@@ -46,38 +46,38 @@ You may or may not find them useful.
 
 1. Go has a stronger type system then C++, therefore any integer conversions need to be explicit
 
-    var x uint16
-    var y int32
-    y = int32(x) //annoying but required for porting
+        var x uint16
+        var y int32
+        y = int32(x) //annoying but required for porting
 
 2. A lot of the code I have seen, passes arrays by pointer, in Go
 this can generally be replaced by a slice.
 
-    STBTT_DEF int stbtt_GetNumberOfFonts(const unsigned char *data);
-    //becomes
-    func GetNumberOfFonts(data []byte) int {
+        STBTT_DEF int stbtt_GetNumberOfFonts(const unsigned char *data);
+        //becomes
+        func GetNumberOfFonts(data []byte) int {
 
 3. Sometimes these C++ array pointers are incremented, I find this to be a very    
 strange pattern but it can be replicated in Go by using a slice operation.
 Keep in mind that the solution below only works for pointer increments, pointer decrements require a different approach (passing an additional index offset).
 
-    //C++
-    stbtt_uint8 *points;
-    stbtt_uint8 flags = *points++; 
+        //C++
+        stbtt_uint8 *points;
+        stbtt_uint8 flags = *points++; 
 
-    //Go 
-    var points []byte
-    points = points[1:] //slice operation, moves the pointer forward by one byte
-    var flags byte = points[0] //get the first byte of the slice
+        //Go 
+        var points []byte
+        points = points[1:] //slice operation, moves the pointer forward by one byte
+        var flags byte = points[0] //get the first byte of the slice
         
 
 4. Go doesn't have struct/array constants, but you can just use a variable to 
 hold the value.
 
-    //C++
-    const ImVec2 zero = ImVec2(0,0);
-    //Go
-    var zero = ImVec2{0,0}
+        //C++
+        const ImVec2 zero = ImVec2(0,0);
+        //Go
+        var zero = ImVec2{0,0}
 
 5. Go doesn't have `static`, so the porting of the imgui debug window is
 painful, perhaps it can be broken up into seperate functions? I don't know.
@@ -85,32 +85,32 @@ painful, perhaps it can be broken up into seperate functions? I don't know.
 6. If a C++ function uses a *void pointer, this can be replaced with a Go
 interface{} type, any value can be assigned to it.
 
-    //C++
-    void *userdata;
-    //Go
-    var userdata interface{}
+        //C++
+        void *userdata;
+        //Go
+        var userdata interface{}
 
 7. Imgui appears to support callbacks of some kind, they are normally
 passed as a struct, I am not too sure how this works in C++, but Go
 has function types and closures that can be used instead.
 
-    //C++
-    typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data)
-    //Go
-    type ImGuiSizeCallback func(data *ImGuiSizeCallbackData)
+        //C++
+        typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data)
+        //Go
+        type ImGuiSizeCallback func(data *ImGuiSizeCallbackData)
 
 
 8. Go doesn't have ternary operator.
 
-    //C++
-    int x = a ? b : c;
-    //Go
-    var x int32
-    if a {
-        x = b
-    } else {
-        x = c
-    }
+        //C++
+        int x = a ? b : c;
+        //Go
+        var x int32
+        if a {
+            x = b
+        } else {
+            x = c
+        }
 
 9. Go is garbage collected, so the ImGui/STB memory management can
 be removed. Can just use builtin `new` and `make` for allocations.
