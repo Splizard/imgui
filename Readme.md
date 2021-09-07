@@ -1,8 +1,8 @@
 # GOLANG IMGUI PORTING EFFORTS
 License will be MIT
 
-A pure Go port of imgui as of github.com/ocornut/imgui commit 5ee40c8d34bea3009cf462ec963225bd22067e5e 
-*(the IMGUI files from this commit are included in the repository)*
+A pure Go port of imgui as of github.com/ocornut/imgui commit  5ee40c8d34bea3009cf462ec963225bd22067e5e  
+*(the IMGUI files from this commit are included in the repository)*  
 
 I made a start on this work but I am not so familiar with C++ and 
 I don't have the time to complete this. You are 
