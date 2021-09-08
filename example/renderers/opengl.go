@@ -17,7 +17,7 @@ var unversionedFragmentShader string
 
 // OpenGL3 implements a renderer based on github.com/go-gl/gl (v3.2-core).
 type OpenGL3 struct {
-	imguiIO *imgui.IO
+	imguiIO *imgui.ImGuiIO
 
 	glslVersion            string
 	fontTexture            uint32
@@ -35,7 +35,7 @@ type OpenGL3 struct {
 
 // NewOpenGL3 attempts to initialize a renderer.
 // An OpenGL context has to be established before calling this function.
-func NewOpenGL3(io *imgui.IO) (*OpenGL3, error) {
+func NewOpenGL3(io *imgui.ImGuiIO) (*OpenGL3, error) {
 	err := gl.Init()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize OpenGL: %w", err)
@@ -61,17 +61,17 @@ func (renderer *OpenGL3) PreRender(clearColor [3]float32) {
 }
 
 // Render translates the ImGui draw data to OpenGL3 commands.
-func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float32, drawData *imgui.DrawData) {
+func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float32, drawData *imgui.ImDrawData) {
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 	displayWidth, displayHeight := displaySize[0], displaySize[1]
 	fbWidth, fbHeight := framebufferSize[0], framebufferSize[1]
 	if (fbWidth <= 0) || (fbHeight <= 0) {
 		return
 	}
-	drawData.ScaleClipRects(imgui.Vec2{
-		fbWidth / displayWidth,
-		fbHeight / displayHeight,
-	})
+	drawData.ScaleClipRects(imgui.NewImVec2(
+		fbWidth/displayWidth,
+		fbHeight/displayHeight,
+	))
 
 	// Backup GL state
 	var lastActiveTexture int32
@@ -147,17 +147,13 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 	gl.EnableVertexAttribArray(uint32(renderer.attribLocationUV))
 	gl.EnableVertexAttribArray(uint32(renderer.attribLocationColor))
 
-	vertexSize, vertexOffsetPos, vertexOffsetUv, vertexOffsetCol :=
-		unsafe.Sizeof(imgui.DrawVert{}),
-		unsafe.Offsetof(imgui.DrawVert{}.Pos),
-		unsafe.Offsetof(imgui.DrawVert{}.UV),
-		unsafe.Offsetof(imgui.DrawVert{}.Col)
+	vertexSize, vertexOffsetPos, vertexOffsetUv, vertexOffsetCol := imgui.ImDrawVertSizeAndOffset()
 
 	gl.VertexAttribPointerWithOffset(uint32(renderer.attribLocationPosition), 2, gl.FLOAT, false, int32(vertexSize), uintptr(vertexOffsetPos))
 	gl.VertexAttribPointerWithOffset(uint32(renderer.attribLocationUV), 2, gl.FLOAT, false, int32(vertexSize), uintptr(vertexOffsetUv))
 	gl.VertexAttribPointerWithOffset(uint32(renderer.attribLocationColor), 4, gl.UNSIGNED_BYTE, true, int32(vertexSize), uintptr(vertexOffsetCol))
 
-	indexSize := unsafe.Sizeof(imgui.DrawIdx(0))
+	indexSize := unsafe.Sizeof(imgui.ImDrawIdx(0))
 	drawType := gl.UNSIGNED_SHORT
 	const bytesPerUint32 = 4
 	if indexSize == bytesPerUint32 {
@@ -274,7 +270,9 @@ func (renderer *OpenGL3) createDeviceObjects() {
 func (renderer *OpenGL3) createFontsTexture() {
 	// Build texture atlas
 	io := imgui.GetIO()
-	pixels, width, height := io.Fonts.GetTexDataAsAlpha8()
+	var pixels []byte
+	var width, height int32
+	io.Fonts.GetTexDataAsAlpha8(&pixels, &width, &height, nil)
 
 	// Upload texture to graphics system
 	var lastTexture int32
@@ -288,7 +286,7 @@ func (renderer *OpenGL3) createFontsTexture() {
 		0, gl.RED, gl.UNSIGNED_BYTE, gl.Ptr(&pixels[0]))
 
 	// Store our identifier
-	io.Fonts.SetTexID(imgui.TextureID(renderer.fontTexture))
+	io.Fonts.SetTexID(imgui.ImTextureID(renderer.fontTexture))
 
 	// Restore state
 	gl.BindTexture(gl.TEXTURE_2D, uint32(lastTexture))

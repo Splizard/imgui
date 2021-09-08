@@ -43,7 +43,7 @@ const (
 
 // GLFW implements a platform based on github.com/go-gl/glfw (v3.2).
 type GLFW struct {
-	imguiIO *imgui.IO
+	imguiIO *imgui.ImGuiIO
 
 	window *glfw.Window
 
@@ -52,7 +52,7 @@ type GLFW struct {
 }
 
 // NewGLFW attempts to initialize a GLFW context.
-func NewGLFW(io *imgui.IO, clientAPI GLFWClientAPI) (*GLFW, error) {
+func NewGLFW(io *imgui.ImGuiIO, clientAPI GLFWClientAPI) (*GLFW, error) {
 	runtime.LockOSThread()
 
 	err := glfw.Init()
@@ -124,7 +124,7 @@ func (platform *GLFW) FramebufferSize() [2]float32 {
 func (platform *GLFW) NewFrame() {
 	// Setup display size (every frame to accommodate for window resizing)
 	displaySize := platform.DisplaySize()
-	platform.imguiIO.DisplaySize = imgui.Vec2{displaySize[0], displaySize[1]}
+	platform.imguiIO.DisplaySize = *imgui.NewImVec2(displaySize[0], displaySize[1])
 
 	// Setup time step
 	currentTime := glfw.GetTime()
@@ -136,9 +136,9 @@ func (platform *GLFW) NewFrame() {
 	// Setup inputs
 	if platform.window.GetAttrib(glfw.Focused) != 0 {
 		x, y := platform.window.GetCursorPos()
-		platform.imguiIO.MousePos = imgui.Vec2{float32(x), float32(y)}
+		platform.imguiIO.MousePos = *imgui.NewImVec2(float32(x), float32(y))
 	} else {
-		platform.imguiIO.MousePos = imgui.Vec2{-math.MaxFloat32, -math.MaxFloat32}
+		platform.imguiIO.MousePos = *imgui.NewImVec2(-math.MaxFloat32, -math.MaxFloat32)
 	}
 
 	for i := 0; i < len(platform.mouseJustPressed); i++ {
@@ -155,27 +155,27 @@ func (platform *GLFW) PostRender() {
 
 func (platform *GLFW) setKeyMapping() {
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeysDown[] array.
-	platform.imguiIO.KeyMap[imgui.KeyTab] = int(glfw.KeyTab)
-	platform.imguiIO.KeyMap[imgui.KeyLeftArrow] = int(glfw.KeyLeft)
-	platform.imguiIO.KeyMap[imgui.KeyRightArrow] = int(glfw.KeyRight)
-	platform.imguiIO.KeyMap[imgui.KeyUpArrow] = int(glfw.KeyUp)
-	platform.imguiIO.KeyMap[imgui.KeyDownArrow] = int(glfw.KeyDown)
-	platform.imguiIO.KeyMap[imgui.KeyPageUp] = int(glfw.KeyPageUp)
-	platform.imguiIO.KeyMap[imgui.KeyPageDown] = int(glfw.KeyPageDown)
-	platform.imguiIO.KeyMap[imgui.KeyHome] = int(glfw.KeyHome)
-	platform.imguiIO.KeyMap[imgui.KeyEnd] = int(glfw.KeyEnd)
-	platform.imguiIO.KeyMap[imgui.KeyInsert] = int(glfw.KeyInsert)
-	platform.imguiIO.KeyMap[imgui.KeyDelete] = int(glfw.KeyDelete)
-	platform.imguiIO.KeyMap[imgui.KeyBackspace] = int(glfw.KeyBackspace)
-	platform.imguiIO.KeyMap[imgui.KeySpace] = int(glfw.KeySpace)
-	platform.imguiIO.KeyMap[imgui.KeyEnter] = int(glfw.KeyEnter)
-	platform.imguiIO.KeyMap[imgui.KeyEscape] = int(glfw.KeyEscape)
-	platform.imguiIO.KeyMap[imgui.KeyA] = int(glfw.KeyA)
-	platform.imguiIO.KeyMap[imgui.KeyC] = int(glfw.KeyC)
-	platform.imguiIO.KeyMap[imgui.KeyV] = int(glfw.KeyV)
-	platform.imguiIO.KeyMap[imgui.KeyX] = int(glfw.KeyX)
-	platform.imguiIO.KeyMap[imgui.KeyY] = int(glfw.KeyY)
-	platform.imguiIO.KeyMap[imgui.KeyZ] = int(glfw.KeyZ)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Tab] = int32(glfw.KeyTab)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_LeftArrow] = int32(glfw.KeyLeft)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_RightArrow] = int32(glfw.KeyRight)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_UpArrow] = int32(glfw.KeyUp)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_DownArrow] = int32(glfw.KeyDown)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_PageUp] = int32(glfw.KeyPageUp)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_PageDown] = int32(glfw.KeyPageDown)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Home] = int32(glfw.KeyHome)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_End] = int32(glfw.KeyEnd)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Insert] = int32(glfw.KeyInsert)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Delete] = int32(glfw.KeyDelete)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Backspace] = int32(glfw.KeyBackspace)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Space] = int32(glfw.KeySpace)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Enter] = int32(glfw.KeyEnter)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Escape] = int32(glfw.KeyEscape)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_A] = int32(glfw.KeyA)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_C] = int32(glfw.KeyC)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_V] = int32(glfw.KeyV)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_X] = int32(glfw.KeyX)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Y] = int32(glfw.KeyY)
+	platform.imguiIO.KeyMap[imgui.ImGuiKey_Z] = int32(glfw.KeyZ)
 }
 
 func (platform *GLFW) installCallbacks() {
@@ -225,7 +225,7 @@ func (platform *GLFW) keyChange(window *glfw.Window, key glfw.Key, scancode int,
 }
 
 func (platform *GLFW) charChange(window *glfw.Window, char rune) {
-	platform.imguiIO.AddInputCharacters(string(char))
+	platform.imguiIO.AddInputCharactersUTF8(string(char))
 }
 
 // ClipboardText returns the current clipboard text, if available.

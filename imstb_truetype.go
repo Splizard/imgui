@@ -13,9 +13,12 @@ func iszero(x uint) bool {
 	return x == 0
 }
 
+type double = float64
 type int = int32
 type uint = uint32
 type float = float32
+type size_t = uintptr
+type char = byte
 
 type (
 	stbtt_uint8  = uint8
