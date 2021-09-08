@@ -18,8 +18,7 @@ func IM_ASSERT(x bool) {
 }
 
 // Forward declarations
-type ImDrawListSharedData struct{} // Data shared among multiple draw lists (typically owned by parent ImGui context, but you may create one yourself)
-type ImFontBuilderIO struct{}      // Opaque interface to a font builder (stb_truetype or FreeType).
+type ImFontBuilderIO struct{} // Opaque interface to a font builder (stb_truetype or FreeType).
 type ImGuiContext struct {
 	FrameCount int
 } // Dear ImGui context (opaque structure, unless including imgui_internal.h)

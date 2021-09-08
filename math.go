@@ -232,6 +232,20 @@ func ImMin(a, b float) float {
 	return b
 }
 
+func ImMinInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func ImMaxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func ImMax(a, b float) float {
 	if a > b {
 		return a
@@ -460,3 +474,35 @@ func (this *ImRect) IsInverted() bool {
 func (this *ImRect) ToVec4() ImVec4 {
 	return ImVec4{this.Min.x, this.Min.y, this.Max.x, this.Max.y}
 }
+
+// ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
+// Estimation of number of circle segment based on error is derived using method described in https://stackoverflow.com/a/2244088/15194693
+// Number of segments (N) is calculated using equation:
+//   N = ceil ( pi / acos(1 - error / r) )     where r > 0, error <= r
+// Our equation is significantly simpler that one in the post thanks for choosing segment that is
+// perpendicular to X axis. Follow steps in the article from this starting condition and you will
+// will get this result.
+//
+// Rendering circles with an odd number of segments, while mathematically correct will produce
+// asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
+//
+func IM_ROUNDUP_TO_EVEN(V float) float {
+	return ((((V) + 1) / 2) * 2)
+}
+
+const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN = 4
+const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX = 512
+
+func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(RAD, MAXERROR float) float {
+	return ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(IM_PI/ImAcos(1-ImMin(MAXERROR, RAD)/RAD))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+}
+
+func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(N, MAXERROR float) float {
+	return MAXERROR / (1 - ImCos(IM_PI/ImMax(N, IM_PI)))
+}
+func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(N, RAD float) float {
+	return (1 - ImCos(IM_PI/ImMax(N, IM_PI))) / RAD
+}
+
+const IM_DRAWLIST_ARCFAST_TABLE_SIZE = 48
+const IM_DRAWLIST_ARCFAST_SAMPLE_MAX = IM_DRAWLIST_ARCFAST_TABLE_SIZE
