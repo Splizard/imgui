@@ -5,21 +5,27 @@ package imgui
 // - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
 //   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
-	/*var ctx *ImGuiContext = NewImGuiContext(shared_font_atlas)
+	var ctx ImGuiContext = NewImGuiContext(shared_font_atlas)
 	if GImGui == nil {
-		SetCurrentContext(ctx)
+		SetCurrentContext(&ctx)
 	}
-	Initialize(ctx)
-	return ctx*/
-	panic("not implemented")
+	Initialize(&ctx)
+	return &ctx
 }
 
-func DestroyContext(ctx *ImGuiContext)    { panic("not implemented") } // NULL = destroy current context
-func GetCurrentContext() *ImGuiContext    { panic("not implemented") }
-func SetCurrentContext(ctx *ImGuiContext) { panic("not implemented") }
+func DestroyContext(ctx *ImGuiContext) { panic("not implemented") } // NULL = destroy current context
+func GetCurrentContext() *ImGuiContext { panic("not implemented") }
 
-// Main
-func GetIO() *ImGuiIO          { panic("not implemented") } // access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
+func SetCurrentContext(ctx *ImGuiContext) {
+	GImGui = ctx
+}
+
+// access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
+func GetIO() *ImGuiIO {
+	IM_ASSERT_USER_ERROR(GImGui != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
+	return &GImGui.IO
+}
+
 func GetStyle() *ImGuiStyle    { panic("not implemented") } // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame!
 func NewFrame()                { panic("not implemented") } // start a new Dear ImGui frame, you can submit any command from this pountil int Render()/EndFrame().
 func EndFrame()                { panic("not implemented") } // ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!

@@ -1,6 +1,9 @@
 package imgui
 
-import "unsafe"
+import (
+	"math"
+	"unsafe"
+)
 
 const IMGUI_VERSION = "1.85 WIP"
 const IMGUI_VERSION_NUM = 18411
@@ -10,18 +13,6 @@ func IMGUI_CHECKVERSION() {
 }
 
 const IMGUI_HAS_TABLE = true
-
-func IM_ASSERT(x bool) {
-	if !x {
-		panic("imgui: IM_ASSERT failed")
-	}
-}
-
-// Forward declarations
-type ImFontBuilderIO struct{} // Opaque interface to a font builder (stb_truetype or FreeType).
-type ImGuiContext struct {
-	FrameCount int
-} // Dear ImGui context (opaque structure, unless including imgui_internal.h)
 
 // Enums/Flags (declared as for int compatibility with old C++, to allow using as flags without overhead, and to not pollute the top of this file)
 // - Tip: Use your programming IDE navigation facilities on the names in the _central column_ below to find the actual flags/enum lists!
@@ -374,9 +365,7 @@ type ImGuiTableColumnSortSpecs struct {
 }
 
 func NewImGuiTableColumnSortSpecs() ImGuiTableColumnSortSpecs {
-	return ImGuiTableColumnSortSpecs{
-		SortDirection: 8,
-	}
+	return ImGuiTableColumnSortSpecs{}
 }
 
 // Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
@@ -915,30 +904,39 @@ func (ImDrawData) ScaleClipRects(fb_scale *ImVec2) { panic("not implemented") } 
 //-----------------------------------------------------------------------------
 
 type ImFontConfig struct {
-	FontData             interface{} //          // TTF/OTF data
-	FontDataSize         int         //          // TTF/OTF data size
-	FontDataOwnedByAtlas bool        // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
-	FontNo               int         // 0        // Index of font within TTF/OTF file
-	SizePixels           float       //          // Size in pixels for rasterizer (more or less maps to the resulting font height).
-	OversampleH          int         // 3        // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
-	OversampleV          int         // 1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
-	PixelSnapH           bool        // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
-	GlyphExtraSpacing    ImVec2      // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
-	GlyphOffset          ImVec2      // 0, 0     // Offset all glyphs from this font input.
-	GlyphRanges          []ImWchar   // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
-	GlyphMinAdvanceX     float       // 0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
-	GlyphMaxAdvanceX     float       // FLT_MAX  // Maximum AdvanceX for glyphs
-	MergeMode            bool        // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
-	FontBuilderFlags     uint        // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
-	RasterizerMultiply   float       // 1.0f     // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
-	EllipsisChar         ImWchar     // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
+	FontData             []byte    //          // TTF/OTF data
+	FontDataSize         int       //          // TTF/OTF data size
+	FontDataOwnedByAtlas bool      // true     // TTF/OTF data ownership taken by the container ImFontAtlas (will delete memory itself).
+	FontNo               int       // 0        // Index of font within TTF/OTF file
+	SizePixels           float     //          // Size in pixels for rasterizer (more or less maps to the resulting font height).
+	OversampleH          int       // 3        // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
+	OversampleV          int       // 1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
+	PixelSnapH           bool      // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
+	GlyphExtraSpacing    ImVec2    // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
+	GlyphOffset          ImVec2    // 0, 0     // Offset all glyphs from this font input.
+	GlyphRanges          []ImWchar // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
+	GlyphMinAdvanceX     float     // 0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
+	GlyphMaxAdvanceX     float     // FLT_MAX  // Maximum AdvanceX for glyphs
+	MergeMode            bool      // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
+	FontBuilderFlags     uint      // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
+	RasterizerMultiply   float     // 1.0f     // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
+	EllipsisChar         ImWchar   // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
 
 	// [Internal]
-	Name    [40]byte // Name (strictly to ease debugging)
+	Name    string
 	DstFont *ImFont
 }
 
-func NewImFontConfig() ImFontConfig { panic("not implemented") }
+func NewImFontConfig() ImFontConfig {
+	return ImFontConfig{
+		FontDataOwnedByAtlas: true,
+		OversampleH:          3, // FIXME: 2 may be a better default?
+		OversampleV:          1,
+		GlyphMaxAdvanceX:     FLT_MAX,
+		RasterizerMultiply:   1.0,
+		EllipsisChar:         255,
+	}
+}
 
 // Hold rendering data for one glyph.
 // (Note: some language parsers may fail to convert the 31+1 bitfield members, in this case maybe drop store a single u32 or we can rework this)
@@ -952,11 +950,7 @@ type ImFontGlyph struct {
 }
 
 func NewImFontGlyph() ImFontGlyph {
-	return ImFontGlyph{
-		Colored:   1,
-		Visible:   1,
-		Codepoint: 30,
-	}
+	return ImFontGlyph{}
 }
 
 // Helper to build glyph ranges from text/string data. Feed your application strings/characters to it then call BuildRanges().
@@ -1066,36 +1060,87 @@ type ImFontAtlas struct {
 	PackIdLines        int // Custom texture rectangle ID for baked anti-aliased lines
 }
 
-func NewImFontAtlas() *ImFontAtlas { panic("not implemented") }
+func NewImFontAtlas() ImFontAtlas {
+	return ImFontAtlas{
+		TexGlyphPadding:    1,
+		PackIdMouseCursors: -1,
+		PackIdLines:        -1,
+	}
+}
 
-func (atlas *ImFontAtlas) AddFont(font_cfg *ImFontConfig) *ImFont        { panic("not implemented") }
-func (atlas *ImFontAtlas) AddFontDefault(font_cfg *ImFontConfig) *ImFont { panic("not implemented") }
+func (atlas *ImFontAtlas) AddFont(font_cfg *ImFontConfig) *ImFont {
+	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render")
+	IM_ASSERT(font_cfg.FontData != nil && font_cfg.FontDataSize > 0)
+	IM_ASSERT(font_cfg.SizePixels > 0.0)
+
+	// Create new font
+	if !font_cfg.MergeMode {
+		f := NewImFont()
+		atlas.Fonts = append(atlas.Fonts, &f)
+	} else {
+		IM_ASSERT_USER_ERROR(len(atlas.Fonts) != 0, "Cannot use MergeMode for the first font") // When using MergeMode make sure that a font has already been added before. You can use ImGui::GetIO().Fonts.AddFontDefault() to add the default imgui font.
+	}
+
+	atlas.ConfigData = append(atlas.ConfigData, *font_cfg)
+	var new_font_cfg *ImFontConfig = &atlas.ConfigData[len(atlas.ConfigData)-1]
+	if new_font_cfg.DstFont == nil {
+		new_font_cfg.DstFont = atlas.Fonts[len(atlas.ConfigData)-1]
+	}
+	if !new_font_cfg.FontDataOwnedByAtlas {
+		new_font_cfg.FontData = make([]byte, new_font_cfg.FontDataSize)
+		new_font_cfg.FontDataOwnedByAtlas = true
+		copy(new_font_cfg.FontData, font_cfg.FontData[:(size_t)(new_font_cfg.FontDataSize)])
+	}
+
+	if new_font_cfg.DstFont.EllipsisChar == math.MaxInt16 {
+		new_font_cfg.DstFont.EllipsisChar = font_cfg.EllipsisChar
+	}
+
+	// Invalidate texture
+	atlas.TexReady = false
+	atlas.ClearTexData()
+	return new_font_cfg.DstFont
+}
+
 func (atlas *ImFontAtlas) AddFontFromFileTTF(filename string, size_pixels float, font_cfg *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
 	panic("not implemented")
 }
-func (atlas *ImFontAtlas) AddFontFromMemoryTTF(font_data []byte, font_size int, size_pixels float, font_cfg *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	panic("not implemented")
-} // Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
-func (atlas *ImFontAtlas) AddFontFromMemoryCompressedTTF(compressed_font_data []byte, compressed_font_size int, size_pixels float, font_cfg *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	panic("not implemented")
-} // 'compressed_font_data' still owned by caller. Compress with binary_to_compressed_c.cpp.
-func (atlas *ImFontAtlas) AddFontFromMemoryCompressedBase85TTF(compressed_font_data_base85 string, size_pixels float, font_cfg *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	panic("not implemented")
-}                                          // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
-func (atlas *ImFontAtlas) ClearInputData() { panic("not implemented") } // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
-func (atlas *ImFontAtlas) ClearTexData()   { panic("not implemented") } // Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
-func (atlas *ImFontAtlas) ClearFonts()     { panic("not implemented") } // Clear output font data (glyphs storage, UV coordinates).
-func (atlas *ImFontAtlas) Clear()          { panic("not implemented") } // Clear all input and output.
 
-// Build atlas, retrieve pixel data.
-// User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
-// The pitch is always = Width * BytesPerPixels (1 or 4)
-// Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
-// the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
-func (atlas *ImFontAtlas) Build() bool { panic("not implemented") } // Build pixels data. This is called automatically for you by the GetTexData*** functions.
-func (atlas *ImFontAtlas) GetTexDataAsAlpha8(out_pixels *[]byte, out_width, out_height, out_bytes_per_pixel *int) {
-	panic("not implemented")
-} // 1 byte per-pixel
+func (atlas *ImFontAtlas) AddFontFromMemoryTTF(ttf_data []byte, ttf_size int, size_pixels float, font_cfg_template *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
+	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!")
+	var font_cfg ImFontConfig
+	if font_cfg_template != nil {
+		font_cfg = *font_cfg_template
+	} else {
+		font_cfg = NewImFontConfig()
+	}
+	IM_ASSERT(font_cfg.FontData == nil)
+	font_cfg.FontData = ttf_data
+	font_cfg.FontDataSize = ttf_size
+	if size_pixels > 0.0 {
+		font_cfg.SizePixels = size_pixels
+	}
+	if glyph_ranges != nil {
+		font_cfg.GlyphRanges = glyph_ranges
+	}
+	return atlas.AddFont(&font_cfg)
+}
+
+// Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+// 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
+func (atlas *ImFontAtlas) ClearInputData() { panic("not implemented") } // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
+
+func (atlas *ImFontAtlas) ClearTexData() {
+	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!")
+	atlas.TexPixelsAlpha8 = nil
+	atlas.TexPixelsRGBA32 = nil
+	atlas.TexPixelsUseColors = false
+}
+
+// Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
+func (atlas *ImFontAtlas) ClearFonts() { panic("not implemented") } // Clear output font data (glyphs storage, UV coordinates).
+func (atlas *ImFontAtlas) Clear()      { panic("not implemented") } // Clear all input and output.
+
 func (atlas *ImFontAtlas) GetTexDataAsRGBA32(out_pixels *[]byte, out_width, out_height, iout_bytes_per_pixel *int) {
 	panic("not implemented")
 }                                                  // 4 bytes-per-pixel
@@ -1109,7 +1154,6 @@ func (atlas *ImFontAtlas) SetTexID(id ImTextureID) { atlas.TexID = id }
 // Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)
 // NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
 // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
-func (atlas *ImFontAtlas) GetGlyphRangesDefault() []ImWchar                 { panic("not implemented") } // Basic Latin, Extended Latin
 func (atlas *ImFontAtlas) GetGlyphRangesKorean() []ImWchar                  { panic("not implemented") } // Default + Korean characters
 func (atlas *ImFontAtlas) GetGlyphRangesJapanese() []ImWchar                { panic("not implemented") } // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
 func (atlas *ImFontAtlas) GetGlyphRangesChineseFull() []ImWchar             { panic("not implemented") } // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
@@ -1129,7 +1173,16 @@ func (atlas *ImFontAtlas) GetGlyphRangesVietnamese() []ImWchar              { pa
 //   so you can render e.g. custom colorful icons and use them as regular glyphs.
 // - Read docs/FONTS.md for more details about using colorful icons.
 // - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
-func (atlas *ImFontAtlas) AddCustomRectRegular(width, height int) int { panic("not implemented") }
+func (atlas *ImFontAtlas) AddCustomRectRegular(width, height int) int {
+	IM_ASSERT(width > 0 && width <= 0xFFFF)
+	IM_ASSERT(height > 0 && height <= 0xFFFF)
+	var r ImFontAtlasCustomRect
+	r.Width = (uint16)(width)
+	r.Height = (uint16)(height)
+	atlas.CustomRects = append(atlas.CustomRects, r)
+	return int(len(atlas.CustomRects)) - 1 // Return index
+}
+
 func (atlas *ImFontAtlas) AddCustomRectFontGlyph(font *ImFont, id ImWchar, width, height int, advance_x float, offset *ImVec2) int {
 	panic("not implemented")
 }
@@ -1174,7 +1227,14 @@ type ImFont struct {
 }
 
 // Methods
-func NewImFont() ImFont { panic("not implemented") }
+func NewImFont() ImFont {
+	return ImFont{
+		FallbackChar: math.MaxInt16,
+		EllipsisChar: math.MaxInt16,
+		DotChar:      math.MaxInt16,
+		Scale:        1,
+	}
+}
 
 func (this *ImFont) FindGlyph(c ImWchar) *ImFontGlyph           { panic("not implemented") }
 func (this *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph { panic("not implemented") }

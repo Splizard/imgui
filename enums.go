@@ -691,14 +691,11 @@ const (
 	ImDrawListFlags_AllowVtxOffset         ImDrawListFlags = 1 << 3 // Can emit 'VtxOffset > 0' to allow large meshes. Set when 'ImGuiBackendFlags_RendererHasVtxOffset' is enabled.
 )
 
-// Flags for ImFontAtlas build
-type ImFontAtlasFlags_ int
-
 const (
-	ImFontAtlasFlags_None               ImFontAtlasFlags_ = 0
-	ImFontAtlasFlags_NoPowerOfTwoHeight ImFontAtlasFlags_ = 1 << 0 // Don't round the height to next power of two
-	ImFontAtlasFlags_NoMouseCursors     ImFontAtlasFlags_ = 1 << 1 // Don't build software mouse cursors into the atlas (save a little texture memory)
-	ImFontAtlasFlags_NoBakedLines       ImFontAtlasFlags_ = 1 << 2 // Don't build thick line textures into the atlas (save a little texture memory). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
+	ImFontAtlasFlags_None               ImFontAtlasFlags = 0
+	ImFontAtlasFlags_NoPowerOfTwoHeight ImFontAtlasFlags = 1 << 0 // Don't round the height to next power of two
+	ImFontAtlasFlags_NoMouseCursors     ImFontAtlasFlags = 1 << 1 // Don't build software mouse cursors into the atlas (save a little texture memory)
+	ImFontAtlasFlags_NoBakedLines       ImFontAtlasFlags = 1 << 2 // Don't build thick line textures into the atlas (save a little texture memory). The AntiAliasedLinesUseTex features uses them, otherwise they will be rendered using polygons (more expensive for CPU/GPU).
 )
 
 // Flags stored in ImGuiViewport::Flags, giving indications to the platform backends.
@@ -958,4 +955,35 @@ const (
 	ImGuiOldColumnFlags_NoPreserveWidths       ImGuiOldColumnFlags = 1 << 2 // Disable column width preservation when adjusting columns
 	ImGuiOldColumnFlags_NoForceWithinWindow    ImGuiOldColumnFlags = 1 << 3 // Disable forcing columns to fit within window
 	ImGuiOldColumnFlags_GrowParentContentsSize ImGuiOldColumnFlags = 1 << 4 // (WIP) Restore pre-1.51 behavior of extending the parent window contents size but _without affecting the columns width at all_. Will eventually remove.
+)
+
+type ImGuiContextHookType int
+
+const (
+	ImGuiContextHookType_NewFramePre ImGuiContextHookType = iota
+	ImGuiContextHookType_NewFramePost
+	ImGuiContextHookType_EndFramePre
+	ImGuiContextHookType_EndFramePost
+	ImGuiContextHookType_RenderPre
+	ImGuiContextHookType_RenderPost
+	ImGuiContextHookType_Shutdown
+	ImGuiContextHookType_PendingRemoval_
+)
+
+//-----------------------------------------------------------------------------
+// [SECTION] Tab bar, Tab item support
+//-----------------------------------------------------------------------------
+
+// Extend ImGuiTabBarFlags_
+const (
+	ImGuiTabBarFlags_DockNode     ImGuiTabBarFlags = 1 << 20 // Part of a dock node [we don't use this in the master branch but it facilitate branch syncing to keep this around]
+	ImGuiTabBarFlags_IsFocused    ImGuiTabBarFlags = 1 << 21
+	ImGuiTabBarFlags_SaveSettings ImGuiTabBarFlags = 1 << 22 // FIXME: Settings are handled by the docking system, this only request the tab bar to mark settings dirty when reordering tabs
+)
+
+// Extend ImGuiTabItemFlags_
+const (
+	ImGuiTabItemFlags_SectionMask_  ImGuiTabItemFlags = ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_Trailing
+	ImGuiTabItemFlags_NoCloseButton ImGuiTabItemFlags = 1 << 20 // Track whether p_open was set or not (we'll need this info on the next frame to recompute ContentWidth during layout)
+	ImGuiTabItemFlags_Button        ImGuiTabItemFlags = 1 << 21 // Used by TabItemButton, change the tab item behavior to mimic a button
 )

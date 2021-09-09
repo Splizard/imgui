@@ -1,6 +1,6 @@
 package imgui
 
-type short int16
+type short = int16
 
 type (
 	STB_TEXTEDIT_STRING   = ImGuiInputTextState
