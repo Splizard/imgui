@@ -1270,8 +1270,8 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 }
 
 // [Internal] Don't use!
-func (this *ImFont) BuildLookupTable()      { panic("not implemented") }
-func (this *ImFont) ClearOutputData()       { panic("not implemented") }
+func (this *ImFont) BuildLookupTable() { panic("not implemented") }
+
 func (this *ImFont) GrowIndex(new_size int) { panic("not implemented") }
 func (this *ImFont) AddGlyph(src_cfg *ImFontConfig, c ImWchar, x0, y0, x1, y1, u0, v0, u1, v1, advance_x float) {
 	panic("not implemented")

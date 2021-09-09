@@ -90,6 +90,20 @@ type ImFontBuildDstData struct {
 	GlyphsSet     ImBitVector // This is used to resolve collision when multiple sources are merged into a same destination font.
 }
 
+func (this *ImFont) ClearOutputData() {
+	this.FontSize = 0
+	this.FallbackAdvanceX = 0
+	this.Glyphs = this.Glyphs[:0]
+	this.IndexAdvanceX = this.IndexAdvanceX[:0]
+	this.IndexLookup = this.IndexLookup[:0]
+	this.FallbackGlyph = nil
+	this.ContainerAtlas = nil
+	this.DirtyLookupTables = true
+	this.Ascent = 0
+	this.Descent = 0
+	this.MetricsTotalSurface = 0
+}
+
 func UnpackBitVectorToFlatIndexList(in *ImBitVector, out *[]int) {
 	IM_ASSERT(unsafe.Sizeof((*in)[0]) == unsafe.Sizeof(int(0)))
 	for i, it := range *in {
@@ -294,6 +308,19 @@ func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque in
 			atlas.TexHeight = ImMaxInt(atlas.TexHeight, int(pack_rects[i].y)+int(pack_rects[i].h))
 		}
 	}
+}
+
+func ImFontAtlasBuildSetupFont(atlas *ImFontAtlas, font *ImFont, font_config *ImFontConfig, ascent float32, descent float32) {
+	if !font_config.MergeMode {
+		font.ClearOutputData()
+		font.FontSize = font_config.SizePixels
+		font.ConfigData = font_config
+		font.ConfigDataCount = 0
+		font.ContainerAtlas = atlas
+		font.Ascent = ascent
+		font.Descent = descent
+	}
+	font.ConfigDataCount++
 }
 
 func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {

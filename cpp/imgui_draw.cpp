@@ -2071,22 +2071,6 @@ void    ImFontAtlasBuildMultiplyRectAlpha8(const unsigned char table[256], unsig
             data[i] = table[data[i]];
 }
 
-
-void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* font_config, float ascent, float descent)
-{
-    if (!font_config.MergeMode)
-    {
-        font.ClearOutputData();
-        font.FontSize = font_config.SizePixels;
-        font.ConfigData = font_config;
-        font.ConfigDataCount = 0;
-        font.ContainerAtlas = atlas;
-        font.Ascent = ascent;
-        font.Descent = descent;
-    }
-    font.ConfigDataCount++;
-}
-
 void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char, unsigned char in_marker_pixel_value)
 {
     IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);
@@ -2513,26 +2497,6 @@ void ImFontGlyphRangesBuilder::BuildRanges(ImVector<ImWchar>* out_ranges)
 //-----------------------------------------------------------------------------
 // [SECTION] ImFont
 //-----------------------------------------------------------------------------
-
-
-ImFont::~ImFont()
-{
-    ClearOutputData();
-}
-
-void    ImFont::ClearOutputData()
-{
-    FontSize = 0.0f;
-    FallbackAdvanceX = 0.0f;
-    Glyphs.clear();
-    IndexAdvanceX.clear();
-    IndexLookup.clear();
-    FallbackGlyph = nil;
-    ContainerAtlas = nil;
-    DirtyLookupTables = true;
-    Ascent = Descent = 0.0f;
-    MetricsTotalSurface = 0;
-}
 
 static ImWchar FindFirstExistingGlyph(ImFont* font, const ImWchar* candidate_chars, int candidate_chars_count)
 {
