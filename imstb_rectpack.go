@@ -229,7 +229,7 @@ func STBRP_ASSERT(cond bool) {
 
 func STBRP_SORT(slice interface{}, _ int, _ uintptr, compare func(a, b interface{}) int) {
 	sort.Slice(slice, func(i, j golang.Int) bool {
-		return compare(reflect.ValueOf(slice).Index(i).Interface(), reflect.ValueOf(slice).Index(j).Interface()) < 0
+		return compare(reflect.ValueOf(slice).Index(i).Addr().Interface(), reflect.ValueOf(slice).Index(j).Addr().Interface()) < 0
 	})
 }
 

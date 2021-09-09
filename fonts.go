@@ -15,6 +15,25 @@ extern void print(char *);
 */
 import "C"
 
+//-----------------------------------------------------------------------------
+// [SECTION] Default font data (ProggyClean.ttf)
+//-----------------------------------------------------------------------------
+// ProggyClean.ttf
+// Copyright (c) 2004, 2005 Tristan Grimmer
+// MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
+// Download and more information at http://upperbounds.net
+//-----------------------------------------------------------------------------
+// File: 'ProggyClean.ttf' (41208 bytes)
+// Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).
+// The purpose of encoding as base85 instead of "0x00,0x01,..." style is only save on _source code_ size.
+//-----------------------------------------------------------------------------
+//go:embed proggy.txt
+var proggy_clean_ttf_compressed_data_base85 []byte
+
+func (atlas *ImFontAtlas) GetDefaultCompressedFontDataTTFBase85() []byte {
+	return proggy_clean_ttf_compressed_data_base85
+}
+
 // A work of art lies ahead! (. = white layer, X = black layer, others are blank)
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
 const FONT_ATLAS_DEFAULT_TEX_DATA_W int = 108 // Actual texture will be 2 times that + 1 spacing.
@@ -249,6 +268,30 @@ func ImFontAtlasBuildInit(atlas *ImFontAtlas) {
 	if atlas.PackIdLines < 0 {
 		if atlas.Flags&ImFontAtlasFlags_NoBakedLines == 0 {
 			atlas.PackIdLines = atlas.AddCustomRectRegular(IM_DRAWLIST_TEX_LINES_WIDTH_MAX+2, IM_DRAWLIST_TEX_LINES_WIDTH_MAX+1)
+		}
+	}
+}
+
+func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque interface{}) {
+	var pack_context *stbrp_context = stbrp_context_opaque.(*stbrp_context)
+	IM_ASSERT(pack_context != nil)
+
+	var user_rects []ImFontAtlasCustomRect = atlas.CustomRects
+	IM_ASSERT(len(user_rects) >= 1) // We expect at least the default custom rects to be registered, else something went wrong.
+
+	var pack_rects []stbrp_rect = make([]stbrp_rect, len(user_rects))
+
+	for i := range user_rects {
+		pack_rects[i].w = user_rects[i].Width
+		pack_rects[i].h = user_rects[i].Height
+	}
+	stbrp_pack_rects(pack_context, pack_rects, int(len(pack_rects)))
+	for i := range pack_rects {
+		if pack_rects[i].was_packed != 0 {
+			user_rects[i].X = pack_rects[i].x
+			user_rects[i].Y = pack_rects[i].y
+			IM_ASSERT(pack_rects[i].w == user_rects[i].Width && pack_rects[i].h == user_rects[i].Height)
+			atlas.TexHeight = ImMaxInt(atlas.TexHeight, int(pack_rects[i].y)+int(pack_rects[i].h))
 		}
 	}
 }
@@ -532,23 +575,4 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	ImFontAtlasBuildFinish(atlas)
 	return true
-}
-
-//-----------------------------------------------------------------------------
-// [SECTION] Default font data (ProggyClean.ttf)
-//-----------------------------------------------------------------------------
-// ProggyClean.ttf
-// Copyright (c) 2004, 2005 Tristan Grimmer
-// MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
-// Download and more information at http://upperbounds.net
-//-----------------------------------------------------------------------------
-// File: 'ProggyClean.ttf' (41208 bytes)
-// Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).
-// The purpose of encoding as base85 instead of "0x00,0x01,..." style is only save on _source code_ size.
-//-----------------------------------------------------------------------------
-//go:embed proggy.txt
-var proggy_clean_ttf_compressed_data_base85 []byte
-
-func (atlas *ImFontAtlas) GetDefaultCompressedFontDataTTFBase85() []byte {
-	return proggy_clean_ttf_compressed_data_base85
 }

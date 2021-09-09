@@ -452,6 +452,7 @@ func stbtt_PackFontRangesRenderIntoRects(spc *stbtt_pack_context, info *stbtt_fo
 					scale*float(spc.h_oversample),
 					scale*float(spc.v_oversample),
 					&x0, &y0, &x1, &y1)
+
 				stbtt_MakeGlyphBitmapSubpixel(info,
 					spc.pixels[int(r.x)+int(r.y)*spc.stride_in_bytes:],
 					int(r.w)-int(spc.h_oversample)+1,
@@ -1242,8 +1243,8 @@ func stbtt_GetGlyphSDF(info *stbtt_fontinfo, scale float, glyph, padding int, on
 								var c float = mx*ax + my*ay
 								if a == 0.0 { // if a is 0, it's linear
 									if b != 0.0 {
-										num++
 										res[num] = -c / b
+										num++
 									}
 								} else {
 									var discriminant float = b*b - 4*a*c
@@ -1509,8 +1510,9 @@ func stbtt__buf_get8(b *stbtt__buf) stbtt_uint8 {
 	if b.cursor >= b.size {
 		return 0
 	}
+	res := b.data[b.cursor]
 	b.cursor++
-	return b.data[b.cursor]
+	return res
 }
 
 func stbtt__buf_peek8(b *stbtt__buf) stbtt_uint8 {
@@ -1947,18 +1949,18 @@ func stbtt__close_shape(vertices []stbtt_vertex, num_vertices, was_off, start_of
 	sx, sy, scx, scy, cx, cy stbtt_int32) int {
 	if start_off != 0 {
 		if was_off != 0 {
-			num_vertices++
 			stbtt_setvertex(&vertices[num_vertices], STBTT_vcurve, (cx+scx)>>1, (cy+scy)>>1, cx, cy)
+			num_vertices++
 		}
-		num_vertices++
 		stbtt_setvertex(&vertices[num_vertices], STBTT_vcurve, sx, sy, scx, scy)
+		num_vertices++
 	} else {
 		if was_off != 0 {
-			num_vertices++
 			stbtt_setvertex(&vertices[num_vertices], STBTT_vcurve, sx, sy, cx, cy)
-		} else {
 			num_vertices++
+		} else {
 			stbtt_setvertex(&vertices[num_vertices], STBTT_vline, sx, sy, 0, 0)
+			num_vertices++
 		}
 	}
 	return num_vertices
@@ -2011,11 +2013,11 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 
 		for i = 0; i < n; i++ {
 			if flagcount == 0 {
-				points = points[1:]
 				flags = points[0]
+				points = points[1:]
 				if flags&8 != 0 {
-					points = points[1:]
 					flagcount = points[0]
+					points = points[1:]
 				}
 			} else {
 				flagcount--
@@ -2028,8 +2030,8 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 		for i = 0; i < n; i++ {
 			flags = vertices[off+i].vtype
 			if flags&2 != 0 {
-				points = points[1:]
 				var dx stbtt_int16 = stbtt_int16(points[0])
+				points = points[1:]
 				if (flags & 16) != 0 {
 					x += int(dx)
 				} else {
@@ -2049,8 +2051,8 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 		for i = 0; i < n; i++ {
 			flags = vertices[off+i].vtype
 			if flags&4 != 0 {
-				points = points[1:]
 				var dy stbtt_int16 = stbtt_int16(points[0])
+				points = points[1:]
 
 				if (flags & 32) != 0 {
 					y += int(dy)
@@ -2098,27 +2100,27 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 					sx = x
 					sy = y
 				}
-				num_vertices++
 				stbtt_setvertex(&vertices[num_vertices], STBTT_vmove, sx, sy, 0, 0)
+				num_vertices++
 				was_off = 0
 				next_move = 1 + int(ttUSHORT(endPtsOfContours[j*2:]))
 				j++
 			} else {
 				if flags&1 == 0 { // if it's a curve
 					if was_off != 0 { // two off-curve control points in a row means interpolate an on-curve midpoint
-						num_vertices++
 						stbtt_setvertex(&vertices[num_vertices], STBTT_vcurve, (cx+x)>>1, (cy+y)>>1, cx, cy)
+						num_vertices++
 					}
 					cx = x
 					cy = y
 					was_off = 1
 				} else {
 					if was_off != 0 {
-						num_vertices++
 						stbtt_setvertex(&vertices[num_vertices], STBTT_vcurve, x, y, cx, cy)
-					} else {
 						num_vertices++
+					} else {
 						stbtt_setvertex(&vertices[num_vertices], STBTT_vline, x, y, 0, 0)
+						num_vertices++
 					}
 					was_off = 0
 				}
@@ -2569,8 +2571,9 @@ func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csct
 			if subr_stack_height >= 10 {
 				return STBTT__CSERR("recursion limit")
 			}
-			subr_stack_height++
+
 			subr_stack[subr_stack_height] = b
+			subr_stack_height++
 
 			var subr stbtt__buf
 			if b0 == 0x0A {
@@ -2709,8 +2712,8 @@ func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csct
 			if sp >= 48 {
 				return STBTT__CSERR("push stack overflow")
 			}
-			sp++
 			s[sp] = f
+			sp++
 			clear_stack = 0
 			break
 		}
@@ -3695,14 +3698,14 @@ func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatne
 
 				x = float(vertices[i].x)
 				y = float(vertices[i].y)
-				num_points++
 				stbtt__add_point(points, num_points, x, y)
+				num_points++
 				break
 			case STBTT_vline:
 				x = float(vertices[i].x)
 				y = float(vertices[i].y)
-				num_points++
 				stbtt__add_point(points, num_points, x, y)
+				num_points++
 				break
 			case STBTT_vcurve:
 				stbtt__tesselate_curve(points, &num_points, x, y,
@@ -3721,6 +3724,8 @@ func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatne
 				x = float(vertices[i].x)
 				y = float(vertices[i].y)
 				break
+			default:
+				panic("unknown vtype")
 			}
 		}
 		(*contour_lengths)[n] = num_points - start
@@ -4165,15 +4170,16 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 			if i >= len1 {
 				return -1
 			}
-			i++
+
 			if stbtt_uint16(s1[i]) != ch {
 				return -1
 			}
+			i++
 		} else if ch < 0x800 {
 			if i+1 >= len1 {
 				return -1
 			}
-			i++
+
 			if stbtt_uint16(s1[i]) != 0xc0+(ch>>6) {
 				return -1
 			}
@@ -4181,6 +4187,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 			if stbtt_uint16(s1[i]) != 0x80+(ch&0x3f) {
 				return -1
 			}
+			i++
 		} else if ch >= 0xd800 && ch < 0xdc00 {
 			var c stbtt_uint32
 			var ch2 stbtt_uint16 = stbtt_uint16(s2[2])*256 + stbtt_uint16(s2[3])
@@ -4188,7 +4195,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 				return -1
 			}
 			c = (stbtt_uint32(ch-0xd800) << 10) + stbtt_uint32(ch2-0xdc00) + stbtt_uint32(0x10000)
-			i++
+
 			if uint(s1[i]) != 0xf0+(c>>18) {
 				return -1
 			}
@@ -4204,6 +4211,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 			if uint(s1[i]) != 0x80+((c)&0x3f) {
 				return -1
 			}
+			i++
 			s2 = s2[2:] // plus another 2 below
 			len2 -= 2
 		} else if ch >= 0xdc00 && ch < 0xe000 {
@@ -4212,7 +4220,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 			if i+2 >= len1 {
 				return -1
 			}
-			i++
+
 			if stbtt_uint16(s1[i]) != 0xe0+(ch>>12) {
 				return -1
 			}
@@ -4224,6 +4232,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 			if stbtt_uint16(s1[i]) != 0x80+((ch)&0x3f) {
 				return -1
 			}
+			i++
 		}
 		s2 = s2[2:]
 		len2 -= 2

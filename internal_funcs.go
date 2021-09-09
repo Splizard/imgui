@@ -573,9 +573,7 @@ func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewport
 func ImFontAtlasBuildSetupFont(atlas *ImFontAtlas, font *ImFont, font_config *ImFontConfig, ascent float32, descent float32) {
 	panic("not implemented")
 }
-func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque interface{}) {
-	panic("not implemented")
-}
+
 func ImFontAtlasBuildFinish(atlas *ImFontAtlas) { panic("not implemented") }
 func ImFontAtlasBuildRender8bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value byte) {
 	panic("not implemented")

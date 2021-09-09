@@ -2087,33 +2087,6 @@ void ImFontAtlasBuildSetupFont(ImFontAtlas* atlas, ImFont* font, ImFontConfig* f
     font.ConfigDataCount++;
 }
 
-void ImFontAtlasBuildPackCustomRects(ImFontAtlas* atlas, void* stbrp_context_opaque)
-{
-    stbrp_context* pack_context = (stbrp_context*)stbrp_context_opaque;
-    IM_ASSERT(pack_context != nil);
-
-    ImVector<ImFontAtlasCustomRect>& user_rects = atlas.CustomRects;
-    IM_ASSERT(user_rects.Size >= 1); // We expect at least the default custom rects to be registered, else something went wrong.
-
-    ImVector<stbrp_rect> pack_rects;
-    pack_rects.resize(user_rects.Size);
-    memset(pack_rects.Data, 0, (size_t)pack_rects.size_in_bytes());
-    for (int i = 0; i < user_rects.Size; i++)
-    {
-        pack_rects[i].w = user_rects[i].Width;
-        pack_rects[i].h = user_rects[i].Height;
-    }
-    stbrp_pack_rects(pack_context, &pack_rects[0], pack_rects.Size);
-    for (int i = 0; i < pack_rects.Size; i++)
-        if (pack_rects[i].was_packed)
-        {
-            user_rects[i].X = pack_rects[i].x;
-            user_rects[i].Y = pack_rects[i].y;
-            IM_ASSERT(pack_rects[i].w == user_rects[i].Width && pack_rects[i].h == user_rects[i].Height);
-            atlas.TexHeight = ImMax(atlas.TexHeight, pack_rects[i].y + pack_rects[i].h);
-        }
-}
-
 void ImFontAtlasBuildRender8bppRectFromString(ImFontAtlas* atlas, int x, int y, int w, int h, const char* in_str, char in_marker_char, unsigned char in_marker_pixel_value)
 {
     IM_ASSERT(x >= 0 && x + w <= atlas.TexWidth);

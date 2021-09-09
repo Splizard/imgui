@@ -1143,8 +1143,9 @@ func stb_text_create_undo_record(state *StbUndoState, numchars int) *StbUndoReco
 		stb_textedit_discard_undo(state)
 	}
 
+	res := &state.undo_rec[state.undo_point]
 	state.undo_point++
-	return &state.undo_rec[state.undo_point]
+	return res
 }
 
 func stb_text_createundo(state *StbUndoState, pos, insert_len, delete_len int) []STB_TEXTEDIT_CHARTYPE {
