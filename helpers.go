@@ -1,5 +1,11 @@
 package imgui
 
+import "fmt"
+
+func printf(format string, v ...interface{}) {
+	fmt.Printf(format, v...)
+}
+
 // CRC32 needs a 1KB lookup table (not cache friendly)
 // Although the code to generate the table is simple and shorter than the table itself, using a const table allows us to easily:
 // - avoid an unnecessary branch/memory tap, - keep the ImHashXXX functions usable by static constructors, - make it thread-safe.

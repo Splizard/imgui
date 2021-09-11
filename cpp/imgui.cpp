@@ -995,63 +995,6 @@ void ImGuiStyle::ScaleAllSizes(float scale_factor)
     MouseCursorScale = ImFloor(MouseCursorScale * scale_factor);
 }
 
-ImGuiIO::ImGuiIO()
-{
-    // Most fields are initialized with zero
-    memset(this, 0, sizeof(*this));
-    IM_ASSERT(IM_ARRAYSIZE(ImGuiIO::MouseDown) == ImGuiMouseButton_COUNT && IM_ARRAYSIZE(ImGuiIO::MouseClicked) == ImGuiMouseButton_COUNT); // Our pre-C++11 IM_STATIC_ASSERT() macros triggers warning on modern compilers so we don't use it here.
-
-    // Settings
-    ConfigFlags = ImGuiConfigFlags_None;
-    BackendFlags = ImGuiBackendFlags_None;
-    DisplaySize = ImVec2(-1.0f, -1.0f);
-    DeltaTime = 1.0f / 60.0f;
-    IniSavingRate = 5.0f;
-    IniFilename = "imgui.ini"; // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
-    LogFilename = "imgui_log.txt";
-    MouseDoubleClickTime = 0.30f;
-    MouseDoubleClickMaxDist = 6.0f;
-    for (int i = 0; i < ImGuiKey_COUNT; i++)
-        KeyMap[i] = -1;
-    KeyRepeatDelay = 0.275f;
-    KeyRepeatRate = 0.050f;
-    UserData = nil;
-
-    Fonts = nil;
-    FontGlobalScale = 1.0f;
-    FontDefault = nil;
-    FontAllowUserScaling = false;
-    DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
-
-    // Miscellaneous options
-    MouseDrawCursor = false;
-#ifdef __APPLE__
-    ConfigMacOSXBehaviors = true;  // Set Mac OS X style defaults based on __APPLE__ compile time flag
-#else
-    ConfigMacOSXBehaviors = false;
-#endif
-    ConfigInputTextCursorBlink = true;
-    ConfigWindowsResizeFromEdges = true;
-    ConfigWindowsMoveFromTitleBarOnly = false;
-    ConfigMemoryCompactTimer = 60.0f;
-
-    // Platform Functions
-    BackendPlatformName = BackendRendererName = nil;
-    BackendPlatformUserData = BackendRendererUserData = BackendLanguageUserData = nil;
-    GetClipboardTextFn = GetClipboardTextFn_DefaultImpl;   // Platform dependent default implementations
-    SetClipboardTextFn = SetClipboardTextFn_DefaultImpl;
-    ClipboardUserData = nil;
-    ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
-    ImeWindowHandle = nil;
-
-    // Input (NB: we already have memset zero the entire structure!)
-    MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
-    MousePosPrev = ImVec2(-FLT_MAX, -FLT_MAX);
-    MouseDragThreshold = 6.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(MouseDownDuration); i++) MouseDownDuration[i] = MouseDownDurationPrev[i] = -1.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(KeysDownDuration); i++) KeysDownDuration[i]  = KeysDownDurationPrev[i] = -1.0f;
-    for (int i = 0; i < IM_ARRAYSIZE(NavInputsDownDuration); i++) NavInputsDownDuration[i] = -1.0f;
-}
 
 // Pass in translated ASCII characters for text input.
 // - with glfw you can get those from the callback set in glfwSetCharCallback()
@@ -1456,47 +1399,6 @@ ImU64   ImFileRead(void* data, ImU64 sz, ImU64 count, ImFileHandle f)           
 ImU64   ImFileWrite(const void* data, ImU64 sz, ImU64 count, ImFileHandle f)    { return fwrite(data, (size_t)sz, (size_t)count, f); }
 #endif // #ifndef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
 
-// Helper: Load file content into memory
-// Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
-// This can't really be used with "rt" because fseek size won't match read size.
-void*   ImFileLoadToMemory(const char* filename, const char* mode, size_t* out_file_size, int padding_bytes)
-{
-    IM_ASSERT(filename && mode);
-    if (out_file_size)
-        *out_file_size = 0;
-
-    ImFileHandle f;
-    if ((f = ImFileOpen(filename, mode)) == nil)
-        return nil;
-
-    size_t file_size = (size_t)ImFileGetSize(f);
-    if (file_size == (size_t)-1)
-    {
-        ImFileClose(f);
-        return nil;
-    }
-
-    void* file_data = IM_ALLOC(file_size + padding_bytes);
-    if (file_data == nil)
-    {
-        ImFileClose(f);
-        return nil;
-    }
-    if (ImFileRead(file_data, 1, file_size, f) != file_size)
-    {
-        ImFileClose(f);
-        IM_FREE(file_data);
-        return nil;
-    }
-    if (padding_bytes > 0)
-        memset((void*)(((char*)file_data) + file_size), 0, (size_t)padding_bytes);
-
-    ImFileClose(f);
-    if (out_file_size)
-        *out_file_size = file_size;
-
-    return file_data;
-}
 
 //-----------------------------------------------------------------------------
 // [SECTION] MISC HELPERS/UTILITIES (ImText* functions)
@@ -2672,20 +2574,6 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
 
     if (g.LogEnabled)
         LogRenderedText(&pos_min, text, text_end_full);
-}
-
-// Render a rectangle shaped with optional rounding and borders
-void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border, float rounding)
-{
-   var g = GImGui
-    ImGuiWindow* window = g.CurrentWindow;
-    window.DrawList.AddRectFilled(p_min, p_max, fill_col, rounding);
-    const float border_size = g.Style.FrameBorderSize;
-    if (border && border_size > 0.0f)
-    {
-        window.DrawList.AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
-        window.DrawList.AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
-    }
 }
 
 void ImGui::RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, float rounding)
@@ -6127,15 +6015,6 @@ void ImGui::ClearIniSettings()
             g.SettingsHandlers[handler_n].ClearAllFn(&g, &g.SettingsHandlers[handler_n]);
 }
 
-void ImGui::LoadIniSettingsFromDisk(const char* ini_filename)
-{
-    size_t file_data_size = 0;
-    char* file_data = (char*)ImFileLoadToMemory(ini_filename, "rb", &file_data_size);
-    if (!file_data)
-        return;
-    LoadIniSettingsFromMemory(file_data, (size_t)file_data_size);
-    IM_FREE(file_data);
-}
 
 // Zero-tolerance, no error reporting, cheap .ini parsing
 void ImGui::LoadIniSettingsFromMemory(const char* ini_data, size_t ini_size)

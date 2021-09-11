@@ -13,6 +13,14 @@ func NewImVec2(x, y float) *ImVec2 {
 	return &ImVec2{x, y}
 }
 
+func (v ImVec2) X() float {
+	return v.x
+}
+
+func (v ImVec2) Y() float {
+	return v.y
+}
+
 func (v ImVec2) Add(b ImVec2) ImVec2 {
 	return ImVec2{v.x + b.x, v.y + b.y}
 }

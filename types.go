@@ -211,7 +211,64 @@ type ImGuiIO struct {
 	InputQueueCharacters             []ImWchar // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
 }
 
-func NewImGuiIO() *ImGuiIO { panic("not implemented") }
+func NewImGuiIO() ImGuiIO {
+	var io ImGuiIO
+	IM_ASSERT(int(len(io.MouseDown)) == int(ImGuiMouseButton_COUNT) && int(len(io.MouseClicked)) == int(ImGuiMouseButton_COUNT)) // Our pre-C++11 IM_STATIC_ASSERT() macros triggers warning on modern compilers so we don't use it here.
+
+	// Settings
+	io.ConfigFlags = ImGuiConfigFlags_None
+	io.BackendFlags = ImGuiBackendFlags_None
+	io.DisplaySize = ImVec2{-1.0, -1.0}
+	io.DeltaTime = 1.0 / 60.0
+	io.IniSavingRate = 5.0
+	io.IniFilename = "imgui.ini" // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
+	io.LogFilename = "imgui_log.txt"
+	io.MouseDoubleClickTime = 0.30
+	io.MouseDoubleClickMaxDist = 6.0
+	for i := ImGuiKey(0); i < ImGuiKey_COUNT; i++ {
+		io.KeyMap[i] = -1
+	}
+	io.KeyRepeatDelay = 0.275
+	io.KeyRepeatRate = 0.050
+
+	io.FontGlobalScale = 1.0
+	io.FontAllowUserScaling = false
+	io.DisplayFramebufferScale = ImVec2{1.0, 1.0}
+
+	// Miscellaneous options
+	io.MouseDrawCursor = false
+	/*#ifdef __APPLE__
+	      ConfigMacOSXBehaviors = true;  // Set Mac OS X style defaults based on __APPLE__ compile time flag
+	  #else
+	      ConfigMacOSXBehaviors = false;
+	  #endif*/
+	io.ConfigInputTextCursorBlink = true
+	io.ConfigWindowsResizeFromEdges = true
+	io.ConfigWindowsMoveFromTitleBarOnly = false
+	io.ConfigMemoryCompactTimer = 60.0
+
+	// Platform Functions
+	//io.GetClipboardTextFn = GetClipboardTextFn_DefaultImpl // Platform dependent default implementations
+	//io.SetClipboardTextFn = SetClipboardTextFn_DefaultImpl
+	//io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl
+
+	// Input (NB: we already have memset zero the entire structure!)
+	io.MousePos = ImVec2{-FLT_MAX, -FLT_MAX}
+	io.MousePosPrev = ImVec2{-FLT_MAX, -FLT_MAX}
+	io.MouseDragThreshold = 6.0
+	for i := 0; i < len(io.MouseDownDuration); i++ {
+		io.MouseDownDuration[i] = -1.0
+		io.MouseDownDurationPrev[i] = -1.0
+	}
+	for i := 0; i < len(io.KeysDownDuration); i++ {
+		io.KeysDownDuration[i] = -1
+		io.KeysDownDurationPrev[i] = -1.0
+	}
+	for i := 0; i < len(io.NavInputsDownDuration); i++ {
+		io.NavInputsDownDuration[i] = -1.0
+	}
+	return io
+}
 
 func (*ImGuiIO) AddInputCharacter(c uint)           { panic("not implemented") } // Queue new character input
 func (*ImGuiIO) AddInputCharacterUTF16(c ImWchar16) { panic("not implemented") } // Queue new character input from an UTF-16 character, it can be a surrogate
@@ -518,9 +575,9 @@ func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f
 func (this ImGuiListClipper) End()       { panic("not implemented") } // Automatically called on the last call of Step() that returns false.
 func (this ImGuiListClipper) Step() bool { panic("not implemented") }
 
-const IM_COL32_R_SHIFT = 16
+const IM_COL32_R_SHIFT = 0
 const IM_COL32_G_SHIFT = 8
-const IM_COL32_B_SHIFT = 0
+const IM_COL32_B_SHIFT = 16
 const IM_COL32_A_SHIFT = 24
 const IM_COL32_A_MASK = 0xFF000000
 
@@ -636,7 +693,12 @@ type ImDrawList struct {
 	_CmdHeader      ImDrawCmdHeader       // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
 	_Splitter       ImDrawListSplitter    // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
 	_FringeScale    float                 // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
+}
 
+func NewImDrawList(shared_data *ImDrawListSharedData) ImDrawList {
+	return ImDrawList{
+		_Data: shared_data,
+	}
 }
 
 func (this *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_current_clip_rect bool) {
@@ -839,6 +901,7 @@ func (this *ImDrawList) AddDrawCmd() {
 	var draw_cmd ImDrawCmd
 	draw_cmd.ClipRect = this._CmdHeader.ClipRect // Same as calling ImDrawCmd_HeaderCopy()
 	draw_cmd.TextureId = this._CmdHeader.TextureId
+
 	draw_cmd.VtxOffset = this._CmdHeader.VtxOffset
 	draw_cmd.IdxOffset = uint(len(this.IdxBuffer))
 

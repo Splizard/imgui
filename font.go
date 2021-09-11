@@ -211,8 +211,10 @@ func SetCurrentFont(font *ImFont) {
 	var g = GImGui
 	IM_ASSERT(font != nil && font.IsLoaded()) // Font Atlas not created. Did you call io.Fonts.GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
 	IM_ASSERT(font.Scale > 0.0)
+
 	g.Font = font
 	g.FontBaseSize = ImMax(1.0, g.IO.FontGlobalScale*g.Font.FontSize*g.Font.Scale)
+
 	if g.CurrentWindow != nil {
 		g.FontSize = g.CurrentWindow.CalcFontSize()
 	} else {

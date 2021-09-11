@@ -44,10 +44,6 @@ func setWindowCollapsed(w *ImGuiWindow, collapsed bool, cond ImGuiCond) {
 }
 func SetWindowHitTestHole(w *ImGuiWindow, pos *ImVec2, size *ImVec2) { panic("not implemented") }
 
-func FocusTopMostWindowUnderOne(under_this_window *ImGuiWindow, ignore_window *ImGuiWindow) {
-	panic("not implemented")
-}
-
 func BringWindowToDisplayBack(w *ImGuiWindow) { panic("not implemented") }
 
 // Fonts, drawing
@@ -453,9 +449,7 @@ func TabItemLabelAndCloseButton(t *ImDrawList, bb *ImRect, flags ImGuiTabItemFla
 func RenderTextEllipsis(t *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, clip_max_x float, ellipsis_max_x float, text string, text_end string, n *ImVec2) {
 	panic("not implemented")
 }
-func RenderFrame(p_min ImVec2, p_max ImVec2, fill_col ImU32, border bool /*= true*/, rounding float) {
-	panic("not implemented")
-}
+
 func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) { panic("not implemented") }
 func RenderColorRectWithAlphaCheckerboard(t *ImDrawList, p_min ImVec2, p_max ImVec2, fill_col ImU32, grid_step float, grid_off ImVec2, rounding float, flags ImDrawFlags) {
 	panic("not implemented")

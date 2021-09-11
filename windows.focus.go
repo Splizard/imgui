@@ -92,3 +92,28 @@ func BringWindowToDisplayFront(window *ImGuiWindow) {
 		}
 	}
 }
+
+func FocusTopMostWindowUnderOne(under_this_window *ImGuiWindow, ignore_window *ImGuiWindow) {
+	var g = GImGui
+
+	var start_idx int
+	if under_this_window != nil {
+		start_idx = FindWindowFocusIndex(under_this_window)
+	} else {
+		start_idx = int(len(g.WindowsFocusOrder) - 1)
+	}
+
+	for i := start_idx; i >= 0; i-- {
+		// We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
+		var window *ImGuiWindow = g.WindowsFocusOrder[i]
+		IM_ASSERT(window == window.RootWindow)
+		if window != ignore_window && window.WasActive {
+			if (window.Flags & (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs)) != (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs) {
+				var focus_window *ImGuiWindow = NavRestoreLastChildNavWindow(window)
+				FocusWindow(focus_window)
+				return
+			}
+		}
+	}
+	FocusWindow(nil)
+}

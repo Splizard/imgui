@@ -4,6 +4,18 @@ import (
 	"unsafe"
 )
 
+// Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
+func GetDrawData() *ImDrawData {
+	var g = GImGui
+	var viewport = g.Viewports[0]
+
+	if viewport.DrawDataP.Valid {
+		return &viewport.DrawDataP
+	} else {
+		return nil
+	}
+} // valid after Render() and until the next call to NewFrame(). this is what you have to render.
+
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
@@ -79,7 +91,7 @@ func (this *ImDrawList) _OnChangedTextureID() {
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 
 	// Try to merge with previous command if it matches, else use current command
-	/*var prev_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var prev_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 
 	prevHeader := ImDrawCmdHeader{
 		ClipRect:  prev_cmd.ClipRect,
@@ -90,7 +102,7 @@ func (this *ImDrawList) _OnChangedTextureID() {
 	if curr_cmd.ElemCount == 0 && len(this.CmdBuffer) > 1 && this._CmdHeader == prevHeader && prev_cmd.UserCallback == nil {
 		this.CmdBuffer = this.CmdBuffer[len(this.CmdBuffer)-1:]
 		return
-	}*/
+	}
 
 	curr_cmd.TextureId = this._CmdHeader.TextureId
 
@@ -101,14 +113,14 @@ func (this *ImDrawList) _OnChangedTextureID() {
 func (this *ImDrawList) _OnChangedClipRect() {
 	// If current command is used with different settings we need to add a new command
 	var curr_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
-	if curr_cmd.ElemCount != 0 && curr_cmd.ClipRect == this._CmdHeader.ClipRect {
+	if curr_cmd.ElemCount != 0 && curr_cmd.ClipRect != this._CmdHeader.ClipRect {
 		this.AddDrawCmd()
 		return
 	}
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 
 	// Try to merge with previous command if it matches, else use current command
-	/*var prev_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-2]
+	var prev_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 
 	prevHeader := ImDrawCmdHeader{
 		ClipRect:  prev_cmd.ClipRect,
@@ -119,7 +131,7 @@ func (this *ImDrawList) _OnChangedClipRect() {
 	if curr_cmd.ElemCount == 0 && len(this.CmdBuffer) > 1 && this._CmdHeader == prevHeader && prev_cmd.UserCallback == nil {
 		this.CmdBuffer = this.CmdBuffer[len(this.CmdBuffer)-1:]
 		return
-	}*/
+	}
 
 	curr_cmd.ClipRect = this._CmdHeader.ClipRect
 }
@@ -129,6 +141,7 @@ func (this *ImDrawList) AddRectFilled(p_min, p_max ImVec2, col ImU32, rounding f
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
 	}
+
 	if rounding <= 0.0 || (flags&ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
 		this.PrimReserve(6, 4)
 		this.PrimRect(&p_min, &p_max, col)
@@ -157,6 +170,7 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 	var uv ImVec2 = this._Data.TexUvWhitePixel
 
 	if this.Flags&ImDrawListFlags_AntiAliasedFill != 0 {
+
 		// Anti-aliased Fill
 		var AA_SIZE float = this._FringeScale
 		var col_trans ImU32 = col &^ IM_COL32_A_MASK
@@ -219,6 +233,7 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 		}
 		this._VtxCurrentIdx += uint((ImDrawIdx)(vtx_count))
 	} else {
+
 		// Non Anti-aliased Fill
 		var idx_count int = (points_count - 2) * 3
 		var vtx_count int = points_count
@@ -447,6 +462,11 @@ func (this *ImDrawList) PrimRect(a, c *ImVec2, col ImU32) {
 // TODO: Thickness anti-aliased lines cap are missing their AA fringe.
 // We avoid using the ImVec2 math operators here to reduce cost to a minimum for debug/non-inlined builds.
 func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32, flags ImDrawFlags, thickness float) {
+	return //TODO/FIXME this is broken
+	//print hex col
+
+	//fmt.Printf("%X\n", col)
+
 	if points_count < 2 {
 		return
 	}

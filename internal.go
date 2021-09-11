@@ -168,8 +168,12 @@ func ImFileWrite(data []byte, size, count ImU64, file ImFileHandle) ImU64 {
 	panic("not implemented")
 }
 
+// Helper: Load file content into memory
+// Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
+// This can't really be used with "rt" because fseek size won't match read size.
 func ImFileLoadToMemory(filename, mode string, out_file_size *size_t, padding_bytes int) []byte {
-	panic("not implemented")
+	b, _ := os.ReadFile(filename)
+	return b
 }
 
 func ImBitArrayTestBit(arr []ImU32, n int) bool {
@@ -229,7 +233,7 @@ type ImSpan struct {
 	Data interface{}
 }
 
-func (this ImSpan) Set(data interface{}) {
+func (this *ImSpan) Set(data interface{}) {
 	if reflect.TypeOf(data).Kind() != reflect.Slice {
 		panic("not implemented")
 	}
@@ -546,7 +550,7 @@ type ImGuiNextItemData struct {
 	OpenVal      bool      // Set by SetNextItemOpen()
 }
 
-func (this ImGuiNextItemData) ClearFlags() {
+func (this *ImGuiNextItemData) ClearFlags() {
 	this.Flags = ImGuiNextItemDataFlags_None
 }
 
@@ -1019,10 +1023,10 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 		ptr := NewImFontAtlas()
 		atlas = &ptr
 	}
+	var io = NewImGuiIO()
+	io.Fonts = atlas
 	return ImGuiContext{
-		IO: ImGuiIO{
-			Fonts: atlas,
-		},
+		IO:                                io,
 		DrawListSharedData:                NewImDrawListSharedData(),
 		Style:                             NewImGuiStyle(),
 		FrameCountEnded:                   -1,
@@ -1256,6 +1260,7 @@ func (this *ImGuiWindow) CalcFontSize() float {
 	if this.ParentWindow != nil {
 		scale *= this.ParentWindow.FontWindowScale
 	}
+	//return 20 //TODO/FIXME
 	return scale
 }
 

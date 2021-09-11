@@ -57,7 +57,8 @@ func main() {
 		// Tip: if we don't call imgui.Begin()/imgui.End() the widgets automatically appears in a window called "Debug".
 		//{
 		//imgui.Text("ภาษาไทย测试조선말")  // To display these, you'll need to register a compatible font
-		imgui.Text("Hello, world!") // Display some text
+		imgui.Text("the quick brown fox jumped over the lazy dog") // Display some text
+		imgui.Text("THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG") // Display some text (all caps, as if drawn manually)
 		/*imgui.SliderFloat("float", &f, 0.0, 1.0)     // Edit 1 float using a slider from 0.0f to 1.0f
 			imgui.ColorEdit3("clear color", &clearColor) // Edit 3 floats representing a color
 

@@ -28,17 +28,6 @@ func GetIO() *ImGuiIO {
 
 func GetStyle() *ImGuiStyle { panic("not implemented") } // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame!
 
-// Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
-func GetDrawData() *ImDrawData {
-	var g = GImGui
-	var viewport = g.Viewports[0]
-	if viewport.DrawDataP.Valid {
-		return &viewport.DrawDataP
-	} else {
-		return nil
-	}
-} // valid after Render() and until the next call to NewFrame(). this is what you have to render.
-
 // Demo, Debug, Information
 func ShowDemoWindow(p_open *bool)         { panic("not implemented") } // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
 func ShowMetricsWindow(p_open *bool)      { panic("not implemented") } // create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
@@ -868,8 +857,15 @@ func SetClipboardText(text string) { panic("not implemented") }
 // - The disk functions are automatically called if io.IniFilename != NULL (default is "imgui.ini").
 // - Set io.IniFilename to NULL to load/save manually. Read io.WantSaveIniSettings description about handling .ini saving manually.
 // - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.g. same path as executables).
-func LoadIniSettingsFromDisk(ini_filename string)                 { panic("not implemented") } // call after CreateContext() and before the first call to NewFrame(). NewFrame() automatically calls LoadIniSettingsFromDisk(io.IniFilename).
-func LoadIniSettingsFromMemory(ini_data string, ini_size uintptr) { panic("not implemented") } // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
+func LoadIniSettingsFromDisk(ini_filename string) {
+	var file_data_size uintptr = 0
+	var file_data []byte = ImFileLoadToMemory(ini_filename, "rb", &file_data_size, 0)
+	if file_data == nil {
+		return
+	}
+	LoadIniSettingsFromMemory(file_data, (size_t)(file_data_size))
+}                                                                 // call after CreateContext() and before the first call to NewFrame(). NewFrame() automatically calls LoadIniSettingsFromDisk(io.IniFilename).
+func LoadIniSettingsFromMemory(ini_data []byte, ini_size uintptr) { panic("not implemented") } // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
 func SaveIniSettingsToDisk(ini_filename string)                   { panic("not implemented") } // this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
 func SaveIniSettingsToMemory(out_ini_size *uintptr) string        { panic("not implemented") } // return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
 

@@ -3,10 +3,12 @@ package renderers
 import (
 	_ "embed" // using embed for the shader sources
 	"fmt"
+	"os"
 	"strings"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.2-core/gl"
+	"github.com/jojomi/go-spew/spew"
 	"github.com/splizard/imgui"
 )
 
@@ -169,12 +171,14 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 
 		//fmt.Println(list)
 
-		if frames == 2 {
-
-			//spew.Dump(list.VtxBuffer)
-			//os.Exit(0)
-		} else {
-			frames++
+		if os.Getenv("DUMP") != "" {
+			if frames == 2 {
+				fmt.Println(list.IdxBuffer)
+				spew.Dump(list.VtxBuffer)
+				os.Exit(0)
+			} else {
+				frames++
+			}
 		}
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, renderer.vboHandle)
@@ -193,6 +197,7 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 			} else {
 				gl.BindTexture(gl.TEXTURE_2D, uint32(cmd.TextureId))
 				clipRect := cmd.ClipRect
+
 				gl.Scissor(int32(clipRect.X()), int32(fbHeight)-int32(clipRect.W()), int32(clipRect.Z()-clipRect.X()), int32(clipRect.W()-clipRect.Y()))
 				gl.DrawElementsWithOffset(gl.TRIANGLES, int32(cmd.ElemCount), uint32(drawType), indexBufferOffset)
 			}
@@ -318,6 +323,7 @@ func (renderer *OpenGL3) createFontsTexture() {
 	io := imgui.GetIO()
 	var pixels []byte
 	var width, height int32
+
 	io.Fonts.GetTexDataAsAlpha8(&pixels, &width, &height, nil)
 
 	// Upload texture to graphics system

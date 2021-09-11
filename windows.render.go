@@ -1,5 +1,17 @@
 package imgui
 
+// Render a rectangle shaped with optional rounding and borders
+func RenderFrame(p_min ImVec2, p_max ImVec2, fill_col ImU32, border bool /*= true*/, rounding float) {
+	var g = GImGui
+	var window = g.CurrentWindow
+	window.DrawList.AddRectFilled(p_min, p_max, fill_col, rounding, 0)
+	var border_size float = g.Style.FrameBorderSize
+	if border && border_size > 0.0 {
+		window.DrawList.AddRect(p_min.Add(ImVec2{1, 1}), p_max.Add(ImVec2{1, 1}), GetColorU32FromID(ImGuiCol_BorderShadow, 1), rounding, 0, border_size)
+		window.DrawList.AddRect(p_min, p_max, GetColorU32FromID(ImGuiCol_Border, 1), rounding, 0, border_size)
+	}
+}
+
 // Draw background and borders
 // Draw and handle scrollbars
 func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_bar_is_highlight bool, resize_grip_count int, resize_grip_col [4]ImU32, resize_grip_draw_size float) {
@@ -56,6 +68,7 @@ func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_
 			if title_bar_is_highlight {
 				title_bar_col = GetColorU32FromID(ImGuiCol_TitleBgActive, 1)
 			}
+			//fmt.Printf("render title bar %X", title_bar_col)
 			window.DrawList.AddRectFilled(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, window_rounding, ImDrawFlags_RoundCornersTop)
 		}
 

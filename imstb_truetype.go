@@ -982,6 +982,7 @@ func stbtt_MakeGlyphBitmapSubpixel(info *stbtt_fontinfo, output []byte, out_w, o
 	gbm.stride = out_stride
 
 	if gbm.w != 0 && gbm.h != 0 {
+
 		stbtt_Rasterize(&gbm, 0.35, vertices, num_verts, scale_x, scale_y, shift_x, shift_y, ix0, iy0, 1, info.userdata)
 	}
 }
@@ -1073,6 +1074,7 @@ func stbtt_Rasterize(result *stbtt__bitmap, // 1-channel bitmap to draw into
 	var winding_lengths []int = nil
 	var windings []stbtt__point = stbtt_FlattenCurves(vertices, num_verts, flatness_in_pixels/scale, &winding_lengths, &winding_count, userdata)
 	if windings != nil {
+		//fmt.Println("rasterize2")
 		stbtt__rasterize(result, windings, winding_lengths, winding_count, scale_x, scale_y, shift_x, shift_y, x_off, y_off, invert, userdata)
 	}
 }
@@ -1139,7 +1141,7 @@ func stbtt_GetGlyphSDF(info *stbtt_fontinfo, scale float, glyph, padding int, on
 		data = make([]byte, w*h)
 		precompute = make([]float, num_verts)
 
-		for j = num_verts - 1; i < num_verts; j, i = i+1, i+1 { //TODO/FIXME is this correct?
+		for j = num_verts - 1; i < num_verts; j, i = i, i+1 {
 			if verts[i].vtype == STBTT_vline {
 				var x0 float = float(verts[i].x) * scale_x
 				var y0 float = float(verts[i].y) * scale_y
@@ -2068,6 +2070,13 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 			vertices[off+i].y = (stbtt_int16)(y)
 		}
 
+		num_vertices = 0
+		sx = 0
+		sy = 0
+		cx = 0
+		cy = 0
+		scx = 0
+		scy = 0
 		// now convert them to our format
 		for i = 0; i < n; i++ {
 			flags = vertices[off+i].vtype
@@ -2228,7 +2237,7 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 				num_vertices += comp_num_verts
 			}
 			// More components ?
-			more = bool2int(flags&(1<<5) != 0)
+			more = int(flags & (1 << 5))
 		}
 	} else if numberOfContours < 0 {
 		// @TODO other compound variations?
@@ -2237,7 +2246,8 @@ func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 		// numberOfCounters == 0, do nothing
 	}
 
-	*pvertices = vertices
+	*pvertices = vertices[:num_vertices]
+
 	return num_vertices
 }
 
@@ -2379,6 +2389,7 @@ func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csct
 		switch b0 {
 		// @TODO implement hinting
 		case 0x13: // hintmask
+			fallthrough
 		case 0x14: // cntrmask
 			if in_header != 0 {
 				maskbits += (sp / 2) // implicit "vstem"
@@ -2388,8 +2399,11 @@ func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csct
 			break
 
 		case 0x01: // hstem
+			fallthrough
 		case 0x03: // vstem
+			fallthrough
 		case 0x12: // hstemhm
+			fallthrough
 		case 0x17: // vstemhm
 			maskbits += (sp / 2)
 			break
@@ -2535,6 +2549,7 @@ func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csct
 			break
 
 		case 0x1A: // vvcurveto
+			fallthrough
 		case 0x1B: // hhcurveto
 			if sp < 4 {
 				return STBTT__CSERR("(vv|hh)curveto stack")
@@ -3107,7 +3122,7 @@ func stbtt__handle_clipped_edge(scanline []float, x int, e *stbtt__active_edge, 
 	if x0 <= float(x) && x1 <= float(x) {
 		scanline[x] += e.direction * (y1 - y0)
 	} else if x0 >= float(x)+1 && x1 >= float(x)+1 {
-		//TODO/FIXME is this meant to be blank?
+
 	} else {
 		STBTT_assert(x0 >= float(x) && x0 <= float(x)+1 && x1 >= float(x) && x1 <= float(x)+1)
 		scanline[x] += e.direction * (y1 - y0) * (1 - ((x0-float(x))+(x1-float(x)))/2) // coverage = 1 - average x position
@@ -3164,7 +3179,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 			var xb float = x0 + dx
 			var x_top, x_bottom float
 			var sy0, sy1 float
-			var dy = e.fdy
+			var dy float = e.fdy
 			STBTT_assert(e.sy <= y_bottom && e.ey >= y_top)
 
 			// compute endpoints of line segment clipped to this scanline (if the
@@ -3195,7 +3210,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 					height = sy1 - sy0
 					STBTT_assert(x >= 0 && x < len)
 					scanline[x] += e.direction * (1 - ((x_top-float(x))+(x_bottom-float(x)))/2) * height
-					scanline_fill[x] += e.direction * height // everything right of this pixel is filled
+					scanline_fill[scanline_fill_idx+x] += e.direction * height // everything right of this pixel is filled
 				} else {
 					var x, x1, x2 int
 					var y_crossing, step, sign, area float
@@ -3240,7 +3255,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 
 					scanline[x2] += area + sign*(1-(float(x2-x2)+(x_bottom-float(x2)))/2)*(sy1-y_crossing)
 
-					scanline_fill[x2] += sign * (sy1 - sy0)
+					scanline_fill[scanline_fill_idx+x2] += sign * (sy1 - sy0)
 				}
 			} else {
 				// if edge goes outside of box we're drawing, we require
@@ -3329,6 +3344,13 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 		var scan_y_bottom = y + 1.0
 		var step **stbtt__active_edge = &active
 
+		for i := 0; int(i) < result.w; i++ {
+			scanline[i] = 0
+		}
+		for i := 0; int(i) < result.w+1; i++ {
+			scanline2[i] = 0
+		}
+
 		// update all active edges;
 		// remove all active edges that terminate before the top of this scanline
 		for *step != nil {
@@ -3371,11 +3393,11 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 			var sum float = 0
 			for i = 0; i < result.w; i++ {
 				var k float
-				var m float
+				var m int
 				sum += scanline2[i]
 				k = scanline[i] + sum
 				k = (float)(STBTT_fabs(k)*255 + 0.5)
-				m = float((int)(k))
+				m = (int)(k)
 				if m > 255 {
 					m = 255
 				}
@@ -3393,21 +3415,10 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 		y++
 		j++
 	}
-
-	//TODO/FIXME what does this mean?
-	//if scanline != scanline_data {
-	//	STBTT_free(scanline, userdata)
-	//}
 }
 
 func STBTT__COMPARE(a, b *stbtt__edge) int {
-	if a.y0 < b.y0 {
-		return -1
-	}
-	if a.y0 > b.y0 {
-		return 1
-	}
-	return 0
+	return bool2int(a.y0 < b.y0)
 }
 
 func stbtt__sort_edges_ins_sort(p []stbtt__edge, n int) {
@@ -3541,7 +3552,7 @@ func stbtt__rasterize(result *stbtt__bitmap, pts []stbtt__point, wcount []int, w
 		var p []stbtt__point = pts[m:]
 		m += wcount[i]
 		j = wcount[i] - 1
-		for k = 0; k < wcount[i]; j, k = k+1, k+1 { //TODO/FIXME is this correct?
+		for k = 0; k < wcount[i]; j, k = k, k+1 {
 			var a, b int = k, j
 			// skip the edge if horizontal
 			if p[j].y == p[k].y {
@@ -3699,7 +3710,6 @@ func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatne
 				x = float(vertices[i].x)
 				y = float(vertices[i].y)
 				stbtt__add_point(points, num_points, x, y)
-				num_points++
 				break
 			case STBTT_vline:
 				x = float(vertices[i].x)
