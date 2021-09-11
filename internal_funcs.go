@@ -14,41 +14,44 @@ func GetCurrentWindow() *ImGuiWindow {
 	g.CurrentWindow.WriteAccessed = true
 	return g.CurrentWindow
 }
-func FindWindowByID(id ImGuiID) *ImGuiWindow { panic("not implemented") }
-func FindWindowByName(e string) *ImGuiWindow { panic("not implemented") }
+
 func UpdateWindowParentAndRootLinks(window *ImGuiWindow, flags ImGuiWindowFlags, parent_window *ImGuiWindow) {
-	panic("not implemented")
+	window.ParentWindow = parent_window
+	window.RootWindow = window
+	window.RootWindowForTitleBarHighlight = window
+	window.RootWindowForNav = window
+	if parent_window != nil && (flags&ImGuiWindowFlags_ChildWindow != 0) && 0 == (flags&ImGuiWindowFlags_Tooltip) {
+		window.RootWindow = parent_window.RootWindow
+	}
+	if parent_window != nil && 0 == (flags&ImGuiWindowFlags_Modal) && (flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_Popup) != 0) {
+		window.RootWindowForTitleBarHighlight = parent_window.RootWindowForTitleBarHighlight
+	}
+	for window.RootWindowForNav.Flags&ImGuiWindowFlags_NavFlattened != 0 {
+		IM_ASSERT(window.RootWindowForNav.ParentWindow != nil)
+		window.RootWindowForNav = window.RootWindowForNav.ParentWindow
+	}
 }
+
 func CalcWindowNextAutoFitSize(w *ImGuiWindow) ImVec2     { panic("not implemented") }
 func IsWindowChildOf(w *ImGuiWindow, t *ImGuiWindow) bool { panic("not implemented") }
 func IsWindowAbove(e *ImGuiWindow, w *ImGuiWindow) bool   { panic("not implemented") }
 func IsWindowNavFocusable(w *ImGuiWindow) bool            { panic("not implemented") }
 
-func setWindowPos(w *ImGuiWindow, pos *ImVec2, cond ImGuiCond)   { panic("not implemented") }
-func setWindowSize(w *ImGuiWindow, size *ImVec2, cond ImGuiCond) { panic("not implemented") }
+func setWindowPos(w *ImGuiWindow, pos *ImVec2, cond ImGuiCond) { panic("not implemented") }
+
 func setWindowCollapsed(w *ImGuiWindow, collapsed bool, cond ImGuiCond) {
 	panic("not implemented")
 }
 func SetWindowHitTestHole(w *ImGuiWindow, pos *ImVec2, size *ImVec2) { panic("not implemented") }
 
-// Windows: Display Order and Focus Order
-func FocusWindow(w *ImGuiWindow) { panic("not implemented") }
 func FocusTopMostWindowUnderOne(under_this_window *ImGuiWindow, ignore_window *ImGuiWindow) {
 	panic("not implemented")
 }
-func BringWindowToFocusFront(w *ImGuiWindow)   { panic("not implemented") }
-func BringWindowToDisplayFront(w *ImGuiWindow) { panic("not implemented") }
-func BringWindowToDisplayBack(w *ImGuiWindow)  { panic("not implemented") }
+
+func BringWindowToDisplayBack(w *ImGuiWindow) { panic("not implemented") }
 
 // Fonts, drawing
-func SetCurrentFont(t *ImFont) { panic("not implemented") }
-func GetDefaultFont() *ImFont {
-	var g *ImGuiContext = GImGui
-	if g.IO.FontDefault != nil {
-		return g.IO.FontDefault
-	}
-	return g.IO.Fonts.Fonts[0]
-}
+
 func getForegroundDrawList(window *ImGuiWindow) *ImDrawList      { return GetForegroundDrawList() } // This seemingly unnecessary wrapper simplifies compatibility between the 'master' and 'docking' branches.
 func getBackgroundDrawList(t *ImGuiViewport) *ImDrawList         { panic("not implemented") }       // get background draw list for the given viewport. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
 func GetForegroundDrawListViewport(t *ImGuiViewport) *ImDrawList { panic("not implemented") }       // get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
@@ -84,31 +87,53 @@ func Initialize(context *ImGuiContext) {
 func Shutdown(t *ImGuiContext) { panic("not implemented") } // Since 1.60 this is a _private_ function. You can call DestroyContext() to destroy the context created by CreateContext().
 
 // NewFrame
-func UpdateHoveredWindowAndCaptureFlags()   { panic("not implemented") }
 func StartMouseMovingWindow(w *ImGuiWindow) { panic("not implemented") }
-func UpdateMouseMovingWindowNewFrame()      { panic("not implemented") }
-func UpdateMouseMovingWindowEndFrame()      { panic("not implemented") }
 
 // Generic context hooks
 func AddContextHook(context *ImGuiContext, hook *ImGuiContextHook) ImGuiID { panic("not implemented") }
 func RemoveContextHook(context *ImGuiContext, hook_to_remove ImGuiID)      { panic("not implemented") }
-func CallContextHooks(context *ImGuiContext, htype ImGuiContextHookType) {
-	panic("not implemented")
+
+// Call context hooks (used by e.g. test engine)
+// We assume a small number of hooks so all stored in same array
+func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
+	var g = ctx
+	for n := range g.Hooks {
+		if g.Hooks[n].Type == hook_type {
+			g.Hooks[n].Callback(g, &g.Hooks[n])
+		}
+	}
 }
 
 // Settings
-func MarkIniSettingsDirty()                                    { panic("not implemented") }
-func MarkIniSettingsDirtyWindow(w *ImGuiWindow)                { panic("not implemented") }
-func ClearIniSettings()                                        { panic("not implemented") }
-func CreateNewWindowSettings(e string) *ImGuiWindowSettings    { panic("not implemented") }
-func FindWindowSettings(id ImGuiID) *ImGuiWindowSettings       { panic("not implemented") }
+func MarkIniSettingsDirty()                                 { panic("not implemented") }
+func MarkIniSettingsDirtyWindow(w *ImGuiWindow)             { panic("not implemented") }
+func ClearIniSettings()                                     { panic("not implemented") }
+func CreateNewWindowSettings(e string) *ImGuiWindowSettings { panic("not implemented") }
+
+func FindWindowSettings(id ImGuiID) *ImGuiWindowSettings {
+	var g = GImGui
+	for i := range g.SettingsWindows {
+		settings := &g.SettingsWindows[i]
+		if settings.ID == id {
+			return settings
+		}
+	}
+	return nil
+}
+
 func FindOrCreateWindowSettings(e string) *ImGuiWindowSettings { panic("not implemented") }
 func FindSettingsHandler(e string) *ImGuiSettingsHandler       { panic("not implemented") }
 
 // Scrolling
 func SetNextWindowScroll(scroll *ImVec2)        { panic("not implemented") } // Use -1.0f on one axis to leave as-is
 func setScrollX(w *ImGuiWindow, scroll_x float) { panic("not implemented") }
-func setScrollY(w *ImGuiWindow, scroll_y float) { panic("not implemented") }
+
+func setScrollY(window *ImGuiWindow, scroll_y float) {
+	window.ScrollTarget.y = scroll_y
+	window.ScrollTargetCenterRatio.y = 0.0
+	window.ScrollTargetEdgeSnapDist.y = 0.0
+}
+
 func setScrollFromPosX(w *ImGuiWindow, local_x float, center_x_ratio float) {
 	panic("not implemented")
 }
@@ -123,33 +148,75 @@ func GetItemStatusFlags() ImGuiItemStatusFlags {
 	var g *ImGuiContext = GImGui
 	return g.LastItemData.StatusFlags
 }
-func GetItemFlags() ImGuiItemFlags                           { var g *ImGuiContext = GImGui; return g.LastItemData.InFlags }
-func GetActiveID() ImGuiID                                   { var g *ImGuiContext = GImGui; return g.ActiveId }
-func GetFocusID() ImGuiID                                    { var g *ImGuiContext = GImGui; return g.NavId }
-func SetActiveID(id ImGuiID, w *ImGuiWindow)                 { panic("not implemented") }
-func SetFocusID(id ImGuiID, w *ImGuiWindow)                  { panic("not implemented") }
-func ClearActiveID()                                         { panic("not implemented") }
-func GetHoveredID() ImGuiID                                  { panic("not implemented") }
-func SetHoveredID(id ImGuiID)                                { panic("not implemented") }
-func KeepAliveID(id ImGuiID)                                 { panic("not implemented") }
+func GetItemFlags() ImGuiItemFlags { var g *ImGuiContext = GImGui; return g.LastItemData.InFlags }
+func GetActiveID() ImGuiID         { var g *ImGuiContext = GImGui; return g.ActiveId }
+func GetFocusID() ImGuiID          { var g *ImGuiContext = GImGui; return g.NavId }
+
+func SetActiveID(id ImGuiID, window *ImGuiWindow) {
+	var g = GImGui
+	g.ActiveIdIsJustActivated = (g.ActiveId != id)
+	if g.ActiveIdIsJustActivated {
+		g.ActiveIdTimer = 0.0
+		g.ActiveIdHasBeenPressedBefore = false
+		g.ActiveIdHasBeenEditedBefore = false
+		g.ActiveIdMouseButton = -1
+		if id != 0 {
+			g.LastActiveId = id
+			g.LastActiveIdTimer = 0.0
+		}
+	}
+	g.ActiveId = id
+	g.ActiveIdAllowOverlap = false
+	g.ActiveIdNoClearOnFocusLoss = false
+	g.ActiveIdWindow = window
+	g.ActiveIdHasBeenEditedThisFrame = false
+	if id != 0 {
+		g.ActiveIdIsAlive = id
+		if g.NavActivateId == id || g.NavInputId == id || g.NavJustTabbedId == id || g.NavJustMovedToId == id {
+			g.ActiveIdSource = ImGuiInputSource_Nav
+		} else {
+			g.ActiveIdSource = ImGuiInputSource_Mouse
+		}
+	}
+
+	// Clear declaration of inputs claimed by the widget
+	// (Please note that this is WIP and not all keys/inputs are thoroughly declared by all widgets yet)
+	g.ActiveIdUsingMouseWheel = false
+	g.ActiveIdUsingNavDirMask = 0x00
+	g.ActiveIdUsingNavInputMask = 0x00
+	g.ActiveIdUsingKeyInputMask = 0x00
+}
+
+func SetFocusID(id ImGuiID, w *ImGuiWindow) { panic("not implemented") }
+
+func ClearActiveID() {
+	SetActiveID(0, nil) // g.ActiveId = 0
+}
+
+func GetHoveredID() ImGuiID   { panic("not implemented") }
+func SetHoveredID(id ImGuiID) { panic("not implemented") }
+
+func KeepAliveID(id ImGuiID) {
+	var g = GImGui
+	if g.ActiveId == id {
+		g.ActiveIdIsAlive = id
+	}
+	if g.ActiveIdPreviousFrame == id {
+		g.ActiveIdPreviousFrameIsAlive = true
+	}
+}
+
 func MarkItemEdited(id ImGuiID)                              { panic("not implemented") } // Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
 func PushOverrideID(id ImGuiID)                              { panic("not implemented") } // Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
 func GetIDWithSeed(n string, d string, seed ImGuiID) ImGuiID { panic("not implemented") }
 
 // Basic Helpers for widget code
-func ItemSizeVec(size *ImVec2, text_baseline_y float /*= -1.0f*/) { panic("not implemented") }
-func ItemSizeRect(bb *ImRect, text_baseline_y float /*= -1.0f*/)  { panic("not implemented") }
-func ItemAdd(bb *ImRect, id ImGuiID, b *ImRect, extra_flags ImGuiItemFlags) bool {
-	panic("not implemented")
-}
-func ItemHoverable(bb *ImRect, id ImGuiID) bool                           { panic("not implemented") }
-func ItemInputable(w *ImGuiWindow, id ImGuiID)                            { panic("not implemented") }
-func IsClippedEx(bb *ImRect, id ImGuiID, clip_even_when_logged bool) bool { panic("not implemented") }
-func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2   { panic("not implemented") }
-func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float             { panic("not implemented") }
-func PushMultiItemsWidths(components int, width_full float)               { panic("not implemented") }
-func IsItemToggledSelection() bool                                        { panic("not implemented") } // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
-func GetContentRegionMaxAbs() ImVec2                                      { panic("not implemented") }
+func ItemInputable(w *ImGuiWindow, id ImGuiID)                          { panic("not implemented") }
+func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 { panic("not implemented") }
+func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float           { panic("not implemented") }
+func PushMultiItemsWidths(components int, width_full float)             { panic("not implemented") }
+func IsItemToggledSelection() bool                                      { panic("not implemented") } // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
+func GetContentRegionMaxAbs() ImVec2                                    { panic("not implemented") }
 func ShrinkWidths(s *ImGuiShrinkWidthItem, count int, width_excess float) {
 	panic("not implemented")
 }
@@ -161,7 +228,7 @@ func PopItemFlag()                                     { panic("not implemented"
 // Logging/Capture
 func LogBegin(ltype ImGuiLogType, auto_open_depth int)      { panic("not implemented") } // . BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
 func LogToBuffer(auto_open_depth int /*= -1*/)              { panic("not implemented") } // Start logging/capturing to internal buffer
-func LogRenderedText(s *ImVec2, t string, d string)         { panic("not implemented") }
+func LogRenderedText(s *ImVec2, t string)                   { panic("not implemented") }
 func LogSetNextTextDecoration(prefix string, suffix string) { panic("not implemented") }
 
 // Popups, Modals, Tooltips
@@ -172,16 +239,13 @@ func OpenPopupEx(id ImGuiID, popup_flags ImGuiPopupFlags) { panic("not implement
 func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) {
 	panic("not implemented")
 }
-func ClosePopupsOverWindow(w *ImGuiWindow, restore_focus_to_window_under_popup bool) {
-	panic("not implemented")
-}
+
 func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool   { panic("not implemented") }
 func BeginPopupEx(id ImGuiID, extra_flags ImGuiWindowFlags) bool { panic("not implemented") }
 func BeginTooltipEx(extra_flags ImGuiWindowFlags, tooltip_flags ImGuiTooltipFlags) {
 	panic("not implemented")
 }
 func GetPopupAllowedExtentRect(w *ImGuiWindow) ImRect { panic("not implemented") }
-func GetTopMostPopupModal() *ImGuiWindow              { panic("not implemented") }
 func FindBestWindowPosForPopup(w *ImGuiWindow) ImVec2 { panic("not implemented") }
 func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, r *ImGuiDir, r_outer *ImRect, r_avoid *ImRect, policy ImGuiPopupPositionPolicy) ImVec2 {
 	panic("not implemented")
@@ -203,31 +267,42 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 func BeginComboPreview() bool { panic("not implemented") }
 func EndComboPreview()        { panic("not implemented") }
 
-// Gamepad/Keyboard Navigation
-func NavInitWindow(w *ImGuiWindow, force_reinit bool) { panic("not implemented") }
-func NavMoveRequestButNoResultYet() bool              { panic("not implemented") }
-func NavMoveRequestSubmit(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
-	panic("not implemented")
-}
 func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
 	panic("not implemented")
 }
-func NavMoveRequestCancel()      { panic("not implemented") }
-func NavMoveRequestApplyResult() { panic("not implemented") }
+func NavMoveRequestCancel() { panic("not implemented") }
+
 func NavMoveRequestTryWrapping(w *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
 	panic("not implemented")
 }
-func GetNavInputAmount(n ImGuiNavInput, mode ImGuiInputReadMode) float { panic("not implemented") }
-func GetNavInputAmount2d(dir_sources ImGuiNavDirSourceFlags, mode ImGuiInputReadMode, slow_factor float, fast_factor float) ImVec2 {
-	panic("not implemented")
+
+// t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
+// t1 = current time (e.g.: g.Time)
+// An event is triggered at:
+//  t = 0.0f     t = repeat_delay,    t = repeat_delay + repeat_rate*N
+func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
+	if t1 == 0.0 {
+		return 1
+	}
+	if t0 >= t1 {
+		return 0
+	}
+	if repeat_rate <= 0.0 {
+		return bool2int((t0 < repeat_delay) && (t1 >= repeat_delay))
+	}
+	var count_t0 int = -1
+	if t0 >= repeat_delay {
+		count_t0 = (int)((t0 - repeat_delay) / repeat_rate)
+	}
+	var count_t1 int = -1
+	if t1 >= repeat_delay {
+		count_t1 = (int)((t1 - repeat_delay) / repeat_rate)
+	}
+	var count int = count_t1 - count_t0
+	return count
 }
-func CalcTypematicRepeatAmount(t0 float, t1 float, repeat_delay float, repeat_rate float) int {
-	panic("not implemented")
-}
+
 func ActivateItem(id ImGuiID) { panic("not implemented") } // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.
-func SetNavID(id ImGuiID, nav_layer ImGuiNavLayer, focus_scope_id ImGuiID, rect_rel *ImRect) {
-	panic("not implemented")
-}
 
 // Focus Scope (WIP)
 // This is generally used to identify a selection set (multiple of which may be in the same window), as selection
@@ -275,7 +350,6 @@ func IsNavInputDown(n ImGuiNavInput) bool {
 func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
 	return (GetNavInputAmount(n, rm) > 0.0)
 }
-func GetMergedKeyModFlags() ImGuiKeyModFlags { panic("not implemented") }
 
 // Drag and Drop
 func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool { panic("not implemented") }
@@ -376,21 +450,6 @@ func TabItemLabelAndCloseButton(t *ImDrawList, bb *ImRect, flags ImGuiTabItemFla
 	panic("not implemented")
 }
 
-// Render helpers
-// AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
-// NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
-func RenderText(pos ImVec2, t string, d string, hide_text_after_hash bool /*= true*/) {
-	panic("not implemented")
-}
-func RenderTextWrapped(pos ImVec2, t string, d string, wrap_width float) {
-	panic("not implemented")
-}
-func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_end string, n *ImVec2, align *ImVec2, t *ImRect) {
-	panic("not implemented")
-}
-func RenderTextClippedEx(t *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, ttext string, text_end string, n *ImVec2, align *ImVec2, clip_rect *ImRect) {
-	panic("not implemented")
-}
 func RenderTextEllipsis(t *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, clip_max_x float, ellipsis_max_x float, text string, text_end string, n *ImVec2) {
 	panic("not implemented")
 }
@@ -403,13 +462,8 @@ func RenderColorRectWithAlphaCheckerboard(t *ImDrawList, p_min ImVec2, p_max ImV
 }
 func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	panic("not implemented")
-}                                                   // Navigation highlight
-func FindRenderedTextEnd(t string, d string) string { panic("not implemented") } // Find the optional ## from which we stop displaying text.
+} // Navigation highlight
 
-// Render helpers (those functions don't access any ImGui state!)
-func RenderArrow(t *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, scale float /*= 1.0f*/) {
-	panic("not implemented")
-}
 func RenderBullet(t *ImDrawList, pos ImVec2, col ImU32)              { panic("not implemented") }
 func RenderCheckMark(t *ImDrawList, pos ImVec2, col ImU32, sz float) { panic("not implemented") }
 func RenderMouseCursor(t *ImDrawList, pos ImVec2, scale float, mouse_cursor ImGuiMouseCursor, col_fill ImU32, col_border ImU32, col_shadow ImU32) {
@@ -426,22 +480,17 @@ func RenderRectFilledWithHole(t *ImDrawList, outer ImRect, inner ImRect, col ImU
 }
 
 // Widgets
-func TextEx(t string, d string, flags ImGuiTextFlags)                  { panic("not implemented") }
+
 func ButtonEx(l string, size_arg *ImVec2, flags ImGuiButtonFlags) bool { panic("not implemented") }
 func CloseButton(id ImGuiID, pos *ImVec2) bool                         { panic("not implemented") }
-func CollapseButton(id ImGuiID, pos *ImVec2) bool                      { panic("not implemented") }
 func ArrowButtonEx(d string, dir ImGuiDir, size_arg ImVec2, flags ImGuiButtonFlags) bool {
 	panic("not implemented")
 }
-func Scrollbar(axis ImGuiAxis) { panic("not implemented") }
-func ScrollbarEx(bb *ImRect, id ImGuiID, axis ImGuiAxis, v *float, avail_v float, contents_v float, flags ImDrawFlags) bool {
-	panic("not implemented")
-}
+
 func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2, uv1 *ImVec2, padding *ImVec2, bg_col *ImVec4, tint_col *ImVec4) bool {
 	panic("not implemented")
 }
-func GetWindowScrollbarRect(w *ImGuiWindow, axis ImGuiAxis) ImRect { panic("not implemented") }
-func GetWindowScrollbarID(w *ImGuiWindow, axis ImGuiAxis) ImGuiID  { panic("not implemented") }
+
 func GetWindowResizeCornerID(w *ImGuiWindow, n int) ImGuiID        { panic("not implemented") } // 0..3: corners
 func GetWindowResizeBorderID(w *ImGuiWindow, dir ImGuiDir) ImGuiID { panic("not implemented") }
 func SeparatorEx(flags ImGuiSeparatorFlags)                        { panic("not implemented") }
@@ -449,9 +498,7 @@ func CheckboxFlagsU(l string, s *ImS64, flags_value ImS64) bool    { panic("not 
 func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool    { panic("not implemented") }
 
 // Widgets low-level behaviors
-func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, flags ImGuiButtonFlags) bool {
-	panic("not implemented")
-}
+
 func DragBehavior(id ImGuiID, data_type ImGuiDataType, v interface{}, v_speed float, n interface{}, x interface{}, t string, flags ImGuiSliderFlags) bool {
 	panic("not implemented")
 }
@@ -570,13 +617,6 @@ func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewport
 	panic("not implemented")
 }
 
-func ImFontAtlasBuildFinish(atlas *ImFontAtlas) { panic("not implemented") }
-func ImFontAtlasBuildRender8bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value byte) {
-	panic("not implemented")
-}
-func ImFontAtlasBuildRender32bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value uint32) {
-	panic("not implemented")
-}
 func ImFontAtlasBuildMultiplyCalcLookupTable(out_table []byte, in_multiply_factor float32) {
 	panic("not implemented")
 }

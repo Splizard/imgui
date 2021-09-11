@@ -2,6 +2,32 @@ package imgui
 
 import "fmt"
 
+// Called by NewFrame()
+func UpdateSettings() {
+	// Load settings on first frame (if not explicitly loaded manually before)
+	var g *ImGuiContext = GImGui
+	if !g.SettingsLoaded {
+		IM_ASSERT(len(g.SettingsWindows) == 0)
+		if g.IO.IniFilename != "" {
+			LoadIniSettingsFromDisk(g.IO.IniFilename)
+		}
+		g.SettingsLoaded = true
+	}
+
+	// Save settings (with a delay after the last modification, so we don't spam disk too much)
+	if g.SettingsDirtyTimer > 0.0 {
+		g.SettingsDirtyTimer -= g.IO.DeltaTime
+		if g.SettingsDirtyTimer <= 0.0 {
+			if g.IO.IniFilename != "" {
+				SaveIniSettingsToDisk(g.IO.IniFilename)
+			} else {
+				g.IO.WantSaveIniSettings = true // Let user know they can call SaveIniSettingsToMemory(). user will need to clear io.WantSaveIniSettings themselves.
+			}
+			g.SettingsDirtyTimer = 0
+		}
+	}
+}
+
 // Apply to existing windows (if any)
 func WindowSettingsHandler_ApplyAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) {
 	var g = ctx

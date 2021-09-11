@@ -363,7 +363,7 @@ const (
 	ImGuiDir_Right ImGuiDir = 1
 	ImGuiDir_Up    ImGuiDir = 2
 	ImGuiDir_Down  ImGuiDir = 3
-	ImGuiDir_COUNT
+	ImGuiDir_COUNT ImGuiDir = 4
 )
 
 // A sorting direction
@@ -942,9 +942,9 @@ const (
 type ImGuiNavLayer int
 
 const (
-	ImGuiNavLayer_Main ImGuiNavLayer = 0 // Main scrolling layer
-	ImGuiNavLayer_Menu ImGuiNavLayer = 1 // Menu layer (access with Alt/ImGuiNavInput_Menu)
-	ImGuiNavLayer_COUNT
+	ImGuiNavLayer_Main  ImGuiNavLayer = 0 // Main scrolling layer
+	ImGuiNavLayer_Menu  ImGuiNavLayer = 1 // Menu layer (access with Alt/ImGuiNavInput_Menu)
+	ImGuiNavLayer_COUNT               = iota
 )
 
 // Flags for internal's BeginColumns(). Prefix using BeginTable() nowadays!

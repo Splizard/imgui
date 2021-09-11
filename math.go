@@ -13,6 +13,26 @@ func NewImVec2(x, y float) *ImVec2 {
 	return &ImVec2{x, y}
 }
 
+func (v ImVec2) Add(b ImVec2) ImVec2 {
+	return ImVec2{v.x + b.x, v.y + b.y}
+}
+
+func (v ImVec2) Sub(b ImVec2) ImVec2 {
+	return ImVec2{v.x - b.x, v.y - b.y}
+}
+
+func (v ImVec2) Mul(b ImVec2) ImVec2 {
+	return ImVec2{v.x * b.x, v.y * b.y}
+}
+
+func (v ImVec2) Div(b ImVec2) ImVec2 {
+	return ImVec2{v.x / b.x, v.y / b.y}
+}
+
+func (v ImVec2) Scale(f float) ImVec2 {
+	return ImVec2{v.x * f, v.y * f}
+}
+
 // ImVec4: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
 type ImVec4 struct {
 	x, y, z, w float
@@ -80,6 +100,13 @@ func ImLog(X float) float {
 }
 
 func ImAbs(X float) float {
+	if X < 0 {
+		return -X
+	}
+	return X
+}
+
+func ImAbsInt(X int) int {
 	if X < 0 {
 		return -X
 	}
@@ -328,7 +355,7 @@ func ImGetDirQuadrantFromDelta(dx, dy float32) ImGuiDir {
 }
 
 type ImVec1 struct {
-	X float
+	x float
 }
 
 type ImVec2ih struct {
@@ -339,6 +366,10 @@ type ImVec2ih struct {
 type ImRect struct {
 	Min ImVec2
 	Max ImVec2
+}
+
+func ImRectFromVec4(v *ImVec4) ImRect {
+	return ImRect{ImVec2{v.x, v.y}, ImVec2{v.z, v.w}}
 }
 
 func (this *ImRect) GetCenter() ImVec2 {
@@ -506,3 +537,26 @@ func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(N, RAD float) float {
 
 const IM_DRAWLIST_ARCFAST_TABLE_SIZE = 48
 const IM_DRAWLIST_ARCFAST_SAMPLE_MAX = IM_DRAWLIST_ARCFAST_TABLE_SIZE
+
+func IM_NORMALIZE2F_OVER_ZERO(VX, VY *float) {
+	var d2 float = *VX**VX + *VY**VY
+	if d2 > 0.0 {
+		var inv_len float = ImRsqrt(d2)
+		*VX *= inv_len
+		*VY *= inv_len
+	}
+}
+
+const IM_FIXNORMAL2F_MAX_INVLEN2 float = 100
+
+func IM_FIXNORMAL2F(VX, VY *float) {
+	var d2 float = *VX**VX + *VY**VY
+	if d2 > 0.000001 {
+		var inv_len2 float = 1.0 / d2
+		if inv_len2 > IM_FIXNORMAL2F_MAX_INVLEN2 {
+			inv_len2 = IM_FIXNORMAL2F_MAX_INVLEN2
+		}
+		*VX *= inv_len2
+		*VY *= inv_len2
+	}
+}

@@ -56,7 +56,7 @@ func main() {
 		// 1. Show a simple window.
 		// Tip: if we don't call imgui.Begin()/imgui.End() the widgets automatically appears in a window called "Debug".
 		//{
-		imgui.Text("ภาษาไทย测试조선말")  // To display these, you'll need to register a compatible font
+		//imgui.Text("ภาษาไทย测试조선말")  // To display these, you'll need to register a compatible font
 		imgui.Text("Hello, world!") // Display some text
 		/*imgui.SliderFloat("float", &f, 0.0, 1.0)     // Edit 1 float using a slider from 0.0f to 1.0f
 			imgui.ColorEdit3("clear color", &clearColor) // Edit 3 floats representing a color
@@ -104,7 +104,7 @@ func main() {
 		// Rendering
 		imgui.Render() // This call only creates the draw data list. Actual rendering to framebuffer is done below.
 
-		r.PreRender([3]float32{0, 0, 0})
+		r.PreRender([3]float32{0.45, 0.55, 0.60})
 		// A this point, the application could perform its own rendering...
 		// app.RenderScene()
 

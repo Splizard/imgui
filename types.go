@@ -74,67 +74,11 @@ type ImU64 = uint64 // 64-bit uinteger (pre and post C++11 with Visual Studio)
 type ImWchar16 = uint16  // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 type ImWchar32 = int     // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 type ImWchar = ImWchar16 // ImWchar [configurable type: override in imconfig.h with '#define IMGUI_USE_WCHAR32' to support Unicode planes 1-16]
+const MaxImWchar ImWchar = math.MaxUint16
 
 // Callback and functions types
 type ImGuiInputTextCallback func(data *ImGuiInputTextCallbackData) int // Callback function for ImGui::InputText()
 type ImGuiSizeCallback func(data *ImGuiSizeCallbackData)               // Callback function for ImGui::SetNextWindowSizeConstraints()
-
-//-----------------------------------------------------------------------------
-// [SECTION] ImGuiStyle
-//-----------------------------------------------------------------------------
-// You may modify the ImGui::GetStyle() main instance during initialization and before NewFrame().
-// During the frame, use ImGui::PushStyleVar(ImGuiStyleVar_XXXX)/PopStyleVar() to alter the main style values,
-// and ImGui::PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
-//-----------------------------------------------------------------------------
-type ImGuiStyle struct {
-	Alpha                      float    // Global alpha applies to everything in Dear ImGui.
-	DisabledAlpha              float    // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
-	WindowPadding              ImVec2   // Padding within a window.
-	WindowRounding             float    // Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
-	WindowBorderSize           float    // Thickness of border around windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-	WindowMinSize              ImVec2   // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
-	WindowTitleAlign           ImVec2   // Alignment for title bar text. Defaults to (0.0f,0.5f) for left-aligned,vertically centered.
-	WindowMenuButtonPosition   ImGuiDir // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
-	ChildRounding              float    // Radius of child window corners rounding. Set to 0.0f to have rectangular windows.
-	ChildBorderSize            float    // Thickness of border around child windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-	PopupRounding              float    // Radius of popup window corners rounding. (Note that tooltip windows use WindowRounding)
-	PopupBorderSize            float    // Thickness of border around popup/tooltip windows. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-	FramePadding               ImVec2   // Padding within a framed rectangle (used by most widgets).
-	FrameRounding              float    // Radius of frame corners rounding. Set to 0.0f to have rectangular frame (used by most widgets).
-	FrameBorderSize            float    // Thickness of border around frames. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-	ItemSpacing                ImVec2   // Horizontal and vertical spacing between widgets/lines.
-	ItemInnerSpacing           ImVec2   // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
-	CellPadding                ImVec2   // Padding within a table cell
-	TouchExtraPadding          ImVec2   // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-	IndentSpacing              float    // Horizontal indentation when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
-	ColumnsMinSpacing          float    // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
-	ScrollbarSize              float    // Width of the vertical scrollbar, Height of the horizontal scrollbar.
-	ScrollbarRounding          float    // Radius of grab corners for scrollbar.
-	GrabMinSize                float    // Minimum width/height of a grab box for slider/scrollbar.
-	GrabRounding               float    // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
-	LogSliderDeadzone          float    // The size in pixels of the dead-zone around zero on logarithmic sliders that cross zero.
-	TabRounding                float    // Radius of upper corners of a tab. Set to 0.0f to have rectangular tabs.
-	TabBorderSize              float    // Thickness of border around tabs.
-	TabMinWidthForCloseButton  float    // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
-	ColorButtonPosition        ImGuiDir // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-	ButtonTextAlign            ImVec2   // Alignment of button text when button is larger than text. Defaults to (0.5f, 0.5f) (centered).
-	SelectableTextAlign        ImVec2   // Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-	DisplayWindowPadding       ImVec2   // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-	DisplaySafeAreaPadding     ImVec2   // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
-	MouseCursorScale           float    // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
-	AntiAliasedLines           bool     // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-	AntiAliasedLinesUseTex     bool     // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering. Latched at the beginning of the frame (copied to ImDrawList).
-	AntiAliasedFill            bool     // Enable anti-aliased edges around filled shapes (rounded rectangles, circles, etc.). Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
-	CurveTessellationTol       float    // Tessellation tolerance when using PathBezierCurveTo() without a specific number of segments. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
-	CircleTessellationMaxError float    // Maximum error (in pixels) allowed when using AddCircle()/AddCircleFilled() or drawing rounded corner rectangles with no explicit segment count specified. Decrease for higher quality but more geometry.
-	Colors                     [ImGuiCol_COUNT]ImVec4
-}
-
-func NewImGuiStyle() *ImGuiStyle {
-	panic("not implemented")
-}
-
-func (ImGuiStyle) ScaleAllSizes(scale_factor float) { panic("not implemented") }
 
 //-----------------------------------------------------------------------------
 // [SECTION] ImGuiIO
@@ -498,11 +442,14 @@ func (this *ImGuiStorage) SetFloat(key ImGuiID, val float) {
 }
 
 func (this *ImGuiStorage) GetInterface(key ImGuiID) interface{} {
-	panic("not implemented")
+	return this.Pointers[key]
 }
 
 func (this *ImGuiStorage) SetInterface(key ImGuiID, val interface{}) {
-	panic("not implemented")
+	if this.Pointers == nil {
+		this.Pointers = make(map[ImGuiID]interface{})
+	}
+	this.Pointers[key] = val
 }
 
 // - Get***Ref() functions finds pair, insert on demand if missing, return pointer. Useful if you intend to do Get+Set.
@@ -581,9 +528,9 @@ func IM_COL32(R, G, B, A byte) ImU32 {
 	return (((ImU32)(A) << IM_COL32_A_SHIFT) | ((ImU32)(B) << IM_COL32_B_SHIFT) | ((ImU32)(G) << IM_COL32_G_SHIFT) | ((ImU32)(R) << IM_COL32_R_SHIFT))
 }
 
-const IM_COL32_WHITE = 0xFFFFFFFF
-const IM_COL32_BLACK = 0xFF000000
-const IM_COL32_BLACK_TRANS = 0x00000000
+const IM_COL32_WHITE = 0xFFFFFFF
+const IM_COL32_BLACK = 0xFF00000
+const IM_COL32_BLACK_TRANS = 0x0000000
 
 // The maximum line width to bake anti-aliased textures for. Build atlas with ImFontAtlasFlags_NoBakedLines to disable baking.
 const IM_DRAWLIST_TEX_LINES_WIDTH_MAX = 63
@@ -682,7 +629,7 @@ type ImDrawList struct {
 	_Data           *ImDrawListSharedData // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
 	_OwnerName      string                // Pointer to owner window's name for debugging
 	_VtxWritePtr    []ImDrawVert          // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-	_IdxWritePtr    ImDrawIdx             // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+	_IdxWritePtr    []ImDrawIdx           // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
 	_ClipRectStack  []ImVec4              // [Internal]
 	_TextureIdStack []ImTextureID         // [Internal]
 	_Path           []ImVec2              // [Internal] current path building
@@ -692,13 +639,45 @@ type ImDrawList struct {
 
 }
 
-func (this *ImDrawList) PushClipRect(clip_rect_min, clip_rect_max ImVec2, intersect_with_current_clip_rect bool) {
-	panic("not implemented")
-}                                                             // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
-func (this *ImDrawList) PushClipRectFullScreen()              { panic("not implemented") }
-func (this *ImDrawList) PopClipRect()                         { panic("not implemented") }
-func (this *ImDrawList) PushTextureID(texture_id ImTextureID) { panic("not implemented") }
-func (this *ImDrawList) PopTextureID()                        { panic("not implemented") }
+func (this *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_current_clip_rect bool) {
+	var cr = ImVec4{cr_min.x, cr_min.y, cr_max.x, cr_max.y}
+	if intersect_with_current_clip_rect {
+		var current ImVec4 = this._CmdHeader.ClipRect
+		if cr.x < current.x {
+			cr.x = current.x
+		}
+		if cr.y < current.y {
+			cr.y = current.y
+		}
+		if cr.z > current.z {
+			cr.z = current.z
+		}
+		if cr.w > current.w {
+			cr.w = current.w
+		}
+	}
+	cr.z = ImMax(cr.x, cr.z)
+	cr.w = ImMax(cr.y, cr.w)
+
+	this._ClipRectStack = append(this._ClipRectStack, cr)
+	this._CmdHeader.ClipRect = cr
+	this._OnChangedClipRect()
+}
+
+// Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
+func (this *ImDrawList) PushClipRectFullScreen() { panic("not implemented") }
+
+func (this *ImDrawList) PopClipRect() {
+	this._ClipRectStack = this._ClipRectStack[len(this._ClipRectStack)-1:]
+	if len(this._ClipRectStack) == 0 {
+		this._CmdHeader.ClipRect = this._Data.ClipRectFullscreen
+	} else {
+		this._CmdHeader.ClipRect = this._ClipRectStack[len(this._ClipRectStack)-1]
+	}
+	this._OnChangedClipRect()
+}
+
+func (this *ImDrawList) PopTextureID() { panic("not implemented") }
 func (this *ImDrawList) GetClipRectMin() ImVec2 {
 	var cr *ImVec4 = &this._ClipRectStack[len(this._ClipRectStack)-1]
 	return ImVec2{cr.x, cr.y}
@@ -717,12 +696,7 @@ func (this *ImDrawList) GetClipRectMax() ImVec2 {
 func (this *ImDrawList) AddLine(p1 *ImVec2, p2 *ImVec2, col ImU32, thickness float /*= 1.0f*/) {
 	panic("not implemented")
 }
-func (this *ImDrawList) AddRect(cp_min ImVec2, p_max ImVec2, col ImU32, rounding float, flags ImDrawFlags, thickness float /*= 1.0f*/) {
-	panic("not implemented")
-} // a: upper-left, b: lower-right (== upper-left + size)
-func (this *ImDrawList) AddRectFilled(cp_min ImVec2, p_max ImVec2, col ImU32, rounding float, flags ImDrawFlags) {
-	panic("not implemented")
-} // a: upper-left, b: lower-right (== upper-left + size)
+
 func (this *ImDrawList) AddRectFilledMultiColor(cp_min ImVec2, p_max ImVec2, col_upr_left, col_upr_right, col_bot_right, col_bot_left ImU32) {
 	panic("not implemented")
 }
@@ -735,9 +709,7 @@ func (this *ImDrawList) AddQuadFilled(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVe
 func (this *ImDrawList) AddTriangle(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32, thickness float /*= 1.0f*/) {
 	panic("not implemented")
 }
-func (this *ImDrawList) AddTriangleFilled(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32) {
-	panic("not implemented")
-}
+
 func (this *ImDrawList) AddCircle(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
 	panic("not implemented")
 }
@@ -750,18 +722,7 @@ func (this *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segm
 func (this *ImDrawList) AddNgonFilled(center ImVec2, radius float, col ImU32, num_segments int) {
 	panic("not implemented")
 }
-func (this *ImDrawList) AddText(pos ImVec2, col ImU32, text_begin string, text_end string) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col ImU32, text_begin, text_end string, wrap_width float, cpu_fine_clip_rect *ImVec4) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddPolyline(points []ImVec2, num_points int, col ImU32, flags ImDrawFlags, thickness float) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, num_points int, col ImU32) {
-	panic("not implemented")
-} // Note: Anti-aliased filling requires points to be in clockwise order.
+
 func (this *ImDrawList) AddBezierCubic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVec2, col ImU32, thickness float, num_segments int) {
 	panic("not implemented")
 } // Cubic Bezier (4 control points)
@@ -810,23 +771,82 @@ func (this *ImDrawList) PathStroke(col ImU32, flags ImDrawFlags, thickness float
 func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_segments int) {
 	panic("not implemented")
 }
-func (this *ImDrawList) PathArcToFast(center ImVec2, radius float, a_min_of_12, a_max_of_12 int) {
-	panic("not implemented")
-} // Use precomputed angles for a 12 steps circle
+
 func (this *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2, num_segments int) {
 	panic("not implemented")
 } // Cubic Bezier (4 control points)
 func (this *ImDrawList) PathBezierQuadraticCurveTo(p2 *ImVec2, p3 ImVec2, num_segments int) {
 	panic("not implemented")
 } // Quadratic Bezier (3 control points)
-func (this *ImDrawList) PathRect(rect_min, rect_max *ImVec2, rounding float, flags ImDrawFlags) {
-	panic("not implemented")
+
+func FixRectCornerFlags(flags ImDrawFlags) ImDrawFlags {
+	// If this triggers, please update your code replacing hardcoded values with new ImDrawFlags_RoundCorners* values.
+	// Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for AddRect(), AddRectFilled(), PathRect() etc...
+	IM_ASSERT_USER_ERROR((flags&0x0F) == 0, "Misuse of legacy hardcoded ImDrawCornerFlags values!")
+
+	if (flags & ImDrawFlags_RoundCornersMask_) == 0 {
+		flags |= ImDrawFlags_RoundCornersAll
+	}
+
+	return flags
+}
+
+func (this *ImDrawList) PathRect(a, b *ImVec2, rounding float, flags ImDrawFlags) {
+	flags = FixRectCornerFlags(flags)
+
+	var xamount, yamount float = 1, 1
+	if ((flags & ImDrawFlags_RoundCornersTop) == ImDrawFlags_RoundCornersTop) || ((flags & ImDrawFlags_RoundCornersBottom) == ImDrawFlags_RoundCornersBottom) {
+		xamount = 0.5
+	}
+	if ((flags & ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft) || ((flags & ImDrawFlags_RoundCornersRight) == ImDrawFlags_RoundCornersRight) {
+		yamount = 0.5
+	}
+
+	rounding = ImMin(rounding, ImFabs(b.x-a.x)*(xamount)-1.0)
+	rounding = ImMin(rounding, ImFabs(b.y-a.y)*(yamount)-1.0)
+
+	if rounding <= 0.0 || (flags&ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
+		this.PathLineTo(*a)
+		this.PathLineTo(ImVec2{b.x, a.y})
+		this.PathLineTo(*b)
+		this.PathLineTo(ImVec2{a.x, b.y})
+	} else {
+		var rounding_tl, rounding_tr, rounding_br, rounding_bl float
+		if (flags & ImDrawFlags_RoundCornersTopLeft) != 0 {
+			rounding_tl = rounding
+		}
+		if (flags & ImDrawFlags_RoundCornersTopRight) != 0 {
+			rounding_tr = rounding
+		}
+		if (flags & ImDrawFlags_RoundCornersBottomRight) != 0 {
+			rounding_br = rounding
+		}
+		if (flags & ImDrawFlags_RoundCornersBottomLeft) != 0 {
+			rounding_bl = rounding
+		}
+		this.PathArcToFast(ImVec2{a.x + rounding_tl, a.y + rounding_tl}, rounding_tl, 6, 9)
+		this.PathArcToFast(ImVec2{b.x - rounding_tr, a.y + rounding_tr}, rounding_tr, 9, 12)
+		this.PathArcToFast(ImVec2{b.x - rounding_br, b.y - rounding_br}, rounding_br, 0, 3)
+		this.PathArcToFast(ImVec2{a.x + rounding_bl, b.y - rounding_bl}, rounding_bl, 3, 6)
+	}
 }
 
 // Advanced
 func AddCallback(callback ImDrawCallback, callback_data interface{}) { panic("not implemented") } // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
-func (this *ImDrawList) AddDrawCmd()                                 { panic("not implemented") } // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-func (this *ImDrawList) CloneOutput() *ImDrawList                    { panic("not implemented") } // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
+
+// This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
+func (this *ImDrawList) AddDrawCmd() {
+	var draw_cmd ImDrawCmd
+	draw_cmd.ClipRect = this._CmdHeader.ClipRect // Same as calling ImDrawCmd_HeaderCopy()
+	draw_cmd.TextureId = this._CmdHeader.TextureId
+	draw_cmd.VtxOffset = this._CmdHeader.VtxOffset
+	draw_cmd.IdxOffset = uint(len(this.IdxBuffer))
+
+	IM_ASSERT(draw_cmd.ClipRect.x <= draw_cmd.ClipRect.z && draw_cmd.ClipRect.y <= draw_cmd.ClipRect.w)
+	this.CmdBuffer = append(this.CmdBuffer, draw_cmd)
+}
+
+func (this *ImDrawList) CloneOutput() *ImDrawList { panic("not implemented") } // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
 
 // Advanced: Channels
 // - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
@@ -838,12 +858,9 @@ func (this *ImDrawList) ChannelsSplit(count int)  { this._Splitter.Split(this, c
 func (this *ImDrawList) ChannelsMerge()           { this._Splitter.Merge(this) }
 func (this *ImDrawList) ChannelsSetCurrent(n int) { this._Splitter.SetCurrentChannel(this, n) }
 
-// Advanced: Primitives allocations
-// - We render triangles (three vertices)
-// - All primitives needs to be reserved via PrimReserve() beforehand.
-func (this *ImDrawList) PrimReserve(idx_count, vtx_count int)           { panic("not implemented") }
-func (this *ImDrawList) PrimUnreserve(idx_count, vtx_count int)         { panic("not implemented") }
-func (this *ImDrawList) PrimRect(a, b *ImVec2, col ImU32)               { panic("not implemented") } // Axis aligned rectangle (composed of two triangles)
+func (this *ImDrawList) PrimUnreserve(idx_count, vtx_count int) { panic("not implemented") }
+
+// Axis aligned rectangle (composed of two triangles)
 func (this *ImDrawList) PrimRectUV(a, b, uv_a, uv_b *ImVec2, col ImU32) { panic("not implemented") }
 func (this *ImDrawList) PrimQuadUV(a, b, c, d *ImVec2, uv_a, uv_b, yv_c, uv_d *ImVec2, col ImU32) {
 	panic("not implemented")
@@ -853,11 +870,12 @@ func (this *ImDrawList) PrimWriteVtx(pos ImVec2, uv *ImVec2, col ImU32) {
 	this._VtxWritePtr[0].uv = *uv
 	this._VtxWritePtr[0].col = col
 	this._VtxWritePtr = this._VtxWritePtr[1:]
+
 	this._VtxCurrentIdx++
 }
 func (this *ImDrawList) PrimWriteIdx(idx ImDrawIdx) {
-	this._IdxWritePtr = idx
-	this._IdxWritePtr++
+	this._IdxWritePtr[0] = idx
+	this._IdxWritePtr = this._IdxWritePtr[1:]
 }
 
 func (this *ImDrawList) PrimVtx(pos ImVec2, uv *ImVec2, col ImU32) {
@@ -865,39 +883,37 @@ func (this *ImDrawList) PrimVtx(pos ImVec2, uv *ImVec2, col ImU32) {
 	this.PrimWriteVtx(pos, uv, col)
 } // Write vertex with unique index
 
-// [Internal helpers]
-func (this *ImDrawList) _ResetForNewFrame()                       { panic("not implemented") }
-func (this *ImDrawList) _ClearFreeMemory()                        { panic("not implemented") }
-func (this *ImDrawList) _PopUnusedDrawCmd()                       { panic("not implemented") }
-func (this *ImDrawList) _TryMergeDrawCmds()                       { panic("not implemented") }
-func (this *ImDrawList) _OnChangedClipRect()                      { panic("not implemented") }
-func (this *ImDrawList) _OnChangedTextureID()                     { panic("not implemented") }
-func (this *ImDrawList) _OnChangedVtxOffset()                     { panic("not implemented") }
-func (this *ImDrawList) _CalcCircleAutoSegmentCount(radius float) { panic("not implemented") }
-func (this *ImDrawList) _PathArcToFastEx(center ImVec2, radius, a_min_sample, a_max_sample float, a_step int) {
-	panic("not implemented")
+func (this *ImDrawList) _ClearFreeMemory() { panic("not implemented") }
+
+// Pop trailing draw command (used before merging or presenting to user)
+// Note that this leaves the ImDrawList in a state unfit for further commands, as most code assume that CmdBuffer.Size > 0 && CmdBuffer.back().UserCallback == nil
+func (this *ImDrawList) _PopUnusedDrawCmd() {
+	if len(this.CmdBuffer) == 0 {
+		return
+	}
+	var curr_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	if curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == nil {
+		this.CmdBuffer = this.CmdBuffer[:len(this.CmdBuffer)-1]
+	}
 }
+
+func (this *ImDrawList) _TryMergeDrawCmds() { panic("not implemented") }
+
+func (this *ImDrawList) _OnChangedVtxOffset() { panic("not implemented") }
+
+func (this *ImDrawList) _CalcCircleAutoSegmentCount(radius float) int {
+	// Automatic segment count
+	var radius_idx int = (int)(radius + 0.999999) // ceil to never reduce accuracy
+	if radius_idx < int(len(this._Data.CircleSegmentCounts)) {
+		return int(this._Data.CircleSegmentCounts[radius_idx]) // Use cached value
+	} else {
+		return int(IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, this._Data.CircleSegmentMaxError))
+	}
+}
+
 func (this *ImDrawList) _PathArcToN(center ImVec2, radius, a_min, a_max float, num_segments int) {
 	panic("not implemented")
 }
-
-// All draw data to render a Dear ImGui frame
-// (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
-// as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
-type ImDrawData struct {
-	Valid            bool          // Only valid after Render() is called and before the next NewFrame() is called.
-	CmdListsCount    int           // Number of ImDrawList* to render
-	TotalIdxCount    int           // For convenience, sum of all ImDrawList's IdxBuffer.Size
-	TotalVtxCount    int           // For convenience, sum of all ImDrawList's VtxBuffer.Size
-	CmdLists         []*ImDrawList // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
-	DisplayPos       ImVec2        // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport()->Pos for the main viewport, == (0.0) in most single-viewport applications)
-	DisplaySize      ImVec2        // Size of the viewport to render (== GetMainViewport()->Size for the main viewport, == io.DisplaySize in most single-viewport applications)
-	FramebufferScale ImVec2        // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
-}
-
-// Functions
-func (ImDrawData) DeIndexAllBuffers()              { panic("not implemented") } // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
-func (ImDrawData) ScaleClipRects(fb_scale *ImVec2) { panic("not implemented") } // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
 
 //-----------------------------------------------------------------------------
 // [SECTION] Font API (ImFontConfig, ImFontGlyph, ImFontAtlasFlags, ImFontAtlas, ImFontGlyphRangesBuilder, ImFont)
@@ -1041,7 +1057,7 @@ type ImFontAtlas struct {
 	TexReady           bool                                        // Set when texture was built matching current font input
 	TexPixelsUseColors bool                                        // Tell whether our texture data is known to use colors (rather than just alpha channel), in order to help backend select a format.
 	TexPixelsAlpha8    []byte                                      // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
-	TexPixelsRGBA32    []int                                       // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
+	TexPixelsRGBA32    []uint                                      // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
 	TexWidth           int                                         // Texture width calculated during Build().
 	TexHeight          int                                         // Texture height calculated during Build().
 	TexUvScale         ImVec2                                      // = (1.0f/TexWidth, 1.0f/TexHeight)
@@ -1092,7 +1108,7 @@ func (atlas *ImFontAtlas) AddFont(font_cfg *ImFontConfig) *ImFont {
 		copy(new_font_cfg.FontData, font_cfg.FontData[:(size_t)(new_font_cfg.FontDataSize)])
 	}
 
-	if new_font_cfg.DstFont.EllipsisChar == math.MaxInt16 {
+	if new_font_cfg.DstFont.EllipsisChar == MaxImWchar {
 		new_font_cfg.DstFont.EllipsisChar = font_cfg.EllipsisChar
 	}
 
@@ -1210,7 +1226,7 @@ type ImFont struct {
 	// Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
 	IndexLookup   []ImWchar     // 12-16 // out //            // Sparse. Index glyphs by Unicode code-point.
 	Glyphs        []ImFontGlyph // 12-16 // out //            // All glyphs.
-	FallbackGlyph []ImFontGlyph // 4-8   // out // = FindGlyph(FontFallbackChar)
+	FallbackGlyph *ImFontGlyph  // 4-8   // out // = FindGlyph(FontFallbackChar)
 
 	// Members: Cold ~32/40 bytes
 	ContainerAtlas      *ImFontAtlas                                    // 4-8   // out //            // What we has been loaded into
@@ -1229,15 +1245,12 @@ type ImFont struct {
 // Methods
 func NewImFont() ImFont {
 	return ImFont{
-		FallbackChar: math.MaxInt16,
-		EllipsisChar: math.MaxInt16,
-		DotChar:      math.MaxInt16,
+		FallbackChar: MaxImWchar,
+		EllipsisChar: MaxImWchar,
+		DotChar:      MaxImWchar,
 		Scale:        1,
 	}
 }
-
-func (this *ImFont) FindGlyph(c ImWchar) *ImFontGlyph           { panic("not implemented") }
-func (this *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph { panic("not implemented") }
 
 func (this *ImFont) GetCharAdvance(c ImWchar) float {
 	if (int)(c) < int(len(this.IndexAdvanceX)) {
@@ -1254,32 +1267,16 @@ func (this *ImFont) GetDebugName() string {
 	return "<unknown>"
 }
 
-// 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
-// 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
-func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text_begin, text_end string, remaining *string) ImVec2 {
-	panic("not implemented")
-} // utf8
-func (this *ImFont) CalcWordWrapPositionA(scale float, text, text_end string, wrap_width float) string {
-	panic("not implemented")
-}
 func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, c ImWchar) {
-	panic("not implemented")
-}
-func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, clip_rect *ImVec4, text_begin, text_end string, wrap_width float, cpu_fine_clip bool) {
 	panic("not implemented")
 }
 
 // [Internal] Don't use!
-func (this *ImFont) BuildLookupTable() { panic("not implemented") }
 
-func (this *ImFont) GrowIndex(new_size int) { panic("not implemented") }
-func (this *ImFont) AddGlyph(src_cfg *ImFontConfig, c ImWchar, x0, y0, x1, y1, u0, v0, u1, v1, advance_x float) {
-	panic("not implemented")
-}
 func (this *ImFont) AddRemapChar(dst, src ImWchar, overwite_dst bool /*= true*/) {
 	panic("not implemented")
-}                                                                 // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
-func (this *ImFont) SetGlyphVisible(c ImWchar, visible bool)      { panic("not implemented") }
+} // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+
 func (this *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool { panic("not implemented") }
 
 // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
@@ -1296,6 +1293,15 @@ type ImGuiViewport struct {
 	WorkPos  ImVec2             // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
 	WorkSize ImVec2             // Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
 
+	DrawListsLastFrame [2]int         // Last frame number the background (0) and foreground (1) draw lists were used
+	DrawLists          [2]*ImDrawList // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.MouseDrawCursor is set and to draw most debug overlays.
+	DrawDataP          ImDrawData
+	DrawDataBuilder    ImDrawDataBuilder
+
+	WorkOffsetMin      ImVec2 // Work Area: Offset from Pos to top-left corner of Work Area. Generally (0,0) or (0,+main_menu_bar_height). Work Area is Full Area but without menu-bars/status-bars (so WorkArea always fit inside Pos/Size!)
+	WorkOffsetMax      ImVec2 // Work Area: Offset from Pos+Size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height).
+	BuildWorkOffsetMin ImVec2 // Work Area: Offset being built during current frame. Generally >= 0.0f.
+	BuildWorkOffsetMax ImVec2 // Work Area: Offset being built during current frame. Generally <= 0.0f.
 }
 
 // Helpers

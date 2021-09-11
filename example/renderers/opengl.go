@@ -3,6 +3,7 @@ package renderers
 import (
 	_ "embed" // using embed for the shader sources
 	"fmt"
+	"strings"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.2-core/gl"
@@ -59,6 +60,8 @@ func (renderer *OpenGL3) PreRender(clearColor [3]float32) {
 	gl.ClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 }
+
+var frames int
 
 // Render translates the ImGui draw data to OpenGL3 commands.
 func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float32, drawData *imgui.ImDrawData) {
@@ -164,11 +167,25 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 	for _, list := range drawData.CmdLists {
 		var indexBufferOffset uintptr
 
+		//fmt.Println(list)
+
+		if frames == 2 {
+
+			//spew.Dump(list.VtxBuffer)
+			//os.Exit(0)
+		} else {
+			frames++
+		}
+
 		gl.BindBuffer(gl.ARRAY_BUFFER, renderer.vboHandle)
 		gl.BufferData(gl.ARRAY_BUFFER, len(list.VtxBuffer)*int(unsafe.Sizeof(list.VtxBuffer[0])), unsafe.Pointer(&list.VtxBuffer[0]), gl.STREAM_DRAW)
 
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, renderer.elementsHandle)
 		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(list.IdxBuffer)*int(unsafe.Sizeof(list.IdxBuffer[0])), unsafe.Pointer(&list.IdxBuffer[0]), gl.STREAM_DRAW)
+
+		//fmt.Println(list.VtxBuffer)
+		//fmt.Println(list.IdxBuffer)
+		//os.Exit(0)
 
 		for i, cmd := range list.CmdBuffer {
 			if cmd.UserCallback != nil {
@@ -235,15 +252,44 @@ func (renderer *OpenGL3) createDeviceObjects() {
 	renderer.vertHandle = gl.CreateShader(gl.VERTEX_SHADER)
 	renderer.fragHandle = gl.CreateShader(gl.FRAGMENT_SHADER)
 
-	glShaderSource := func(handle uint32, source string) {
-		csource, free := gl.Strs(source + "\x00")
-		defer free()
+	compileSource := func(kind uint32, source string) (uint32, error) {
+		shader := gl.CreateShader(kind)
 
-		gl.ShaderSource(handle, 1, csource, nil)
+		csources, free := gl.Strs(string(source) + "\000")
+		gl.ShaderSource(shader, 1, csources, nil)
+		free()
+		gl.CompileShader(shader)
+
+		var status int32
+		gl.GetShaderiv(shader, gl.COMPILE_STATUS, &status)
+		if status == gl.FALSE {
+			var logLength int32
+			gl.GetShaderiv(shader, gl.INFO_LOG_LENGTH, &logLength)
+
+			log := strings.Repeat("\x00", int(logLength+1))
+			gl.GetShaderInfoLog(shader, logLength, nil, gl.Str(log))
+
+			gl.DeleteShader(shader)
+
+			return 0, fmt.Errorf("failed to compile shader: %v\n %v", log, source)
+		}
+
+		return shader, nil
 	}
 
-	glShaderSource(renderer.vertHandle, vertexShader)
-	glShaderSource(renderer.fragHandle, fragmentShader)
+	var err error
+
+	renderer.vertHandle, err = compileSource(gl.VERTEX_SHADER, vertexShader)
+	if err != nil {
+		panic(err)
+	}
+	renderer.fragHandle, err = compileSource(gl.FRAGMENT_SHADER, fragmentShader)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("no errors")
+
 	gl.CompileShader(renderer.vertHandle)
 	gl.CompileShader(renderer.fragHandle)
 	gl.AttachShader(renderer.shaderHandle, renderer.vertHandle)

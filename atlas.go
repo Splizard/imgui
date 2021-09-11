@@ -90,20 +90,6 @@ type ImFontBuildDstData struct {
 	GlyphsSet     ImBitVector // This is used to resolve collision when multiple sources are merged into a same destination font.
 }
 
-func (this *ImFont) ClearOutputData() {
-	this.FontSize = 0
-	this.FallbackAdvanceX = 0
-	this.Glyphs = this.Glyphs[:0]
-	this.IndexAdvanceX = this.IndexAdvanceX[:0]
-	this.IndexLookup = this.IndexLookup[:0]
-	this.FallbackGlyph = nil
-	this.ContainerAtlas = nil
-	this.DirtyLookupTables = true
-	this.Ascent = 0
-	this.Descent = 0
-	this.MetricsTotalSurface = 0
-}
-
 func UnpackBitVectorToFlatIndexList(in *ImBitVector, out *[]int) {
 	IM_ASSERT(unsafe.Sizeof((*in)[0]) == unsafe.Sizeof(int(0)))
 	for i, it := range *in {
@@ -321,6 +307,156 @@ func ImFontAtlasBuildSetupFont(atlas *ImFontAtlas, font *ImFont, font_config *Im
 		font.Descent = descent
 	}
 	font.ConfigDataCount++
+}
+
+func ImFontAtlasBuildRender8bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value byte) {
+	IM_ASSERT(x >= 0 && x+w <= atlas.TexWidth)
+	IM_ASSERT(y >= 0 && y+h <= atlas.TexHeight)
+	var out_pixel []byte = atlas.TexPixelsAlpha8[x+(y*atlas.TexWidth):]
+	for off_y := int(0); off_y < h; off_y, out_pixel, in_str = off_y+1, out_pixel[atlas.TexWidth:], in_str[w:] {
+		for off_x := int(0); off_x < w; off_x++ {
+			if in_str[off_x] == in_marker_char {
+				out_pixel[off_x] = in_marker_pixel_value
+			} else {
+				out_pixel[off_x] = 0x00
+			}
+		}
+	}
+}
+
+func ImFontAtlasBuildRender32bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value uint32) {
+	IM_ASSERT(x >= 0 && x+w <= atlas.TexWidth)
+	IM_ASSERT(y >= 0 && y+h <= atlas.TexHeight)
+	var out_pixel []uint = atlas.TexPixelsRGBA32[x+(y*atlas.TexWidth):]
+	for off_y := int(0); off_y < h; off_y, out_pixel, in_str = off_y+1, out_pixel[atlas.TexWidth:], in_str[w:] {
+		for off_x := int(0); off_x < w; off_x++ {
+			if in_str[off_x] == in_marker_char {
+				out_pixel[off_x] = in_marker_pixel_value
+			} else {
+				out_pixel[off_x] = IM_COL32_BLACK_TRANS
+			}
+		}
+	}
+}
+
+func ImFontAtlasBuildRenderDefaultTexData(atlas *ImFontAtlas) {
+	var r *ImFontAtlasCustomRect = atlas.GetCustomRectByIndex(atlas.PackIdMouseCursors)
+	IM_ASSERT(r.IsPacked())
+
+	var w int = atlas.TexWidth
+	if atlas.Flags&ImFontAtlasFlags_NoMouseCursors == 0 {
+		// Render/copy pixels
+		IM_ASSERT(int(r.Width) == FONT_ATLAS_DEFAULT_TEX_DATA_W*2+1 && int(r.Height) == FONT_ATLAS_DEFAULT_TEX_DATA_H)
+		var x_for_white int = int(r.X)
+		var x_for_black int = int(r.X) + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1
+		if atlas.TexPixelsAlpha8 != nil {
+			ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_white, int(r.Y), FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', 0xFF)
+			ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_black, int(r.Y), FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', 0xFF)
+		} else {
+			ImFontAtlasBuildRender32bppRectFromString(atlas, x_for_white, int(r.Y), FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', IM_COL32_WHITE)
+			ImFontAtlasBuildRender32bppRectFromString(atlas, x_for_black, int(r.Y), FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', IM_COL32_WHITE)
+		}
+	} else {
+		// Render 4 white pixels
+		IM_ASSERT(r.Width == 2 && r.Height == 2)
+		var offset int = (int)(r.X) + (int)(r.Y)*w
+		if atlas.TexPixelsAlpha8 != nil {
+			atlas.TexPixelsAlpha8[offset] = 0xFF
+			atlas.TexPixelsAlpha8[offset+1] = 0xFF
+			atlas.TexPixelsAlpha8[offset+w] = 0xFF
+			atlas.TexPixelsAlpha8[offset+w+1] = 0xFF
+		} else {
+			atlas.TexPixelsRGBA32[offset] = IM_COL32_WHITE
+			atlas.TexPixelsRGBA32[offset+1] = IM_COL32_WHITE
+			atlas.TexPixelsRGBA32[offset+w] = IM_COL32_WHITE
+			atlas.TexPixelsRGBA32[offset+w+1] = IM_COL32_WHITE
+		}
+	}
+	atlas.TexUvWhitePixel = ImVec2{(float(r.X) + 0.5) * atlas.TexUvScale.x, (float(r.Y) + 0.5) * atlas.TexUvScale.y}
+}
+
+func ImFontAtlasBuildRenderLinesTexData(atlas *ImFontAtlas) {
+	if atlas.Flags&ImFontAtlasFlags_NoBakedLines != 0 {
+		return
+	}
+
+	// This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
+	var r *ImFontAtlasCustomRect = atlas.GetCustomRectByIndex(atlas.PackIdLines)
+	IM_ASSERT(r.IsPacked())
+	for n := 0; n < IM_DRAWLIST_TEX_LINES_WIDTH_MAX+1; n++ { // +1 because of the zero-width row
+		// Each line consists of at least two empty pixels at the ends, with a line of solid pixels in the middle
+		var y uint = uint(n)
+		var line_width uint = uint(n)
+		var pad_left uint = (uint(r.Width) - uint(line_width)) / 2
+		var pad_right uint = uint(r.Width) - (uint(pad_left) + uint(line_width))
+
+		// Write each slice
+		IM_ASSERT(pad_left+line_width+pad_right == uint(r.Width) && y < uint(r.Height)) // Make sure we're inside the texture bounds before we start writing pixels
+		if atlas.TexPixelsAlpha8 != nil {
+			var write_ptr []byte = atlas.TexPixelsAlpha8[uint(r.X)+((uint(r.Y)+uint(y))*uint(atlas.TexWidth)):]
+			for i := uint(0); i < pad_left; i++ {
+				write_ptr[i] = 0x00
+			}
+
+			for i := uint(0); i < line_width; i++ {
+				write_ptr[pad_left+i] = 0xFF
+			}
+
+			for i := uint(0); i < pad_right; i++ {
+				write_ptr[pad_left+line_width+i] = 0x00
+			}
+		} else {
+			var write_ptr []uint = atlas.TexPixelsRGBA32[uint(r.X)+((uint(r.Y)+uint(y))*uint(atlas.TexWidth)):]
+			for i := uint(0); i < pad_left; i++ {
+				write_ptr[i] = IM_COL32_BLACK_TRANS
+			}
+
+			for i := uint(0); i < line_width; i++ {
+				write_ptr[pad_left+i] = IM_COL32_WHITE
+			}
+
+			for i := uint(0); i < pad_right; i++ {
+				write_ptr[pad_left+line_width+i] = IM_COL32_BLACK_TRANS
+			}
+		}
+
+		// Calculate UVs for this line
+		var uv0 ImVec2 = ImVec2{(float)(uint(r.X) + pad_left - 1), (float)(uint(r.Y) + y)}.Mul(atlas.TexUvScale)
+		var uv1 ImVec2 = ImVec2{(float)(uint(r.X) + pad_left + line_width + 1), (float)(uint(r.Y) + y + 1)}.Mul(atlas.TexUvScale)
+		var half_v float = (uv0.y + uv1.y) * 0.5 // Calculate a constant V in the middle of the row to avoid sampling artifacts
+		atlas.TexUvLines[n] = ImVec4{uv0.x, half_v, uv1.x, half_v}
+	}
+}
+
+// This is called/shared by both the stb_truetype and the FreeType builder.
+func ImFontAtlasBuildFinish(atlas *ImFontAtlas) {
+	// Render into our custom data blocks
+	IM_ASSERT(atlas.TexPixelsAlpha8 != nil || atlas.TexPixelsRGBA32 != nil)
+	ImFontAtlasBuildRenderDefaultTexData(atlas)
+	ImFontAtlasBuildRenderLinesTexData(atlas)
+
+	// Register custom rectangle glyphs
+	for i := range atlas.CustomRects {
+		var r *ImFontAtlasCustomRect = &atlas.CustomRects[i]
+		if r.Font == nil || r.GlyphID == 0 {
+			continue
+		}
+
+		// Will ignore ImFontConfig settings: GlyphMinAdvanceX, GlyphMinAdvanceY, GlyphExtraSpacing, PixelSnapH
+		IM_ASSERT(r.Font.ContainerAtlas == atlas)
+		var uv0, uv1 ImVec2
+		atlas.CalcCustomRectUV(r, &uv0, &uv1)
+		r.Font.AddGlyph(nil, (ImWchar)(r.GlyphID), r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x+float(r.Width), r.GlyphOffset.y+float(r.Height), uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX)
+	}
+
+	// Build all fonts lookup tables
+	for i := range atlas.Fonts {
+		if atlas.Fonts[i].DirtyLookupTables {
+			atlas.Fonts[i].BuildLookupTable()
+		}
+	}
+
+	atlas.TexReady = true
 }
 
 func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {

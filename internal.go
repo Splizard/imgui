@@ -80,7 +80,16 @@ func IM_ROUND(val float32) float {
 	return (float)((int)(val + 0.5))
 }
 
-func ImHashData(data unsafe.Pointer, data_size uintptr, seed ImU32) ImGuiID { panic("not implemented") }
+func ImHashData(ptr unsafe.Pointer, data_size uintptr, seed ImU32) ImGuiID {
+	var crc ImU32 = ^seed
+	var data *byte = (*byte)(ptr)
+	var crc32_lut = &GCrc32LookupTable
+	for i := uintptr(0); i < data_size; i++ {
+		crc = (crc >> 8) ^ crc32_lut[(crc&0xFF)^uint(*data)]
+		data = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(data)) + 1))
+	}
+	return ^crc
+}
 
 func ImAlphaBlendColors(col_a, col_b ImU32) ImU32 { panic("not implemented") }
 
@@ -139,8 +148,7 @@ func ImCharIsBlankW(c uint) bool                                  { return c == 
 func ImTextCharToUtf8(out_buf [5]char, c uint) string { panic("not implemented") } // return out_buf
 func ImTextStrToUtf8(out_buf []byte, out_buf_size int, in_text []ImWchar, in_text_end []ImWchar) int {
 	panic("not implemented")
-}                                                                         // return out_// return output UTF-8 bytes count
-func ImTextCharFromUtf8(out_char []uint, in_text, in_text_end string) int { panic("not implemented") } // read one character. return input UTF-8 bytes count
+} // return out_// return output UTF-8 bytes count
 func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, in_text, in_text_end string, in_remaining *string) int {
 	panic("not implemented")
 }                                                                    // return input UTF-8 bytes count
@@ -148,7 +156,7 @@ func ImTextCountCharsFromUtf8(in_text, in_text_end string) int       { panic("no
 func ImTextCountUtf8BytesFromChar(in_text, in_text_end string) int   { panic("not implemented") } // return number of bytes to express one char in UTF-8
 func ImTextCountUtf8BytesFromStr(in_text, in_text_end []ImWchar) int { panic("not implemented") } // return number of bytes to express string in UTF-8
 
-type ImFileHandle = os.File
+type ImFileHandle = *os.File
 
 func ImFileOpen(filename string, mode string) ImFileHandle { panic("not implemented") }
 func ImFileClose(file ImFileHandle) bool                   { panic("not implemented") }
@@ -189,9 +197,9 @@ func ImBitArraySetBitRange(arr []ImU32, n, n2 int) {
 		} else {
 			b_mod = (n2 & 31) + 1
 		}
-		var mask ImU32 = (1 << b_mod) - 1 & ^(1<<a_mod)
+		var mask ImU32 = (1 << b_mod) - 1&^(1<<a_mod)
 		arr[n>>5] |= mask
-		n = (n + 32) & ^31
+		n = (n + 32) &^ 31
 	}
 }
 
@@ -247,13 +255,32 @@ type ImDrawListSharedData struct {
 	ArcFastVtx            [IM_DRAWLIST_ARCFAST_TABLE_SIZE]ImVec2
 	ArcFastRadiusCutoff   float
 	CircleSegmentCounts   [64]ImU8
-	TexUvLines            *ImVec4
+	TexUvLines            []ImVec4
 }
 
-func NewImDrawListSharedData() ImDrawListSharedData { panic("not implemented") }
+func NewImDrawListSharedData() ImDrawListSharedData {
+	var this ImDrawListSharedData
+	for i := range this.ArcFastVtx {
+		var a float = ((float)(i) * 2 * IM_PI) / (float)(len(this.ArcFastVtx))
+		this.ArcFastVtx[i] = ImVec2{ImCos(a), ImSin(a)}
+	}
+	this.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, this.CircleSegmentMaxError)
+	return this
+}
 
 func (this *ImDrawListSharedData) SetCircleTessellationMaxError(max_error float) {
+	if this.CircleSegmentMaxError == max_error {
+		return
+	}
+	IM_ASSERT(max_error > 0.0)
 	this.CircleSegmentMaxError = max_error
+	for i := range this.CircleSegmentCounts {
+		var radius float = (float)(i)
+		if i > 0 {
+			this.CircleSegmentCounts[i] = uint8(IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, this.CircleSegmentMaxError))
+		}
+	}
+	this.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, this.CircleSegmentMaxError)
 }
 
 type ImDrawDataBuilder [2][]*ImDrawList
@@ -272,7 +299,30 @@ func (this *ImDrawDataBuilder) GetDrawListCount() int {
 	return count
 }
 
-func (this *ImDrawDataBuilder) FlattenIntoSingleLayer() { panic("not implemented") }
+func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
+	var n = len(Layers[0])
+	var size int = int(n)
+	for i := 1; i < len(*Layers); i++ {
+		size += int(len(Layers[i]))
+	}
+
+	//TODO/FIXME this could be wrong
+	if size < int(len(Layers[0])) {
+		Layers[0] = Layers[0][0:size]
+	} else {
+		Layers[0] = append(Layers[0], make([]*ImDrawList, 0, size-int(len(Layers[0])))...)
+	}
+
+	for layer_n := 1; layer_n < len(*Layers); layer_n++ {
+		var layer *[]*ImDrawList = &Layers[layer_n]
+		if len(*layer) == 0 {
+			continue
+		}
+		copy(Layers[0][n:], *layer)
+		n += len(*layer)
+		*layer = (*layer)[:0]
+	}
+}
 
 type ImGuiDataTypeTempStorage [8]byte
 
@@ -585,18 +635,7 @@ type ImGuiOldColumns struct {
 
 // ImGuiViewport Private/Internals fields (cardinal sin: we are using inheritance!)
 // Every instance of ImGuiViewport is in fact a ImGuiViewportP.
-type ImGuiViewportP struct {
-	ImGuiViewport
-
-	DrawListsLastFrame [2]int         // Last frame number the background (0) and foreground (1) draw lists were used
-	DrawLists          [2]*ImDrawList // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.MouseDrawCursor is set and to draw most debug overlays.
-	DrawDataBuilder    ImDrawDataBuilder
-
-	WorkOffsetMin      ImVec2 // Work Area: Offset from Pos to top-left corner of Work Area. Generally (0,0) or (0,+main_menu_bar_height). Work Area is Full Area but without menu-bars/status-bars (so WorkArea always fit inside Pos/Size!)
-	WorkOffsetMax      ImVec2 // Work Area: Offset from Pos+Size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height).
-	BuildWorkOffsetMin ImVec2 // Work Area: Offset being built during current frame. Generally >= 0.0f.
-	BuildWorkOffsetMax ImVec2 // Work Area: Offset being built during current frame. Generally <= 0.0f.
-}
+type ImGuiViewportP = ImGuiViewport
 
 func NewImGuiViewportP() ImGuiViewportP {
 	return ImGuiViewportP{
@@ -688,8 +727,35 @@ type ImGuiStackSizes struct {
 	SizeOfBeginPopupStack short
 }
 
-func (this *ImGuiStackSizes) SetToCurrentState()       { panic("not implemented") }
-func (this *ImGuiStackSizes) CompareWithCurrentState() { panic("not implemented") }
+func (this *ImGuiStackSizes) SetToCurrentState() {
+	var g = GImGui
+	var window = g.CurrentWindow
+	this.SizeOfIDStack = (short)(len(window.IDStack))
+	this.SizeOfColorStack = (short)(len(g.ColorStack))
+	this.SizeOfStyleVarStack = (short)(len(g.StyleVarStack))
+	this.SizeOfFontStack = (short)(len(g.FontStack))
+	this.SizeOfFocusScopeStack = (short)(len(g.FocusScopeStack))
+	this.SizeOfGroupStack = (short)(len(g.GroupStack))
+	this.SizeOfBeginPopupStack = (short)(len(g.BeginPopupStack))
+}
+
+func (this *ImGuiStackSizes) CompareWithCurrentState() {
+	var g = GImGui
+	var window = g.CurrentWindow
+
+	// Window stacks
+	// NOT checking: DC.ItemWidth, DC.TextWrapPos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
+	IM_ASSERT_USER_ERROR(this.SizeOfIDStack == short(len(window.IDStack)), "PushID/PopID or TreeNode/TreePop Mismatch!")
+
+	// Global stacks
+	// For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.
+	IM_ASSERT_USER_ERROR(this.SizeOfGroupStack == short(len(g.GroupStack)), "BeginGroup/EndGroup Mismatch!")
+	IM_ASSERT_USER_ERROR(this.SizeOfBeginPopupStack == short(len(g.BeginPopupStack)), "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!")
+	IM_ASSERT_USER_ERROR(this.SizeOfColorStack >= short(len(g.ColorStack)), "PushStyleColor/PopStyleColor Mismatch!")
+	IM_ASSERT_USER_ERROR(this.SizeOfStyleVarStack >= short(len(g.StyleVarStack)), "PushStyleVar/PopStyleVar Mismatch!")
+	IM_ASSERT_USER_ERROR(this.SizeOfFontStack >= short(len(g.FontStack)), "PushFont/PopFont Mismatch!")
+	IM_ASSERT_USER_ERROR(this.SizeOfFocusScopeStack == short(len(g.FocusScopeStack)), "PushFocusScope/PopFocusScope Mismatch!")
+}
 
 type ImGuiContextHookCallback func(ctx *ImGuiContext, hook *ImGuiContextHook)
 
@@ -716,6 +782,7 @@ type ImGuiContext struct {
 	WithinFrameScope                   bool // Set by NewFrame(), cleared by EndFrame()
 	WithinFrameScopeWithImplicitWindow bool // Set by NewFrame(), cleared by EndFrame() when the implicit debug window has been pushed
 	WithinEndChild                     bool // Set within EndChild()
+	GcCompactAll                       bool
 
 	// Windows state
 	Windows                        []*ImGuiWindow // Windows, sorted in display order, back to front
@@ -758,7 +825,7 @@ type ImGuiContext struct {
 	ActiveIdClickOffset                      ImVec2 // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
 	ActiveIdWindow                           *ImGuiWindow
 	ActiveIdSource                           ImGuiInputSource // Activating with mouse or nav (gamepad/keyboard)
-	ActiveIdMouseButton                      int
+	ActiveIdMouseButton                      ImGuiMouseButton
 	ActiveIdPreviousFrame                    ImGuiID
 	ActiveIdPreviousFrameIsAlive             bool
 	ActiveIdPreviousFrameHasBeenEditedBefore bool
@@ -853,7 +920,7 @@ type ImGuiContext struct {
 	DragDropWithinTarget            bool // Set when within a BeginDragDropXXX/EndDragDropXXX block for a drag target.
 	DragDropSourceFlags             ImGuiDragDropFlags
 	DragDropSourceFrameCount        int
-	DragDropMouseButton             int
+	DragDropMouseButton             ImGuiMouseButton
 	DragDropPayload                 ImGuiPayload
 	DragDropTargetRect              ImRect // Store rectangle of current target candidate (we favor small targets when overlapping)
 	DragDropTargetId                ImGuiID
@@ -869,7 +936,7 @@ type ImGuiContext struct {
 	// Table
 	CurrentTable                *ImGuiTable
 	CurrentTableStackIdx        int
-	Tables                      map[ImGuiID]ImGuiTable
+	Tables                      map[ImGuiID]*ImGuiTable
 	TablesTempDataStack         []ImGuiTableTempData
 	TablesLastTimeActive        []float // Last used timestamp of each tables (SOA, for efficient GC)
 	DrawChannelsTempMergeBuffer []ImDrawChannel
@@ -956,6 +1023,8 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 		IO: ImGuiIO{
 			Fonts: atlas,
 		},
+		DrawListSharedData:                NewImDrawListSharedData(),
+		Style:                             NewImGuiStyle(),
 		FrameCountEnded:                   -1,
 		FrameCountRendered:                -1,
 		ActiveIdClickOffset:               ImVec2{-1, -1},
@@ -1045,7 +1114,6 @@ type ImGuiWindow struct {
 	WindowPadding       ImVec2  // Window padding at the time of begin.
 	WindowRounding      float   // Window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
 	WindowBorderSize    float   // Window border size at the time of begin.
-	NameBufLen          int     // Size of buffer storing Name. May be larger than strlen(Name)!
 	MoveId              ImGuiID // == window->GetID("#MOVE")
 	ChildId             ImGuiID // ID of corresponding item in parent window (for navigation to return from child window to parent window)
 	Scroll              ImVec2  // Current scrolling position
@@ -1126,14 +1194,54 @@ type ImGuiWindow struct {
 }
 
 func NewImGuiWindow(context *ImGuiContext, name string) *ImGuiWindow {
-	panic("not implemented")
-	return &ImGuiWindow{}
+	var id = ImHashStr(name, uintptr(len(name)), 0)
+	var window = ImGuiWindow{
+		Name:                         name,
+		ID:                           id,
+		IDStack:                      []ImGuiID{id},
+		ScrollTarget:                 ImVec2{FLT_MAX, FLT_MAX},
+		ScrollTargetCenterRatio:      ImVec2{0.5, 0.5},
+		AutoFitFramesX:               -1,
+		AutoFitFramesY:               -1,
+		AutoPosLastDirection:         ImGuiDir_None,
+		SetWindowPosAllowFlags:       ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
+		SetWindowSizeAllowFlags:      ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
+		SetWindowCollapsedAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
+		SetWindowPosVal:              ImVec2{FLT_MAX, FLT_MAX},
+		SetWindowPosPivot:            ImVec2{FLT_MAX, FLT_MAX},
+		LastFrameActive:              -1,
+		LastTimeActive:               -1.0,
+		FontWindowScale:              1.0,
+		SettingsOffset:               -1,
+	}
+	window.MoveId = window.GetIDs("#MOVE", "")
+	window.DrawList = &window.DrawListInst
+	window.DrawList._Data = &context.DrawListSharedData
+	window.DrawList._OwnerName = name
+	return &window
 }
 
-func (this *ImGuiWindow) GetIDs(str, str_end string) ImGuiID                { panic("not implemented") }
-func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID            { panic("not implemented") }
-func (this *ImGuiWindow) GetIDInt(n int) ImGuiID                            { panic("not implemented") }
-func (this *ImGuiWindow) GetIDNoKeepAlive(str, str_end string) ImGuiID      { panic("not implemented") }
+func (this *ImGuiWindow) GetIDs(str, str_end string) ImGuiID {
+	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
+	var id ImGuiID = ImHashStr(str, 0, seed)
+	KeepAliveID(id)
+	return id
+}
+func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID { panic("not implemented") }
+
+func (this *ImGuiWindow) GetIDInt(n int) ImGuiID {
+	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
+	var id ImGuiID = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), seed)
+	KeepAliveID(id)
+	return id
+}
+
+func (this *ImGuiWindow) GetIDNoKeepAlive(str string) ImGuiID {
+	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
+	var id ImGuiID = ImHashStr(str, 0, seed)
+	return id
+}
+
 func (this *ImGuiWindow) GetIDNoKeepAliveInterface(ptr interface{}) ImGuiID { panic("not implemented") }
 func (this *ImGuiWindow) GetIDNoKeepAliveInt(n int) ImGuiID                 { panic("not implemented") }
 func (this *ImGuiWindow) GetIDFromRectangle(r_abs ImRect) ImGuiID           { panic("not implemented") }
