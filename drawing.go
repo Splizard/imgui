@@ -767,6 +767,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 		}
 		this._VtxCurrentIdx = uint((ImDrawIdx)(vtx_count))
 	} else {
+
 		// [PATH 4] Non texture-based, Non anti-aliased lines
 		var idx_count int = count * 6
 		var vtx_count int = count * 4 // FIXME-OPT: Not sharing edges

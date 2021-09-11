@@ -37,8 +37,6 @@ func IsWindowChildOf(w *ImGuiWindow, t *ImGuiWindow) bool { panic("not implement
 func IsWindowAbove(e *ImGuiWindow, w *ImGuiWindow) bool   { panic("not implemented") }
 func IsWindowNavFocusable(w *ImGuiWindow) bool            { panic("not implemented") }
 
-func setWindowPos(w *ImGuiWindow, pos *ImVec2, cond ImGuiCond) { panic("not implemented") }
-
 func setWindowCollapsed(w *ImGuiWindow, collapsed bool, cond ImGuiCond) {
 	panic("not implemented")
 }
@@ -61,7 +59,7 @@ func Initialize(context *ImGuiContext) {
 	{
 		var ini_handler ImGuiSettingsHandler
 		ini_handler.TypeName = "Window"
-		ini_handler.TypeHash = ImHashStr("Window", size_t(len("Window")), 0)
+		ini_handler.TypeHash = ImHashStr("Window", 0, 0)
 		ini_handler.ClearAllFn = WindowSettingsHandler_ClearAll
 		ini_handler.ReadOpenFn = WindowSettingsHandler_ReadOpen
 		ini_handler.ReadLineFn = WindowSettingsHandler_ReadLine
@@ -82,9 +80,6 @@ func Initialize(context *ImGuiContext) {
 
 func Shutdown(t *ImGuiContext) { panic("not implemented") } // Since 1.60 this is a _private_ function. You can call DestroyContext() to destroy the context created by CreateContext().
 
-// NewFrame
-func StartMouseMovingWindow(w *ImGuiWindow) { panic("not implemented") }
-
 // Generic context hooks
 func AddContextHook(context *ImGuiContext, hook *ImGuiContextHook) ImGuiID { panic("not implemented") }
 func RemoveContextHook(context *ImGuiContext, hook_to_remove ImGuiID)      { panic("not implemented") }
@@ -99,26 +94,6 @@ func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 		}
 	}
 }
-
-// Settings
-func MarkIniSettingsDirty()                                 { panic("not implemented") }
-func MarkIniSettingsDirtyWindow(w *ImGuiWindow)             { panic("not implemented") }
-func ClearIniSettings()                                     { panic("not implemented") }
-func CreateNewWindowSettings(e string) *ImGuiWindowSettings { panic("not implemented") }
-
-func FindWindowSettings(id ImGuiID) *ImGuiWindowSettings {
-	var g = GImGui
-	for i := range g.SettingsWindows {
-		settings := &g.SettingsWindows[i]
-		if settings.ID == id {
-			return settings
-		}
-	}
-	return nil
-}
-
-func FindOrCreateWindowSettings(e string) *ImGuiWindowSettings { panic("not implemented") }
-func FindSettingsHandler(e string) *ImGuiSettingsHandler       { panic("not implemented") }
 
 // Scrolling
 func SetNextWindowScroll(scroll *ImVec2)        { panic("not implemented") } // Use -1.0f on one axis to leave as-is
@@ -189,8 +164,24 @@ func ClearActiveID() {
 	SetActiveID(0, nil) // g.ActiveId = 0
 }
 
-func GetHoveredID() ImGuiID   { panic("not implemented") }
-func SetHoveredID(id ImGuiID) { panic("not implemented") }
+func GetHoveredID() ImGuiID {
+	var g = GImGui
+	if g.HoveredId != 0 {
+		return g.HoveredId
+	}
+	return g.HoveredIdPreviousFrame
+}
+
+func SetHoveredID(id ImGuiID) {
+	var g = GImGui
+	g.HoveredId = id
+	g.HoveredIdAllowOverlap = false
+	g.HoveredIdUsingMouseWheel = false
+	if id != 0 && g.HoveredIdPreviousFrame != id {
+		g.HoveredIdTimer = 0
+		g.HoveredIdNotActiveTimer = 0.0
+	}
+}
 
 func KeepAliveID(id ImGuiID) {
 	var g = GImGui
@@ -266,7 +257,6 @@ func EndComboPreview()        { panic("not implemented") }
 func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
 	panic("not implemented")
 }
-func NavMoveRequestCancel() { panic("not implemented") }
 
 func NavMoveRequestTryWrapping(w *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
 	panic("not implemented")
@@ -313,8 +303,17 @@ func GetFocusScope() ImGuiID {
 
 // Inputs
 // FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
-func SetItemUsingMouseWheel()     { panic("not implemented") }
-func SetActiveIdUsingNavAndKeys() { panic("not implemented") }
+func SetItemUsingMouseWheel() { panic("not implemented") }
+
+func SetActiveIdUsingNavAndKeys() {
+	var g = GImGui
+	IM_ASSERT(g.ActiveId != 0)
+	g.ActiveIdUsingNavDirMask = ^(ImU32)(0)
+	g.ActiveIdUsingNavInputMask = ^(ImU32)(0)
+	g.ActiveIdUsingKeyInputMask = ^(ImU64)(0)
+	NavMoveRequestCancel()
+}
+
 func IsActiveIdUsingNavDir(dir ImGuiDir) bool {
 	var g *ImGuiContext = GImGui
 	return (g.ActiveIdUsingNavDirMask & (1 << dir)) != 0

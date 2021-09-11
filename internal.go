@@ -1198,7 +1198,7 @@ type ImGuiWindow struct {
 }
 
 func NewImGuiWindow(context *ImGuiContext, name string) *ImGuiWindow {
-	var id = ImHashStr(name, uintptr(len(name)), 0)
+	var id = ImHashStr(name, 0, 0)
 	var window = ImGuiWindow{
 		Name:                         name,
 		ID:                           id,

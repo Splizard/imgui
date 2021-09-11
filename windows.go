@@ -84,7 +84,7 @@ func FindWindowByID(id ImGuiID) *ImGuiWindow {
 }
 
 func FindWindowByName(e string) *ImGuiWindow {
-	var id ImGuiID = ImHashStr(e, uintptr(len(e)), 0)
+	var id ImGuiID = ImHashStr(e, 0, 0)
 	return FindWindowByID(id)
 }
 
@@ -100,6 +100,26 @@ func SetCurrentWindow(window *ImGuiWindow) {
 		g.DrawListSharedData.FontSize = size
 	}
 
+}
+
+func setWindowPos(window *ImGuiWindow, pos *ImVec2, cond ImGuiCond) {
+	// Test condition (NB: bit 0 is always true) and clear flags for next time
+	if cond != 0 && (window.SetWindowPosAllowFlags&cond) == 0 {
+		return
+	}
+
+	IM_ASSERT(cond == 0 || ImIsPowerOfTwoInt(int(cond))) // Make sure the user doesn't attempt to combine multiple condition flags.
+	window.SetWindowPosAllowFlags &= ^(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing)
+	window.SetWindowPosVal = ImVec2{FLT_MAX, FLT_MAX}
+
+	// Set
+	var old_pos ImVec2 = window.Pos
+	window.Pos = *ImFloorVec(pos)
+	var offset ImVec2 = window.Pos.Sub(old_pos)
+	window.DC.CursorPos = window.DC.CursorPos.Add(offset)       // As we happen to move the window while it is being appended to (which is a bad idea - will smear) let's at least offset the cursor
+	window.DC.CursorMaxPos = window.DC.CursorMaxPos.Add(offset) // And more importantly we need to offset CursorMaxPos/CursorStartPos this so ContentSize calculation doesn't get affected.
+	window.DC.IdealMaxPos = window.DC.IdealMaxPos.Add(offset)
+	window.DC.CursorStartPos = window.DC.CursorStartPos.Add(offset)
 }
 
 func setWindowSize(window *ImGuiWindow, size *ImVec2, cond ImGuiCond) {

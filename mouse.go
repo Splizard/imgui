@@ -27,6 +27,27 @@ func StartLockWheelingWindow(window *ImGuiWindow) {
 	g.WheelingWindowTimer = WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER
 }
 
+func StartMouseMovingWindow(window *ImGuiWindow) {
+	// Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
+	// We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
+	// This is because we want ActiveId to be set even when the window is not permitted to move.
+	var g = GImGui
+	FocusWindow(window)
+	SetActiveID(window.MoveId, window)
+	g.NavDisableHighlight = true
+	g.ActiveIdClickOffset = g.IO.MouseClickedPos[0].Sub(window.RootWindow.Pos)
+	g.ActiveIdNoClearOnFocusLoss = true
+	SetActiveIdUsingNavAndKeys()
+
+	var can_move_window bool = true
+	if (window.Flags&ImGuiWindowFlags_NoMove != 0) || (window.RootWindow.Flags&ImGuiWindowFlags_NoMove != 0) {
+		can_move_window = false
+	}
+	if can_move_window {
+		g.MovingWindow = window
+	}
+}
+
 // Test if mouse cursor is hovering given rectangle
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)

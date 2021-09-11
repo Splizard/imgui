@@ -1237,3 +1237,10 @@ func NavMoveRequestApplyResult() {
 	g.NavDisableMouseHover = true
 	g.NavMousePosDirty = true
 }
+
+func NavMoveRequestCancel() {
+	var g = GImGui
+	g.NavMoveSubmitted = false
+	g.NavMoveScoringItems = false
+	NavUpdateAnyRequestFlag()
+}

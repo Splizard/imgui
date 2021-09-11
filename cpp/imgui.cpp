@@ -2695,23 +2695,6 @@ void ImGui::GcAwakeTransientWindowBuffers(ImGuiWindow* window)
     window.MemoryDrawListIdxCapacity = window.MemoryDrawListVtxCapacity = 0;
 }
 
-void ImGui::SetHoveredID(ImGuiID id)
-{
-   var g = GImGui
-    g.HoveredId = id;
-    g.HoveredIdAllowOverlap = false;
-    g.HoveredIdUsingMouseWheel = false;
-    if (id != 0 && g.HoveredIdPreviousFrame != id)
-        g.HoveredIdTimer = g.HoveredIdNotActiveTimer = 0.0f;
-}
-
-ImGuiID ImGui::GetHoveredID()
-{
-   var g = GImGui
-    return g.HoveredId ? g.HoveredId : g.HoveredIdPreviousFrame;
-}
-
-
 void ImGui::MarkItemEdited(ImGuiID id)
 {
     // This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
@@ -3004,28 +2987,6 @@ ImDrawListSharedData* ImGui::GetDrawListSharedData()
 {
     return &GImGui.DrawListSharedData;
 }
-
-void ImGui::StartMouseMovingWindow(ImGuiWindow* window)
-{
-    // Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
-    // We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
-    // This is because we want ActiveId to be set even when the window is not permitted to move.
-   var g = GImGui
-    FocusWindow(window);
-    SetActiveID(window.MoveId, window);
-    g.NavDisableHighlight = true;
-    g.ActiveIdClickOffset = g.IO.MouseClickedPos[0] - window.RootWindow.Pos;
-    g.ActiveIdNoClearOnFocusLoss = true;
-    SetActiveIdUsingNavAndKeys();
-
-    bool can_move_window = true;
-    if ((window.Flags & ImGuiWindowFlags_NoMove) || (window.RootWindow.Flags & ImGuiWindowFlags_NoMove))
-        can_move_window = false;
-    if (can_move_window)
-        g.MovingWindow = window;
-}
-
-
 
 
 
@@ -3450,16 +3411,6 @@ void ImGui::SetItemUsingMouseWheel()
         g.HoveredIdUsingMouseWheel = true;
     if (g.ActiveId == id)
         g.ActiveIdUsingMouseWheel = true;
-}
-
-void ImGui::SetActiveIdUsingNavAndKeys()
-{
-   var g = GImGui
-    IM_ASSERT(g.ActiveId != 0);
-    g.ActiveIdUsingNavDirMask = ~(ImU32)0;
-    g.ActiveIdUsingNavInputMask = ~(ImU32)0;
-    g.ActiveIdUsingKeyInputMask = ~(ImU64)0;
-    NavMoveRequestCancel();
 }
 
 ImVec2 ImGui::GetItemRectMin()
@@ -3911,25 +3862,6 @@ ImVec2 ImGui::GetWindowPos()
     return window.Pos;
 }
 
-void ImGui::SetWindowPos(ImGuiWindow* window, const ImVec2& pos, ImGuiCond cond)
-{
-    // Test condition (NB: bit 0 is always true) and clear flags for next time
-    if (cond && (window.SetWindowPosAllowFlags & cond) == 0)
-        return;
-
-    IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
-    window.SetWindowPosAllowFlags &= ~(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
-    window.SetWindowPosVal = ImVec2(FLT_MAX, FLT_MAX);
-
-    // Set
-    const ImVec2 old_pos = window.Pos;
-    window.Pos = ImFloor(pos);
-    ImVec2 offset = window.Pos - old_pos;
-    window.DC.CursorPos += offset;         // As we happen to move the window while it is being appended to (which is a bad idea - will smear) let's at least offset the cursor
-    window.DC.CursorMaxPos += offset;      // And more importantly we need to offset CursorMaxPos/CursorStartPos this so ContentSize calculation doesn't get affected.
-    window.DC.IdealMaxPos += offset;
-    window.DC.CursorStartPos += offset;
-}
 
 void ImGui::SetWindowPos(const ImVec2& pos, ImGuiCond cond)
 {
@@ -5349,12 +5281,6 @@ ImGuiDir ImGetDirQuadrantFromDelta(float dx, float dy)
     return (dy > 0.0f) ? ImGuiDir_Down : ImGuiDir_Up;
 }
 
-void ImGui::NavMoveRequestCancel()
-{
-   var g = GImGui
-    g.NavMoveSubmitted = g.NavMoveScoringItems = false;
-    NavUpdateAnyRequestFlag();
-}
 
 // Forward will reuse the move request again on the next frame (generally with modifications done to it)
 void ImGui::NavMoveRequestForward(ImGuiDir move_dir, ImGuiDir clip_dir, ImGuiNavMoveFlags move_flags)
@@ -5952,60 +5878,6 @@ void ImGui::LogButtons()
 // - WindowSettingsHandler_***() [Internal]
 //-----------------------------------------------------------------------------
 
-void ImGui::MarkIniSettingsDirty()
-{
-   var g = GImGui
-    if (g.SettingsDirtyTimer <= 0.0f)
-        g.SettingsDirtyTimer = g.IO.IniSavingRate;
-}
-
-void ImGui::MarkIniSettingsDirty(ImGuiWindow* window)
-{
-   var g = GImGui
-    if (!(window.Flags & ImGuiWindowFlags_NoSavedSettings))
-        if (g.SettingsDirtyTimer <= 0.0f)
-            g.SettingsDirtyTimer = g.IO.IniSavingRate;
-}
-
-ImGuiWindowSettings* ImGui::CreateNewWindowSettings(const char* name)
-{
-   var g = GImGui
-
-#if !IMGUI_DEBUG_INI_SETTINGS
-    // Skip to the "###" marker if any. We don't skip past to match the behavior of GetID()
-    // Preserve the full string when IMGUI_DEBUG_INI_SETTINGS is set to make .ini inspection easier.
-    if (const char* p = strstr(name, "###"))
-        name = p;
-#endif
-    const size_t name_len = strlen(name);
-
-    // Allocate chunk
-    const size_t chunk_size = sizeof(ImGuiWindowSettings) + name_len + 1;
-    ImGuiWindowSettings* settings = g.SettingsWindows.alloc_chunk(chunk_size);
-    IM_PLACEMENT_NEW(settings) ImGuiWindowSettings();
-    settings.ID = ImHashStr(name, name_len);
-    memcpy(settings.GetName(), name, name_len + 1);   // Store with zero terminator
-
-    return settings;
-}
-
-ImGuiWindowSettings* ImGui::FindOrCreateWindowSettings(const char* name)
-{
-    if (ImGuiWindowSettings* settings = FindWindowSettings(ImHashStr(name)))
-        return settings;
-    return CreateNewWindowSettings(name);
-}
-
-ImGuiSettingsHandler* ImGui::FindSettingsHandler(const char* type_name)
-{
-   var g = GImGui
-    const ImGuiID type_hash = ImHashStr(type_name);
-    for (int handler_n = 0; handler_n < g.SettingsHandlers.Size; handler_n++)
-        if (g.SettingsHandlers[handler_n].TypeHash == type_hash)
-            return &g.SettingsHandlers[handler_n];
-    return nil;
-}
-
 void ImGui::ClearIniSettings()
 {
    var g = GImGui
@@ -6015,110 +5887,6 @@ void ImGui::ClearIniSettings()
             g.SettingsHandlers[handler_n].ClearAllFn(&g, &g.SettingsHandlers[handler_n]);
 }
 
-
-// Zero-tolerance, no error reporting, cheap .ini parsing
-void ImGui::LoadIniSettingsFromMemory(const char* ini_data, size_t ini_size)
-{
-   var g = GImGui
-    IM_ASSERT(g.Initialized);
-    //IM_ASSERT(!g.WithinFrameScope && "Cannot be called between NewFrame() and EndFrame()");
-    //IM_ASSERT(g.SettingsLoaded == false && g.FrameCount == 0);
-
-    // For user convenience, we allow passing a non zero-terminated string (hence the ini_size parameter).
-    // For our convenience and to make the code simpler, we'll also write zero-terminators within the buffer. So let's create a writable copy..
-    if (ini_size == 0)
-        ini_size = strlen(ini_data);
-    g.SettingsIniData.Buf.resize((int)ini_size + 1);
-    char* const buf = g.SettingsIniData.Buf.Data;
-    char* const buf_end = buf + ini_size;
-    memcpy(buf, ini_data, ini_size);
-    buf_end[0] = 0;
-
-    // Call pre-read handlers
-    // Some types will clear their data (e.g. dock information) some types will allow merge/override (window)
-    for (int handler_n = 0; handler_n < g.SettingsHandlers.Size; handler_n++)
-        if (g.SettingsHandlers[handler_n].ReadInitFn)
-            g.SettingsHandlers[handler_n].ReadInitFn(&g, &g.SettingsHandlers[handler_n]);
-
-    void* entry_data = nil;
-    ImGuiSettingsHandler* entry_handler = nil;
-
-    char* line_end = nil;
-    for (char* line = buf; line < buf_end; line = line_end + 1)
-    {
-        // Skip new lines markers, then find end of the line
-        while (*line == '\n' || *line == '\r')
-            line++;
-        line_end = line;
-        while (line_end < buf_end && *line_end != '\n' && *line_end != '\r')
-            line_end++;
-        line_end[0] = 0;
-        if (line[0] == ';')
-            continue;
-        if (line[0] == '[' && line_end > line && line_end[-1] == ']')
-        {
-            // Parse "[Type][Name]". Note that 'Name' can itself contains [] characters, which is acceptable with the current format and parsing code.
-            line_end[-1] = 0;
-            const char* name_end = line_end - 1;
-            const char* type_start = line + 1;
-            char* type_end = (char*)(void*)ImStrchrRange(type_start, name_end, ']');
-            const char* name_start = type_end ? ImStrchrRange(type_end + 1, name_end, '[') : nil;
-            if (!type_end || !name_start)
-                continue;
-            *type_end = 0; // Overwrite first ']'
-            name_start++;  // Skip second '['
-            entry_handler = FindSettingsHandler(type_start);
-            entry_data = entry_handler ? entry_handler.ReadOpenFn(&g, entry_handler, name_start) : nil;
-        }
-        else if (entry_handler != nil && entry_data != nil)
-        {
-            // Let type handler parse the line
-            entry_handler.ReadLineFn(&g, entry_handler, entry_data, line);
-        }
-    }
-    g.SettingsLoaded = true;
-
-    // [DEBUG] Restore untouched copy so it can be browsed in Metrics (not strictly necessary)
-    memcpy(buf, ini_data, ini_size);
-
-    // Call post-read handlers
-    for (int handler_n = 0; handler_n < g.SettingsHandlers.Size; handler_n++)
-        if (g.SettingsHandlers[handler_n].ApplyAllFn)
-            g.SettingsHandlers[handler_n].ApplyAllFn(&g, &g.SettingsHandlers[handler_n]);
-}
-
-void ImGui::SaveIniSettingsToDisk(const char* ini_filename)
-{
-   var g = GImGui
-    g.SettingsDirtyTimer = 0.0f;
-    if (!ini_filename)
-        return;
-
-    size_t ini_data_size = 0;
-    const char* ini_data = SaveIniSettingsToMemory(&ini_data_size);
-    ImFileHandle f = ImFileOpen(ini_filename, "wt");
-    if (!f)
-        return;
-    ImFileWrite(ini_data, sizeof(char), ini_data_size, f);
-    ImFileClose(f);
-}
-
-// Call registered handlers (e.g. SettingsHandlerWindow_WriteAll() + custom handlers) to write their stuff into a text buffer
-const char* ImGui::SaveIniSettingsToMemory(size_t* out_size)
-{
-   var g = GImGui
-    g.SettingsDirtyTimer = 0.0f;
-    g.SettingsIniData.Buf.resize(0);
-    g.SettingsIniData.Buf.push_back(0);
-    for (int handler_n = 0; handler_n < g.SettingsHandlers.Size; handler_n++)
-    {
-        ImGuiSettingsHandler* handler = &g.SettingsHandlers[handler_n];
-        handler.WriteAllFn(&g, handler, &g.SettingsIniData);
-    }
-    if (out_size)
-        *out_size = (size_t)g.SettingsIniData.size();
-    return g.SettingsIniData.c_str();
-}
 
 static void WindowSettingsHandler_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)
 {
