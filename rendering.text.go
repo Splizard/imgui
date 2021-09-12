@@ -264,6 +264,7 @@ func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_size_
 }
 
 func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, clip_rect *ImVec4, text string, wrap_width float, cpu_fine_clip bool) {
+
 	// Align to be pixel perfect
 	pos.x = IM_FLOOR(pos.x)
 	pos.y = IM_FLOOR(pos.y)
@@ -309,6 +310,12 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 	var vtx_count_max int = (int)(int(len(text))-i) * 4
 	var idx_count_max int = (int)(int(len(text))-i) * 6
 	var idx_expected_size int = int(len(draw_list.IdxBuffer)) + idx_count_max
+
+	//TODO/FIXME these can be negative?
+	if idx_count_max < 0 || vtx_count_max < 0 {
+		return
+	}
+
 	draw_list.PrimReserve(idx_count_max, vtx_count_max)
 
 	var vtx_write []ImDrawVert = draw_list._VtxWritePtr
