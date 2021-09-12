@@ -27,6 +27,27 @@ func StartLockWheelingWindow(window *ImGuiWindow) {
 	g.WheelingWindowTimer = WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER
 }
 
+// is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
+func IsMouseDragging(button ImGuiMouseButton, lock_threshold float /*= -1.0*/) bool {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	if !g.IO.MouseDown[button] {
+		return false
+	}
+	return IsMouseDragPastThreshold(button, lock_threshold)
+}
+
+// Return if a mouse click/drag went past the given threshold. Valid to call during the MouseReleased frame.
+// [Internal] This doesn't test if the button is pressed
+func IsMouseDragPastThreshold(button ImGuiMouseButton, lock_threshold float /*= -1.0f*/) bool {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	if lock_threshold < 0.0 {
+		lock_threshold = g.IO.MouseDragThreshold
+	}
+	return g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold*lock_threshold
+}
+
 func StartMouseMovingWindow(window *ImGuiWindow) {
 	// Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
 	// We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.

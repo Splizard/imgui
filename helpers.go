@@ -2,6 +2,16 @@ package imgui
 
 import "fmt"
 
+//reserveVec2Slice operates like C++ vector reserve.
+func reserveVec2Slice(slice []ImVec2, capacity int) []ImVec2 {
+	if int(cap(slice)) < capacity {
+		bigger := make([]ImVec2, len(slice), capacity)
+		copy(bigger, slice)
+		return bigger
+	}
+	return slice
+}
+
 func printf(format string, v ...interface{}) {
 	fmt.Printf(format, v...)
 }

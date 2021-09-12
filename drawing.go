@@ -822,3 +822,98 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 		}
 	}
 }
+
+func (this *ImDrawList) AddCircleFilled(center ImVec2, radius float, col ImU32, num_segments int) {
+	if (col&IM_COL32_A_MASK) == 0 || radius <= 0.0 {
+		return
+	}
+
+	if num_segments <= 0 {
+		// Use arc with automatic segment count
+		this.PathArcToFastEx(center, radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0)
+		this._Path = this._Path[:len(this._Path)-1]
+	} else {
+		// Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
+		num_segments = int(ImClamp(float(num_segments), 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX))
+
+		// Because we are filling a closed shape we remove 1 from the count of segments/points
+		var a_max float = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
+		this.PathArcTo(center, radius, 0.0, a_max, num_segments-1)
+	}
+
+	this.PathFillConvex(col)
+}
+
+func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_segments int) {
+	if radius <= 0.0 {
+		this._Path = append(this._Path, center)
+		return
+	}
+
+	if num_segments > 0 {
+		this._PathArcToN(center, radius, a_min, a_max, num_segments)
+		return
+	}
+
+	// Automatic segment count
+	if radius <= this._Data.ArcFastRadiusCutoff {
+		var a_is_reverse bool = a_max < a_min
+
+		// We are going to use precomputed values for mid samples.
+		// Determine first and last sample in lookup table that belong to the arc.
+		var a_min_sample_f float = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0)
+		var a_max_sample_f float = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0)
+
+		var a_min_sample int
+		if a_is_reverse {
+			a_min_sample = (int)(ImFloorSigned(a_min_sample_f))
+		} else {
+			a_min_sample = (int)(ImCeil(a_min_sample_f))
+		}
+
+		var a_max_sample int
+		if a_is_reverse {
+			a_max_sample = (int)(ImCeil(a_max_sample_f))
+		} else {
+			a_max_sample = (int)(ImFloorSigned(a_max_sample_f))
+		}
+
+		var a_mid_samples int
+		if a_is_reverse {
+			a_mid_samples = ImMaxInt(a_min_sample-a_max_sample, 0)
+		} else {
+			a_mid_samples = ImMaxInt(a_max_sample-a_min_sample, 0)
+		}
+
+		var a_min_segment_angle float = float(a_min_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
+		var a_max_segment_angle float = float(a_max_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
+		var a_emit_start bool = (a_min_segment_angle - a_min) != 0.0
+		var a_emit_end bool = (a_max - a_max_segment_angle) != 0.0
+
+		var emit int
+		if a_emit_start {
+			emit += 1
+		}
+		if a_emit_end {
+			emit += 1
+		}
+
+		//grow slice if necessary (this._Path.reserve(_Path.Size + (a_mid_samples + 1 + emit)))
+		this._Path = reserveVec2Slice(this._Path, int(len(this._Path))+(a_mid_samples+1+emit))
+
+		if a_emit_start {
+			this._Path = append(this._Path, ImVec2{center.x + ImCos(a_min)*radius, center.y + ImSin(a_min)*radius})
+		}
+		if a_mid_samples > 0 {
+			this.PathArcToFastEx(center, radius, a_min_sample, a_max_sample, 0)
+		}
+		if a_emit_end {
+			this._Path = append(this._Path, ImVec2{center.x + ImCos(a_max)*radius, center.y + ImSin(a_max)*radius})
+		}
+	} else {
+		var arc_length float = ImAbs(a_max - a_min)
+		var circle_segment_count int = this._CalcCircleAutoSegmentCount(radius)
+		var arc_segment_count int = ImMaxInt((int)(ImCeil(float(circle_segment_count)*arc_length/(IM_PI*2.0))), (int)(2.0*IM_PI/arc_length))
+		this._PathArcToN(center, radius, a_min, a_max, arc_segment_count)
+	}
+}

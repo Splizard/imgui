@@ -3232,15 +3232,6 @@ bool ImGui::IsMouseDragPastThreshold(ImGuiMouseButton button, float lock_thresho
     return g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold * lock_threshold;
 }
 
-bool ImGui::IsMouseDragging(ImGuiMouseButton button, float lock_threshold)
-{
-   var g = GImGui
-    IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
-    if (!g.IO.MouseDown[button])
-        return false;
-    return IsMouseDragPastThreshold(button, lock_threshold);
-}
-
 ImVec2 ImGui::GetMousePos()
 {
    var g = GImGui
@@ -5250,29 +5241,6 @@ ImVec2 ImGui::FindBestWindowPosForPopup(ImGuiWindow* window)
 }
 
 
-void ImGui::SetFocusID(ImGuiID id, ImGuiWindow* window)
-{
-   var g = GImGui
-    IM_ASSERT(id != 0);
-
-    // Assume that SetFocusID() is called in the context where its window.DC.NavLayerCurrent and window.DC.NavFocusScopeIdCurrent are valid.
-    // Note that window may be != g.CurrentWindow (e.g. SetFocusID call in InputTextEx for multi-line text)
-    const ImGuiNavLayer nav_layer = window.DC.NavLayerCurrent;
-    if (g.NavWindow != window)
-        g.NavInitRequest = false;
-    g.NavWindow = window;
-    g.NavId = id;
-    g.NavLayer = nav_layer;
-    g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent;
-    window.NavLastIds[nav_layer] = id;
-    if (g.LastItemData.ID == id)
-        window.NavRectRel[nav_layer] = ImRect(g.LastItemData.NavRect.Min - window.Pos, g.LastItemData.NavRect.Max - window.Pos);
-
-    if (g.ActiveIdSource == ImGuiInputSource_Nav)
-        g.NavDisableMouseHover = true;
-    else
-        g.NavDisableHighlight = true;
-}
 
 ImGuiDir ImGetDirQuadrantFromDelta(float dx, float dy)
 {

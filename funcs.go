@@ -837,9 +837,7 @@ func IsMouseDoubleClicked(button ImGuiMouseButton) bool        { panic("not impl
 func IsAnyMouseDown() bool                                     { panic("not implemented") } // is any mouse button held?
 func GetMousePos() ImVec2                                      { panic("not implemented") } // shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
 func GetMousePosOnOpeningCurrentPopup() ImVec2                 { panic("not implemented") } // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to a user backing that value themselves)
-func IsMouseDragging(button ImGuiMouseButton, lock_threshold float /*= -1.0*/) bool {
-	panic("not implemented")
-} // is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
+
 func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*= -1.0*/) ImVec2 {
 	panic("not implemented")
 }                                                                  // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)

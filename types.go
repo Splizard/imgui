@@ -775,9 +775,7 @@ func (this *ImDrawList) AddTriangle(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32
 func (this *ImDrawList) AddCircle(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
 	panic("not implemented")
 }
-func (this *ImDrawList) AddCircleFilled(center ImVec2, radius float, col ImU32, num_segments int) {
-	panic("not implemented")
-}
+
 func (this *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
 	panic("not implemented")
 }
@@ -828,10 +826,6 @@ func (this *ImDrawList) PathFillConvex(col ImU32) {
 func (this *ImDrawList) PathStroke(col ImU32, flags ImDrawFlags, thickness float /*= 1.0f*/) {
 	this.AddPolyline(this._Path, int(len(this._Path)), col, flags, thickness)
 	this._Path = this._Path[:0]
-}
-
-func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_segments int) {
-	panic("not implemented")
 }
 
 func (this *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2, num_segments int) {
@@ -975,7 +969,18 @@ func (this *ImDrawList) _CalcCircleAutoSegmentCount(radius float) int {
 }
 
 func (this *ImDrawList) _PathArcToN(center ImVec2, radius, a_min, a_max float, num_segments int) {
-	panic("not implemented")
+	if radius <= 0.0 {
+		this._Path = append(this._Path, center)
+		return
+	}
+
+	// Note that we are adding a point at both a_min and a_max.
+	// If you are trying to draw a full closed circle you don't want the overlapping points!
+	this._Path = reserveVec2Slice(this._Path, int(len(this._Path))+(num_segments+1))
+	for i := int(0); i <= num_segments; i++ {
+		var a float = a_min + ((float)(i)/(float)(num_segments))*(a_max-a_min)
+		this._Path = append(this._Path, ImVec2{center.x + ImCos(a)*radius, center.y + ImSin(a)*radius})
+	}
 }
 
 //-----------------------------------------------------------------------------

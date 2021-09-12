@@ -158,7 +158,31 @@ func SetActiveID(id ImGuiID, window *ImGuiWindow) {
 	g.ActiveIdUsingKeyInputMask = 0x00
 }
 
-func SetFocusID(id ImGuiID, w *ImGuiWindow) { panic("not implemented") }
+func SetFocusID(id ImGuiID, window *ImGuiWindow) {
+	var g = GImGui
+	IM_ASSERT(id != 0)
+
+	// Assume that SetFocusID() is called in the context where its window.DC.NavLayerCurrent and window.DC.NavFocusScopeIdCurrent are valid.
+	// Note that window may be != g.CurrentWindow (e.g. SetFocusID call in InputTextEx for multi-line text)
+	var nav_layer ImGuiNavLayer = window.DC.NavLayerCurrent
+	if g.NavWindow != window {
+		g.NavInitRequest = false
+	}
+	g.NavWindow = window
+	g.NavId = id
+	g.NavLayer = nav_layer
+	g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent
+	window.NavLastIds[nav_layer] = id
+	if g.LastItemData.ID == id {
+		window.NavRectRel[nav_layer] = ImRect{g.LastItemData.NavRect.Min.Sub(window.Pos), g.LastItemData.NavRect.Max.Sub(window.Pos)}
+	}
+
+	if g.ActiveIdSource == ImGuiInputSource_Nav {
+		g.NavDisableMouseHover = true
+	} else {
+		g.NavDisableHighlight = true
+	}
+}
 
 func ClearActiveID() {
 	SetActiveID(0, nil) // g.ActiveId = 0
@@ -327,9 +351,7 @@ func IsActiveIdUsingKey(key ImGuiKey) bool {
 	IM_ASSERT(key < 64)
 	return (g.ActiveIdUsingKeyInputMask & ((ImU64)(1) << key)) != 0
 }
-func IsMouseDragPastThreshold(button ImGuiMouseButton, lock_threshold float /*= -1.0f*/) bool {
-	panic("not implemented")
-}
+
 func IsKeyPressedMap(key ImGuiKey, repeat bool /*= true*/) bool {
 	var g *ImGuiContext = GImGui
 	var key_index int = g.IO.KeyMap[key]

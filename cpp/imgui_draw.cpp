@@ -558,74 +558,6 @@ void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_coun
 }
 
 
-void ImDrawList::_PathArcToN(const ImVec2& center, float radius, float a_min, float a_max, int num_segments)
-{
-    if (radius <= 0.0f)
-    {
-        _Path.push_back(center);
-        return;
-    }
-
-    // Note that we are adding a point at both a_min and a_max.
-    // If you are trying to draw a full closed circle you don't want the overlapping points!
-    _Path.reserve(_Path.Size + (num_segments + 1));
-    for (int i = 0; i <= num_segments; i++)
-    {
-        const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
-        _Path.push_back(ImVec2(center.x + ImCos(a) * radius, center.y + ImSin(a) * radius));
-    }
-}
-
-
-void ImDrawList::PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments)
-{
-    if (radius <= 0.0f)
-    {
-        _Path.push_back(center);
-        return;
-    }
-
-    if (num_segments > 0)
-    {
-        _PathArcToN(center, radius, a_min, a_max, num_segments);
-        return;
-    }
-
-    // Automatic segment count
-    if (radius <= _Data.ArcFastRadiusCutoff)
-    {
-        const bool a_is_reverse = a_max < a_min;
-
-        // We are going to use precomputed values for mid samples.
-        // Determine first and last sample in lookup table that belong to the arc.
-        const float a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0f);
-        const float a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0f);
-
-        const int a_min_sample = a_is_reverse ? (int)ImFloorSigned(a_min_sample_f) : (int)ImCeil(a_min_sample_f);
-        const int a_max_sample = a_is_reverse ? (int)ImCeil(a_max_sample_f) : (int)ImFloorSigned(a_max_sample_f);
-        const int a_mid_samples = a_is_reverse ? ImMax(a_min_sample - a_max_sample, 0) : ImMax(a_max_sample - a_min_sample, 0);
-
-        const float a_min_segment_angle = a_min_sample * IM_PI * 2.0f / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
-        const float a_max_segment_angle = a_max_sample * IM_PI * 2.0f / IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
-        const bool a_emit_start = (a_min_segment_angle - a_min) != 0.0f;
-        const bool a_emit_end = (a_max - a_max_segment_angle) != 0.0f;
-
-        _Path.reserve(_Path.Size + (a_mid_samples + 1 + (a_emit_start ? 1 : 0) + (a_emit_end ? 1 : 0)));
-        if (a_emit_start)
-            _Path.push_back(ImVec2(center.x + ImCos(a_min) * radius, center.y + ImSin(a_min) * radius));
-        if (a_mid_samples > 0)
-            _PathArcToFastEx(center, radius, a_min_sample, a_max_sample, 0);
-        if (a_emit_end)
-            _Path.push_back(ImVec2(center.x + ImCos(a_max) * radius, center.y + ImSin(a_max) * radius));
-    }
-    else
-    {
-        const float arc_length = ImAbs(a_max - a_min);
-        const int circle_segment_count = _CalcCircleAutoSegmentCount(radius);
-        const int arc_segment_count = ImMax((int)ImCeil(circle_segment_count * arc_length / (IM_PI * 2.0f)), (int)(2.0f * IM_PI / arc_length));
-        _PathArcToN(center, radius, a_min, a_max, arc_segment_count);
-    }
-}
 
 ImVec2 ImBezierCubicCalc(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, float t)
 {
@@ -791,53 +723,6 @@ void ImDrawList::AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImV
     PathFillConvex(col);
 }
 
-void ImDrawList::AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness)
-{
-    if ((col & IM_COL32_A_MASK) == 0 || radius <= 0.0f)
-        return;
-
-    if (num_segments <= 0)
-    {
-        // Use arc with automatic segment count
-        _PathArcToFastEx(center, radius - 0.5f, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0);
-        _Path.Size--;
-    }
-    else
-    {
-        // Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
-        num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
-
-        // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const float a_max = (IM_PI * 2.0f) * ((float)num_segments - 1.0f) / (float)num_segments;
-        PathArcTo(center, radius - 0.5f, 0.0f, a_max, num_segments - 1);
-    }
-
-    PathStroke(col, ImDrawFlags_Closed, thickness);
-}
-
-void ImDrawList::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments)
-{
-    if ((col & IM_COL32_A_MASK) == 0 || radius <= 0.0f)
-        return;
-
-    if (num_segments <= 0)
-    {
-        // Use arc with automatic segment count
-        _PathArcToFastEx(center, radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0);
-        _Path.Size--;
-    }
-    else
-    {
-        // Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
-        num_segments = ImClamp(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX);
-
-        // Because we are filling a closed shape we remove 1 from the count of segments/points
-        const float a_max = (IM_PI * 2.0f) * ((float)num_segments - 1.0f) / (float)num_segments;
-        PathArcTo(center, radius, 0.0f, a_max, num_segments - 1);
-    }
-
-    PathFillConvex(col);
-}
 
 // Guaranteed to honor 'num_segments'
 void ImDrawList::AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness)
