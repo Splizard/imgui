@@ -70,7 +70,7 @@ func NewFrame() {
 	g.FrameCount += 1
 	g.TooltipOverrideCount = 0
 	g.WindowsActiveCount = 0
-	g.MenusIdSubmittedThisFrame = g.MenusIdSubmittedThisFrame[0:]
+	g.MenusIdSubmittedThisFrame = g.MenusIdSubmittedThisFrame[:0]
 
 	// Calculate frame-rate for the user, as a purely luxurious feature
 	g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx]

@@ -166,10 +166,9 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 	}
 
 	// Draw
+
 	for _, list := range drawData.CmdLists {
 		var indexBufferOffset uintptr
-
-		//fmt.Println(list)
 
 		if os.Getenv("DUMP") != "" {
 			if frames == 2 {
@@ -190,6 +189,8 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 		//fmt.Println(list.VtxBuffer)
 		//fmt.Println(list.IdxBuffer)
 		//os.Exit(0)
+
+		//fmt.Println(len(list.CmdBuffer))
 
 		for i, cmd := range list.CmdBuffer {
 			if cmd.UserCallback != nil {

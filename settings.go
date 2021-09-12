@@ -222,7 +222,7 @@ func WindowSettingsHandler_ClearAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) 
 	for i := range g.Windows {
 		g.Windows[i].SettingsOffset = -1
 	}
-	g.SettingsWindows = g.SettingsWindows[0:]
+	g.SettingsWindows = g.SettingsWindows[:0]
 }
 
 func WindowSettingsHandler_ReadOpen(_ *ImGuiContext, _ *ImGuiSettingsHandler, name string) interface{} {

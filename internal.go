@@ -214,7 +214,7 @@ func (this *ImBitVector) Create(sz int) {
 }
 
 func (this *ImBitVector) Clear() {
-	*this = (*this)[0:]
+	*this = (*this)[:0]
 }
 
 func (this *ImBitVector) TestBit(n int) bool {
@@ -291,7 +291,7 @@ type ImDrawDataBuilder [2][]*ImDrawList
 
 func (this *ImDrawDataBuilder) Clear() {
 	for i := range this {
-		this[i] = this[i][0:]
+		this[i] = this[i][:0]
 	}
 }
 

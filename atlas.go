@@ -692,7 +692,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// End packing
 	stbtt_PackEnd(&spc)
-	buf_rects = buf_rects[0:]
+	buf_rects = buf_rects[:0]
 
 	// 9. Setup ImFont and glyphs for runtime
 	for src_i := range src_tmp_array {
