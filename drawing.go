@@ -1,6 +1,7 @@
 package imgui
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -346,6 +347,7 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 // You must finish filling your reserved data before calling PrimReserve() again, as it may reallocate or
 // submit the intermediate results. PrimUnreserve() can be used to release unused allocations.
 func (this *ImDrawList) PrimReserve(idx_count, vtx_count int) {
+
 	// Large mesh support (when enabled)
 	IM_ASSERT(idx_count >= 0 && vtx_count >= 0)
 	if unsafe.Sizeof(ImDrawIdx(0)) == 2 && (this._VtxCurrentIdx+uint(vtx_count) >= (1 << 16)) && (this.Flags&ImDrawListFlags_AllowVtxOffset != 0) {
@@ -462,11 +464,6 @@ func (this *ImDrawList) PrimRect(a, c *ImVec2, col ImU32) {
 // TODO: Thickness anti-aliased lines cap are missing their AA fringe.
 // We avoid using the ImVec2 math operators here to reduce cost to a minimum for debug/non-inlined builds.
 func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32, flags ImDrawFlags, thickness float) {
-	return //TODO/FIXME this is broken
-	//print hex col
-
-	//fmt.Printf("%X\n", col)
-
 	if points_count < 2 {
 		return
 	}
@@ -765,7 +762,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				this._VtxWritePtr = this._VtxWritePtr[4:]
 			}
 		}
-		this._VtxCurrentIdx = uint((ImDrawIdx)(vtx_count))
+		this._VtxCurrentIdx += uint((ImDrawIdx)(vtx_count))
 	} else {
 
 		// [PATH 4] Non texture-based, Non anti-aliased lines
