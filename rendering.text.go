@@ -318,8 +318,8 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 
 	draw_list.PrimReserve(idx_count_max, vtx_count_max)
 
-	var vtx_write []ImDrawVert = draw_list._VtxWritePtr
-	var idx_write []ImDrawIdx = draw_list._IdxWritePtr
+	var vtx_write int = draw_list._VtxWritePtr
+	var idx_write int = draw_list._IdxWritePtr
 	var vtx_current_idx uint = draw_list._VtxCurrentIdx
 
 	var col_untinted ImU32 = ImU32(uint64(col) | ^uint64(IM_COL32_A_MASK))
@@ -431,35 +431,35 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 				}
 				// We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
 				{
-					idx_write[0] = (ImDrawIdx)(vtx_current_idx)
-					idx_write[1] = (ImDrawIdx)(vtx_current_idx + 1)
-					idx_write[2] = (ImDrawIdx)(vtx_current_idx + 2)
-					idx_write[3] = (ImDrawIdx)(vtx_current_idx)
-					idx_write[4] = (ImDrawIdx)(vtx_current_idx + 2)
-					idx_write[5] = (ImDrawIdx)(vtx_current_idx + 3)
-					vtx_write[0].pos.x = x1
-					vtx_write[0].pos.y = y1
-					vtx_write[0].col = glyph_col
-					vtx_write[0].uv.x = u1
-					vtx_write[0].uv.y = v1
-					vtx_write[1].pos.x = x2
-					vtx_write[1].pos.y = y1
-					vtx_write[1].col = glyph_col
-					vtx_write[1].uv.x = u2
-					vtx_write[1].uv.y = v1
-					vtx_write[2].pos.x = x2
-					vtx_write[2].pos.y = y2
-					vtx_write[2].col = glyph_col
-					vtx_write[2].uv.x = u2
-					vtx_write[2].uv.y = v2
-					vtx_write[3].pos.x = x1
-					vtx_write[3].pos.y = y2
-					vtx_write[3].col = glyph_col
-					vtx_write[3].uv.x = u1
-					vtx_write[3].uv.y = v2
-					vtx_write = vtx_write[4:]
+					draw_list.IdxBuffer[idx_write] = (ImDrawIdx)(vtx_current_idx)
+					draw_list.IdxBuffer[idx_write+1] = (ImDrawIdx)(vtx_current_idx + 1)
+					draw_list.IdxBuffer[idx_write+2] = (ImDrawIdx)(vtx_current_idx + 2)
+					draw_list.IdxBuffer[idx_write+3] = (ImDrawIdx)(vtx_current_idx)
+					draw_list.IdxBuffer[idx_write+4] = (ImDrawIdx)(vtx_current_idx + 2)
+					draw_list.IdxBuffer[idx_write+5] = (ImDrawIdx)(vtx_current_idx + 3)
+					draw_list.VtxBuffer[vtx_write+0].pos.x = x1
+					draw_list.VtxBuffer[vtx_write+0].pos.y = y1
+					draw_list.VtxBuffer[vtx_write+0].col = glyph_col
+					draw_list.VtxBuffer[vtx_write+0].uv.x = u1
+					draw_list.VtxBuffer[vtx_write+0].uv.y = v1
+					draw_list.VtxBuffer[vtx_write+1].pos.x = x2
+					draw_list.VtxBuffer[vtx_write+1].pos.y = y1
+					draw_list.VtxBuffer[vtx_write+1].col = glyph_col
+					draw_list.VtxBuffer[vtx_write+1].uv.x = u2
+					draw_list.VtxBuffer[vtx_write+1].uv.y = v1
+					draw_list.VtxBuffer[vtx_write+2].pos.x = x2
+					draw_list.VtxBuffer[vtx_write+2].pos.y = y2
+					draw_list.VtxBuffer[vtx_write+2].col = glyph_col
+					draw_list.VtxBuffer[vtx_write+2].uv.x = u2
+					draw_list.VtxBuffer[vtx_write+2].uv.y = v2
+					draw_list.VtxBuffer[vtx_write+3].pos.x = x1
+					draw_list.VtxBuffer[vtx_write+3].pos.y = y2
+					draw_list.VtxBuffer[vtx_write+3].col = glyph_col
+					draw_list.VtxBuffer[vtx_write+3].uv.x = u1
+					draw_list.VtxBuffer[vtx_write+3].uv.y = v2
+					vtx_write += 4
 					vtx_current_idx += 4
-					idx_write = idx_write[6:]
+					idx_write += 6
 				}
 			}
 		}
@@ -467,8 +467,9 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 	}
 
 	// Give back unused vertices (clipped ones, blanks) ~ this is essentially a PrimUnreserve() action.
-	draw_list.VtxBuffer = draw_list.VtxBuffer[:len(draw_list.VtxBuffer)-len(vtx_write)]
-	draw_list.IdxBuffer = draw_list.IdxBuffer[:len(draw_list.IdxBuffer)-len(idx_write)]
+	//fmt.Println(int(len(draw_list.VtxBuffer)) - vtx_write)
+	draw_list.VtxBuffer = draw_list.VtxBuffer[:vtx_write]
+	draw_list.IdxBuffer = draw_list.IdxBuffer[:idx_write]
 	draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].ElemCount -= uint(idx_expected_size - int(len(draw_list.IdxBuffer)))
 	draw_list._VtxWritePtr = vtx_write
 	draw_list._IdxWritePtr = idx_write

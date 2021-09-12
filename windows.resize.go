@@ -76,7 +76,7 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 	if (flags&ImGuiWindowFlags_NoResize != 0) || (flags&ImGuiWindowFlags_AlwaysAutoResize != 0) || window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0 {
 		return false
 	}
-	if window.WasActive == false { // Early out to avoid running this code for e.g. an hidden implicit/fallback Debug window.
+	if !window.WasActive { // Early out to avoid running this code for e.g. an hidden implicit/fallback Debug window.
 		return false
 	}
 

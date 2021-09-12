@@ -685,8 +685,8 @@ type ImDrawList struct {
 	_VtxCurrentIdx  uint                  // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
 	_Data           *ImDrawListSharedData // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
 	_OwnerName      string                // Pointer to owner window's name for debugging
-	_VtxWritePtr    []ImDrawVert          // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-	_IdxWritePtr    []ImDrawIdx           // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+	_VtxWritePtr    int                   // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
+	_IdxWritePtr    int                   // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
 	_ClipRectStack  []ImVec4              // [Internal]
 	_TextureIdStack []ImTextureID         // [Internal]
 	_Path           []ImVec2              // [Internal] current path building
@@ -929,16 +929,16 @@ func (this *ImDrawList) PrimQuadUV(a, b, c, d *ImVec2, uv_a, uv_b, yv_c, uv_d *I
 	panic("not implemented")
 }
 func (this *ImDrawList) PrimWriteVtx(pos ImVec2, uv *ImVec2, col ImU32) {
-	this._VtxWritePtr[0].pos = pos
-	this._VtxWritePtr[0].uv = *uv
-	this._VtxWritePtr[0].col = col
-	this._VtxWritePtr = this._VtxWritePtr[1:]
+	this.VtxBuffer[this._VtxWritePtr].pos = pos
+	this.VtxBuffer[this._VtxWritePtr].uv = *uv
+	this.VtxBuffer[this._VtxWritePtr].col = col
+	this._VtxWritePtr++
 
 	this._VtxCurrentIdx++
 }
 func (this *ImDrawList) PrimWriteIdx(idx ImDrawIdx) {
-	this._IdxWritePtr[0] = idx
-	this._IdxWritePtr = this._IdxWritePtr[1:]
+	this.IdxBuffer[this._IdxWritePtr] = idx
+	this._IdxWritePtr++
 }
 
 func (this *ImDrawList) PrimVtx(pos ImVec2, uv *ImVec2, col ImU32) {
