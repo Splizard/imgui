@@ -437,7 +437,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			if window.ScrollbarX {
 				scroll_bar_size_x = style.ScrollbarSize
 			}
-			window.ScrollbarSizes = ImVec2{scroll_bar_size_x, scroll_bar_size_y}
+			window.ScrollbarSizes = ImVec2{scroll_bar_size_y, scroll_bar_size_x}
 		}
 
 		// UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)

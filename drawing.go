@@ -1,7 +1,6 @@
 package imgui
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -403,10 +402,10 @@ func (this *ImDrawList) AddTriangleFilled(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col
 func AddDrawListToDrawData(out_list *[]*ImDrawList, draw_list *ImDrawList) {
 	// Remove trailing command if unused.
 	// Technically we could return directly instead of popping, but this make things looks neat in Metrics/Debugger window as well.
-	//draw_list._PopUnusedDrawCmd()
-	//if len(draw_list.CmdBuffer) == 0 {
-	//	return
-	//}
+	draw_list._PopUnusedDrawCmd()
+	if len(draw_list.CmdBuffer) == 0 {
+		return
+	}
 
 	// Draw list sanity check. Detect mismatch between PrimReserve() calls and incrementing _VtxCurrentIdx, _VtxWritePtr etc.
 	// May trigger for you if you are using PrimXXX functions incorrectly.

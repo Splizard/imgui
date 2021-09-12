@@ -11,9 +11,9 @@ func GetWindowScrollbarRect(window *ImGuiWindow, axis ImGuiAxis) ImRect {
 	//TODO/FIXME is this correct?
 	switch axis {
 	case ImGuiAxis_X:
-		scrollbar_size = window.ScrollbarSizes.x
-	case ImGuiAxis_Y:
 		scrollbar_size = window.ScrollbarSizes.y
+	case ImGuiAxis_Y:
+		scrollbar_size = window.ScrollbarSizes.x
 	}
 
 	IM_ASSERT(scrollbar_size > 0.0)
