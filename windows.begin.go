@@ -252,6 +252,9 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			if window.WantCollapseToggle {
 				window.Collapsed = !window.Collapsed
 				MarkIniSettingsDirtyWindow(window)
+				if !window.Collapsed {
+					window.SizeFull = window.Size
+				}
 			}
 		} else {
 			window.Collapsed = false
@@ -746,7 +749,9 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		window.GetIDs("#FOCUSSCOPE", "")
 	}
 
-	PushClipRect(window.InnerClipRect.Min, window.InnerClipRect.Max, true)
+	if !window.Collapsed {
+		PushClipRect(window.InnerClipRect.Min, window.InnerClipRect.Max, true)
+	}
 
 	// Clear 'accessed' flag last thing (After PushClipRect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
 	window.WriteAccessed = false
