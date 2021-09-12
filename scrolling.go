@@ -63,8 +63,10 @@ func Scrollbar(axis ImGuiAxis) {
 	switch axis {
 	case ImGuiAxis_X:
 		size_avail = window.InnerRect.Max.x - window.InnerRect.Min.x
+		size_contents = window.ContentSize.x + window.WindowPadding.x*2.0
 		amount = window.Scroll.x
 	case ImGuiAxis_Y:
+		size_avail = window.InnerRect.Max.y - window.InnerRect.Min.y
 		size_contents = window.ContentSize.y + window.WindowPadding.y*2.0
 		amount = window.Scroll.y
 	}
