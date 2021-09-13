@@ -1,6 +1,7 @@
 package imgui
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -158,7 +159,7 @@ func (this *ImDrawList) PathArcToFast(center ImVec2, radius float, a_min_sample,
 		this._Path = append(this._Path, center)
 		return
 	}
-	this.PathArcToFastEx(center, radius, a_min_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, a_min_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, 0)
+	this.PathArcToFastEx(center, radius, a_min_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, a_max_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, 0)
 }
 
 // We intentionally avoid using ImVec2 and its math operators here to reduce cost to a minimum for debug/non-inlined builds.
@@ -339,6 +340,8 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 		out_ptr[0].y = center.y + s.y*radius
 		out_ptr = out_ptr[1:]
 	}
+
+	IM_ASSERT(len(out_ptr) == 0)
 } // Use precomputed angles for a 12 steps circle
 
 // Advanced: Primitives allocations
