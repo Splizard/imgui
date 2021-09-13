@@ -238,14 +238,14 @@ func WindowSettingsHandler_ReadOpen(_ *ImGuiContext, _ *ImGuiSettingsHandler, na
 func WindowSettingsHandler_ReadLine(_ *ImGuiContext, _ *ImGuiSettingsHandler, entry interface{}, line string) {
 	var settings = entry.(*ImGuiWindowSettings)
 	var x, y int
-	var i int
+	var i bool
 
 	if n, _ := fmt.Sscanf(line, "Pos=%v,%v", &x, &y); n == 2 {
 		settings.Pos = ImVec2ih{(short)(x), (short)(y)}
 	} else if n, _ := fmt.Sscanf(line, "Size=%v,%v", &x, &y); n == 2 {
 		settings.Size = ImVec2ih{(short)(x), (short)(y)}
 	} else if n, _ := fmt.Sscanf(line, "Collapsed=%v", &i); n == 1 {
-		settings.Collapsed = (i != 0)
+		settings.Collapsed = i
 	}
 }
 
@@ -279,7 +279,7 @@ func WindowSettingsHandler_WriteAll(ctx *ImGuiContext, handler *ImGuiSettingsHan
 		}
 		IM_ASSERT(settings.ID == window.ID)
 		settings.Pos = ImVec2ih{short(window.Pos.x), short(window.Pos.y)}
-		settings.Size = ImVec2ih{short(window.SizeFull.x), short(window.SizeFull.y)}
+		settings.Size = ImVec2ih{short(window.Size.x), short(window.Size.y)}
 
 		settings.Collapsed = window.Collapsed
 	}
