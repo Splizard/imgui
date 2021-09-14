@@ -185,14 +185,14 @@ func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, n
 
 	// Collapse button (submitting first so it gets priority when choosing a navigation init fallback)
 	if has_collapse_button {
-		if CollapseButton(window.GetIDs("#COLLAPSE", ""), &collapse_button_pos) {
+		if CollapseButton(window.GetIDs("#COLLAPSE"), &collapse_button_pos) {
 			window.WantCollapseToggle = true // Defer actual collapsing to next frame as we are too far in the Begin() function
 		}
 	}
 
 	// Close button
 	if has_close_button {
-		if CloseButton(window.GetIDs("#CLOSE", ""), &close_button_pos) {
+		if CloseButton(window.GetIDs("#CLOSE"), &close_button_pos) {
 			*p_open = false
 		}
 	}

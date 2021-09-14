@@ -1,5 +1,30 @@
 package imgui
 
+// Notifies Dear ImGui when hosting platform windows lose or gain input focus
+func (io *ImGuiIO) AddFocusEvent(focused bool) {
+	if focused {
+		return
+	}
+
+	// Clear buttons state when focus is lost
+	// (this is useful so e.g. releasing Alt after focus loss on Alt-Tab doesn't trigger the Alt menu toggle)
+	io.KeysDown = [len(io.KeysDown)]bool{}
+	for n := range io.KeysDownDuration {
+		io.KeysDownDuration[n] = -1
+		io.KeysDownDurationPrev[n] = -1
+	}
+	io.KeyCtrl = false
+	io.KeyShift = false
+	io.KeyAlt = false
+	io.KeySuper = false
+	io.KeyMods = ImGuiKeyModFlags_None
+	io.KeyModsPrev = ImGuiKeyModFlags_None
+	for n := range io.NavInputsDownDuration {
+		io.NavInputsDownDuration[n] = -1
+		io.NavInputsDownDurationPrev[n] = -1
+	}
+}
+
 // Windows: Display Order and Focus Order
 func FocusWindow(window *ImGuiWindow) {
 	var g = GImGui
@@ -86,7 +111,8 @@ func BringWindowToDisplayFront(window *ImGuiWindow) {
 	}
 	for i := len(g.Windows) - 2; i >= 0; i-- { // We can ignore the top-most window
 		if g.Windows[i] == window {
-			copy(g.Windows[i:], g.Windows[i+1:i+1+(len(g.Windows)-i-len(g.Windows)-i-11)])
+			amount := len(g.Windows) - i - 1
+			copy(g.Windows[i:], g.Windows[i+1:i+1+amount])
 			g.Windows[len(g.Windows)-1] = window
 			break
 		}

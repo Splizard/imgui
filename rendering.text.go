@@ -12,11 +12,32 @@ func ImTextCharFromUtf8(out_char *uint, text string) int {
 	return 0
 }
 
+// shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
+func TextColored(col *ImVec4, format string, args ...interface{}) {
+	PushStyleColorVec(ImGuiCol_Text, col)
+	Text(format, args...)
+	PopStyleColor(1)
+}
+
 // Render helpers
 // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
 // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
-func RenderText(pos ImVec2, t string, hide_text_after_hash bool /*= true*/) {
-	panic("not implemented")
+func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
+	var g = GImGui
+	var window = g.CurrentWindow
+
+	// Hide anything after a '##' string
+	var text_display_end string
+	if hide_text_after_hash {
+		text_display_end = FindRenderedTextEnd(text)
+	}
+
+	if text != text_display_end {
+		window.DrawList.AddTextV(g.Font, g.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, 0, nil)
+		if g.LogEnabled {
+			LogRenderedText(&pos, text)
+		}
+	}
 }
 
 func RenderTextWrapped(pos ImVec2, text string, wrap_width float) {

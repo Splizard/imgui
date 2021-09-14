@@ -222,12 +222,11 @@ func PushOverrideID(id ImGuiID)                              { panic("not implem
 func GetIDWithSeed(n string, d string, seed ImGuiID) ImGuiID { panic("not implemented") }
 
 // Basic Helpers for widget code
-func ItemInputable(w *ImGuiWindow, id ImGuiID)                          { panic("not implemented") }
-func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 { panic("not implemented") }
-func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float           { panic("not implemented") }
-func PushMultiItemsWidths(components int, width_full float)             { panic("not implemented") }
-func IsItemToggledSelection() bool                                      { panic("not implemented") } // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
-func GetContentRegionMaxAbs() ImVec2                                    { panic("not implemented") }
+func ItemInputable(w *ImGuiWindow, id ImGuiID)                { panic("not implemented") }
+func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float { panic("not implemented") }
+func PushMultiItemsWidths(components int, width_full float)   { panic("not implemented") }
+func IsItemToggledSelection() bool                            { panic("not implemented") } // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
+func GetContentRegionMaxAbs() ImVec2                          { panic("not implemented") }
 func ShrinkWidths(s *ImGuiShrinkWidthItem, count int, width_excess float) {
 	panic("not implemented")
 }
@@ -253,14 +252,7 @@ func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) 
 
 func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool   { panic("not implemented") }
 func BeginPopupEx(id ImGuiID, extra_flags ImGuiWindowFlags) bool { panic("not implemented") }
-func BeginTooltipEx(extra_flags ImGuiWindowFlags, tooltip_flags ImGuiTooltipFlags) {
-	panic("not implemented")
-}
-func GetPopupAllowedExtentRect(w *ImGuiWindow) ImRect { panic("not implemented") }
-func FindBestWindowPosForPopup(w *ImGuiWindow) ImVec2 { panic("not implemented") }
-func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, r *ImGuiDir, r_outer *ImRect, r_avoid *ImRect, policy ImGuiPopupPositionPolicy) ImVec2 {
-	panic("not implemented")
-}
+
 func BeginViewportSideBar(e string, t *ImGuiViewport, dir ImGuiDir, size float, window_flags ImGuiWindowFlags) bool {
 	panic("not implemented")
 }
@@ -380,7 +372,6 @@ func SetWindowClipRectBeforeSetChannel(w *ImGuiWindow, clip_rect *ImRect) {
 func BeginColumns(d string, count int, flags ImGuiOldColumnFlags)         { panic("not implemented") } // setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
 func EndColumns()                                                         { panic("not implemented") } // close columns
 func PushColumnClipRect(column_index int)                                 { panic("not implemented") }
-func PushColumnsBackground()                                              { panic("not implemented") }
 func PopColumnsBackground()                                               { panic("not implemented") }
 func GetColumnsID(d string, count int) ImGuiID                            { panic("not implemented") }
 func FindOrCreateColumns(w *ImGuiWindow, id ImGuiID) *ImGuiOldColumns     { panic("not implemented") }
@@ -475,9 +466,45 @@ func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) { panic("not 
 func RenderColorRectWithAlphaCheckerboard(t *ImDrawList, p_min ImVec2, p_max ImVec2, fill_col ImU32, grid_step float, grid_off ImVec2, rounding float, flags ImDrawFlags) {
 	panic("not implemented")
 }
+
+// Navigation highlight
 func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
-	panic("not implemented")
-} // Navigation highlight
+	var g = GImGui
+	if id != g.NavId {
+		return
+	}
+	if g.NavDisableHighlight && 0 == (flags&ImGuiNavHighlightFlags_AlwaysDraw) {
+		return
+	}
+	var window = g.CurrentWindow
+	if window.DC.NavHideHighlightOneFrame {
+		return
+	}
+
+	var rounding float
+	if 0 == (flags & ImGuiNavHighlightFlags_NoRounding) {
+		rounding = g.Style.FrameRounding
+	}
+
+	var display_rect ImRect = *bb
+	display_rect.ClipWith(window.ClipRect)
+	if flags&ImGuiNavHighlightFlags_TypeDefault != 0 {
+		var THICKNESS float = 2.0
+		var DISTANCE float = 3.0 + THICKNESS*0.5
+		display_rect.ExpandVec(ImVec2{DISTANCE, DISTANCE})
+		var fully_visible bool = window.ClipRect.ContainsRect(display_rect)
+		if !fully_visible {
+			window.DrawList.PushClipRect(display_rect.Min, display_rect.Max, false)
+		}
+		window.DrawList.AddRect(display_rect.Min.Add(ImVec2{THICKNESS * 0.5, THICKNESS * 0.5}), display_rect.Max.Sub(ImVec2{THICKNESS * 0.5, THICKNESS * 0.5}), GetColorU32FromID(ImGuiCol_NavHighlight, 1), rounding, 0, THICKNESS)
+		if !fully_visible {
+			window.DrawList.PopClipRect()
+		}
+	}
+	if flags&ImGuiNavHighlightFlags_TypeThin != 0 {
+		window.DrawList.AddRect(display_rect.Min, display_rect.Max, GetColorU32FromID(ImGuiCol_NavHighlight, 1), rounding, 0, 1.0)
+	}
+}
 
 func RenderBullet(t *ImDrawList, pos ImVec2, col ImU32)              { panic("not implemented") }
 func RenderCheckMark(t *ImDrawList, pos ImVec2, col ImU32, sz float) { panic("not implemented") }
@@ -496,8 +523,7 @@ func RenderRectFilledWithHole(t *ImDrawList, outer ImRect, inner ImRect, col ImU
 
 // Widgets
 
-func ButtonEx(l string, size_arg *ImVec2, flags ImGuiButtonFlags) bool { panic("not implemented") }
-func CloseButton(id ImGuiID, pos *ImVec2) bool                         { panic("not implemented") }
+func CloseButton(id ImGuiID, pos *ImVec2) bool { panic("not implemented") }
 func ArrowButtonEx(d string, dir ImGuiDir, size_arg ImVec2, flags ImGuiButtonFlags) bool {
 	panic("not implemented")
 }
@@ -508,7 +534,6 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 
 func GetWindowResizeCornerID(w *ImGuiWindow, n int) ImGuiID        { panic("not implemented") } // 0..3: corners
 func GetWindowResizeBorderID(w *ImGuiWindow, dir ImGuiDir) ImGuiID { panic("not implemented") }
-func SeparatorEx(flags ImGuiSeparatorFlags)                        { panic("not implemented") }
 func CheckboxFlagsU(l string, s *ImS64, flags_value ImS64) bool    { panic("not implemented") }
 func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool    { panic("not implemented") }
 
@@ -523,11 +548,6 @@ func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, v interface
 func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size2 *float, min_size1 float, min_size2 float, hover_extend float, hover_visibility_delay float) bool {
 	panic("not implemented")
 }
-func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, l string, d string) bool {
-	panic("not implemented")
-}
-func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool { panic("not implemented") } // Consume previous SetNextItemOpen() data, if any. May return true when logging
-func TreePushOverrideID(id ImGuiID)                                    { panic("not implemented") }
 
 // Template functions are instantiated in imgui_widgets.cpp for a finite number of types.
 // To use them externally (for custom widget) you may need an "extern template" statement in your code in order to link to existing instances and silence Clang warnings (see #2036).

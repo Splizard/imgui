@@ -271,6 +271,9 @@ func NewFrame() {
 	g.ItemFlagsStack = append(g.ItemFlagsStack, ImGuiItemFlags_None)
 	g.GroupStack = g.GroupStack[:0]
 
+	// [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
+	UpdateDebugToolItemPicker()
+
 	// Create implicit/fallback window - which we will only render it if the user has added something to it.
 	// We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
 	// This fallback is particularly important as it avoid ImGui:: calls from crashing.

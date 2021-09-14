@@ -53,6 +53,8 @@ func main() {
 		p.NewFrame()
 		imgui.NewFrame()
 
+		imgui.ShowMetricsWindow(nil)
+
 		// 1. Show a simple window.
 		// Tip: if we don't call imgui.Begin()/imgui.End() the widgets automatically appears in a window called "Debug".
 		//{

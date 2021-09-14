@@ -17,6 +17,30 @@ func IsMousePosValid(mouse_pos *ImVec2) bool {
 	return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID
 }
 
+// did mouse button clicked? (went from !Down to Down)
+func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	var t float = g.IO.MouseDownDuration[button]
+	if t == 0.0 {
+		return true
+	}
+
+	if repeat && t > g.IO.KeyRepeatDelay {
+		// FIXME: 2019/05/03: Our old repeat code was wrong here and led to doubling the repeat rate, which made it an ok rate for repeat on mouse hold.
+		var amount int = CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate*0.50)
+		if amount > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// set desired cursor type
+func SetMouseCursor(cursor_type ImGuiMouseCursor) {
+	GImGui.MouseCursor = cursor_type
+}
+
 func StartLockWheelingWindow(window *ImGuiWindow) {
 	var g = GImGui
 	if g.WheelingWindow == window {

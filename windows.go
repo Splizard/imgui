@@ -12,6 +12,13 @@ func IsWindowActiveAndVisible(window *ImGuiWindow) bool {
 	return (window.Active) && (!window.Hidden)
 }
 
+// set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
+func SetNextWindowBgAlpha(alpha float) {
+	var g = GImGui
+	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasBgAlpha
+	g.NextWindowData.BgAlphaVal = alpha
+}
+
 // Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
 func AddRootWindowToDrawData(window *ImGuiWindow) {
 	var layer int
@@ -368,6 +375,8 @@ func CalcWindowContentSizes(window *ImGuiWindow, content_size_current, content_s
 func End() {
 	var g = GImGui
 	var window = g.CurrentWindow
+
+	window.StateStorage = window.DC.StateStorage
 
 	// Error checking: verify that user hasn't called End() too many times!
 	if len(g.CurrentWindowStack) <= 1 && g.WithinFrameScopeWithImplicitWindow {

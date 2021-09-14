@@ -98,7 +98,79 @@ func NewImGuiStyle() ImGuiStyle {
 	return style
 }
 
-func (ImGuiStyle) ScaleAllSizes(scale_factor float) { panic("not implemented") }
+// To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
+// Important: This operation is lossy because we round all sizes to integer. If you need to change your scale multiples, call this over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
+func (style *ImGuiStyle) ScaleAllSizes(scale_factor float) {
+	winpad := style.WindowPadding.Scale(scale_factor)
+	style.WindowPadding = *ImFloorVec(&winpad)
+	style.WindowRounding = ImFloor(style.WindowRounding * scale_factor)
+	minsize := style.WindowMinSize.Scale(scale_factor)
+	style.WindowMinSize = *ImFloorVec(&minsize)
+	style.ChildRounding = ImFloor(style.ChildRounding * scale_factor)
+	style.PopupRounding = ImFloor(style.PopupRounding * scale_factor)
+	framepad := style.FramePadding.Scale(scale_factor)
+	style.FramePadding = *ImFloorVec(&framepad)
+	style.FrameRounding = ImFloor(style.FrameRounding * scale_factor)
+	itemspacing := style.ItemSpacing.Scale(scale_factor)
+	style.ItemSpacing = *ImFloorVec(&itemspacing)
+	innerspacing := style.ItemInnerSpacing.Scale(scale_factor)
+	style.ItemInnerSpacing = *ImFloorVec(&innerspacing)
+	cellpad := style.CellPadding.Scale(scale_factor)
+	style.CellPadding = *ImFloorVec(&cellpad)
+	touchxtra := style.TouchExtraPadding.Scale(scale_factor)
+	style.TouchExtraPadding = *ImFloorVec(&touchxtra)
+	style.IndentSpacing = ImFloor(style.IndentSpacing * scale_factor)
+	style.ColumnsMinSpacing = ImFloor(style.ColumnsMinSpacing * scale_factor)
+	style.ScrollbarSize = ImFloor(style.ScrollbarSize * scale_factor)
+	style.ScrollbarRounding = ImFloor(style.ScrollbarRounding * scale_factor)
+	style.GrabMinSize = ImFloor(style.GrabMinSize * scale_factor)
+	style.GrabRounding = ImFloor(style.GrabRounding * scale_factor)
+	style.LogSliderDeadzone = ImFloor(style.LogSliderDeadzone * scale_factor)
+	style.TabRounding = ImFloor(style.TabRounding * scale_factor)
+	if style.TabMinWidthForCloseButton != FLT_MAX {
+		style.TabMinWidthForCloseButton = ImFloor(style.TabMinWidthForCloseButton * scale_factor)
+	}
+	diswinpad := style.DisplayWindowPadding.Scale(scale_factor)
+	style.DisplayWindowPadding = *ImFloorVec(&diswinpad)
+	safepad := style.DisplaySafeAreaPadding.Scale(scale_factor)
+	style.DisplaySafeAreaPadding = *ImFloorVec(&safepad)
+	style.MouseCursorScale = ImFloor(style.MouseCursorScale * scale_factor)
+}
+
+// retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
+func GetStyleColorVec4(idx ImGuiCol) *ImVec4 {
+	var style = GImGui.Style
+	return &style.Colors[idx]
+}
+
+// FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
+func PushStyleColorInt(idx ImGuiCol, col ImU32) {
+	var g = GImGui
+	var backup ImGuiColorMod
+	backup.Col = idx
+	backup.BackupValue = g.Style.Colors[idx]
+	g.ColorStack = append(g.ColorStack, backup)
+	g.Style.Colors[idx] = ColorConvertU32ToFloat4(col)
+}
+
+func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
+	var g = GImGui
+	var backup ImGuiColorMod
+	backup.Col = idx
+	backup.BackupValue = g.Style.Colors[idx]
+	g.ColorStack = append(g.ColorStack, backup)
+	g.Style.Colors[idx] = *col
+}
+
+func PopStyleColor(count int /*= 1*/) {
+	var g = GImGui
+	for count > 0 {
+		var backup *ImGuiColorMod = &g.ColorStack[len(g.ColorStack)-1]
+		g.Style.Colors[backup.Col] = backup.BackupValue
+		g.ColorStack = g.ColorStack[:len(g.ColorStack)-1]
+		count--
+	}
+}
 
 func StyleColorsDark(dst *ImGuiStyle) {
 	var style *ImGuiStyle = dst

@@ -1,5 +1,29 @@
 package imgui
 
+// Pass in translated ASCII characters for text input.
+// - with glfw you can get those from the callback set in glfwSetCharCallback()
+// - on Windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
+func (io *ImGuiIO) AddInputCharacter(c rune) {
+	if c != 0 {
+		if c <= IM_UNICODE_CODEPOINT_MAX {
+			io.InputQueueCharacters = append(io.InputQueueCharacters, c)
+		} else {
+			io.AddInputCharacter(IM_UNICODE_CODEPOINT_INVALID)
+		}
+	}
+}
+
+func (io *ImGuiIO) AddInputCharacters(chars string) {
+	for _, c := range chars {
+		io.AddInputCharacter(c)
+	}
+}
+
+// Clear the text input buffer manually
+func (io *ImGuiIO) ClearInputCharacters() {
+	io.InputQueueCharacters = io.InputQueueCharacters[:0]
+}
+
 func GetMergedKeyModFlags() ImGuiKeyModFlags {
 	var g = GImGui
 	var key_mod_flags ImGuiKeyModFlags = ImGuiKeyModFlags_None

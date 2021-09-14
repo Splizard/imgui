@@ -30,13 +30,16 @@ func GetStyle() *ImGuiStyle { panic("not implemented") } // access the Style str
 
 // Demo, Debug, Information
 func ShowDemoWindow(p_open *bool)         { panic("not implemented") } // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
-func ShowMetricsWindow(p_open *bool)      { panic("not implemented") } // create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
 func ShowAboutWindow(p_open *bool)        { panic("not implemented") } // create About window. display Dear ImGui version, credits and build/system information.
 func ShowStyleEditor(ref *ImGuiStyle)     { panic("not implemented") } // add style editor block (not a window). you can pass in a reference ImGuiStyle structure to compare to, revert to and save to (else it uses the default style)
 func ShowStyleSelector(label string) bool { panic("not implemented") } // add style selector block (not a window), essentially a combo listing the default styles.
 func ShowFontSelector(label string)       { panic("not implemented") } // add font selector block (not a window), essentially a combo listing the loaded fonts.
 func ShowUserGuide()                      { panic("not implemented") } // add basic help/info block (not a window): how to manipulate ImGui as a end-user (mouse/keyboard controls).
-func GetVersion() string                  { panic("not implemented") } // get the compiled version string e.g. "1.80 WIP" (essentially the value for IMGUI_VERSION from the compiled version of imgui.cpp)
+
+// get the compiled version string e.g. "1.80 WIP" (essentially the value for IMGUI_VERSION from the compiled version of imgui.cpp)
+func GetVersion() string {
+	return IMGUI_VERSION
+}
 
 // Styles
 func StyleColorsLight(dst *ImGuiStyle)   { panic("not implemented") } // best used with borders and a custom, thicker font
@@ -80,7 +83,6 @@ func SetNextWindowSizeConstraints(size_min ImVec2, size_max ImVec2, custom_callb
 func SetNextWindowContentSize(size ImVec2)                                { panic("not implemented") } // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0 to leave it automatic. call before Begin()
 func SetNextWindowCollapsed(collapsed bool, cond ImGuiCond)               { panic("not implemented") } // set next window collapsed state. call before Begin()
 func SetNextWindowFocus()                                                 { panic("not implemented") } // set next window to be focused / top-most. call before Begin()
-func SetNextWindowBgAlpha(alpha float)                                    { panic("not implemented") } // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
 func SetWindowPos(pos ImVec2, cond ImGuiCond)                             { panic("not implemented") } // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
 func SetWindowSize(size ImVec2, cond ImGuiCond)                           { panic("not implemented") } // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
 func SetWindowCollapsed(collapsed bool, cond ImGuiCond)                   { panic("not implemented") } // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
@@ -112,11 +114,9 @@ func SetScrollFromPosX(local_x, center_x_ratio float /*= 0.5*/) { panic("not imp
 func SetScrollFromPosY(local_y, center_y_ratio float /*= 0.5*/) { panic("not implemented") } // adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
 // Parameters stacks (shared)
-func PushFont(font ImFont)                             { panic("not implemented") } // use NULL as a shortcut to push default font
-func PopFont()                                         { panic("not implemented") }
-func PushStyleColorInt(idx ImGuiCol, col ImU32)        { panic("not implemented") } // modify a style color. always use this if you modify the style after NewFrame().
-func PushStyleColorVec(idx ImGuiCol, col ImVec4)       { panic("not implemented") }
-func PopStyleColor(count int /*= 1*/)                  { panic("not implemented") }
+func PushFont(font ImFont) { panic("not implemented") } // use NULL as a shortcut to push default font
+func PopFont()             { panic("not implemented") }
+
 func PushStyleFloat(idx ImGuiStyleVar, val float)      { panic("not implemented") } // modify a style variable float. always use this if you modify the style after NewFrame().
 func PushStyleVec(idx ImGuiStyleVar, val ImVec2)       { panic("not implemented") } // modify a style variable ImVec2. always use this if you modify the style after NewFrame().
 func PopStyleVar(count int /*= 1*/)                    { panic("not implemented") }
@@ -151,8 +151,6 @@ func GetColorU32FromVec(col ImVec4) ImU32 { panic("not implemented") } // retrie
 
 func GetColorU32FromInt(col ImU32) ImU32 { panic("not implemented") } // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 
-func GetStyleColorVec4(idx ImGuiCol) *ImVec4 { panic("not implemented") } // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
-
 // Cursor / Layout
 // - By "cursor" we mean the current output position.
 // - The typical widget behavior is to output themselves at the current cursor position, then move the cursor one line down.
@@ -160,12 +158,9 @@ func GetStyleColorVec4(idx ImGuiCol) *ImVec4 { panic("not implemented") } // ret
 // - Attention! We currently have inconsistencies between window-local and absolute positions we will aim to fix with future API:
 //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
 //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
-func Separator()                          { panic("not implemented") } // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
 func NewLine()                            { panic("not implemented") } // undo a SameLine() or force a new line when in an horizontal-layout context.
 func Spacing()                            { panic("not implemented") } // add vertical spacing.
 func Dummy(size ImVec2)                   { panic("not implemented") } // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
-func Indent(indent_w float)               { panic("not implemented") } // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
-func Unindent(indent_w float)             { panic("not implemented") } // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
 func BeginGroup()                         { panic("not implemented") } // lock horizontal starting position
 func EndGroup()                           { panic("not implemented") } // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 func GetCursorPos() ImVec2                { panic("not implemented") } // cursor position in window coordinates (relative to window position)
@@ -211,19 +206,18 @@ func PopID() {
 } // pop from the ID stack.
 
 func GetIDFromString(str_id string) ImGuiID {
-	return GImGui.CurrentWindow.GetIDs(str_id, "")
+	return GImGui.CurrentWindow.GetIDs(str_id)
 
 } // calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
 
-func GetIDs(str_id_begin string, str_id_end string) ImGuiID {
-	return GImGui.CurrentWindow.GetIDs(str_id_begin, str_id_end)
+func GetIDs(str_id_begin string) ImGuiID {
+	return GImGui.CurrentWindow.GetIDs(str_id_begin)
 }
 
 func GetIDFromInterface(ptr_id interface{}) ImGuiID { panic("not implemented") }
 
 // Widgets: Text
 func TextUnformatted(text string, text_end string)            { panic("not implemented") } // raw text without formatting. Roughly equivalent to Text("%s", text) but: A) doesn't require null terminated string if 'text_end' is specified, B) it's faster, no memory copy is done, no buffer size limits, recommended for long chunks of text.
-func TextColored(col ImVec4, fmt string, args ...interface{}) { panic("not implemented") } // shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
 func TextDisabled(fmt string, args ...interface{})            { panic("not implemented") } // shortcut for PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
 func TextWrapped(fmt string, args ...interface{})             { panic("not implemented") } // shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
 func LabelText(label string, fmt string, args ...interface{}) { panic("not implemented") } // display text+label aligned the same way as value+label widgets
@@ -232,8 +226,7 @@ func BulletText(fmt string, args ...interface{})              { panic("not imple
 // Widgets: Main
 // - Most widgets return true when the value has been changed or when pressed/selected
 // - You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
-func Button(label string, size ImVec2) bool { panic("not implemented") } // button
-func SmallButton(label string) bool         { panic("not implemented") } // button with FramePadding=(0,0) to easily embed within text
+func SmallButton(label string) bool { panic("not implemented") } // button with FramePadding=(0,0) to easily embed within text
 func InvisibleButton(str_id string, size ImVec2, flsgs ImGuiButtonFlags) bool {
 	panic("not implemented")
 }                                                  // flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
@@ -423,7 +416,6 @@ func SetColorEditOptions(flags ImGuiColorEditFlags) { panic("not implemented") }
 
 // Widgets: Trees
 // - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
-func TreeNode(label string) bool                                    { panic("not implemented") }
 func TreeNodeF(str_id string, fmt string, args ...interface{}) bool { panic("not implemented") } // helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
 func TreeNodeInterface(ptr_id interface{}, fmt string, args ...interface{}) bool {
 	panic("not implemented")
@@ -447,7 +439,6 @@ func TreeNodeInterfaceExV(ptr_id interface{}, flags ImGuiTreeNodeFlags, fmt stri
 }
 func TreePush(str_id string)                                       { panic("not implemented") } // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
 func TreePushInterface(ptr_id interface{})                         { panic("not implemented") } // "
-func TreePop()                                                     { panic("not implemented") } // ~ Unindent()+PopId()
 func GetTreeNodeToLabelSpacing() float                             { panic("not implemented") } // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
 func CollapsingHeader(label string, flsgs ImGuiTreeNodeFlags) bool { panic("not implemented") } // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
 func CollapsingHeaderVisible(label string, p_visible *bool, flsgs ImGuiTreeNodeFlags) bool {
@@ -519,13 +510,6 @@ func MenuItem(label string, shortcut string /*= L*/, selected bool /*= e*/, enab
 func MenuItemSelected(label string, shortcut string, p_selected *bool, enabled bool /*= true*/) bool {
 	panic("not implemented")
 } // return true when activated + toggle (*p_selected) if p_selected != NULL
-
-// Tooltips
-// - Tooltip are windows following the mouse. They do not take focus away.
-func BeginTooltip()                              { panic("not implemented") } // begin/append a tooltip window. to create full-featured tooltip (with any kind of items).
-func EndTooltip()                                { panic("not implemented") }
-func SetTooltip(fmt string, args ...interface{}) { panic("not implemented") } // set a text-only tooltip, typically use with ImGui::IsItemHovered(). override any previous call to SetTooltip().
-func SetTooltipV(fmt string, args []interface{}) { panic("not implemented") }
 
 // Popups, Modals
 //  - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
@@ -830,20 +814,18 @@ func CaptureKeyboardFromApp(want_capture_keyboard_value bool /*= true*/)    { pa
 // - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
 // - You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
 // - Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' and 'io.MouseDraggingThreshold')
-func IsMouseDown(button ImGuiMouseButton) bool                 { panic("not implemented") } // is mouse button held?
-func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool { panic("not implemented") } // did mouse button clicked? (went from !Down to Down)
-func IsMouseReleased(button ImGuiMouseButton) bool             { panic("not implemented") } // did mouse button released? (went from Down to !Down)
-func IsMouseDoubleClicked(button ImGuiMouseButton) bool        { panic("not implemented") } // did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)
-func IsAnyMouseDown() bool                                     { panic("not implemented") } // is any mouse button held?
-func GetMousePos() ImVec2                                      { panic("not implemented") } // shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
-func GetMousePosOnOpeningCurrentPopup() ImVec2                 { panic("not implemented") } // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to a user backing that value themselves)
+func IsMouseDown(button ImGuiMouseButton) bool          { panic("not implemented") } // is mouse button held?
+func IsMouseReleased(button ImGuiMouseButton) bool      { panic("not implemented") } // did mouse button released? (went from Down to !Down)
+func IsMouseDoubleClicked(button ImGuiMouseButton) bool { panic("not implemented") } // did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)
+func IsAnyMouseDown() bool                              { panic("not implemented") } // is any mouse button held?
+func GetMousePos() ImVec2                               { panic("not implemented") } // shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
+func GetMousePosOnOpeningCurrentPopup() ImVec2          { panic("not implemented") } // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to a user backing that value themselves)
 
 func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*= -1.0*/) ImVec2 {
 	panic("not implemented")
 }                                                                  // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
 func ResetMouseDragDelta(button ImGuiMouseButton)                  { panic("not implemented") } //
 func GetMouseCursor() ImGuiMouseCursor                             { panic("not implemented") } // get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
-func SetMouseCursor(cursor_type ImGuiMouseCursor)                  { panic("not implemented") } // set desired cursor type
 func CaptureMouseFromApp(want_capture_mouse_value bool /*= true*/) { panic("not implemented") } // attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value  {panic("not implemented")}" after the next NewFrame() call.
 
 // Clipboard Utilities

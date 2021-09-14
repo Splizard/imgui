@@ -746,7 +746,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	if flags&ImGuiWindowFlags_ChildWindow != 0 {
 		window.DC.NavFocusScopeIdCurrent = parent_window.DC.NavFocusScopeIdCurrent
 	} else {
-		window.GetIDs("#FOCUSSCOPE", "")
+		window.GetIDs("#FOCUSSCOPE")
 	}
 
 	if !window.Collapsed {

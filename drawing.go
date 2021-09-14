@@ -1,7 +1,6 @@
 package imgui
 
 import (
-	"fmt"
 	"unsafe"
 )
 

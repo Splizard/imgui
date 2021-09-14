@@ -1,5 +1,61 @@
 package imgui
 
+// button
+func Button(label string) bool {
+	return ButtonEx(label, &ImVec2{}, ImGuiButtonFlags_None)
+}
+
+func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	var style = g.Style
+	var id = window.GetIDs(label)
+	var label_size = CalcTextSize(label, true, 0)
+
+	var pos ImVec2 = window.DC.CursorPos
+	if (flags&ImGuiButtonFlags_AlignTextBaseLine) != 0 && style.FramePadding.y < window.DC.CurrLineTextBaseOffset { // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
+		pos.y += window.DC.CurrLineTextBaseOffset - style.FramePadding.y
+	}
+	var size ImVec2 = CalcItemSize(*size_arg, label_size.x+style.FramePadding.x*2.0, label_size.y+style.FramePadding.y*2.0)
+
+	var bb = ImRect{pos, pos.Add(size)}
+	ItemSizeVec(&size, style.FramePadding.y)
+	if !ItemAdd(&bb, id, nil, 0) {
+		return false
+	}
+
+	if g.LastItemData.InFlags&ImGuiItemFlags_ButtonRepeat != 0 {
+		flags |= ImGuiButtonFlags_Repeat
+	}
+
+	var hovered, held bool
+	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, flags)
+
+	// Render
+	var col ImU32
+	if held && hovered {
+		col = GetColorU32FromID(ImGuiCol_ButtonActive, 1)
+	} else if hovered {
+		col = GetColorU32FromID(ImGuiCol_ButtonHovered, 1)
+	} else {
+		col = GetColorU32FromID(ImGuiCol_Button, 1)
+	}
+	RenderNavHighlight(&bb, id, 0)
+	RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding)
+
+	if g.LogEnabled {
+		LogSetNextTextDecoration("[", "]")
+	}
+	min, max := bb.Min.Add(style.FramePadding), bb.Max.Sub(style.FramePadding)
+	RenderTextClipped(&min, &max, label, &label_size, &style.ButtonTextAlign, &bb)
+
+	return pressed
+}
+
 // The ButtonBehavior() function is key to many interactions and used by many/most widgets.
 // Because we handle so many cases (keyboard/gamepad navigation, drag and drop) and many specific behavior (via ImGuiButtonFlags_),
 // this code is a little complex.

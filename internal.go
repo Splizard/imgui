@@ -149,10 +149,29 @@ func ImTextCharToUtf8(out_buf [5]char, c uint) string { panic("not implemented")
 func ImTextStrToUtf8(out_buf []byte, out_buf_size int, in_text []ImWchar, in_text_end []ImWchar) int {
 	panic("not implemented")
 } // return out_// return output UTF-8 bytes count
-func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, in_text, in_text_end string, in_remaining *string) int {
-	panic("not implemented")
-}                                                                    // return input UTF-8 bytes count
-func ImTextCountCharsFromUtf8(in_text, in_text_end string) int       { panic("not implemented") } // return number of UTF-8 code-points (NOT bytes count)
+
+func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, text string, in_remaining *string) int {
+	var count int
+	for i, char := range text {
+		if count >= int(len(out_buf)) {
+			*in_remaining = text[i:]
+			return int(count)
+		}
+		out_buf[i] = char
+		count++
+	}
+	return int(len(text))
+}
+
+// return number of UTF-8 code-points (NOT bytes count)
+func ImTextCountCharsFromUtf8(in_text string) int {
+	var count int
+	for range in_text {
+		count++
+	}
+	return count
+}
+
 func ImTextCountUtf8BytesFromChar(in_text, in_text_end string) int   { panic("not implemented") } // return number of bytes to express one char in UTF-8
 func ImTextCountUtf8BytesFromStr(in_text, in_text_end []ImWchar) int { panic("not implemented") } // return number of bytes to express string in UTF-8
 
@@ -1218,14 +1237,14 @@ func NewImGuiWindow(context *ImGuiContext, name string) *ImGuiWindow {
 		FontWindowScale:              1.0,
 		SettingsOffset:               -1,
 	}
-	window.MoveId = window.GetIDs("#MOVE", "")
+	window.MoveId = window.GetIDs("#MOVE")
 	window.DrawList = &window.DrawListInst
 	window.DrawList._Data = &context.DrawListSharedData
 	window.DrawList._OwnerName = name
 	return &window
 }
 
-func (this *ImGuiWindow) GetIDs(str, str_end string) ImGuiID {
+func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
 	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
 	var id ImGuiID = ImHashStr(str, 0, seed)
 	KeepAliveID(id)

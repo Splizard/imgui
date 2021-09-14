@@ -87,6 +87,33 @@ func ItemHoverable(bb *ImRect, id ImGuiID) bool {
 	return true
 }
 
+// [Internal] Calculate full item size given user provided 'size' parameter and default width/height. Default width is often == CalcItemWidth().
+// Those two functions CalcItemWidth vs CalcItemSize are awkwardly named because they are not fully symmetrical.
+// Note that only CalcItemWidth() is publicly exposed.
+// The 4.0f here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
+func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 {
+	var window = GImGui.CurrentWindow
+
+	var region_max ImVec2
+	if size.x < 0.0 || size.y < 0.0 {
+		region_max = GetContentRegionMaxAbs()
+	}
+
+	if size.x == 0.0 {
+		size.x = default_w
+	} else if size.x < 0.0 {
+		size.x = ImMax(4.0, region_max.x-window.DC.CursorPos.x+size.x)
+	}
+
+	if size.y == 0.0 {
+		size.y = default_h
+	} else if size.y < 0.0 {
+		size.y = ImMax(4.0, region_max.y-window.DC.CursorPos.y+size.y)
+	}
+
+	return size
+}
+
 // Declare item bounding box for clipping and interaction.
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
