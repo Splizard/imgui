@@ -91,8 +91,6 @@ func ImHashData(ptr unsafe.Pointer, data_size uintptr, seed ImU32) ImGuiID {
 	return ^crc
 }
 
-func ImAlphaBlendColors(col_a, col_b ImU32) ImU32 { panic("not implemented") }
-
 func ImIsPowerOfTwoInt(v int) bool {
 	return v != 0 && (v&(v-1)) == 0
 }

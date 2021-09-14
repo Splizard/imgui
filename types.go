@@ -404,37 +404,6 @@ func (this ImGuiOnceUponAFrame) Bool() bool {
 	return true
 }
 
-type ImGuiTextRange struct {
-	b string
-	e string
-}
-
-func (this ImGuiTextRange) split(separator byte, out []ImGuiTextRange) { panic("not implemented") }
-
-// Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]"
-type ImGuiTextFilter struct {
-	InputBuf  [256]byte
-	Filters   []ImGuiTextRange
-	CountGrep int
-}
-
-func NewImGuiTextFilter(default_filter string) ImGuiTextFilter { panic("not implemented") }
-
-func (this *ImGuiTextFilter) Draw(label string /*= "Filter (inc,-exc)"*/, width float) bool {
-	panic("not implemented")
-}                                                                   // Helper calling InputText+Build
-func (this *ImGuiTextFilter) PassFilter(text, text_end string) bool { panic("not implemented") }
-func (this *ImGuiTextFilter) Build()                                { panic("not implemented") }
-func (this *ImGuiTextFilter) Clear() {
-	this.InputBuf[0] = 0
-	this.Build()
-}
-func (this *ImGuiTextFilter) IsActive() bool { return len(this.Filters) > 0 }
-
-// Helper: Growable text buffer for logging/accumulating text
-// (this could be called 'ImGuiTextBuilder' / 'ImGuiStringBuilder')
-type ImGuiTextBuffer []byte
-
 // Helper: Manually clip large list of items.
 // If you are submitting lots of evenly spaced items and you have a random access to the list, you can perform coarse
 // clipping based on visibility to save yourself from processing those items at all.

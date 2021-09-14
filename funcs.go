@@ -790,16 +790,6 @@ func CalcListClipping(items_count int, items_height float, out_items_display_sta
 func BeginChildFrame(id ImGuiID, size ImVec2, flsgs ImGuiWindowFlags) bool { panic("not implemented") } // helper to create a child window / scrolling region that looks like a normal widget frame
 func EndChildFrame()                                                       { panic("not implemented") } // always call EndChildFrame() regardless of BeginChildFrame() return values (which indicates a collapsed/clipped window)
 
-// Color Utilities
-func ColorConvertU32ToFloat4(in ImU32) ImVec4 { panic("not implemented") }
-
-func ColorConvertRGBtoHSV(r float, g float, b float, out_h, out_s, out_v *float) {
-	panic("not implemented")
-}
-func ColorConvertHSVtoRGB(h float, s float, v float, out_r, out_g, out_b *float) {
-	panic("not implemented")
-}
-
 // Inputs Utilities: Keyboard
 // - For 'user_key_index int' you can use your own indices/enums according to how your backend/engine stored them in io.KeysDown[].
 // - We don't know the meaning of those value. You can use GetKeyIndex() to map a ImGuiKey_ value into the user index.

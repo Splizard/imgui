@@ -4,6 +4,11 @@ import (
 	"unsafe"
 )
 
+/*
+	The storage functions have been modified to use an ordinary Go map,
+	this is probably inefficient, but convinient for now - Quentin.
+*/
+
 // [Internal]
 type ImGuiStoragePair struct {
 	key ImGuiID
@@ -54,19 +59,28 @@ func (this *ImGuiStorage) SetInt(key ImGuiID, val int) {
 }
 
 func (this *ImGuiStorage) GetBool(key ImGuiID, default_val bool) bool {
-	panic("not implemented")
+	var def int
+	if default_val {
+		def = 1
+	}
+	return this.GetInt(key, def) != 0
 }
 
 func (this *ImGuiStorage) SetBool(key ImGuiID, val bool) {
-	panic("not implemented")
+	if val {
+		this.SetInt(key, 1)
+	} else {
+		this.SetInt(key, 0)
+	}
 }
 
 func (this *ImGuiStorage) GetFloat(key ImGuiID, default_val float) float {
-	panic("not implemented")
+	val := this.GetInt(key, *(*int)(unsafe.Pointer(&default_val)))
+	return *(*float)(unsafe.Pointer(&val))
 }
 
 func (this *ImGuiStorage) SetFloat(key ImGuiID, val float) {
-	panic("not implemented")
+	this.SetInt(key, *(*int)(unsafe.Pointer(&val)))
 }
 
 func (this *ImGuiStorage) GetInterface(key ImGuiID) interface{} {
@@ -80,29 +94,9 @@ func (this *ImGuiStorage) SetInterface(key ImGuiID, val interface{}) {
 	this.Pointers[key] = val
 }
 
-// - Get***Ref() functions finds pair, insert on demand if missing, return pointer. Useful if you intend to do Get+Set.
-// - References are only valid until a new value is added to the storage. Calling a Set***() function or a Get***Ref() function invalidates the pointer.
-// - A typical use case where this is convenient for quick hacking (e.g. add storage during a live Edit&Continue session if you can't modify existing struct)
-//      float* pvar ImGui::GetFloatRef(key) = ImGui::SliderFloat("var", pvar, 100.0f) 0, some_var *pvar +=
-
-func (this *ImGuiStorage) GetIntRef(key ImGuiID, default_val int) *int {
-	panic("not implemented")
-}
-
-func (this *ImGuiStorage) GetBoolRef(key ImGuiID, default_val bool) bool {
-	panic("not implemented")
-}
-
-func (this *ImGuiStorage) GetFloatRef(key ImGuiID, default_val float) float {
-	panic("not implemented")
-}
-
-func (this *ImGuiStorage) GetInterfaceRef(key ImGuiID, default_val interface{}) *interface{} {
-	panic("not implemented")
-}
-
 // Use on your own storage if you know only integer are being stored (open/close all tree nodes)
-func (this *ImGuiStorage) SetAllInt(val int) { panic("not implemented") }
-
-// For quicker full rebuild of a storage (instead of an incremental one), you may add all your contents and then sort once.
-func (this *ImGuiStorage) BuildSortByKey() {}
+func (this *ImGuiStorage) SetAllInt(val int) {
+	for key := range this.Data {
+		this.Data[key] = val
+	}
+}
