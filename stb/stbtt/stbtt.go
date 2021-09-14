@@ -1,13 +1,14 @@
-package imgui
+package stbtt
 
 import (
 	"math"
 	"unsafe"
 
 	"github.com/splizard/imgui/golang"
+	"github.com/splizard/imgui/stb/stbrp"
 )
 
-//PORTING STATUS = DONE
+//PORTING STATUS = DONE - Quentin Quaadgras
 
 func iszero(x uint) bool {
 	return x == 0
@@ -19,6 +20,21 @@ type uint = uint32
 type float = float32
 type size_t = uintptr
 type char = byte
+
+func isfalse(x int) bool {
+	return x == 0
+}
+
+func istrue(x int) bool {
+	return x != 0
+}
+
+func bool2int(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
 
 type (
 	stbtt_uint8  = uint8
@@ -96,9 +112,9 @@ func stbtt_BakeFontBitmap(data []byte, offset int, // font location (use offset=
 	return stbtt_BakeFontBitmap_internal(data, offset, pixel_height, pixels, pw, ph, first_char, num_chars, chardata)
 }
 
-type stbtt_aligned_quad struct {
-	x0, y0, s0, t0 float // top-left
-	x1, y1, s1, t1 float // bottom-right
+type AlignedQuad struct {
+	X0, Y0, S0, T0 float // top-left
+	X1, Y1, S1, T1 float // bottom-right
 }
 
 // Call GetBakedQuad with char_index = 'character - first_char', and it
@@ -113,7 +129,7 @@ type stbtt_aligned_quad struct {
 func stbtt_GetBakedQuad(chardata []stbtt_bakedchar, pw, ph, // same data as above
 	char_index int, // character to display
 	xpos, ypos *float, // pointers to current position in screen pixel space
-	q *stbtt_aligned_quad, // output: quad to draw
+	q *AlignedQuad, // output: quad to draw
 	opengl_fillrule int) { // true if opengl fill rule; false if DX9 or earlier
 	var d3d_bias float
 	if opengl_fillrule == 0 {
@@ -125,15 +141,15 @@ func stbtt_GetBakedQuad(chardata []stbtt_bakedchar, pw, ph, // same data as abov
 	var round_x int = STBTT_ifloor((*xpos + b.xoff) + 0.5)
 	var round_y int = STBTT_ifloor((*ypos + b.yoff) + 0.5)
 
-	q.x0 = float(round_x) + d3d_bias
-	q.y0 = float(round_y) + d3d_bias
-	q.x1 = float(round_x) + float(b.x1) - float(b.x0) + d3d_bias
-	q.y1 = float(round_y) + float(b.y1) - float(b.y0) + d3d_bias
+	q.X0 = float(round_x) + d3d_bias
+	q.Y0 = float(round_y) + d3d_bias
+	q.X1 = float(round_x) + float(b.x1) - float(b.x0) + d3d_bias
+	q.Y1 = float(round_y) + float(b.y1) - float(b.y0) + d3d_bias
 
-	q.s0 = float(b.x0) * ipw
-	q.t0 = float(b.y0) * iph
-	q.s1 = float(b.x1) * ipw
-	q.t1 = float(b.y1) * iph
+	q.S0 = float(b.x0) * ipw
+	q.T0 = float(b.y0) * iph
+	q.S1 = float(b.x1) * ipw
+	q.T1 = float(b.y1) * iph
 
 	*xpos += b.xadvance
 }
@@ -142,22 +158,22 @@ func stbtt_GetBakedQuad(chardata []stbtt_bakedchar, pw, ph, // same data as abov
 func stbtt_GetScaledFontVMetrics(fontdata []byte, index int, size float, ascent, descent, lineGap *float) {
 	var i_ascent, i_descent, i_lineGap int
 	var scale float
-	var info stbtt_fontinfo
-	stbtt_InitFont(&info, fontdata, stbtt_GetFontOffsetForIndex(fontdata, index))
+	var info FontInfo
+	InitFont(&info, fontdata, GetFontOffsetForIndex(fontdata, index))
 	if size > 0 {
-		scale = stbtt_ScaleForPixelHeight(&info, size)
+		scale = ScaleForPixelHeight(&info, size)
 	} else {
-		scale = stbtt_ScaleForMappingEmToPixels(&info, -size)
+		scale = ScaleForMappingEmToPixels(&info, -size)
 	}
-	stbtt_GetFontVMetrics(&info, &i_ascent, &i_descent, &i_lineGap)
+	GetFontVMetrics(&info, &i_ascent, &i_descent, &i_lineGap)
 	*ascent = (float)(i_ascent) * scale
 	*descent = (float)(i_descent) * scale
 	*lineGap = (float)(i_lineGap) * scale
 }
 
-type stbtt_packedchar struct {
+type PackedChar struct {
 	x0, y0, x1, y1       uint16 // coordinates of bbox in bitmap
-	xoff, yoff, xadvance float
+	xoff, yoff, AdvanceX float
 	xoff2, yoff2         float
 }
 
@@ -170,10 +186,10 @@ type stbtt_packedchar struct {
 // bilinear filtering).
 //
 // Returns 0 on failure, 1 on success.
-func stbtt_PackBegin(spc *stbtt_pack_context, pixels []byte, width, height, stride_in_bytes, padding int, alloc_context interface{}) int {
-	var context *stbrp_context = new(stbrp_context)
+func PackBegin(spc *PackContext, pixels []byte, width, height, stride_in_bytes, padding int, alloc_context interface{}) int {
+	var context *stbrp.Context = new(stbrp.Context)
 	var num_nodes int = width - padding
-	var nodes []stbrp_node = make([]stbrp_node, num_nodes)
+	var nodes []stbrp.Node = make([]stbrp.Node, num_nodes)
 
 	if context == nil || nodes == nil {
 		//if (context != nil) {STBTT_free(context, alloc_context);
@@ -183,9 +199,9 @@ func stbtt_PackBegin(spc *stbtt_pack_context, pixels []byte, width, height, stri
 
 	spc.user_allocator_context = alloc_context
 	spc.width = width
-	spc.height = height
-	spc.pixels = pixels
-	spc.pack_info = context
+	spc.Height = height
+	spc.Pixels = pixels
+	spc.PackInfo = context
 	spc.nodes = nodes
 	spc.padding = padding
 	if stride_in_bytes != 0 {
@@ -197,13 +213,10 @@ func stbtt_PackBegin(spc *stbtt_pack_context, pixels []byte, width, height, stri
 	spc.v_oversample = 1
 	spc.skip_missing = 0
 
-	stbrp_init_target(context, width-padding, height-padding, nodes, num_nodes)
+	stbrp.InitTarget(context, width-padding, height-padding, nodes, num_nodes)
 
 	return 1
 }
-
-// Cleans up the packing context and frees all memory.
-func stbtt_PackEnd(spc *stbtt_pack_context) {}
 
 func STBTT_POINT_SIZE(x int) int {
 	return -x
@@ -221,65 +234,68 @@ func STBTT_POINT_SIZE(x int) int {
 // and pass that result as 'font_size':
 //       ...,                  20 , ... // font max minus min y is 20 pixels tall
 //       ..., STBTT_POINT_SIZE(20), ... // 'M' is 20 pixels tall
-func stbtt_PackFontRange(spc *stbtt_pack_context, fontdata []byte, font_index int, font_size float,
-	first_unicode_char_in_range, num_chars_in_range int, chardata_for_range []stbtt_packedchar) int {
+func stbtt_PackFontRange(spc *PackContext, fontdata []byte, font_index int, font_size float,
+	first_unicode_char_in_range, num_chars_in_range int, chardata_for_range []PackedChar) int {
 
-	var prange [1]stbtt_pack_range
-	prange[0].first_unicode_codepoint_in_range = first_unicode_char_in_range
-	prange[0].array_of_unicode_codepoints = nil
-	prange[0].num_chars = num_chars_in_range
-	prange[0].chardata_for_range = chardata_for_range
-	prange[0].font_size = font_size
+	var prange [1]PackRange
+	prange[0].FirstUnicodeCodepointInRange = first_unicode_char_in_range
+	prange[0].ArrayOfUnicodeCodepoints = nil
+	prange[0].NumChars = num_chars_in_range
+	prange[0].ChardataForRange = chardata_for_range
+	prange[0].FontSize = font_size
 	return stbtt_PackFontRanges(spc, fontdata, font_index, prange[:], 1)
 }
 
-type stbtt_pack_range struct {
-	font_size                        float
-	first_unicode_codepoint_in_range int   // if non-zero, then the chars are continuous, and this is the first codepoint
-	array_of_unicode_codepoints      []int // if non-zero, then this is an array of unicode codepoints
-	num_chars                        int
-	chardata_for_range               []stbtt_packedchar // output
-	h_oversample, v_oversample       byte               // don't set these, they're used internally
+type PackRange struct {
+	FontSize                     float
+	FirstUnicodeCodepointInRange int   // if non-zero, then the chars are continuous, and this is the first codepoint
+	ArrayOfUnicodeCodepoints     []int // if non-zero, then this is an array of unicode codepoints
+	NumChars                     int
+	ChardataForRange             []PackedChar // output
+
+	Oversample struct {
+		H, V byte
+	}
 }
 
 // Creates character bitmaps from multiple ranges of characters stored in
 // ranges. This will usually create a better-packed bitmap than multiple
 // calls to stbtt_PackFontRange. Note that you can call this multiple
 // times within a single PackBegin/PackEnd.
-func stbtt_PackFontRanges(spc *stbtt_pack_context, fontdata []byte, font_index int, ranges []stbtt_pack_range, num_ranges int) int {
-	var info stbtt_fontinfo
+func stbtt_PackFontRanges(spc *PackContext, fontdata []byte, font_index int, ranges []PackRange, num_ranges int) int {
+	var info FontInfo
 	var i, j, n, return_value int // [DEAR IMGUI] removed = 1
-	//stbrp_context *context = (stbrp_context *) spc.pack_info;
-	var rects []stbrp_rect
+	//stbrp.Context *context = (stbrp.Context *) spc.pack_info;
+	var rects []stbrp.Rect
 
 	// flag all characters as NOT packed
 	for i = 0; i < num_ranges; i++ {
-		for j = 0; j < ranges[i].num_chars; j++ {
-			ranges[i].chardata_for_range[j].x0 = 0
-			ranges[i].chardata_for_range[j].y0 = 0
-			ranges[i].chardata_for_range[j].x1 = 0
-			ranges[i].chardata_for_range[j].y1 = 0
+		for j = 0; j < ranges[i].NumChars; j++ {
+			ranges[i].ChardataForRange[j].x0 = 0
+			ranges[i].ChardataForRange[j].y0 = 0
+			ranges[i].ChardataForRange[j].x1 = 0
+			ranges[i].ChardataForRange[j].y1 = 0
 		}
 	}
 
 	n = 0
 	for i = 0; i < num_ranges; i++ {
-		n += ranges[i].num_chars
+		n += ranges[i].NumChars
 	}
 
-	rects = make([]stbrp_rect, n)
+	rects = make([]stbrp.Rect, n)
 	if rects == nil {
 		return 0
 	}
 
 	info.userdata = spc.user_allocator_context
-	stbtt_InitFont(&info, fontdata, stbtt_GetFontOffsetForIndex(fontdata, font_index))
+	InitFont(&info, fontdata, GetFontOffsetForIndex(fontdata, font_index))
 
 	n = stbtt_PackFontRangesGatherRects(spc, &info, ranges, num_ranges, rects)
 
 	stbtt_PackFontRangesPackRects(spc, rects, n)
 
-	return_value = stbtt_PackFontRangesRenderIntoRects(spc, &info, ranges, num_ranges, rects)
+	return_value = PackFontRangesRenderIntoRects(spc, &info, ranges, num_ranges, rects)
 
 	return return_value
 }
@@ -298,7 +314,7 @@ func stbtt_PackFontRanges(spc *stbtt_pack_context, fontdata []byte, font_index i
 //
 // To use with PackFontRangesGather etc., you must set it before calls
 // call to PackFontRangesGatherRects.
-func stbtt_PackSetOversampling(spc *stbtt_pack_context, h_oversample, v_oversample uint) {
+func PackSetOversampling(spc *PackContext, h_oversample, v_oversample uint) {
 	STBTT_assert(h_oversample <= STBTT_MAX_OVERSAMPLE)
 	STBTT_assert(v_oversample <= STBTT_MAX_OVERSAMPLE)
 	if h_oversample <= STBTT_MAX_OVERSAMPLE {
@@ -313,40 +329,40 @@ func stbtt_PackSetOversampling(spc *stbtt_pack_context, h_oversample, v_oversamp
 // there is no corresponding glyph. If skip=0, which is the default, then
 // codepoints without a glyph recived the font's "missing character" glyph,
 // typically an empty box by convention.
-func stbtt_PackSetSkipMissingCodepoints(spc *stbtt_pack_context, skip int) {
+func stbtt_PackSetSkipMissingCodepoints(spc *PackContext, skip int) {
 	spc.skip_missing = skip
 }
 
-func stbtt_GetPackedQuad(chardata []stbtt_packedchar, pw, ph, // same data as above
+func GetPackedQuad(chardata []PackedChar, pw, ph, // same data as above
 	char_index int, // character to display
 	xpos, ypos *float, // pointers to current position in screen pixel space
-	q *stbtt_aligned_quad, // output: quad to draw
+	q *AlignedQuad, // output: quad to draw
 	align_to_integer int) {
 
 	var ipw float = 1.0 / float(pw)
 	var iph float = 1.0 / float(ph)
-	var b *stbtt_packedchar = &chardata[char_index]
+	var b *PackedChar = &chardata[char_index]
 
 	if align_to_integer != 0 {
 		var x float = (float)(STBTT_ifloor((*xpos + b.xoff) + 0.5))
 		var y float = (float)(STBTT_ifloor((*ypos + b.yoff) + 0.5))
-		q.x0 = x
-		q.y0 = y
-		q.x1 = x + b.xoff2 - b.xoff
-		q.y1 = y + b.yoff2 - b.yoff
+		q.X0 = x
+		q.Y0 = y
+		q.X1 = x + b.xoff2 - b.xoff
+		q.Y1 = y + b.yoff2 - b.yoff
 	} else {
-		q.x0 = *xpos + b.xoff
-		q.y0 = *ypos + b.yoff
-		q.x1 = *xpos + b.xoff2
-		q.y1 = *ypos + b.yoff2
+		q.X0 = *xpos + b.xoff
+		q.Y0 = *ypos + b.yoff
+		q.X1 = *xpos + b.xoff2
+		q.Y1 = *ypos + b.yoff2
 	}
 
-	q.s0 = float(b.x0) * ipw
-	q.t0 = float(b.y0) * iph
-	q.s1 = float(b.x1) * ipw
-	q.t1 = float(b.y1) * iph
+	q.S0 = float(b.x0) * ipw
+	q.T0 = float(b.y0) * iph
+	q.S1 = float(b.x1) * ipw
+	q.T1 = float(b.y1) * iph
 
-	*xpos += b.xadvance
+	*xpos += b.AdvanceX
 }
 
 // Calling these functions in sequence is roughly equivalent to calling
@@ -359,40 +375,40 @@ func stbtt_GetPackedQuad(chardata []stbtt_packedchar, pw, ph, // same data as ab
 // better packing than calling PackFontRanges multiple times
 // (or it may not).
 
-func stbtt_PackFontRangesGatherRects(spc *stbtt_pack_context, info *stbtt_fontinfo, ranges []stbtt_pack_range, num_ranges int, rects []stbrp_rect) int {
+func stbtt_PackFontRangesGatherRects(spc *PackContext, info *FontInfo, ranges []PackRange, num_ranges int, rects []stbrp.Rect) int {
 	var i, j, k int
 
 	k = 0
 	for i = 0; i < num_ranges; i++ {
-		var fh float = ranges[i].font_size
+		var fh float = ranges[i].FontSize
 		var scale float
 		if fh > 0 {
-			scale = stbtt_ScaleForPixelHeight(info, fh)
+			scale = ScaleForPixelHeight(info, fh)
 		} else {
-			scale = stbtt_ScaleForMappingEmToPixels(info, -fh)
+			scale = ScaleForMappingEmToPixels(info, -fh)
 		}
-		ranges[i].h_oversample = (byte)(spc.h_oversample)
-		ranges[i].v_oversample = (byte)(spc.v_oversample)
-		for j = 0; j < ranges[i].num_chars; j++ {
+		ranges[i].Oversample.H = (byte)(spc.h_oversample)
+		ranges[i].Oversample.V = (byte)(spc.v_oversample)
+		for j = 0; j < ranges[i].NumChars; j++ {
 			var x0, y0, x1, y1 int
 			var codepoint int
-			if ranges[i].array_of_unicode_codepoints == nil {
-				codepoint = ranges[i].first_unicode_codepoint_in_range + j
+			if ranges[i].ArrayOfUnicodeCodepoints == nil {
+				codepoint = ranges[i].FirstUnicodeCodepointInRange + j
 			} else {
-				codepoint = ranges[i].array_of_unicode_codepoints[j]
+				codepoint = ranges[i].ArrayOfUnicodeCodepoints[j]
 			}
-			var glyph int = stbtt_FindGlyphIndex(info, codepoint)
+			var glyph int = FindGlyphIndex(info, codepoint)
 			if glyph == 0 && spc.skip_missing != 0 {
-				rects[k].w = 0
-				rects[k].h = 0
+				rects[k].W = 0
+				rects[k].H = 0
 			} else {
-				stbtt_GetGlyphBitmapBoxSubpixel(info, glyph,
+				GetGlyphBitmapBoxSubpixel(info, glyph,
 					scale*float(spc.h_oversample),
 					scale*float(spc.v_oversample),
 					0, 0,
 					&x0, &y0, &x1, &y1)
-				rects[k].w = (stbrp_coord)(x1 - x0 + spc.padding + int(spc.h_oversample) - 1)
-				rects[k].h = (stbrp_coord)(y1 - y0 + spc.padding + int(spc.v_oversample) - 1)
+				rects[k].W = (stbrp.Coord)(x1 - x0 + spc.padding + int(spc.h_oversample) - 1)
+				rects[k].H = (stbrp.Coord)(y1 - y0 + spc.padding + int(spc.v_oversample) - 1)
 			}
 			k++
 		}
@@ -401,11 +417,11 @@ func stbtt_PackFontRangesGatherRects(spc *stbtt_pack_context, info *stbtt_fontin
 	return k
 }
 
-func stbtt_PackFontRangesPackRects(spc *stbtt_pack_context, rects []stbrp_rect, num_rects int) {
-	stbrp_pack_rects(spc.pack_info.(*stbrp_context), rects, num_rects)
+func stbtt_PackFontRangesPackRects(spc *PackContext, rects []stbrp.Rect, num_rects int) {
+	stbrp.PackRects(spc.PackInfo.(*stbrp.Context), rects, num_rects)
 }
 
-func stbtt_PackFontRangesRenderIntoRects(spc *stbtt_pack_context, info *stbtt_fontinfo, ranges []stbtt_pack_range, num_ranges int, rects []stbrp_rect) int {
+func PackFontRangesRenderIntoRects(spc *PackContext, info *FontInfo, ranges []PackRange, num_ranges int, rects []stbrp.Rect) int {
 	var i, j, k, return_value int = 0, 0, 0, 1
 
 	// save current values
@@ -414,39 +430,39 @@ func stbtt_PackFontRangesRenderIntoRects(spc *stbtt_pack_context, info *stbtt_fo
 
 	k = 0
 	for i = 0; i < num_ranges; i++ {
-		var fh float = ranges[i].font_size
+		var fh float = ranges[i].FontSize
 		var scale float
 		if fh > 0 {
-			scale = stbtt_ScaleForPixelHeight(info, fh)
+			scale = ScaleForPixelHeight(info, fh)
 		} else {
-			scale = stbtt_ScaleForMappingEmToPixels(info, -fh)
+			scale = ScaleForMappingEmToPixels(info, -fh)
 		}
 		var recip_h, recip_v, sub_x, sub_y float
-		spc.h_oversample = uint(ranges[i].h_oversample)
-		spc.v_oversample = uint(ranges[i].v_oversample)
+		spc.h_oversample = uint(ranges[i].Oversample.H)
+		spc.v_oversample = uint(ranges[i].Oversample.V)
 		recip_h = 1.0 / float(spc.h_oversample)
 		recip_v = 1.0 / float(spc.v_oversample)
 		sub_x = stbtt__oversample_shift(int(spc.h_oversample))
 		sub_y = stbtt__oversample_shift(int(spc.v_oversample))
-		for j = 0; j < ranges[i].num_chars; j++ {
-			var r *stbrp_rect = &rects[k]
-			if r.was_packed != 0 && r.w != 0 && r.h != 0 {
-				var bc *stbtt_packedchar = &ranges[i].chardata_for_range[j]
+		for j = 0; j < ranges[i].NumChars; j++ {
+			var r *stbrp.Rect = &rects[k]
+			if r.WasPacked != 0 && r.W != 0 && r.H != 0 {
+				var bc *PackedChar = &ranges[i].ChardataForRange[j]
 				var advance, lsb, x0, y0, x1, y1 int
 				var codepoint int
-				if ranges[i].array_of_unicode_codepoints == nil {
-					codepoint = ranges[i].first_unicode_codepoint_in_range + j
+				if ranges[i].ArrayOfUnicodeCodepoints == nil {
+					codepoint = ranges[i].FirstUnicodeCodepointInRange + j
 				} else {
-					codepoint = ranges[i].array_of_unicode_codepoints[j]
+					codepoint = ranges[i].ArrayOfUnicodeCodepoints[j]
 				}
-				var glyph int = stbtt_FindGlyphIndex(info, codepoint)
-				var pad stbrp_coord = (stbrp_coord)(spc.padding)
+				var glyph int = FindGlyphIndex(info, codepoint)
+				var pad stbrp.Coord = (stbrp.Coord)(spc.padding)
 
 				// pad on left and top
-				r.x += pad
-				r.y += pad
-				r.w -= pad
-				r.h -= pad
+				r.X += pad
+				r.Y += pad
+				r.W -= pad
+				r.H -= pad
 				stbtt_GetGlyphHMetrics(info, glyph, &advance, &lsb)
 				stbtt_GetGlyphBitmapBox(info, glyph,
 					scale*float(spc.h_oversample),
@@ -454,9 +470,9 @@ func stbtt_PackFontRangesRenderIntoRects(spc *stbtt_pack_context, info *stbtt_fo
 					&x0, &y0, &x1, &y1)
 
 				stbtt_MakeGlyphBitmapSubpixel(info,
-					spc.pixels[int(r.x)+int(r.y)*spc.stride_in_bytes:],
-					int(r.w)-int(spc.h_oversample)+1,
-					int(r.h)-int(spc.v_oversample)+1,
+					spc.Pixels[int(r.X)+int(r.Y)*spc.stride_in_bytes:],
+					int(r.W)-int(spc.h_oversample)+1,
+					int(r.H)-int(spc.v_oversample)+1,
 					spc.stride_in_bytes,
 					scale*float(spc.h_oversample),
 					scale*float(spc.v_oversample),
@@ -464,26 +480,26 @@ func stbtt_PackFontRangesRenderIntoRects(spc *stbtt_pack_context, info *stbtt_fo
 					glyph)
 
 				if spc.h_oversample > 1 {
-					stbtt__h_prefilter(spc.pixels[int(r.x)+int(r.y)*spc.stride_in_bytes:],
-						int(r.w), int(r.h), spc.stride_in_bytes,
+					stbtt__h_prefilter(spc.Pixels[int(r.X)+int(r.Y)*spc.stride_in_bytes:],
+						int(r.W), int(r.H), spc.stride_in_bytes,
 						spc.h_oversample)
 				}
 
 				if spc.v_oversample > 1 {
-					stbtt__v_prefilter(spc.pixels[int(r.x)+int(r.y)*spc.stride_in_bytes:],
-						int(r.w), int(r.h), spc.stride_in_bytes,
+					stbtt__v_prefilter(spc.Pixels[int(r.X)+int(r.Y)*spc.stride_in_bytes:],
+						int(r.W), int(r.H), spc.stride_in_bytes,
 						spc.v_oversample)
 				}
 
-				bc.x0 = uint16((stbtt_int16)(r.x))
-				bc.y0 = uint16((stbtt_int16)(r.y))
-				bc.x1 = uint16((stbtt_int16)(r.x + r.w))
-				bc.y1 = uint16((stbtt_int16)(r.y + r.h))
-				bc.xadvance = scale * float(advance)
+				bc.x0 = uint16((stbtt_int16)(r.X))
+				bc.y0 = uint16((stbtt_int16)(r.Y))
+				bc.x1 = uint16((stbtt_int16)(r.X + r.W))
+				bc.y1 = uint16((stbtt_int16)(r.Y + r.H))
+				bc.AdvanceX = scale * float(advance)
 				bc.xoff = (float)(float(x0)*recip_h + sub_x)
 				bc.yoff = (float)(float(y0)*recip_v + sub_y)
-				bc.xoff2 = float(x0+int(r.w))*recip_h + sub_x
-				bc.yoff2 = float(y0+int(r.h))*recip_v + sub_y
+				bc.xoff2 = float(x0+int(r.W))*recip_h + sub_x
+				bc.yoff2 = float(y0+int(r.H))*recip_v + sub_y
 			} else {
 				return_value = 0 // if any fail, report failure
 			}
@@ -501,16 +517,16 @@ func stbtt_PackFontRangesRenderIntoRects(spc *stbtt_pack_context, info *stbtt_fo
 
 // this is an opaque structure that you shouldn't mess with which holds
 // all the context needed from PackBegin to PackEnd.
-type stbtt_pack_context struct {
+type PackContext struct {
 	user_allocator_context     interface{}
-	pack_info                  interface{}
+	PackInfo                   interface{}
 	width                      int
-	height                     int
+	Height                     int
 	stride_in_bytes            int
 	padding                    int
 	skip_missing               int
 	h_oversample, v_oversample uint
-	pixels                     []byte
+	Pixels                     []byte
 	nodes                      interface{}
 }
 
@@ -528,13 +544,13 @@ func stbtt_GetNumberOfFonts(data []byte) int {
 // a given index; it returns -1 if the index is out of range. A regular .ttf
 // file will only define one font and it always be at offset 0, so it will
 // return '0' for index 0, and -1 for all other indices.
-func stbtt_GetFontOffsetForIndex(data []byte, index int) int {
+func GetFontOffsetForIndex(data []byte, index int) int {
 	return stbtt_GetFontOffsetForIndex_internal(data, index)
 }
 
 // The following structure is defined publicly so you can declare one on
 // the stack or as a global or etc, but you should treat it as opaque.
-type stbtt_fontinfo struct {
+type FontInfo struct {
 	userdata  interface{}
 	data      []byte // pointer to .ttf file
 	fontstart int    // offset of start of font
@@ -555,10 +571,10 @@ type stbtt_fontinfo struct {
 
 // Given an offset into the file that defines a font, this function builds
 // the necessary cached info for the rest of the system. You must allocate
-// the stbtt_fontinfo yourself, and stbtt_InitFont will fill it out. You don't
+// the stbtt_fontinfo yourself, and InitFont will fill it out. You don't
 // need to do anything special to free it, because the contents are pure
 // value data with no additional data structures. Returns 0 on failure.
-func stbtt_InitFont(info *stbtt_fontinfo, data []byte, offset int) int {
+func InitFont(info *FontInfo, data []byte, offset int) int {
 	return stbtt_InitFont_internal(info, data, offset)
 }
 
@@ -567,7 +583,7 @@ func stbtt_InitFont(info *stbtt_fontinfo, data []byte, offset int) int {
 // going to process, then use glyph-based functions instead of the
 // codepoint-based functions.
 // Returns 0 if the character codepoint is not defined in the font.
-func stbtt_FindGlyphIndex(info *stbtt_fontinfo, unicode_codepoint int) int {
+func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
 	var data []byte = info.data
 	var index_map stbtt_uint32 = stbtt_uint32(info.index_map)
 
@@ -673,7 +689,7 @@ func stbtt_FindGlyphIndex(info *stbtt_fontinfo, unicode_codepoint int) int {
 // and computing:
 //       scale = pixels / (ascent - descent)
 // so if you prefer to measure height by the ascent only, use a similar calculation.
-func stbtt_ScaleForPixelHeight(info *stbtt_fontinfo, pixels float) float {
+func ScaleForPixelHeight(info *FontInfo, pixels float) float {
 	var fheight int = int(ttSHORT(info.data[info.hhea+4:])) - int(ttSHORT(info.data[info.hhea+6:]))
 	return pixels / (float)(fheight)
 }
@@ -681,7 +697,7 @@ func stbtt_ScaleForPixelHeight(info *stbtt_fontinfo, pixels float) float {
 // computes a scale factor to produce a font whose EM size is mapped to
 // 'pixels' tall. This is probably what traditional APIs compute, but
 // I'm not positive.
-func stbtt_ScaleForMappingEmToPixels(info *stbtt_fontinfo, pixels float) float {
+func ScaleForMappingEmToPixels(info *FontInfo, pixels float) float {
 	var unitsPerEm int = int(ttUSHORT(info.data[info.head+18:]))
 	return pixels / float(unitsPerEm)
 }
@@ -692,7 +708,7 @@ func stbtt_ScaleForMappingEmToPixels(info *stbtt_fontinfo, pixels float) float {
 // so you should advance the vertical position by "*ascent - *descent + *lineGap"
 //   these are expressed in unscaled coordinates, so you must multiply by
 //   the scale factor for a given size
-func stbtt_GetFontVMetrics(info *stbtt_fontinfo, ascent, descent, lineGap *int) {
+func GetFontVMetrics(info *FontInfo, ascent, descent, lineGap *int) {
 	if ascent != nil {
 		*ascent = int(ttSHORT(info.data[info.hhea+4:]))
 	}
@@ -708,7 +724,7 @@ func stbtt_GetFontVMetrics(info *stbtt_fontinfo, ascent, descent, lineGap *int) 
 // table (specific to MS/Windows TTF files).
 //
 // Returns 1 on success (table present), 0 on failure.
-func stbtt_GetFontVMetricsOS2(info *stbtt_fontinfo, typoAscent, typoDescent, typoLineGap *int) int {
+func stbtt_GetFontVMetricsOS2(info *FontInfo, typoAscent, typoDescent, typoLineGap *int) int {
 	var tab int = int(stbtt__find_table(info.data, uint(info.fontstart), "OS/2"))
 	if tab == 0 {
 		return 0
@@ -726,7 +742,7 @@ func stbtt_GetFontVMetricsOS2(info *stbtt_fontinfo, typoAscent, typoDescent, typ
 }
 
 // the bounding box around all possible characters
-func stbtt_GetFontBoundingBox(info *stbtt_fontinfo, x0, y0, x1, y1 *int) {
+func stbtt_GetFontBoundingBox(info *FontInfo, x0, y0, x1, y1 *int) {
 	*x0 = int(ttSHORT(info.data[info.head+36:]))
 	*y0 = int(ttSHORT(info.data[info.head+38:]))
 	*x1 = int(ttSHORT(info.data[info.head+40:]))
@@ -736,26 +752,26 @@ func stbtt_GetFontBoundingBox(info *stbtt_fontinfo, x0, y0, x1, y1 *int) {
 // leftSideBearing is the offset from the current horizontal position to the left edge of the character
 // advanceWidth is the offset from the current horizontal position to the next horizontal position
 //   these are expressed in unscaled coordinates
-func stbtt_GetCodepointHMetrics(info *stbtt_fontinfo, codepoint int, advanceWidth, leftSideBearing *int) {
-	stbtt_GetGlyphHMetrics(info, stbtt_FindGlyphIndex(info, codepoint), advanceWidth, leftSideBearing)
+func stbtt_GetCodepointHMetrics(info *FontInfo, codepoint int, advanceWidth, leftSideBearing *int) {
+	stbtt_GetGlyphHMetrics(info, FindGlyphIndex(info, codepoint), advanceWidth, leftSideBearing)
 }
 
 // an additional amount to add to the 'advance' value between ch1 and ch2
-func stbtt_GetCodepointKernAdvance(info *stbtt_fontinfo, ch1, ch2 int) int {
+func stbtt_GetCodepointKernAdvance(info *FontInfo, ch1, ch2 int) int {
 	if info.kern == 0 && info.gpos == 0 { // if no kerning table, don't waste time looking up both codepoint.glyphs
 		return 0
 	}
-	return stbtt_GetGlyphKernAdvance(info, stbtt_FindGlyphIndex(info, ch1), stbtt_FindGlyphIndex(info, ch2))
+	return stbtt_GetGlyphKernAdvance(info, FindGlyphIndex(info, ch1), FindGlyphIndex(info, ch2))
 }
 
 // Gets the bounding box of the visible part of the glyph, in unscaled coordinates
-func stbtt_GetCodepointBox(info *stbtt_fontinfo, codepoint int, x0, y0, x1, y1 *int) int {
-	return stbtt_GetGlyphBox(info, stbtt_FindGlyphIndex(info, codepoint), x0, y0, x1, y1)
+func stbtt_GetCodepointBox(info *FontInfo, codepoint int, x0, y0, x1, y1 *int) int {
+	return stbtt_GetGlyphBox(info, FindGlyphIndex(info, codepoint), x0, y0, x1, y1)
 }
 
 // as above, but takes one or more glyph indices for greater efficiency
 
-func stbtt_GetGlyphHMetrics(info *stbtt_fontinfo, glyph_index int, advanceWidth, leftSideBearing *int) {
+func stbtt_GetGlyphHMetrics(info *FontInfo, glyph_index int, advanceWidth, leftSideBearing *int) {
 	var numOfLongHorMetrics stbtt_uint16 = ttUSHORT(info.data[info.hhea+34:])
 	if glyph_index < int(numOfLongHorMetrics) {
 		if advanceWidth != nil {
@@ -774,7 +790,7 @@ func stbtt_GetGlyphHMetrics(info *stbtt_fontinfo, glyph_index int, advanceWidth,
 	}
 }
 
-func stbtt_GetGlyphKernAdvance(info *stbtt_fontinfo, glyph1, glyph2 int) int {
+func stbtt_GetGlyphKernAdvance(info *FontInfo, glyph1, glyph2 int) int {
 	var xAdvance int = 0
 
 	if info.gpos != 0 {
@@ -788,7 +804,7 @@ func stbtt_GetGlyphKernAdvance(info *stbtt_fontinfo, glyph1, glyph2 int) int {
 	return xAdvance
 }
 
-func stbtt_GetGlyphBox(info *stbtt_fontinfo, glyph_index int, x0, y0, x1, y1 *int) int {
+func stbtt_GetGlyphBox(info *FontInfo, glyph_index int, x0, y0, x1, y1 *int) int {
 	if info.cff.size != 0 {
 		stbtt__GetGlyphInfoT2(info, glyph_index, x0, y0, x1, y1)
 	} else {
@@ -827,7 +843,7 @@ type stbtt_vertex struct {
 }
 
 // returns non-zero if nothing is drawn for this glyph
-func stbtt_IsGlyphEmpty(info *stbtt_fontinfo, glyph_index int) int {
+func stbtt_IsGlyphEmpty(info *FontInfo, glyph_index int) int {
 	var numberOfContours stbtt_int16
 	var g int
 	if info.cff.size != 0 {
@@ -850,12 +866,12 @@ func stbtt_IsGlyphEmpty(info *stbtt_fontinfo, glyph_index int) int {
 // draws a line from previous endpoint to its x,y; a curveto
 // draws a quadratic bezier from previous endpoint to
 // its x,y, using cx,cy as the bezier control point.
-func stbtt_GetCodepointShape(info *stbtt_fontinfo, unicode_codepoint int, vertices *[]stbtt_vertex) int {
-	return stbtt_GetGlyphShape(info, stbtt_FindGlyphIndex(info, unicode_codepoint), vertices)
+func stbtt_GetCodepointShape(info *FontInfo, unicode_codepoint int, vertices *[]stbtt_vertex) int {
+	return stbtt_GetGlyphShape(info, FindGlyphIndex(info, unicode_codepoint), vertices)
 }
 
 // frees the data allocated above
-func stbtt_FreeShape(info *stbtt_fontinfo, vertices []stbtt_vertex) {}
+func stbtt_FreeShape(info *FontInfo, vertices []stbtt_vertex) {}
 
 // frees the bitmap allocated below
 func stbtt_FreeBitmap(bitmap []byte, userdata interface{}) {}
@@ -867,34 +883,34 @@ func stbtt_FreeBitmap(bitmap []byte, userdata interface{}) {}
 // which is stored left-to-right, top-to-bottom.
 //
 // xoff/yoff are the offset it pixel space from the glyph origin to the top-left of the bitmap
-func stbtt_GetCodepointBitmap(info *stbtt_fontinfo, scale_x, scale_y float, codepoint int, width, height, xoff, yoff *int) []byte {
+func stbtt_GetCodepointBitmap(info *FontInfo, scale_x, scale_y float, codepoint int, width, height, xoff, yoff *int) []byte {
 	return stbtt_GetCodepointBitmapSubpixel(info, scale_x, scale_y, 0.0, 0.0, codepoint, width, height, xoff, yoff)
 }
 
 // the same as stbtt_GetCodepoitnBitmap, but you can specify a subpixel
 // shift for the character
-func stbtt_GetCodepointBitmapSubpixel(info *stbtt_fontinfo, scale_x, scale_y, shift_x, shift_y float, codepoint int, width, height, xoff, yoff *int) []byte {
-	return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y, shift_x, shift_y, stbtt_FindGlyphIndex(info, codepoint), width, height, xoff, yoff)
+func stbtt_GetCodepointBitmapSubpixel(info *FontInfo, scale_x, scale_y, shift_x, shift_y float, codepoint int, width, height, xoff, yoff *int) []byte {
+	return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y, shift_x, shift_y, FindGlyphIndex(info, codepoint), width, height, xoff, yoff)
 }
 
 // the same as stbtt_GetCodepointBitmap, but you pass in storage for the bitmap
 // in the form of 'output', with row spacing of 'out_stride' bytes. the bitmap
 // is clipped to out_w/out_h bytes. Call stbtt_GetCodepointBitmapBox to get the
 // width and height and positioning info for it first.
-func stbtt_MakeCodepointBitmap(info *stbtt_fontinfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y float, codepoint int) {
+func stbtt_MakeCodepointBitmap(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y float, codepoint int) {
 	stbtt_MakeCodepointBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, 0.0, 0.0, codepoint)
 }
 
 // same as stbtt_MakeCodepointBitmap, but you can specify a subpixel
 // shift for the character
-func stbtt_MakeCodepointBitmapSubpixel(info *stbtt_fontinfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, codepoint int) {
-	stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, stbtt_FindGlyphIndex(info, codepoint))
+func stbtt_MakeCodepointBitmapSubpixel(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, codepoint int) {
+	stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, FindGlyphIndex(info, codepoint))
 }
 
 // same as stbtt_MakeCodepointBitmapSubpixel, but prefiltering
 // is performed (see stbtt_PackSetOversampling)
-func stbtt_MakeCodepointBitmapSubpixelPrefilter(info *stbtt_fontinfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, oversample_x, oversample_y int, sub_x, sub_y *float, codepoint int) {
-	stbtt_MakeGlyphBitmapSubpixelPrefilter(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, oversample_x, oversample_y, sub_x, sub_y, stbtt_FindGlyphIndex(info, codepoint))
+func stbtt_MakeCodepointBitmapSubpixelPrefilter(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, oversample_x, oversample_y int, sub_x, sub_y *float, codepoint int) {
+	stbtt_MakeGlyphBitmapSubpixelPrefilter(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, oversample_x, oversample_y, sub_x, sub_y, FindGlyphIndex(info, codepoint))
 }
 
 // get the bbox of the bitmap centered around the glyph origin; so the
@@ -902,23 +918,23 @@ func stbtt_MakeCodepointBitmapSubpixelPrefilter(info *stbtt_fontinfo, output []b
 // the bitmap top left is (leftSideBearing*scale,iy0).
 // (Note that the bitmap uses y-increases-down, but the shape uses
 // y-increases-up, so CodepointBitmapBox and CodepointBox are inverted.)
-func stbtt_GetCodepointBitmapBox(font *stbtt_fontinfo, codepoint int, scale_x, scale_y float, ix0, iy0, ix1, iy1 *int) {
+func stbtt_GetCodepointBitmapBox(font *FontInfo, codepoint int, scale_x, scale_y float, ix0, iy0, ix1, iy1 *int) {
 	stbtt_GetCodepointBitmapBoxSubpixel(font, codepoint, scale_x, scale_y, 0.0, 0.0, ix0, iy0, ix1, iy1)
 }
 
 // same as stbtt_GetCodepointBitmapBox, but you can specify a subpixel
 // shift for the character
-func stbtt_GetCodepointBitmapBoxSubpixel(font *stbtt_fontinfo, codepoint int, scale_x, scale_y, shift_x, shift_y float, ix0, iy0, ix1, iy1 *int) {
-	stbtt_GetGlyphBitmapBoxSubpixel(font, stbtt_FindGlyphIndex(font, codepoint), scale_x, scale_y, shift_x, shift_y, ix0, iy0, ix1, iy1)
+func stbtt_GetCodepointBitmapBoxSubpixel(font *FontInfo, codepoint int, scale_x, scale_y, shift_x, shift_y float, ix0, iy0, ix1, iy1 *int) {
+	GetGlyphBitmapBoxSubpixel(font, FindGlyphIndex(font, codepoint), scale_x, scale_y, shift_x, shift_y, ix0, iy0, ix1, iy1)
 }
 
 // the following functions are equivalent to the above functions, but operate
 // on glyph indices instead of Unicode codepoints (for efficiency)
-func stbtt_GetGlyphBitmap(info *stbtt_fontinfo, scale_x, scale_y float, glyph int, width, height, xoff, yoff *int) []byte {
+func stbtt_GetGlyphBitmap(info *FontInfo, scale_x, scale_y float, glyph int, width, height, xoff, yoff *int) []byte {
 	return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y, 0.0, 0.0, glyph, width, height, xoff, yoff)
 }
 
-func stbtt_GetGlyphBitmapSubpixel(info *stbtt_fontinfo, scale_x, scale_y, shift_x, shift_y float, glyph int, width, height, xoff, yoff *int) []byte {
+func stbtt_GetGlyphBitmapSubpixel(info *FontInfo, scale_x, scale_y, shift_x, shift_y float, glyph int, width, height, xoff, yoff *int) []byte {
 	var ix0, iy0, ix1, iy1 int
 	var gbm stbtt__bitmap
 	var vertices []stbtt_vertex
@@ -934,7 +950,7 @@ func stbtt_GetGlyphBitmapSubpixel(info *stbtt_fontinfo, scale_x, scale_y, shift_
 		scale_y = scale_x
 	}
 
-	stbtt_GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &ix0, &iy0, &ix1, &iy1)
+	GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &ix0, &iy0, &ix1, &iy1)
 
 	// now we get the size
 	gbm.w = (ix1 - ix0)
@@ -965,17 +981,17 @@ func stbtt_GetGlyphBitmapSubpixel(info *stbtt_fontinfo, scale_x, scale_y, shift_
 	return gbm.pixels
 }
 
-func stbtt_MakeGlyphBitmap(info *stbtt_fontinfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y float, glyph int) {
+func stbtt_MakeGlyphBitmap(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y float, glyph int) {
 	stbtt_MakeGlyphBitmapSubpixel(info, output, out_w, out_h, out_stride, scale_x, scale_y, 0.0, 0.0, glyph)
 }
 
-func stbtt_MakeGlyphBitmapSubpixel(info *stbtt_fontinfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, glyph int) {
+func stbtt_MakeGlyphBitmapSubpixel(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, glyph int) {
 	var ix0, iy0 int
 	var vertices []stbtt_vertex
 	var num_verts int = stbtt_GetGlyphShape(info, glyph, &vertices)
 	var gbm stbtt__bitmap
 
-	stbtt_GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &ix0, &iy0, nil, nil)
+	GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &ix0, &iy0, nil, nil)
 	gbm.pixels = output
 	gbm.w = out_w
 	gbm.h = out_h
@@ -987,7 +1003,7 @@ func stbtt_MakeGlyphBitmapSubpixel(info *stbtt_fontinfo, output []byte, out_w, o
 	}
 }
 
-func stbtt_MakeGlyphBitmapSubpixelPrefilter(info *stbtt_fontinfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, oversample_x, oversample_y int, sub_x, sub_y *float, glyph int) {
+func stbtt_MakeGlyphBitmapSubpixelPrefilter(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, oversample_x, oversample_y int, sub_x, sub_y *float, glyph int) {
 	stbtt_MakeGlyphBitmapSubpixel(info,
 		output,
 		out_w-(oversample_x-1),
@@ -1011,11 +1027,11 @@ func stbtt_MakeGlyphBitmapSubpixelPrefilter(info *stbtt_fontinfo, output []byte,
 	*sub_y = stbtt__oversample_shift(oversample_y)
 }
 
-func stbtt_GetGlyphBitmapBox(font *stbtt_fontinfo, glyph int, scale_x, scale_y float, ix0, iy0, ix1, iy1 *int) {
-	stbtt_GetGlyphBitmapBoxSubpixel(font, glyph, scale_x, scale_y, 0.0, 0.0, ix0, iy0, ix1, iy1)
+func stbtt_GetGlyphBitmapBox(font *FontInfo, glyph int, scale_x, scale_y float, ix0, iy0, ix1, iy1 *int) {
+	GetGlyphBitmapBoxSubpixel(font, glyph, scale_x, scale_y, 0.0, 0.0, ix0, iy0, ix1, iy1)
 }
 
-func stbtt_GetGlyphBitmapBoxSubpixel(font *stbtt_fontinfo, glyph int, scale_x, scale_y, shift_x, shift_y float, ix0, iy0, ix1, iy1 *int) {
+func GetGlyphBitmapBoxSubpixel(font *FontInfo, glyph int, scale_x, scale_y, shift_x, shift_y float, ix0, iy0, ix1, iy1 *int) {
 	var x0, y0, x1, y1 int // =0 suppresses compiler warning
 	if stbtt_GetGlyphBox(font, glyph, &x0, &y0, &x1, &y1) == 0 {
 		// e.g. space character
@@ -1084,7 +1100,7 @@ func stbtt_FreeSDF(bitmap []byte, userdata interface{}) {
 	panic("not implemented")
 }
 
-func stbtt_GetGlyphSDF(info *stbtt_fontinfo, scale float, glyph, padding int, onedge_value byte, pixel_dist_scale float, width, height, xoff, yoff *int) []byte {
+func stbtt_GetGlyphSDF(info *FontInfo, scale float, glyph, padding int, onedge_value byte, pixel_dist_scale float, width, height, xoff, yoff *int) []byte {
 	var scale_x, scale_y float = scale, scale
 	var ix0, iy0, ix1, iy1 int
 	var w, h int
@@ -1102,7 +1118,7 @@ func stbtt_GetGlyphSDF(info *stbtt_fontinfo, scale float, glyph, padding int, on
 		scale_y = scale_x
 	}
 
-	stbtt_GetGlyphBitmapBoxSubpixel(info, glyph, scale, scale, 0.0, 0.0, &ix0, &iy0, &ix1, &iy1)
+	GetGlyphBitmapBoxSubpixel(info, glyph, scale, scale, 0.0, 0.0, &ix0, &iy0, &ix1, &iy1)
 
 	// if empty, return nil
 	if ix0 == ix1 || iy0 == iy1 {
@@ -1360,8 +1376,8 @@ func stbtt_GetGlyphSDF(info *stbtt_fontinfo, scale float, glyph, padding int, on
 //
 // The algorithm has not been optimized at all, so expect it to be slow
 // if computing lots of characters or very large sizes.
-func stbtt_GetCodepointSDF(info *stbtt_fontinfo, scale float, codepoint, padding int, onedge_value byte, pixel_dist_scale float, width, height, xoff, yoff *int) []byte {
-	return stbtt_GetGlyphSDF(info, scale, stbtt_FindGlyphIndex(info, codepoint), padding, onedge_value, pixel_dist_scale, width, height, xoff, yoff)
+func stbtt_GetCodepointSDF(info *FontInfo, scale float, codepoint, padding int, onedge_value byte, pixel_dist_scale float, width, height, xoff, yoff *int) []byte {
+	return stbtt_GetGlyphSDF(info, scale, FindGlyphIndex(info, codepoint), padding, onedge_value, pixel_dist_scale, width, height, xoff, yoff)
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1413,7 +1429,7 @@ func stbtt_CompareUTF8toUTF16_bigendian(s1 string, len1 int, s2 string, len2 int
 // some of the values for the IDs are below; for more see the truetype spec:
 //     http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6name.html
 //     http://www.microsoft.com/typography/otspec/name.htm
-func stbtt_GetFontNameString(font stbtt_fontinfo, length *int, platformID, encodingID, languageID, nameID int) string {
+func stbtt_GetFontNameString(font FontInfo, length *int, platformID, encodingID, languageID, nameID int) string {
 	var i, count, stringOffset stbtt_int32
 	var fc []byte = font.data
 	var offset stbtt_uint32 = uint(font.fontstart)
@@ -1781,7 +1797,7 @@ func stbtt__get_subrs(cff stbtt__buf, fontdict stbtt__buf) stbtt__buf {
 	return stbtt__cff_get_index(&cff)
 }
 
-func stbtt_InitFont_internal(info *stbtt_fontinfo, data []byte, fontstart int) int {
+func stbtt_InitFont_internal(info *FontInfo, data []byte, fontstart int) int {
 	var cmap, t stbtt_uint32
 	var i, numTables stbtt_int32
 
@@ -1917,7 +1933,7 @@ func stbtt_setvertex(v *stbtt_vertex, vtype stbtt_uint8, x, y, cx, cy stbtt_int3
 	v.cy = (stbtt_int16)(cy)
 }
 
-func stbtt__GetGlyfOffset(info *stbtt_fontinfo, glyph_index int) int {
+func stbtt__GetGlyfOffset(info *FontInfo, glyph_index int) int {
 	var g1, g2 int
 
 	STBTT_assert(info.cff.size == 0)
@@ -1943,7 +1959,7 @@ func stbtt__GetGlyfOffset(info *stbtt_fontinfo, glyph_index int) int {
 	return g1
 }
 
-func stbtt__GetGlyphInfoT2(info *stbtt_fontinfo, glyph_index int, x0, y0, x1, y1 *int) int {
+func stbtt__GetGlyphInfoT2(info *FontInfo, glyph_index int, x0, y0, x1, y1 *int) int {
 	panic("unimplemented")
 }
 
@@ -1968,7 +1984,7 @@ func stbtt__close_shape(vertices []stbtt_vertex, num_vertices, was_off, start_of
 	return num_vertices
 }
 
-func stbtt__GetGlyphShapeTT(info *stbtt_fontinfo, glyph_index int, pvertices *[]stbtt_vertex) int {
+func stbtt__GetGlyphShapeTT(info *FontInfo, glyph_index int, pvertices *[]stbtt_vertex) int {
 	var numberOfContours stbtt_int16
 	var endPtsOfContours []stbtt_uint8
 	var data []byte = info.data
@@ -2338,7 +2354,7 @@ func stbtt__get_subr(idx stbtt__buf, n int) stbtt__buf {
 	return stbtt__cff_index_get(idx, n)
 }
 
-func stbtt__cid_get_glyph_subrs(info *stbtt_fontinfo, glyph_index int) stbtt__buf {
+func stbtt__cid_get_glyph_subrs(info *FontInfo, glyph_index int) stbtt__buf {
 	var fdselect stbtt__buf = info.fdselect
 	var nranges, start, end, v, fmt, fdselector, i int = 0, 0, 0, 0, 0, -1, 0
 
@@ -2367,7 +2383,7 @@ func stbtt__cid_get_glyph_subrs(info *stbtt_fontinfo, glyph_index int) stbtt__bu
 	return stbtt__get_subrs(info.cff, stbtt__cff_index_get(info.fontdicts, fdselector))
 }
 
-func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csctx) int {
+func stbtt__run_charstring(info *FontInfo, glyph_index int, c *stbtt__csctx) int {
 	var in_header, maskbits, subr_stack_height, sp, v, i, b0 int = 1, 0, 0, 0, 0, 0, 0
 	var has_subrs, clear_stack int
 	var s [48]float
@@ -2739,7 +2755,7 @@ func stbtt__run_charstring(info *stbtt_fontinfo, glyph_index int, c *stbtt__csct
 	return STBTT__CSERR("no endchar")
 }
 
-func stbtt__GetGlyphShapeT2(info *stbtt_fontinfo, glyph_index int, pvertices *[]stbtt_vertex) int {
+func stbtt__GetGlyphShapeT2(info *FontInfo, glyph_index int, pvertices *[]stbtt_vertex) int {
 	// runs the charstring twice, once to count and once to output (to avoid realloc)
 	var count_ctx stbtt__csctx = stbtt__csctx{bounds: 1}
 	var output_ctx stbtt__csctx = stbtt__csctx{bounds: 0}
@@ -2755,7 +2771,7 @@ func stbtt__GetGlyphShapeT2(info *stbtt_fontinfo, glyph_index int, pvertices *[]
 	return 0
 }
 
-func stbtt_GetGlyphShape(info *stbtt_fontinfo, glyph_index int, pvertices *[]stbtt_vertex) int {
+func stbtt_GetGlyphShape(info *FontInfo, glyph_index int, pvertices *[]stbtt_vertex) int {
 	if info.cff.size == 0 {
 		return stbtt__GetGlyphShapeTT(info, glyph_index, pvertices)
 	} else {
@@ -2763,7 +2779,7 @@ func stbtt_GetGlyphShape(info *stbtt_fontinfo, glyph_index int, pvertices *[]stb
 	}
 }
 
-func stbtt__GetGlyphKernInfoAdvance(info *stbtt_fontinfo, glyph1, glyph2 int) int {
+func stbtt__GetGlyphKernInfoAdvance(info *FontInfo, glyph1, glyph2 int) int {
 	var data []byte = info.data[info.kern:]
 	var needle, straw stbtt_uint32
 	var l, r, m int
@@ -2923,7 +2939,7 @@ func STBTT_GPOS_TODO_assert(x bool) {
 	}
 }
 
-func stbtt__GetGlyphGPOSInfoAdvance(info *stbtt_fontinfo, glyph1, glyph2 int) stbtt_int32 {
+func stbtt__GetGlyphGPOSInfoAdvance(info *FontInfo, glyph1, glyph2 int) stbtt_int32 {
 	var lookupListOffset stbtt_uint16
 	var lookupList []byte
 	var lookupCount stbtt_uint16
@@ -3755,20 +3771,20 @@ func stbtt_BakeFontBitmap_internal(data []byte, offset int, // font location (us
 	chardata []stbtt_bakedchar) int {
 	var scale float
 	var x, y, bottom_y, i int
-	var f stbtt_fontinfo
+	var f FontInfo
 	f.userdata = nil
-	if stbtt_InitFont(&f, data, offset) == 0 {
+	if InitFont(&f, data, offset) == 0 {
 		return -1
 	}
 	x = 1
 	y = 1
 	bottom_y = 1
 
-	scale = stbtt_ScaleForPixelHeight(&f, pixel_height)
+	scale = ScaleForPixelHeight(&f, pixel_height)
 
 	for i = 0; i < num_chars; i++ {
 		var advance, lsb, x0, y0, x1, y1, gw, gh int
-		var g int = stbtt_FindGlyphIndex(&f, first_char+i)
+		var g int = FindGlyphIndex(&f, first_char+i)
 		stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb)
 		stbtt_GetGlyphBitmapBox(&f, g, scale, scale, &x0, &y0, &x1, &y1)
 		gw = x1 - x0
@@ -4357,7 +4373,7 @@ func stbtt__matches(fc []byte, offset stbtt_uint32, name []byte, flags stbtt_int
 func stbtt_FindMatchingFont_internal(font_collection []byte, name_utf8 []byte, flags stbtt_int32) int {
 	var i stbtt_int32
 	for i = 0; ; i++ {
-		var off stbtt_int32 = stbtt_GetFontOffsetForIndex(font_collection, i)
+		var off stbtt_int32 = GetFontOffsetForIndex(font_collection, i)
 		if off < 0 {
 			return off
 		}
@@ -4369,6 +4385,7 @@ func stbtt_FindMatchingFont_internal(font_collection []byte, name_utf8 []byte, f
 
 // FULL VERSION HISTORY
 //
+//   1.19 (2021-10-14) Ported to Go
 //   1.19 (2018-02-11) OpenType GPOS kerning (horizontal only), STBTT_fmod
 //   1.18 (2018-01-29) add missing function
 //   1.17 (2017-07-23) make more arguments const; doc fix
@@ -4430,6 +4447,7 @@ This software is available under 2 licenses -- choose whichever you prefer.
 ------------------------------------------------------------------------------
 ALTERNATIVE A - MIT License
 Copyright (c) 2017 Sean Barrett
+Copyright (c) 2021 Quentin Quaadgras
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
