@@ -1,7 +1,6 @@
 package imgui
 
 import (
-	"math"
 	"unicode"
 	"unsafe"
 )
@@ -75,7 +74,6 @@ type ImU64 = uint64 // 64-bit uinteger (pre and post C++11 with Visual Studio)
 type ImWchar16 = uint16 // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 type ImWchar32 = int    // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 type ImWchar = rune     // ImWchar [configurable type: override in imconfig.h with '#define IMGUI_USE_WCHAR32' to support Unicode planes 1-16]
-const MaxImWchar ImWchar = math.MaxInt32
 
 // Callback and functions types
 type ImGuiInputTextCallback func(data *ImGuiInputTextCallbackData) int // Callback function for ImGui::InputText()
@@ -403,45 +401,6 @@ func (this ImGuiOnceUponAFrame) Bool() bool {
 	this.RefFrame = current_frame
 	return true
 }
-
-// Helper: Manually clip large list of items.
-// If you are submitting lots of evenly spaced items and you have a random access to the list, you can perform coarse
-// clipping based on visibility to save yourself from processing those items at all.
-// The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
-// (Dear ImGui already clip items based on their bounds but it needs to measure text size to do so, whereas manual coarse clipping before submission makes this cost and your own data fetching/submission cost almost null)
-// Usage:
-//   clipper ImGuiListClipper
-//clipper.Begin(1000) //         // We have 1000 elements, evenly spaced.
-//   while (clipper.Step())
-//       for (int i clipper.DisplayStart = i clipper.DisplayEnd < i++)
-//           ImGui::Text("line number i) %d",
-// Generally what happens is:
-// - Clipper lets you process the first element (DisplayStart  DisplayEnd = 1) regardless of it being visible or not.
-// - User code submit one element.
-// - Clipper can measure the height of the first element
-// - Clipper calculate the actual range of elements to display based on the current clipping rectangle, position the cursor before the first visible element.
-// - User code submit visible elements.
-type ImGuiListClipper struct {
-	DisplayStart int
-	DisplayEnd   int
-
-	// [Internal]
-	ItemsCount  int
-	StepNo      int
-	ItemsFrozen int
-	ItemsHeight float
-	StartPosY   float
-}
-
-func NewImGuiListClipper() ImGuiListClipper { panic("not implemented") }
-
-// items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
-// items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
-func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f*/) {
-	panic("not implemented")
-}                                        // Automatically called by constructor if you passed 'items_count' or by Step() in Step 1.
-func (this ImGuiListClipper) End()       { panic("not implemented") } // Automatically called on the last call of Step() that returns false.
-func (this ImGuiListClipper) Step() bool { panic("not implemented") }
 
 const IM_COL32_R_SHIFT = 0
 const IM_COL32_G_SHIFT = 8
@@ -891,7 +850,7 @@ func NewImFontConfig() ImFontConfig {
 		OversampleV:          1,
 		GlyphMaxAdvanceX:     FLT_MAX,
 		RasterizerMultiply:   1.0,
-		EllipsisChar:         255,
+		EllipsisChar:         (ImWchar)(-1),
 	}
 }
 
@@ -1049,7 +1008,7 @@ func (atlas *ImFontAtlas) AddFont(font_cfg *ImFontConfig) *ImFont {
 		copy(new_font_cfg.FontData, font_cfg.FontData[:(size_t)(new_font_cfg.FontDataSize)])
 	}
 
-	if new_font_cfg.DstFont.EllipsisChar == MaxImWchar {
+	if new_font_cfg.DstFont.EllipsisChar == (ImWchar)(-1) {
 		new_font_cfg.DstFont.EllipsisChar = font_cfg.EllipsisChar
 	}
 
@@ -1186,9 +1145,9 @@ type ImFont struct {
 // Methods
 func NewImFont() ImFont {
 	return ImFont{
-		FallbackChar: MaxImWchar,
-		EllipsisChar: MaxImWchar,
-		DotChar:      MaxImWchar,
+		FallbackChar: (ImWchar)(-1),
+		EllipsisChar: (ImWchar)(-1),
+		DotChar:      (ImWchar)(-1),
 		Scale:        1,
 	}
 }

@@ -361,23 +361,6 @@ type ImGuiColorMod struct {
 	BackupValue ImVec4
 }
 
-type ImGuiStyleMod struct {
-	VarIdx      ImGuiStyleVar
-	BackupValue [2]int
-}
-
-func NewImGuiStyleModInt(idx ImGuiStyleVar, v int) ImGuiStyleMod {
-	return ImGuiStyleMod{VarIdx: idx, BackupValue: [2]int{v, 0}}
-}
-
-func NewImGuiStyleModFloat(idx ImGuiStyleVar, v float32) ImGuiStyleMod {
-	return ImGuiStyleMod{VarIdx: idx, BackupValue: [2]int{*(*int)(unsafe.Pointer(&v)), 0}}
-}
-
-func NewImGuiStyleModVec(idx ImGuiStyleVar, v ImVec2) ImGuiStyleMod {
-	return ImGuiStyleMod{VarIdx: idx, BackupValue: [2]int{*(*int)(unsafe.Pointer(&v.x)), *(*int)(unsafe.Pointer(&v.y))}}
-}
-
 // Storage data for BeginComboPreview()/EndComboPreview()
 type ImGuiComboPreviewData struct {
 	PreviewRect                  ImRect

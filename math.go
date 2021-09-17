@@ -298,6 +298,16 @@ func ImClamp(v, mn, mx float) float {
 	return v
 }
 
+func ImClampInt(v, mn, mx int) int {
+	if v < mn {
+		return mn
+	}
+	if v > mx {
+		return mx
+	}
+	return v
+}
+
 func ImLerp(a, b, t float) float {
 	return a + (b-a)*t
 }

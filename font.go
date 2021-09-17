@@ -1,9 +1,5 @@
 package imgui
 
-import (
-	"math"
-)
-
 // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
 // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
 func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width float) int {
@@ -255,7 +251,7 @@ func (this *ImFont) FindGlyph(c ImWchar) *ImFontGlyph {
 		return this.FallbackGlyph
 	}
 	var i ImWchar = this.IndexLookup[c]
-	if i == math.MaxUint16 {
+	if i == (ImWchar)(-1) {
 		return this.FallbackGlyph
 	}
 	return &this.Glyphs[i]
@@ -327,7 +323,7 @@ func FindFirstExistingGlyph(font *ImFont, candidate_chars []ImWchar, candidate_c
 			return candidate_chars[n]
 		}
 	}
-	return MaxImWchar
+	return (ImWchar)(-1)
 }
 
 func (this *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph {
@@ -335,7 +331,7 @@ func (this *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph {
 		return nil
 	}
 	var i ImWchar = this.IndexLookup[c]
-	if i == MaxImWchar {
+	if i == (ImWchar)(-1) {
 		return nil
 	}
 	return &this.Glyphs[i]
@@ -350,7 +346,7 @@ func (this *ImFont) GrowIndex(new_size int) {
 		this.IndexAdvanceX = append(this.IndexAdvanceX, -1)
 	}
 	for int(len(this.IndexLookup)) < new_size {
-		this.IndexLookup = append(this.IndexLookup, MaxImWchar)
+		this.IndexLookup = append(this.IndexLookup, (ImWchar)(-1))
 	}
 }
 
@@ -400,10 +396,10 @@ func (this *ImFont) BuildLookupTable() {
 	// FIXME: Note that 0x2026 is rarely included in our font ranges. Because of this we are more likely to use three individual dots.
 	var ellipsis_chars = []ImWchar{(ImWchar)(0x2026), (ImWchar)(0x0085)}
 	var dots_chars = []ImWchar{(ImWchar)('.'), (ImWchar)(0xFF0E)}
-	if this.EllipsisChar == MaxImWchar {
+	if this.EllipsisChar == (ImWchar)(-1) {
 		this.EllipsisChar = FindFirstExistingGlyph(this, ellipsis_chars, int(len(ellipsis_chars)))
 	}
-	if this.DotChar == MaxImWchar {
+	if this.DotChar == (ImWchar)(-1) {
 		this.DotChar = FindFirstExistingGlyph(this, dots_chars, int(len(dots_chars)))
 	}
 

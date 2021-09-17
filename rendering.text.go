@@ -52,6 +52,91 @@ func RenderTextWrapped(pos ImVec2, text string, wrap_width float) {
 	}
 }
 
+// Another overly complex function until we reorganize everything into a nice all-in-one helper.
+// This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
+// This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
+func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, clip_max_x float, ellipsis_max_x float, text string, text_end string, text_size_if_known *ImVec2) {
+	var g = GImGui
+	var text_size ImVec2
+	if text_size_if_known != nil {
+		text_size = *text_size_if_known
+	} else {
+		CalcTextSize(text, false, 0.0)
+	}
+
+	//draw_list.AddLine(ImVec2(pos_max.x, pos_min.y - 4), ImVec2(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
+	//draw_list.AddLine(ImVec2(ellipsis_max_x, pos_min.y-2), ImVec2(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
+	//draw_list.AddLine(ImVec2(clip_max_x, pos_min.y), ImVec2(clip_max_x, pos_max.y), IM_COL32(255, 0, 0, 255));
+	// FIXME: We could technically remove (last_glyph.AdvanceX - last_glyph.X1) from text_size.x here and save a few pixels.
+	if text_size.x > pos_max.x-pos_min.x {
+		// Hello wo...
+		// |       |   |
+		// min   max   ellipsis_max
+		//          <. this is generally some padding value
+
+		var font *ImFont = draw_list._Data.Font
+		var font_size float = draw_list._Data.FontSize
+		var text_end_ellipsis int
+
+		var ellipsis_char ImWchar = font.EllipsisChar
+		var ellipsis_char_count int = 1
+		if ellipsis_char == (ImWchar)(-1) {
+			ellipsis_char = font.DotChar
+			ellipsis_char_count = 3
+		}
+		var glyph *ImFontGlyph = font.FindGlyph(ellipsis_char)
+
+		var ellipsis_glyph_width float = glyph.X1             // Width of the glyph with no padding on either side
+		var ellipsis_total_width float = ellipsis_glyph_width // Full width of entire ellipsis
+
+		if ellipsis_char_count > 1 {
+			// Full ellipsis size without free spacing after it.
+			var spacing_between_dots float = 1.0 * (draw_list._Data.FontSize / font.FontSize)
+			ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots
+			ellipsis_total_width = ellipsis_glyph_width*(float)(ellipsis_char_count) - spacing_between_dots
+		}
+
+		// We can now claim the space between pos_max.x and ellipsis_max.x
+		var text_avail_width float = ImMax((ImMax(pos_max.x, ellipsis_max_x)-ellipsis_total_width)-pos_min.x, 1.0)
+
+		s := text[text_end_ellipsis:]
+
+		var text_size_clipped_x float = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, &s).x
+		if text_end_ellipsis == 0 && text_end_ellipsis < int(len(text)) {
+			// Always display at least 1 character if there's no room for character + ellipsis
+			text_end_ellipsis = ImTextCountUtf8BytesFromChar(text, "")
+
+			s = text[text_end_ellipsis:]
+
+			text_size_clipped_x = font.CalcTextSizeA(font_size, FLT_MAX, 0.0, text, &s).x
+		}
+		for text_end_ellipsis > 0 && ImCharIsBlankA(text[text_end_ellipsis-1]) {
+			// Trim trailing space before ellipsis (FIXME: Supporting non-ascii blanks would be nice, for this we need a function to backtrack in UTF-8 text)
+			text_end_ellipsis--
+
+			s = text[text_end_ellipsis+1:]
+
+			text_size_clipped_x -= font.CalcTextSizeA(font_size, FLT_MAX, 0.0, text[text_end_ellipsis:], &s).x // Ascii blanks are always 1 byte
+		}
+
+		// Render text, render ellipsis
+		RenderTextClippedEx(draw_list, pos_min, &ImVec2{clip_max_x, pos_max.y}, text, &text_size, &ImVec2{0.0, 0.0}, nil)
+		var ellipsis_x float = pos_min.x + text_size_clipped_x
+		if ellipsis_x+ellipsis_total_width <= ellipsis_max_x {
+			for i := 0; int(i) < ellipsis_char_count; i++ {
+				font.RenderChar(draw_list, font_size, ImVec2{ellipsis_x, pos_min.y}, GetColorU32FromID(ImGuiCol_Text, 1), ellipsis_char)
+				ellipsis_x += ellipsis_glyph_width
+			}
+		}
+	} else {
+		RenderTextClippedEx(draw_list, pos_min, &ImVec2{clip_max_x, pos_max.y}, text, &text_size, &ImVec2{0.0, 0.0}, nil)
+	}
+
+	if g.LogEnabled {
+		LogRenderedText(pos_min, text)
+	}
+}
+
 // formatted text
 func Text(format string, args ...interface{}) {
 	var window = GetCurrentWindow()

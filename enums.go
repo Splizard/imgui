@@ -525,44 +525,6 @@ const (
 	ImGuiCol_COUNT
 )
 
-// Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
-// - The const (
-//   During initialization or between frames, feel free to just poke into ImGuiStyle directly.
-// - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
-//   In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
-//   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
-// - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link const (
-const (
-
-	// const (
-	ImGuiStyleVar_Alpha               ImGuiStyleVar = iota // float     Alpha
-	ImGuiStyleVar_DisabledAlpha                            // float     DisabledAlpha
-	ImGuiStyleVar_WindowPadding                            // ImVec2    WindowPadding
-	ImGuiStyleVar_WindowRounding                           // float     WindowRounding
-	ImGuiStyleVar_WindowBorderSize                         // float     WindowBorderSize
-	ImGuiStyleVar_WindowMinSize                            // ImVec2    WindowMinSize
-	ImGuiStyleVar_WindowTitleAlign                         // ImVec2    WindowTitleAlign
-	ImGuiStyleVar_ChildRounding                            // float     ChildRounding
-	ImGuiStyleVar_ChildBorderSize                          // float     ChildBorderSize
-	ImGuiStyleVar_PopupRounding                            // float     PopupRounding
-	ImGuiStyleVar_PopupBorderSize                          // float     PopupBorderSize
-	ImGuiStyleVar_FramePadding                             // ImVec2    FramePadding
-	ImGuiStyleVar_FrameRounding                            // float     FrameRounding
-	ImGuiStyleVar_FrameBorderSize                          // float     FrameBorderSize
-	ImGuiStyleVar_ItemSpacing                              // ImVec2    ItemSpacing
-	ImGuiStyleVar_ItemInnerSpacing                         // ImVec2    ItemInnerSpacing
-	ImGuiStyleVar_IndentSpacing                            // float     IndentSpacing
-	ImGuiStyleVar_CellPadding                              // ImVec2    CellPadding
-	ImGuiStyleVar_ScrollbarSize                            // float     ScrollbarSize
-	ImGuiStyleVar_ScrollbarRounding                        // float     ScrollbarRounding
-	ImGuiStyleVar_GrabMinSize                              // float     GrabMinSize
-	ImGuiStyleVar_GrabRounding                             // float     GrabRounding
-	ImGuiStyleVar_TabRounding                              // float     TabRounding
-	ImGuiStyleVar_ButtonTextAlign                          // ImVec2    ButtonTextAlign
-	ImGuiStyleVar_SelectableTextAlign                      // ImVec2    SelectableTextAlign
-	ImGuiStyleVar_COUNT
-)
-
 // Flags for InvisibleButton() [extended in imgui_internal.h]
 const (
 	ImGuiButtonFlags_None              ImGuiButtonFlags = 0

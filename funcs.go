@@ -26,8 +26,6 @@ func GetIO() *ImGuiIO {
 	return &GImGui.IO
 }
 
-func GetStyle() *ImGuiStyle { panic("not implemented") } // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame!
-
 // Demo, Debug, Information
 func ShowDemoWindow(p_open *bool)         { panic("not implemented") } // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
 func ShowAboutWindow(p_open *bool)        { panic("not implemented") } // create About window. display Dear ImGui version, credits and build/system information.
@@ -117,9 +115,6 @@ func SetScrollFromPosY(local_y, center_y_ratio float /*= 0.5*/) { panic("not imp
 func PushFont(font ImFont) { panic("not implemented") } // use NULL as a shortcut to push default font
 func PopFont()             { panic("not implemented") }
 
-func PushStyleFloat(idx ImGuiStyleVar, val float)      { panic("not implemented") } // modify a style variable float. always use this if you modify the style after NewFrame().
-func PushStyleVec(idx ImGuiStyleVar, val ImVec2)       { panic("not implemented") } // modify a style variable ImVec2. always use this if you modify the style after NewFrame().
-func PopStyleVar(count int /*= 1*/)                    { panic("not implemented") }
 func PushAllowKeyboardFocus(allow_keyboard_focus bool) { panic("not implemented") } // == tab stop enable. Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
 func PopAllowKeyboardFocus()                           { panic("not implemented") }
 func PushButtonRepeat(repeat bool)                     { panic("not implemented") } // in 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.
@@ -138,18 +133,6 @@ func PopTextWrapPos()                        { panic("not implemented") }
 func GetFont() *ImFont               { panic("not implemented") } // get current font
 func GetFontSize() float             { panic("not implemented") } // get current font size (= height in pixels) of current font with current scale applied
 func GetFontTexUvWhitePixel() ImVec2 { panic("not implemented") } // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
-
-func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
-	var style = GImGui.Style
-	var c ImVec4 = style.Colors[idx]
-	c.w *= style.Alpha * alpha_mul
-	return ColorConvertFloat4ToU32(c)
-}
-
-// retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
-func GetColorU32FromVec(col ImVec4) ImU32 { panic("not implemented") } // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
-
-func GetColorU32FromInt(col ImU32) ImU32 { panic("not implemented") } // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 
 // Cursor / Layout
 // - By "cursor" we mean the current output position.
@@ -781,12 +764,10 @@ func GetFrameCount() int                                 { panic("not implemente
 func GetBackgroundDrawList() *ImDrawList                 { panic("not implemented") } // this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
 func GetForegroundDrawList() *ImDrawList                 { panic("not implemented") } // this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 func GetDrawListSharedData() *ImDrawListSharedData       { panic("not implemented") } // you may use this when creating your own ImDrawList instances.
-func GetStyleColorName(idx ImGuiCol) string              { panic("not implemented") } // get a string corresponding to the enum value (for display, saving, etc.).
 func SetStateStorage(storage *ImGuiStorage)              { panic("not implemented") } // replace current window storage with our own (if you want to manipulate it yourself, typically clear subsection of it)
 func GetStateStorage() *ImGuiStorage                     { panic("not implemented") }
-func CalcListClipping(items_count int, items_height float, out_items_display_start *int, out_items_display_end *int) {
-	panic("not implemented")
-}                                                                          // calculate coarse clipping for large list of evenly sized items. Prefer using the ImGuiListClipper higher-level helper if you can.
+
+// calculate coarse clipping for large list of evenly sized items. Prefer using the ImGuiListClipper higher-level helper if you can.
 func BeginChildFrame(id ImGuiID, size ImVec2, flsgs ImGuiWindowFlags) bool { panic("not implemented") } // helper to create a child window / scrolling region that looks like a normal widget frame
 func EndChildFrame()                                                       { panic("not implemented") } // always call EndChildFrame() regardless of BeginChildFrame() return values (which indicates a collapsed/clipped window)
 

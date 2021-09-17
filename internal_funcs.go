@@ -458,10 +458,6 @@ func TabItemLabelAndCloseButton(t *ImDrawList, bb *ImRect, flags ImGuiTabItemFla
 	panic("not implemented")
 }
 
-func RenderTextEllipsis(t *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, clip_max_x float, ellipsis_max_x float, text string, text_end string, n *ImVec2) {
-	panic("not implemented")
-}
-
 func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) { panic("not implemented") }
 func RenderColorRectWithAlphaCheckerboard(t *ImDrawList, p_min ImVec2, p_max ImVec2, fill_col ImU32, grid_step float, grid_off ImVec2, rounding float, flags ImDrawFlags) {
 	panic("not implemented")
