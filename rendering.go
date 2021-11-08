@@ -1,5 +1,15 @@
 package imgui
 
+func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) {
+	var g = GImGui
+	var window = g.CurrentWindow
+	var border_size = g.Style.FrameBorderSize
+	if border_size > 0.0 {
+		window.DrawList.AddRect(p_min.Add(ImVec2{1, 1}), p_max.Add(ImVec2{1, 1}), GetColorU32FromID(ImGuiCol_BorderShadow, 1), rounding, 0, border_size)
+		window.DrawList.AddRect(p_min, p_max, GetColorU32FromID(ImGuiCol_Border, 1), rounding, 0, border_size)
+	}
+}
+
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, scale float /*= 1.0f*/) {
 	var h = draw_list._Data.FontSize * 1.00

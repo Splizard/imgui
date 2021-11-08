@@ -2,6 +2,99 @@ package imgui
 
 const WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER float = 2.00 // Lock scrolled window (so it doesn't pick child windows that are scrolling through) for a certain time, unless mouse moved.
 
+// Inputs Utilities: Mouse
+// - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
+// - You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
+// - Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' and 'io.MouseDraggingThreshold')
+
+// is mouse button held?
+func IsMouseDown(button ImGuiMouseButton) bool {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	return g.IO.MouseDown[button]
+}
+
+// did mouse button released? (went from Down to !Down)
+func IsMouseReleased(button ImGuiMouseButton) bool {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	return g.IO.MouseReleased[button]
+}
+
+// did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)
+func IsMouseDoubleClicked(button ImGuiMouseButton) bool {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	return g.IO.MouseDoubleClicked[button]
+}
+
+// is any mouse button held?
+func IsAnyMouseDown() bool {
+	var g = GImGui
+	for n := range g.IO.MouseDown {
+		if g.IO.MouseDown[n] {
+			return true
+		}
+	}
+	return false
+}
+
+// shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
+func GetMousePos() ImVec2 {
+	var g = GImGui
+	return g.IO.MousePos
+}
+
+// retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to a user backing that value themselves)
+func GetMousePosOnOpeningCurrentPopup() ImVec2 {
+	var g = GImGui
+	if len(g.BeginPopupStack) > 0 {
+		return g.OpenPopupStack[len(g.BeginPopupStack)-1].OpenMousePos
+	}
+	return g.IO.MousePos
+}
+
+// Return the delta from the initial clicking position while the mouse button is clicked or was just released.
+// This is locked and return 0.0f until the mouse moves past a distance threshold at least once.
+// NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
+// return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
+func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*= -1.0*/) ImVec2 {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	if lock_threshold < 0.0 {
+		lock_threshold = g.IO.MouseDragThreshold
+	}
+	if g.IO.MouseDown[button] || g.IO.MouseReleased[button] {
+		if g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold*lock_threshold {
+			if IsMousePosValid(&g.IO.MousePos) && IsMousePosValid(&g.IO.MouseClickedPos[button]) {
+				return g.IO.MousePos.Sub(g.IO.MouseClickedPos[button])
+			}
+		}
+	}
+	return ImVec2{0.0, 0.0}
+}
+
+func ResetMouseDragDelta(button ImGuiMouseButton) {
+	var g = GImGui
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	// NB: We don't need to reset g.IO.MouseDragMaxDistanceSqr
+	g.IO.MouseClickedPos[button] = g.IO.MousePos
+}
+
+// get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
+func GetMouseCursor() ImGuiMouseCursor {
+	return GImGui.MouseCursor
+}
+
+// attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value  {panic("not implemented")}" after the next NewFrame() call.
+func CaptureMouseFromApp(want_capture_mouse_value bool /*= true*/) {
+	if want_capture_mouse_value {
+		GImGui.WantCaptureMouseNextFrame = 1
+	} else {
+		GImGui.WantCaptureMouseNextFrame = 0
+	}
+}
+
 // We typically use ImVec2(-FLT_MAX,-FLT_MAX) to denote an invalid mouse position.
 func IsMousePosValid(mouse_pos *ImVec2) bool {
 	// The assert is only to silence a false-positive in XCode Static Analysis.

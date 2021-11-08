@@ -1,5 +1,68 @@
 package imgui
 
+// Widgets: Selectables
+// - A selectable highlights when hovered, and can display another color when selected.
+// - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
+// "selected bool" carry the selection state (read-only). Selectable() is clicked is returns true so you can modify your selection state. size.x==0.0: use remaining width, size.x>0.0: specify width. size.y==0.0: use label height, size.y>0.0: specify height
+func Selectable(label string, selected bool, flsgs ImGuiSelectableFlags, size ImVec2) bool {
+	panic("not implemented")
+}
+
+// Focus, Activation
+// - Prefer using "SetItemDefaultFocus()" over "if (IsWindowAppearing()) SetScrollHereY()" when applicable to signify "this is the default item"
+
+// make last item the default focused item of a window.
+func SetItemDefaultFocus() {
+	var g = GImGui
+	var window = g.CurrentWindow
+	if !window.Appearing {
+		return
+	}
+	if g.NavWindow == window.RootWindowForNav && (g.NavInitRequest || g.NavInitResultId != 0) && g.NavLayer == window.DC.NavLayerCurrent {
+		g.NavInitRequest = false
+		g.NavInitResultId = g.LastItemData.ID
+		g.NavInitResultRectRel = ImRect{g.LastItemData.Rect.Min.Sub(window.Pos), g.LastItemData.Rect.Max.Sub(window.Pos)}
+		NavUpdateAnyRequestFlag()
+		if !IsItemVisible() {
+			SetScrollHereY(0.5)
+		}
+	}
+}
+
+// focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
+func SetKeyboardFocusHere(offset int) {
+	IM_ASSERT(offset >= -1) // -1 is allowed but not below
+	var g = GImGui
+	var window *ImGuiWindow = g.CurrentWindow
+	g.TabFocusRequestNextWindow = window
+	g.TabFocusRequestNextCounterRegular = window.DC.FocusCounterRegular + 1 + offset
+	g.TabFocusRequestNextCounterTabStop = INT_MAX
+}
+
+// Focus Scope (WIP)
+// This is generally used to identify a selection set (multiple of which may be in the same window), as selection
+// patterns generally need to react (e.g. clear selection) when landing on an item of the set.
+func PushFocusScope(id ImGuiID) {
+	var g = GImGui
+	var window = g.CurrentWindow
+	g.FocusScopeStack = append(g.FocusScopeStack, window.DC.NavFocusScopeIdCurrent)
+	window.DC.NavFocusScopeIdCurrent = id
+}
+
+func PopFocusScope() {
+	var g = GImGui
+	var window = g.CurrentWindow
+	IM_ASSERT(len(g.FocusScopeStack) > 0) // Too many PopFocusScope() ?
+	window.DC.NavFocusScopeIdCurrent = g.FocusScopeStack[len(g.FocusScopeStack)-1]
+	g.FocusScopeStack = g.FocusScopeStack[:len(g.FocusScopeStack)-1]
+}
+
+func GetFocusedFocusScope() ImGuiID { var g *ImGuiContext = GImGui; return g.NavFocusScopeId } // Focus scope which is actually active
+func GetFocusScope() ImGuiID {
+	var g *ImGuiContext = GImGui
+	return g.CurrentWindow.DC.NavFocusScopeIdCurrent
+} // Focus scope we are outputting into, set by PushFocusScope()
+
 // Notifies Dear ImGui when hosting platform windows lose or gain input focus
 func (io *ImGuiIO) AddFocusEvent(focused bool) {
 	if focused {

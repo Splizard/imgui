@@ -15,6 +15,28 @@ func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OP
 	return nil
 }
 
+// Forward will reuse the move request again on the next frame (generally with modifications done to it)
+func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
+	var g = GImGui
+	IM_ASSERT(g.NavMoveForwardToNextFrame == false)
+	NavMoveRequestCancel()
+	g.NavMoveForwardToNextFrame = true
+	g.NavMoveDir = move_dir
+	g.NavMoveClipDir = clip_dir
+	g.NavMoveFlags = move_flags | ImGuiNavMoveFlags_Forwarded
+}
+
+// Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
+// popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
+func NavMoveRequestTryWrapping(window *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
+	var g = GImGui
+	IM_ASSERT(move_flags != 0) // Call with _WrapX, _WrapY, _LoopX, _LoopY
+	// In theory we should test for NavMoveRequestButNoResultYet() but there's no point doing it, NavEndFrame() will do the same test
+	if g.NavWindow == window && g.NavMoveScoringItems && g.NavLayer == ImGuiNavLayer_Main {
+		g.NavMoveFlags |= move_flags
+	}
+}
+
 // FIXME-NAV: The existence of SetNavID vs SetFocusID properly needs to be clarified/reworked.
 // In our terminology those should be interchangeable. Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 func SetNavID(id ImGuiID, nav_layer ImGuiNavLayer, focus_scope_id ImGuiID, rect_rel *ImRect) {

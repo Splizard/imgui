@@ -298,7 +298,7 @@ func ErrorCheckEndFrameSanityChecks() {
 	IM_ASSERT_USER_ERROR((key_mod_flags == 0 || g.IO.KeyMods == key_mod_flags), "Mismatching io.KeyCtrl/io.KeyShift/io.KeyAlt/io.KeySuper vs io.KeyMods")
 
 	// Recover from errors
-	//ErrorCheckEndFrameRecover();
+	ErrorCheckEndFrameRecover(nil, nil)
 
 	// Report when there is a mismatch of Begin/BeginChild vs End/EndChild calls. Important: Remember that the Begin/BeginChild API requires you
 	// to always call End/EndChild even if Begin/BeginChild returns false! (this is unfortunately inconsistent with most other Begin* API).

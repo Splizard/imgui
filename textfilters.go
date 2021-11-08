@@ -1,6 +1,8 @@
 package imgui
 
-import "strings"
+import (
+	"strings"
+)
 
 // Helper: Growable text buffer for logging/accumulating text
 // (this could be called 'ImGuiTextBuilder' / 'ImGuiStringBuilder')

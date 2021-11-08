@@ -466,7 +466,16 @@ func ImTriangleClosestPoint(a, b, c, p *ImVec2) ImVec2 {
 }
 
 func ImGetDirQuadrantFromDelta(dx, dy float32) ImGuiDir {
-	panic("not implemented")
+	if ImFabs(dx) > ImFabs(dy) {
+		if dx > 0 {
+			return ImGuiDir_Right
+		}
+		return ImGuiDir_Left
+	}
+	if dy > 0 {
+		return ImGuiDir_Down
+	}
+	return ImGuiDir_Up
 }
 
 type ImVec1 struct {

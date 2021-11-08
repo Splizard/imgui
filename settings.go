@@ -120,7 +120,15 @@ func MarkIniSettingsDirtyWindow(window *ImGuiWindow) {
 	}
 }
 
-func ClearIniSettings() { panic("not implemented") }
+func ClearIniSettings() {
+	var g = GImGui
+	g.SettingsIniData = g.SettingsIniData[:0]
+	for handler_n := range g.SettingsHandlers {
+		if g.SettingsHandlers[handler_n].ClearAllFn != nil {
+			g.SettingsHandlers[handler_n].ClearAllFn(g, &g.SettingsHandlers[handler_n])
+		}
+	}
+}
 
 func CreateNewWindowSettings(name string) *ImGuiWindowSettings {
 	var g = GImGui

@@ -1,5 +1,38 @@
 package imgui
 
+// Style read access
+// - Use the style editor (ShowStyleEditor() function) to interactively see what the colors are)
+
+// get current font
+func GetFont() *ImFont { return GImGui.Font }
+
+// get current font size (= height in pixels) of current font with current scale applied
+func GetFontSize() float { return GImGui.FontSize }
+
+func GetFontTexUvWhitePixel() ImVec2 { return GImGui.DrawListSharedData.TexUvWhitePixel } // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
+
+// Parameters stacks (shared)
+// use NULL as a shortcut to push default font
+func PushFont(font *ImFont) {
+	var g = GImGui
+	if font == nil {
+		font = GetDefaultFont()
+	}
+	SetCurrentFont(font)
+	g.FontStack = append(g.FontStack, font)
+	g.CurrentWindow.DrawList.PushTextureID(font.ContainerAtlas.TexID)
+}
+func PopFont() {
+	var g = GImGui
+	g.CurrentWindow.DrawList.PopTextureID()
+	g.FontStack = g.FontStack[:len(g.FontStack)-1]
+	if len(g.FontStack) == 0 {
+		SetCurrentFont(GetDefaultFont())
+	} else {
+		SetCurrentFont(g.FontStack[len(g.FontStack)-1])
+	}
+}
+
 // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
 // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
 func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width float) int {

@@ -32,7 +32,9 @@ func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
 		text_display_end = FindRenderedTextEnd(text)
 	}
 
-	if text != text_display_end {
+	text = text[:len(text_display_end)]
+
+	if text != "" {
 		window.DrawList.AddTextV(g.Font, g.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, 0, nil)
 		if g.LogEnabled {
 			LogRenderedText(&pos, text)
@@ -289,7 +291,7 @@ func FindRenderedTextEnd(t string) string {
 }
 
 // Text Utilities
-func CalcTextSize(text string, hide_text_after_double_hash bool /*= e*/, wrap_width float /*= -1.0*/) ImVec2 {
+func CalcTextSize(text string, hide_text_after_double_hash bool /*= true*/, wrap_width float /*= -1.0*/) ImVec2 {
 	var g = GImGui
 
 	var text_display_end string
@@ -317,6 +319,10 @@ func CalcTextSize(text string, hide_text_after_double_hash bool /*= e*/, wrap_wi
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
 func RenderTextClippedEx(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, text string, text_size_if_known *ImVec2, align *ImVec2, clip_rect *ImRect) {
+	if align == nil {
+		align = &ImVec2{0.0, 0.0}
+	}
+
 	// Perform CPU side clipping for single clipped element to avoid using scissor state
 	var pos ImVec2 = *pos_min
 	var text_size ImVec2

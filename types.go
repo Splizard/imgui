@@ -136,12 +136,12 @@ type ImGuiIO struct {
 	// Optional: Access OS clipboard
 	// (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
 	GetClipboardTextFn func(user_data interface{}) string
-	SetClipboardTextFn func(user_data interface{}, text string) string
+	SetClipboardTextFn func(user_data interface{}, text string)
 	ClipboardUserData  interface{}
 
 	// Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
 	// (default to use native imm32 api on Windows)
-	ImeSetInputScreenPosFn func(x, y int) int
+	ImeSetInputScreenPosFn func(x, y int)
 	ImeWindowHandle        interface{} // = NULL           // (Windows) Set this to your HWND to get automatic IME cursor positioning.
 
 	//------------------------------------------------------------------
@@ -247,9 +247,9 @@ func NewImGuiIO() ImGuiIO {
 	io.ConfigMemoryCompactTimer = 60.0
 
 	// Platform Functions
-	//io.GetClipboardTextFn = GetClipboardTextFn_DefaultImpl // Platform dependent default implementations
-	//io.SetClipboardTextFn = SetClipboardTextFn_DefaultImpl
-	//io.ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl
+	io.GetClipboardTextFn = GetClipboardTextFn_DefaultImpl // Platform dependent default implementations
+	io.SetClipboardTextFn = SetClipboardTextFn_DefaultImpl
+	io.ImeSetInputScreenPosFn = func(x, y int) {}
 
 	// Input (NB: we already have memset zero the entire structure!)
 	io.MousePos = ImVec2{-FLT_MAX, -FLT_MAX}

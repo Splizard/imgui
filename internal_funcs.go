@@ -1,88 +1,10 @@
 package imgui
 
-// Windows
-// We should always have a CurrentWindow in the stack (there is an implicit "Debug" window)
-// If this ever crash because g.CurrentWindow is NULL it means that either
-// - ImGui::NewFrame() has never been called, which is illegal.
-// - You are calling ImGui functions after ImGui::EndFrame()/ImGui::Render() and before the next ImGui::NewFrame(), which is also illegal.
-func GetCurrentWindowRead() *ImGuiWindow {
-	var g *ImGuiContext = GImGui
-	return g.CurrentWindow
-}
-func GetCurrentWindow() *ImGuiWindow {
-	var g *ImGuiContext = GImGui
-	g.CurrentWindow.WriteAccessed = true
-	return g.CurrentWindow
-}
-
-func UpdateWindowParentAndRootLinks(window *ImGuiWindow, flags ImGuiWindowFlags, parent_window *ImGuiWindow) {
-	window.ParentWindow = parent_window
-	window.RootWindow = window
-	window.RootWindowForTitleBarHighlight = window
-	window.RootWindowForNav = window
-	if parent_window != nil && (flags&ImGuiWindowFlags_ChildWindow != 0) && 0 == (flags&ImGuiWindowFlags_Tooltip) {
-		window.RootWindow = parent_window.RootWindow
-	}
-	if parent_window != nil && 0 == (flags&ImGuiWindowFlags_Modal) && (flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_Popup) != 0) {
-		window.RootWindowForTitleBarHighlight = parent_window.RootWindowForTitleBarHighlight
-	}
-	for window.RootWindowForNav.Flags&ImGuiWindowFlags_NavFlattened != 0 {
-		IM_ASSERT(window.RootWindowForNav.ParentWindow != nil)
-		window.RootWindowForNav = window.RootWindowForNav.ParentWindow
-	}
-}
-
-func CalcWindowNextAutoFitSize(w *ImGuiWindow) ImVec2     { panic("not implemented") }
-func IsWindowChildOf(w *ImGuiWindow, t *ImGuiWindow) bool { panic("not implemented") }
-func IsWindowAbove(e *ImGuiWindow, w *ImGuiWindow) bool   { panic("not implemented") }
-func IsWindowNavFocusable(w *ImGuiWindow) bool            { panic("not implemented") }
-
-func setWindowCollapsed(w *ImGuiWindow, collapsed bool, cond ImGuiCond) {
-	panic("not implemented")
-}
-func SetWindowHitTestHole(w *ImGuiWindow, pos *ImVec2, size *ImVec2) { panic("not implemented") }
-
-func BringWindowToDisplayBack(w *ImGuiWindow) { panic("not implemented") }
-
 // Fonts, drawing
 
-func getForegroundDrawList(window *ImGuiWindow) *ImDrawList      { return GetForegroundDrawList() } // This seemingly unnecessary wrapper simplifies compatibility between the 'master' and 'docking' branches.
-func getBackgroundDrawList(t *ImGuiViewport) *ImDrawList         { panic("not implemented") }       // get background draw list for the given viewport. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
-func GetForegroundDrawListViewport(t *ImGuiViewport) *ImDrawList { panic("not implemented") }       // get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
-
-// Init
-func Initialize(context *ImGuiContext) {
-	var g *ImGuiContext = context
-	IM_ASSERT(!g.Initialized && !g.SettingsLoaded)
-
-	// Add .ini handle for ImGuiWindow type
-	{
-		var ini_handler ImGuiSettingsHandler
-		ini_handler.TypeName = "Window"
-		ini_handler.TypeHash = ImHashStr("Window", 0, 0)
-		ini_handler.ClearAllFn = WindowSettingsHandler_ClearAll
-		ini_handler.ReadOpenFn = WindowSettingsHandler_ReadOpen
-		ini_handler.ReadLineFn = WindowSettingsHandler_ReadLine
-		ini_handler.ApplyAllFn = WindowSettingsHandler_ApplyAll
-		ini_handler.WriteAllFn = WindowSettingsHandler_WriteAll
-		g.SettingsHandlers = append(g.SettingsHandlers, ini_handler)
-	}
-
-	// Add .ini handle for ImGuiTable type
-	//TableSettingsInstallHandler(context)
-
-	// Create default viewport
-	var viewport ImGuiViewportP = NewImGuiViewportP()
-	g.Viewports = append(g.Viewports, &viewport)
-
-	g.Initialized = true
-}
-
-func Shutdown(t *ImGuiContext) { panic("not implemented") } // Since 1.60 this is a _private_ function. You can call DestroyContext() to destroy the context created by CreateContext().
-
-// Generic context hooks
-func AddContextHook(context *ImGuiContext, hook *ImGuiContextHook) ImGuiID { panic("not implemented") }
-func RemoveContextHook(context *ImGuiContext, hook_to_remove ImGuiID)      { panic("not implemented") }
+func getForegroundDrawList(window *ImGuiWindow) *ImDrawList      { return GetForegroundDrawList(nil) } // This seemingly unnecessary wrapper simplifies compatibility between the 'master' and 'docking' branches.
+func getBackgroundDrawList(t *ImGuiViewport) *ImDrawList         { panic("not implemented") }          // get background draw list for the given viewport. this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
+func GetForegroundDrawListViewport(t *ImGuiViewport) *ImDrawList { panic("not implemented") }          // get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 
 // Call context hooks (used by e.g. test engine)
 // We assume a small number of hooks so all stored in same array
@@ -94,24 +16,6 @@ func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 		}
 	}
 }
-
-// Scrolling
-func SetNextWindowScroll(scroll *ImVec2)        { panic("not implemented") } // Use -1.0f on one axis to leave as-is
-func setScrollX(w *ImGuiWindow, scroll_x float) { panic("not implemented") }
-
-func setScrollY(window *ImGuiWindow, scroll_y float) {
-	window.ScrollTarget.y = scroll_y
-	window.ScrollTargetCenterRatio.y = 0.0
-	window.ScrollTargetEdgeSnapDist.y = 0.0
-}
-
-func setScrollFromPosX(w *ImGuiWindow, local_x float, center_x_ratio float) {
-	panic("not implemented")
-}
-func setScrollFromPosY(w *ImGuiWindow, local_y float, center_y_ratio float) {
-	panic("not implemented")
-}
-func ScrollToBringRectIntoView(w *ImGuiWindow, item_rect *ImRect) ImVec2 { panic("not implemented") }
 
 // Basic Accessors
 func GetItemID() ImGuiID { var g *ImGuiContext = GImGui; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
@@ -217,41 +121,39 @@ func KeepAliveID(id ImGuiID) {
 	}
 }
 
-func MarkItemEdited(id ImGuiID)                              { panic("not implemented") } // Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
-func PushOverrideID(id ImGuiID)                              { panic("not implemented") } // Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
-func GetIDWithSeed(n string, d string, seed ImGuiID) ImGuiID { panic("not implemented") }
+// Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
+func MarkItemEdited(id ImGuiID) {
+	// This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
+	// ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
+	var g = GImGui
+	IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive)
 
-// Basic Helpers for widget code
-func ItemInputable(w *ImGuiWindow, id ImGuiID)                { panic("not implemented") }
-func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float { panic("not implemented") }
-func PushMultiItemsWidths(components int, width_full float)   { panic("not implemented") }
-func IsItemToggledSelection() bool                            { panic("not implemented") } // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
-func GetContentRegionMaxAbs() ImVec2                          { panic("not implemented") }
-func ShrinkWidths(s *ImGuiShrinkWidthItem, count int, width_excess float) {
-	panic("not implemented")
+	//IM_ASSERT(g.CurrentWindow.DC.LastItemId == id);
+	g.ActiveIdHasBeenEditedThisFrame = true
+	g.ActiveIdHasBeenEditedBefore = true
+	g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited
 }
 
 // Parameter stacks
-func PushItemFlag(option ImGuiItemFlags, enabled bool) { panic("not implemented") }
-func PopItemFlag()                                     { panic("not implemented") }
-
-// Logging/Capture
-func LogBegin(ltype ImGuiLogType, auto_open_depth int)      { panic("not implemented") } // . BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
-func LogToBuffer(auto_open_depth int /*= -1*/)              { panic("not implemented") } // Start logging/capturing to internal buffer
-func LogRenderedText(s *ImVec2, t string)                   { panic("not implemented") }
-func LogSetNextTextDecoration(prefix string, suffix string) { panic("not implemented") }
-
-// Popups, Modals, Tooltips
-func BeginChildEx(e string, id ImGuiID, size_arg *ImVec2, border bool, flags ImGuiWindowFlags) bool {
-	panic("not implemented")
-}
-func OpenPopupEx(id ImGuiID, popup_flags ImGuiPopupFlags) { panic("not implemented") }
-func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) {
-	panic("not implemented")
+func PushItemFlag(option ImGuiItemFlags, enabled bool) {
+	var g = GImGui
+	var item_flags ImGuiItemFlags = g.CurrentItemFlags
+	IM_ASSERT(item_flags == g.ItemFlagsStack[len(g.ItemFlagsStack)-1])
+	if enabled {
+		item_flags |= option
+	} else {
+		item_flags &= ^option
+	}
+	g.CurrentItemFlags = item_flags
+	g.ItemFlagsStack = append(g.ItemFlagsStack, item_flags)
 }
 
-func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool   { panic("not implemented") }
-func BeginPopupEx(id ImGuiID, extra_flags ImGuiWindowFlags) bool { panic("not implemented") }
+func PopItemFlag() {
+	var g = GImGui
+	IM_ASSERT(len(g.ItemFlagsStack) > 1) // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
+	g.ItemFlagsStack = g.ItemFlagsStack[:len(g.ItemFlagsStack)-1]
+	g.CurrentItemFlags = g.ItemFlagsStack[len(g.ItemFlagsStack)-1]
+}
 
 func BeginViewportSideBar(e string, t *ImGuiViewport, dir ImGuiDir, size float, window_flags ImGuiWindowFlags) bool {
 	panic("not implemented")
@@ -260,21 +162,6 @@ func BeginViewportSideBar(e string, t *ImGuiViewport, dir ImGuiDir, size float, 
 // Menus
 func BeginMenuEx(l string, n string, enabled bool /*= true*/) bool { panic("not implemented") }
 func MenuItemEx(l string, n string, t string, selected bool, enabled bool /*= true*/) bool {
-	panic("not implemented")
-}
-
-// Combos
-func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
-	panic("not implemented")
-}
-func BeginComboPreview() bool { panic("not implemented") }
-func EndComboPreview()        { panic("not implemented") }
-
-func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
-	panic("not implemented")
-}
-
-func NavMoveRequestTryWrapping(w *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
 	panic("not implemented")
 }
 
@@ -303,23 +190,6 @@ func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
 	var count int = count_t1 - count_t0
 	return count
 }
-
-func ActivateItem(id ImGuiID) { panic("not implemented") } // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.
-
-// Focus Scope (WIP)
-// This is generally used to identify a selection set (multiple of which may be in the same window), as selection
-// patterns generally need to react (e.g. clear selection) when landing on an item of the set.
-func PushFocusScope(id ImGuiID)     { panic("not implemented") }
-func PopFocusScope()                { panic("not implemented") }
-func GetFocusedFocusScope() ImGuiID { var g *ImGuiContext = GImGui; return g.NavFocusScopeId } // Focus scope which is actually active
-func GetFocusScope() ImGuiID {
-	var g *ImGuiContext = GImGui
-	return g.CurrentWindow.DC.NavFocusScopeIdCurrent
-} // Focus scope we are outputting into, set by PushFocusScope()
-
-// Inputs
-// FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
-func SetItemUsingMouseWheel() { panic("not implemented") }
 
 func SetActiveIdUsingNavAndKeys() {
 	var g = GImGui
@@ -359,11 +229,6 @@ func IsNavInputDown(n ImGuiNavInput) bool {
 func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
 	return (GetNavInputAmount(n, rm) > 0.0)
 }
-
-// Drag and Drop
-func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool { panic("not implemented") }
-func ClearDragDrop()                                        { panic("not implemented") }
-func IsDragDropPayloadBeingAccepted() bool                  { panic("not implemented") }
 
 // Internal Columns API (this is not exposed because we will encourage transitioning to the Tables API)
 func SetWindowClipRectBeforeSetChannel(w *ImGuiWindow, clip_rect *ImRect) {
@@ -458,7 +323,6 @@ func TabItemLabelAndCloseButton(t *ImDrawList, bb *ImRect, flags ImGuiTabItemFla
 	panic("not implemented")
 }
 
-func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) { panic("not implemented") }
 func RenderColorRectWithAlphaCheckerboard(t *ImDrawList, p_min ImVec2, p_max ImVec2, fill_col ImU32, grid_step float, grid_off ImVec2, rounding float, flags ImDrawFlags) {
 	panic("not implemented")
 }
@@ -502,8 +366,8 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	}
 }
 
-func RenderBullet(t *ImDrawList, pos ImVec2, col ImU32)              { panic("not implemented") }
-func RenderCheckMark(t *ImDrawList, pos ImVec2, col ImU32, sz float) { panic("not implemented") }
+func RenderBullet(t *ImDrawList, pos ImVec2, col ImU32) { panic("not implemented") }
+
 func RenderMouseCursor(t *ImDrawList, pos ImVec2, scale float, mouse_cursor ImGuiMouseCursor, col_fill ImU32, col_border ImU32, col_shadow ImU32) {
 	panic("not implemented")
 }
@@ -528,10 +392,8 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 	panic("not implemented")
 }
 
-func GetWindowResizeCornerID(w *ImGuiWindow, n int) ImGuiID        { panic("not implemented") } // 0..3: corners
-func GetWindowResizeBorderID(w *ImGuiWindow, dir ImGuiDir) ImGuiID { panic("not implemented") }
-func CheckboxFlagsU(l string, s *ImS64, flags_value ImS64) bool    { panic("not implemented") }
-func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool    { panic("not implemented") }
+func CheckboxFlagsU(l string, s *ImS64, flags_value ImS64) bool { panic("not implemented") }
+func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool { panic("not implemented") }
 
 // Widgets low-level behaviors
 
@@ -610,41 +472,6 @@ func ShadeVertsLinearColorGradientKeepAlpha(t *ImDrawList, vert_start_idx int, v
 	panic("not implemented")
 }
 func ShadeVertsLinearUV(t *ImDrawList, vert_start_idx int, vert_end_idx int, a *ImVec2, b *ImVec2, uv_a *ImVec2, uv_b *ImVec2, clamp bool) {
-	panic("not implemented")
-}
-
-// Garbage collection
-func GcCompactTransientMiscBuffers()                 { panic("not implemented") }
-func GcCompactTransientWindowBuffers(w *ImGuiWindow) { panic("not implemented") }
-func GcAwakeTransientWindowBuffers(w *ImGuiWindow)   { panic("not implemented") }
-
-// Debug Tools
-func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, a interface{}) {
-	panic("not implemented")
-}
-func DebugDrawItemRect(col ImU32 /*= IM_COL32(255,0,0,255)*/) {
-	var g *ImGuiContext = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
-	getForegroundDrawList(window).AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col, 0, 0, 1)
-}
-func DebugStartItemPicker() { var g *ImGuiContext = GImGui; g.DebugItemPickerActive = true }
-
-func ShowFontAtlas(s *ImFontAtlas)                              { panic("not implemented") }
-func DebugNodeColumns(s *ImGuiOldColumns)                       { panic("not implemented") }
-func DebugNodeDrawList(w *ImGuiWindow, t *ImDrawList, l string) { panic("not implemented") }
-func DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list *ImDrawList, draw_list *ImDrawList, d *ImDrawCmd, show_mesh bool, show_aabb bool) {
-	panic("not implemented")
-}
-func DebugNodeFont(t *ImFont)                               { panic("not implemented") }
-func DebugNodeStorage(e *ImGuiStorage, l string)            { panic("not implemented") }
-func DebugNodeTabBar(r *ImGuiTabBar, l string)              { panic("not implemented") }
-func DebugNodeTable(e *ImGuiTable)                          { panic("not implemented") }
-func DebugNodeTableSettings(s *ImGuiTableSettings)          { panic("not implemented") }
-func DebugNodeWindow(w *ImGuiWindow, l string)              { panic("not implemented") }
-func DebugNodeWindowSettings(s *ImGuiWindowSettings)        { panic("not implemented") }
-func DebugNodeWindowsList(windows []*ImGuiWindow, l string) { panic("not implemented") }
-func DebugNodeViewport(t *ImGuiViewportP)                   { panic("not implemented") }
-func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewportP, bb *ImRect) {
 	panic("not implemented")
 }
 

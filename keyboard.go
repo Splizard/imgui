@@ -1,5 +1,66 @@
 package imgui
 
+// Inputs Utilities: Keyboard
+// - For 'user_key_index int' you can use your own indices/enums according to how your backend/engine stored them in io.KeysDown[].
+// - We don't know the meaning of those value. You can use GetKeyIndex() to map a ImGuiKey_ value into the user index.
+
+// == tab stop enable. Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets
+func PushAllowKeyboardFocus(allow_keyboard_focus bool) {
+	PushItemFlag(ImGuiItemFlags_NoTabStop, !allow_keyboard_focus)
+}
+func PopAllowKeyboardFocus() {
+	PopItemFlag()
+}
+
+// map ImGuiKey_* values into user's key index. == io.KeyMap[key]
+func GetKeyIndex(imgui_key ImGuiKey) int {
+	IM_ASSERT(imgui_key >= 0 && imgui_key < ImGuiKey_COUNT)
+	var g = GImGui
+	return g.IO.KeyMap[imgui_key]
+}
+
+// Note that dear imgui doesn't know the semantic of each entry of io.KeysDown[]!
+// Use your own indices/enums according to how your backend/engine stored them into io.KeysDown[]!
+// is key being held. == io.KeysDown[user_key_index].
+func IsKeyDown(user_key_index int) bool {
+	if user_key_index < 0 {
+		return false
+	}
+	var g = GImGui
+	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
+	return g.IO.KeysDown[user_key_index]
+}
+
+// was key released (went from Down to !Down)?
+func IsKeyReleased(user_key_index int) bool {
+	var g = GImGui
+	if user_key_index < 0 {
+		return false
+	}
+	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
+	return g.IO.KeysDownDurationPrev[user_key_index] >= 0.0 && !g.IO.KeysDown[user_key_index]
+}
+
+// uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
+func GetKeyPressedAmount(key_index int, repeat_delay float, repeat_rate float) int {
+	var g = GImGui
+	if key_index < 0 {
+		return 0
+	}
+	IM_ASSERT(key_index >= 0 && key_index < int(len(g.IO.KeysDown)))
+	var t = g.IO.KeysDownDuration[key_index]
+	return CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, repeat_delay, repeat_rate)
+}
+
+// attention: misleading name! manually override io.WantCaptureKeyboard flag next frame (said flag is entirely left for your application to handle). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard_value"  {panic("not implemented")} after the next NewFrame() call.
+func CaptureKeyboardFromApp(want_capture_keyboard_value bool /*= true*/) {
+	if want_capture_keyboard_value {
+		GImGui.WantCaptureKeyboardNextFrame = 1
+	} else {
+		GImGui.WantCaptureKeyboardNextFrame = 0
+	}
+}
+
 // Pass in translated ASCII characters for text input.
 // - with glfw you can get those from the callback set in glfwSetCharCallback()
 // - on Windows you can get those using ToAscii+keyboard state, or via the WM_CHAR message
