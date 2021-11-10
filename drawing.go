@@ -35,7 +35,29 @@ func (this *ImDrawData) Clear() {
 }
 
 // Functions
-func (ImDrawData) DeIndexAllBuffers() { panic("not implemented") } // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
+// Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
+func (this *ImDrawData) DeIndexAllBuffers() {
+	var new_vtx_buffer []ImDrawVert
+	this.TotalVtxCount = 0
+	this.TotalIdxCount = 0
+	for i := int(0); i < this.CmdListsCount; i++ {
+		var cmd_list = this.CmdLists[i]
+		if len(cmd_list.IdxBuffer) == 0 {
+			continue
+		}
+		if len(new_vtx_buffer) < len(cmd_list.IdxBuffer) {
+			new_vtx_buffer = append(new_vtx_buffer, make([]ImDrawVert, len(cmd_list.IdxBuffer)-len(new_vtx_buffer))...)
+		} else {
+			new_vtx_buffer = new_vtx_buffer[:len(cmd_list.IdxBuffer)]
+		}
+		for j := range cmd_list.IdxBuffer {
+			new_vtx_buffer[j] = cmd_list.VtxBuffer[cmd_list.IdxBuffer[j]]
+		}
+		cmd_list.VtxBuffer, new_vtx_buffer = new_vtx_buffer, cmd_list.VtxBuffer
+		cmd_list.IdxBuffer = cmd_list.IdxBuffer[:0]
+		this.TotalVtxCount += int(len(cmd_list.VtxBuffer))
+	}
+}
 
 // Helper to scale the ClipRect field of each ImDrawCmd.
 // Use if your final output buffer is at a different scale than draw_data.DisplaySize,
@@ -389,17 +411,6 @@ func (this *ImDrawList) AddRect(p_min ImVec2, p_max ImVec2, col ImU32, rounding 
 	} // Better looking lower-right corner and rounded non-AA shapes.
 	this.PathStroke(col, ImDrawFlags_Closed, thickness)
 } // a: upper-left, b: lower-right (== upper-left + size)
-
-func (this *ImDrawList) AddTriangleFilled(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32) {
-	if (col & IM_COL32_A_MASK) == 0 {
-		return
-	}
-
-	this.PathLineTo(*p1)
-	this.PathLineTo(*p2)
-	this.PathLineTo(p3)
-	this.PathFillConvex(col)
-}
 
 func AddDrawListToDrawData(out_list *[]*ImDrawList, draw_list *ImDrawList) {
 	// Remove trailing command if unused.

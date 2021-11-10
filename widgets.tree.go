@@ -1,5 +1,76 @@
 package imgui
 
+import "fmt"
+
+// Widgets: Trees
+// - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
+
+// helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
+func TreeNodeF(str_id string, format string, args ...interface{}) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	return TreeNodeBehavior(window.GetIDs(str_id), 0, fmt.Sprintf(format, args...))
+}
+
+func TreeNodeInterface(ptr_id interface{}, format string, args ...interface{}) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	return TreeNodeBehavior(window.GetIDInterface(ptr_id), 0, fmt.Sprintf(format, args...))
+}
+
+func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...interface{}) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	return TreeNodeBehavior(window.GetIDs(str_id), flags, fmt.Sprintf(format, args...))
+}
+
+func TreeNodeInterfaceEx(ptr_id interface{}, flags ImGuiTreeNodeFlags, format string, args ...interface{}) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	return TreeNodeBehavior(window.GetIDInterface(ptr_id), flags, fmt.Sprintf(format, args...))
+}
+
+func TreePush(str_id string)               { panic("not implemented") } // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
+func TreePushInterface(ptr_id interface{}) { panic("not implemented") } // "
+
+// horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
+func GetTreeNodeToLabelSpacing() float {
+	var g = GImGui
+	return g.FontSize + (g.Style.FramePadding.x * 2.0)
+}
+
+func CollapsingHeader(label string, flsgs ImGuiTreeNodeFlags) bool { panic("not implemented") } // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
+func CollapsingHeaderVisible(label string, p_visible *bool, flsgs ImGuiTreeNodeFlags) bool {
+	panic("not implemented")
+} // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the to bool false when clicked, if '*p_visible==false' don't display the header.
+
+// set next TreeNode/CollapsingHeader open state.
+func SetNextItemOpen(is_open bool, cond ImGuiCond) {
+	var g = GImGui
+	if g.CurrentWindow.SkipItems {
+		return
+	}
+	g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasOpen
+	g.NextItemData.OpenVal = is_open
+	if cond != 0 {
+		g.NextItemData.OpenCond = cond
+	} else {
+		g.NextItemData.OpenCond = ImGuiCond_Always
+	}
+}
+
 func TreeNode(label string) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {

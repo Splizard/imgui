@@ -19,24 +19,13 @@ func GetVersion() string {
 	return IMGUI_VERSION
 }
 
-// Styles
-func StyleColorsLight(dst *ImGuiStyle)   { panic("not implemented") } // best used with borders and a custom, thicker font
-func StyleColorsClassic(dst *ImGuiStyle) { panic("not implemented") } // classic imgui style
-
 // Widgets: Main
 // - Most widgets return true when the value has been changed or when pressed/selected
 // - You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
-func SmallButton(label string) bool { panic("not implemented") } // button with FramePadding=(0,0) to easily embed within text
 func InvisibleButton(str_id string, size ImVec2, flsgs ImGuiButtonFlags) bool {
 	panic("not implemented")
 }                                                  // flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
 func ArrowButton(str_id string, dir ImGuiDir) bool { panic("not implemented") } // square button with an arrow shape
-func Image(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec2, tint_col ImVec4, border_col ImVec4) {
-	panic("not implemented")
-}
-func ImageButton(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec2, frame_padding int /*/*= /*/, bg_col ImVec4, tint_col ImVec4) bool {
-	panic("not implemented")
-} // <0 frame_padding uses default frame padding settings. 0 for no padding
 
 func RadioButtonBool(label string, active bool)              { panic("not implemented") } // use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1 bool {panic("not implemented")} }
 func RadioButtonInt(label string, v *int, v_button int) bool { panic("not implemented") } // shortcut to handle the above pattern when value is an integer
@@ -44,51 +33,6 @@ func ProgressBar(fraction float, size_arg ImVec2 /*= ImVec2(-FLT_MIN, 0)*/, over
 	panic("not implemented")
 }
 func Bullet() { panic("not implemented") } // draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
-
-// Widgets: Drag Sliders
-// - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
-// - For all the Float2/Float3/Float4/Int2/Int3/Int4 versions of every functions, note that a 'v float[X]' function argument is the same as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible. You can pass address of your first element out of a contiguous set, e.g. &myvector.x
-// - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2 secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
-// - Format string may also be set to NULL or use the default format ("%f" or "%d").
-// - Speed are per-pixel of mouse movement (v_speed=0.2: mouse needs to move by 5 pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed is Max(v_speed, minimum_step_at_given_precision).
-// - Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual input can override those limits.
-// - Use v_max/*= m*/,same with v_min = -FLT_MAX / INT_MIN to a clamping to a minimum.
-// - We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
-// - Legacy: Pre-1.78 there are DragXXX() function signatures that takes a final `power float=1.0' argument instead of the `ImGuiSliderFlags flags=0' argument.
-//   If you get a warning converting a to float ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
-func DragFloat2(label string, v [2]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragFloat3(label string, v [3]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragFloat4(label string, v [4]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "*/, format_max string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragInt(label string, v *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-} // If v_min >= v_max we have no bound
-func DragInt2(label string, v [2]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragInt3(label string, v [3]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragInt4(label string, v [4]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "*/, format_max string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_speed float /*= 0*/, p_min interface{} /*= L*/, p_max interface{} /*= L*/, format string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func DragScalarN(label string, data_type ImGuiDataType, p_data interface{}, components int, v_speed float /*= 0*/, p_min interface{} /*= L*/, p_max interface{} /*= L*/, format string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
 
 // Widgets: Regular Sliders
 // - CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
@@ -194,38 +138,6 @@ func ColorButton(desc_id string, col ImVec4, flsgs ImGuiColorEditFlags, size ImV
 	panic("not implemented")
 }                                                   // display a color square/button, hover for details, return true when pressed.
 func SetColorEditOptions(flags ImGuiColorEditFlags) { panic("not implemented") } // initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
-
-// Widgets: Trees
-// - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
-func TreeNodeF(str_id string, fmt string, args ...interface{}) bool { panic("not implemented") } // helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
-func TreeNodeInterface(ptr_id interface{}, fmt string, args ...interface{}) bool {
-	panic("not implemented")
-}                                                                  // "
-func TreeNodeV(str_id string, fmt string, args []interface{}) bool { panic("not implemented") }
-func TreeNodeInterfaceV(ptr_id interface{}, fmt string, args []interface{}) bool {
-	panic("not implemented")
-}
-func TreeNodeEx(label string, flsgs ImGuiTreeNodeFlags) bool { panic("not implemented") }
-func TreeNodeExF(str_id string, flags ImGuiTreeNodeFlags, fmt string, args ...interface{}) bool {
-	panic("not implemented")
-}
-func TreeNodeInterfaceEx(ptr_id interface{}, flags ImGuiTreeNodeFlags, fmt string, args ...interface{}) bool {
-	panic("not implemented")
-}
-func TreeNodeExV(str_id string, flags ImGuiTreeNodeFlags, fmt string, args []interface{}) bool {
-	panic("not implemented")
-}
-func TreeNodeInterfaceExV(ptr_id interface{}, flags ImGuiTreeNodeFlags, fmt string, args []interface{}) bool {
-	panic("not implemented")
-}
-func TreePush(str_id string)                                       { panic("not implemented") } // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
-func TreePushInterface(ptr_id interface{})                         { panic("not implemented") } // "
-func GetTreeNodeToLabelSpacing() float                             { panic("not implemented") } // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
-func CollapsingHeader(label string, flsgs ImGuiTreeNodeFlags) bool { panic("not implemented") } // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
-func CollapsingHeaderVisible(label string, p_visible *bool, flsgs ImGuiTreeNodeFlags) bool {
-	panic("not implemented")
-}                                                  // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the to bool false when clicked, if '*p_visible==false' don't display the header.
-func SetNextItemOpen(is_open bool, cond ImGuiCond) { panic("not implemented") } // set next TreeNode/CollapsingHeader open state.
 
 func SelectablePointer(label string, p_selected *bool, flsgs ImGuiSelectableFlags, size ImVec2) bool {
 	panic("not implemented")

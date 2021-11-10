@@ -7,9 +7,20 @@ package imgui
 // - Attention! We currently have inconsistencies between window-local and absolute positions we will aim to fix with future API:
 //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
 //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
-func NewLine()          { panic("not implemented") } // undo a SameLine() or force a new line when in an horizontal-layout context.
-func Spacing()          { panic("not implemented") } // add vertical spacing.
-func Dummy(size ImVec2) { panic("not implemented") } // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
+func NewLine() { panic("not implemented") } // undo a SameLine() or force a new line when in an horizontal-layout context.
+func Spacing() { panic("not implemented") } // add vertical spacing.
+
+// add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
+func Dummy(size ImVec2) {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return
+	}
+
+	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)}
+	ItemSizeVec(&size, 0)
+	ItemAdd(&bb, 0, nil, 0)
+}
 
 // Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.

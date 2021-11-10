@@ -217,32 +217,6 @@ void ImGui::BulletText(const char* fmt, ...)
     va_end(args);
 }
 
-// Text with a little bullet aligned to the typical tree node.
-void ImGui::BulletTextV(const char* fmt, va_list args)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return;
-
-   var g = GImGui
-    const ImGuiStyle& style = g.Style;
-
-    const char* text_begin = g.TempBuffer;
-    const char* text_end = text_begin + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
-    const ImVec2 label_size = CalcTextSize(text_begin, text_end, false);
-    const ImVec2 total_size = ImVec2(g.FontSize + (label_size.x > 0.0f ? (label_size.x + style.FramePadding.x * 2) : 0.0f), label_size.y);  // Empty text doesn't add padding
-    ImVec2 pos = window.DC.CursorPos;
-    pos.y += window.DC.CurrLineTextBaseOffset;
-    ItemSize(total_size, 0.0f);
-    const ImRect bb(pos, pos + total_size);
-    if (!ItemAdd(bb, 0))
-        return;
-
-    // Render
-    ImU32 text_col = GetColorU32(ImGuiCol_Text);
-    RenderBullet(window.DrawList, bb.Min + ImVec2(style.FramePadding.x + g.FontSize * 0.5f, g.FontSize * 0.5f), text_col);
-    RenderText(bb.Min + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f), text_begin, text_end, false);
-}
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: Main
@@ -268,16 +242,6 @@ void ImGui::BulletTextV(const char* fmt, va_list args)
 // - Bullet()
 //-------------------------------------------------------------------------
 
-// Small buttons fits within text without additional vertical spacing.
-bool ImGui::SmallButton(const char* label)
-{
-   var g = GImGui
-    float backup_padding_y = g.Style.FramePadding.y;
-    g.Style.FramePadding.y = 0.0f;
-    bool pressed = ButtonEx(label, ImVec2(0, 0), ImGuiButtonFlags_AlignTextBaseLine);
-    g.Style.FramePadding.y = backup_padding_y;
-    return pressed;
-}
 
 // Tip: use ImGui::PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
@@ -376,33 +340,6 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
     window.DrawList.AddLine(center + ImVec2(+cross_extent, -cross_extent), center + ImVec2(-cross_extent, +cross_extent), cross_col, 1.0f);
 
     return pressed;
-}
-
-
-
-
-void ImGui::Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return;
-
-    ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
-    if (border_col.w > 0.0f)
-        bb.Max += ImVec2(2, 2);
-    ItemSize(bb);
-    if (!ItemAdd(bb, 0))
-        return;
-
-    if (border_col.w > 0.0f)
-    {
-        window.DrawList.AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0f);
-        window.DrawList.AddImage(user_texture_id, bb.Min + ImVec2(1, 1), bb.Max - ImVec2(1, 1), uv0, uv1, GetColorU32(tint_col));
-    }
-    else
-    {
-        window.DrawList.AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
-    }
 }
 
 // ImageButton() is flawed as 'id' is always derived from 'texture_id' (see #2464 #1390)
@@ -645,16 +582,6 @@ void ImGui::Spacing()
     ItemSize(ImVec2(0, 0));
 }
 
-void ImGui::Dummy(const ImVec2& size)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return;
-
-    const ImRect bb(window.DC.CursorPos, window.DC.CursorPos + size);
-    ItemSize(size);
-    ItemAdd(bb, 0);
-}
 
 void ImGui::NewLine()
 {
@@ -1201,14 +1128,6 @@ bool ImGui::DataTypeClamp(ImGuiDataType data_type, void* p_data, const void* p_m
     return false;
 }
 
-static float GetMinimumStepAtDecimalPrecision(int decimal_precision)
-{
-    static const float min_steps[10] = { 1.0f, 0.1f, 0.01f, 0.001f, 0.0001f, 0.00001f, 0.000001f, 0.0000001f, 0.00000001f, 0.000000001f };
-    if (decimal_precision < 0)
-        return FLT_MIN;
-    return (decimal_precision < IM_ARRAYSIZE(min_steps)) ? min_steps[decimal_precision] : ImPow(10.0f, (float)-decimal_precision);
-}
-
 template<typename TYPE>
 static const char* ImAtoi(const char* src, TYPE* output)
 {
@@ -1283,245 +1202,6 @@ TYPE ImGui::RoundScalarWithFormatT(const char* format, ImGuiDataType data_type, 
 // - DragIntRange2()
 //-------------------------------------------------------------------------
 
-// This is called by DragBehavior() when the widget is active (held by mouse or being manipulated with Nav controls)
-template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-bool ImGui::DragBehaviorT(ImGuiDataType data_type, TYPE* v, float v_speed, const TYPE v_min, const TYPE v_max, const char* format, ImGuiSliderFlags flags)
-{
-   var g = GImGui
-    const ImGuiAxis axis = (flags & ImGuiSliderFlags_Vertical) ? ImGuiAxis_Y : ImGuiAxis_X;
-    const bool is_clamped = (v_min < v_max);
-    const bool is_logarithmic = (flags & ImGuiSliderFlags_Logarithmic) != 0;
-    const bool is_floating_point = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
-
-    // Default tweak speed
-    if (v_speed == 0.0f && is_clamped && (v_max - v_min < FLT_MAX))
-        v_speed = (float)((v_max - v_min) * g.DragSpeedDefaultRatio);
-
-    // Inputs accumulates into g.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
-    float adjust_delta = 0.0f;
-    if (g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid() && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR))
-    {
-        adjust_delta = g.IO.MouseDelta[axis];
-        if (g.IO.KeyAlt)
-            adjust_delta *= 1.0f / 100.0f;
-        if (g.IO.KeyShift)
-            adjust_delta *= 10.0f;
-    }
-    else if (g.ActiveIdSource == ImGuiInputSource_Nav)
-    {
-        const int decimal_precision = is_floating_point ? ImParseFormatPrecision(format, 3) : 0;
-        adjust_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard | ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 1.0f / 10.0f, 10.0f)[axis];
-        v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision));
-    }
-    adjust_delta *= v_speed;
-
-    // For vertical drag we currently assume that Up=higher value (like we do with vertical sliders). This may become a parameter.
-    if (axis == ImGuiAxis_Y)
-        adjust_delta = -adjust_delta;
-
-    // For logarithmic use our range is effectively 0..1 so scale the delta into that range
-    if (is_logarithmic && (v_max - v_min < FLT_MAX) && ((v_max - v_min) > 0.000001f)) // Epsilon to avoid /0
-        adjust_delta /= (float)(v_max - v_min);
-
-    // Clear current value on activation
-    // Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.g. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
-    bool is_just_activated = g.ActiveIdIsJustActivated;
-    bool is_already_past_limits_and_pushing_outward = is_clamped && ((*v >= v_max && adjust_delta > 0.0f) || (*v <= v_min && adjust_delta < 0.0f));
-    if (is_just_activated || is_already_past_limits_and_pushing_outward)
-    {
-        g.DragCurrentAccum = 0.0f;
-        g.DragCurrentAccumDirty = false;
-    }
-    else if (adjust_delta != 0.0f)
-    {
-        g.DragCurrentAccum += adjust_delta;
-        g.DragCurrentAccumDirty = true;
-    }
-
-    if (!g.DragCurrentAccumDirty)
-        return false;
-
-    TYPE v_cur = *v;
-    FLOATTYPE v_old_ref_for_accum_remainder = (FLOATTYPE)0.0f;
-
-    float logarithmic_zero_epsilon = 0.0f; // Only valid when is_logarithmic is true
-    const float zero_deadzone_halfsize = 0.0f; // Drag widgets have no deadzone (as it doesn't make sense)
-    if (is_logarithmic)
-    {
-        // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
-        const int decimal_precision = is_floating_point ? ImParseFormatPrecision(format, 3) : 1;
-        logarithmic_zero_epsilon = ImPow(0.1f, (float)decimal_precision);
-
-        // Convert to parametric space, apply delta, convert back
-        float v_old_parametric = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-        float v_new_parametric = v_old_parametric + g.DragCurrentAccum;
-        v_cur = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-        v_old_ref_for_accum_remainder = v_old_parametric;
-    }
-    else
-    {
-        v_cur += (SIGNEDTYPE)g.DragCurrentAccum;
-    }
-
-    // Round to user desired precision based on format string
-    if (!(flags & ImGuiSliderFlags_NoRoundToFormat))
-        v_cur = RoundScalarWithFormatT<TYPE, SIGNEDTYPE>(format, data_type, v_cur);
-
-    // Preserve remainder after rounding has been applied. This also allow slow tweaking of values.
-    g.DragCurrentAccumDirty = false;
-    if (is_logarithmic)
-    {
-        // Convert to parametric space, apply delta, convert back
-        float v_new_parametric = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-        g.DragCurrentAccum -= (float)(v_new_parametric - v_old_ref_for_accum_remainder);
-    }
-    else
-    {
-        g.DragCurrentAccum -= (float)((SIGNEDTYPE)v_cur - (SIGNEDTYPE)*v);
-    }
-
-    // Lose zero sign for float/double
-    if (v_cur == (TYPE)-0)
-        v_cur = (TYPE)0;
-
-    // Clamp values (+ handle overflow/wrap-around for integer types)
-    if (*v != v_cur && is_clamped)
-    {
-        if (v_cur < v_min || (v_cur > *v && adjust_delta < 0.0f && !is_floating_point))
-            v_cur = v_min;
-        if (v_cur > v_max || (v_cur < *v && adjust_delta > 0.0f && !is_floating_point))
-            v_cur = v_max;
-    }
-
-    // Apply result
-    if (*v == v_cur)
-        return false;
-    *v = v_cur;
-    return true;
-}
-
-bool ImGui::DragBehavior(ImGuiID id, ImGuiDataType data_type, void* p_v, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
-{
-    // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
-    IM_ASSERT((flags == 1 || (flags & ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
-
-   var g = GImGui
-    if (g.ActiveId == id)
-    {
-        if (g.ActiveIdSource == ImGuiInputSource_Mouse && !g.IO.MouseDown[0])
-            ClearActiveID();
-        else if (g.ActiveIdSource == ImGuiInputSource_Nav && g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated)
-            ClearActiveID();
-    }
-    if (g.ActiveId != id)
-        return false;
-    if ((g.LastItemData.InFlags & ImGuiItemFlags_ReadOnly) || (flags & ImGuiSliderFlags_ReadOnly))
-        return false;
-
-    switch (data_type)
-    {
-    case ImGuiDataType_S8:     { ImS32 v32 = (ImS32)*(ImS8*)p_v;  bool r = DragBehaviorT<ImS32, ImS32, float>(ImGuiDataType_S32, &v32, v_speed, p_min ? *(const ImS8*) p_min : IM_S8_MIN,  p_max ? *(const ImS8*)p_max  : IM_S8_MAX,  format, flags); if (r) *(ImS8*)p_v = (ImS8)v32; return r; }
-    case ImGuiDataType_U8:     { ImU32 v32 = (ImU32)*(ImU8*)p_v;  bool r = DragBehaviorT<ImU32, ImS32, float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(const ImU8*) p_min : IM_U8_MIN,  p_max ? *(const ImU8*)p_max  : IM_U8_MAX,  format, flags); if (r) *(ImU8*)p_v = (ImU8)v32; return r; }
-    case ImGuiDataType_S16:    { ImS32 v32 = (ImS32)*(ImS16*)p_v; bool r = DragBehaviorT<ImS32, ImS32, float>(ImGuiDataType_S32, &v32, v_speed, p_min ? *(const ImS16*)p_min : IM_S16_MIN, p_max ? *(const ImS16*)p_max : IM_S16_MAX, format, flags); if (r) *(ImS16*)p_v = (ImS16)v32; return r; }
-    case ImGuiDataType_U16:    { ImU32 v32 = (ImU32)*(ImU16*)p_v; bool r = DragBehaviorT<ImU32, ImS32, float>(ImGuiDataType_U32, &v32, v_speed, p_min ? *(const ImU16*)p_min : IM_U16_MIN, p_max ? *(const ImU16*)p_max : IM_U16_MAX, format, flags); if (r) *(ImU16*)p_v = (ImU16)v32; return r; }
-    case ImGuiDataType_S32:    return DragBehaviorT<ImS32, ImS32, float >(data_type, (ImS32*)p_v,  v_speed, p_min ? *(const ImS32* )p_min : IM_S32_MIN, p_max ? *(const ImS32* )p_max : IM_S32_MAX, format, flags);
-    case ImGuiDataType_U32:    return DragBehaviorT<ImU32, ImS32, float >(data_type, (ImU32*)p_v,  v_speed, p_min ? *(const ImU32* )p_min : IM_U32_MIN, p_max ? *(const ImU32* )p_max : IM_U32_MAX, format, flags);
-    case ImGuiDataType_S64:    return DragBehaviorT<ImS64, ImS64, double>(data_type, (ImS64*)p_v,  v_speed, p_min ? *(const ImS64* )p_min : IM_S64_MIN, p_max ? *(const ImS64* )p_max : IM_S64_MAX, format, flags);
-    case ImGuiDataType_U64:    return DragBehaviorT<ImU64, ImS64, double>(data_type, (ImU64*)p_v,  v_speed, p_min ? *(const ImU64* )p_min : IM_U64_MIN, p_max ? *(const ImU64* )p_max : IM_U64_MAX, format, flags);
-    case ImGuiDataType_Float:  return DragBehaviorT<float, float, float >(data_type, (float*)p_v,  v_speed, p_min ? *(const float* )p_min : -FLT_MAX,   p_max ? *(const float* )p_max : FLT_MAX,    format, flags);
-    case ImGuiDataType_Double: return DragBehaviorT<double,double,double>(data_type, (double*)p_v, v_speed, p_min ? *(const double*)p_min : -DBL_MAX,   p_max ? *(const double*)p_max : DBL_MAX,    format, flags);
-    case ImGuiDataType_COUNT:  break;
-    }
-    IM_ASSERT(0);
-    return false;
-}
-
-// Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
-// Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
-bool ImGui::DragScalar(const char* label, ImGuiDataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return false;
-
-   var g = GImGui
-    const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window.GetID(label);
-    const float w = CalcItemWidth();
-
-    const ImVec2 label_size = CalcTextSize(label, nil, true);
-    const ImRect frame_bb(window.DC.CursorPos, window.DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y * 2.0f));
-    const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
-
-    const bool temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0;
-    ItemSize(total_bb, style.FramePadding.y);
-    if (!ItemAdd(total_bb, id, &frame_bb, temp_input_allowed ? ImGuiItemFlags_Inputable : 0))
-        return false;
-
-    // Default format string when passing nil
-    if (format == nil)
-        format = DataTypeGetInfo(data_type).PrintFmt;
-    else if (data_type == ImGuiDataType_S32 && strcmp(format, "%d") != 0) // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
-        format = PatchFormatStringFloatToInt(format);
-
-    // Tabbing or CTRL-clicking on Drag turns it into an InputText
-    const bool hovered = ItemHoverable(frame_bb, id);
-    bool temp_input_is_active = temp_input_allowed && TempInputIsActive(id);
-    if (!temp_input_is_active)
-    {
-        const bool focus_requested = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Focused) != 0;
-        const bool clicked = (hovered && g.IO.MouseClicked[0]);
-        const bool double_clicked = (hovered && g.IO.MouseDoubleClicked[0]);
-        if (focus_requested || clicked || double_clicked || g.NavActivateId == id || g.NavInputId == id)
-        {
-            SetActiveID(id, window);
-            SetFocusID(id, window);
-            FocusWindow(window);
-            g.ActiveIdUsingNavDirMask = (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
-            if (temp_input_allowed && (focus_requested || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavInputId == id))
-                temp_input_is_active = true;
-        }
-        // Experimental: simple click (without moving) turns Drag into an InputText
-        // FIXME: Currently polling ImGuiConfigFlags_IsTouchScreen, may either poll an hypothetical ImGuiBackendFlags_HasKeyboard and/or an explicit drag settings.
-        if (g.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active)
-            if (g.ActiveId == id && hovered && g.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR))
-            {
-                g.NavInputId = id;
-                temp_input_is_active = true;
-            }
-    }
-
-    if (temp_input_is_active)
-    {
-        // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
-        const bool is_clamp_input = (flags & ImGuiSliderFlags_AlwaysClamp) != 0 && (p_min == nil || p_max == nil || DataTypeCompare(data_type, p_min, p_max) < 0);
-        return TempInputScalar(frame_bb, id, label, data_type, p_data, format, is_clamp_input ? p_min : nil, is_clamp_input ? p_max : nil);
-    }
-
-    // Draw frame
-    const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
-    RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.FrameRounding);
-
-    // Drag behavior
-    const bool value_changed = DragBehavior(id, data_type, p_data, v_speed, p_min, p_max, format, flags);
-    if (value_changed)
-        MarkItemEdited(id);
-
-    // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-    char value_buf[64];
-    const char* value_buf_end = value_buf + DataTypeFormatString(value_buf, IM_ARRAYSIZE(value_buf), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
-    RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, nil, ImVec2(0.5f, 0.5f));
-
-    if (label_size.x > 0.0f)
-        RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
-
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
-    return value_changed;
-}
-
 bool ImGui::DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags)
 {
     ImGuiWindow* window = GetCurrentWindow();
@@ -1557,10 +1237,6 @@ bool ImGui::DragScalarN(const char* label, ImGuiDataType data_type, void* p_data
     return value_changed;
 }
 
-bool ImGui::DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
-{
-    return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, flags);
-}
 
 bool ImGui::DragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags)
 {
@@ -4715,84 +4391,6 @@ void ImGui::ColorPickerOptionsPopup(const float* ref_col, ImGuiColorEditFlags fl
 // - SetNextItemOpen()
 // - CollapsingHeader()
 //-------------------------------------------------------------------------
-
-bool ImGui::TreeNode(const char* str_id, const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    bool is_open = TreeNodeExV(str_id, 0, fmt, args);
-    va_end(args);
-    return is_open;
-}
-
-bool ImGui::TreeNode(const void* ptr_id, const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    bool is_open = TreeNodeExV(ptr_id, 0, fmt, args);
-    va_end(args);
-    return is_open;
-}
-
-bool ImGui::TreeNodeV(const char* str_id, const char* fmt, va_list args)
-{
-    return TreeNodeExV(str_id, 0, fmt, args);
-}
-
-bool ImGui::TreeNodeV(const void* ptr_id, const char* fmt, va_list args)
-{
-    return TreeNodeExV(ptr_id, 0, fmt, args);
-}
-
-bool ImGui::TreeNodeEx(const char* label, ImGuiTreeNodeFlags flags)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return false;
-
-    return TreeNodeBehavior(window.GetID(label), flags, label, nil);
-}
-
-bool ImGui::TreeNodeEx(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    bool is_open = TreeNodeExV(str_id, flags, fmt, args);
-    va_end(args);
-    return is_open;
-}
-
-bool ImGui::TreeNodeEx(const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    bool is_open = TreeNodeExV(ptr_id, flags, fmt, args);
-    va_end(args);
-    return is_open;
-}
-
-bool ImGui::TreeNodeExV(const char* str_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return false;
-
-   var g = GImGui
-    const char* label_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
-    return TreeNodeBehavior(window.GetID(str_id), flags, g.TempBuffer, label_end);
-}
-
-bool ImGui::TreeNodeExV(const void* ptr_id, ImGuiTreeNodeFlags flags, const char* fmt, va_list args)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return false;
-
-   var g = GImGui
-    const char* label_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
-    return TreeNodeBehavior(window.GetID(ptr_id), flags, g.TempBuffer, label_end);
-}
-
 void ImGui::TreePush(const char* str_id)
 {
     ImGuiWindow* window = GetCurrentWindow();
@@ -4809,24 +4407,6 @@ void ImGui::TreePush(const void* ptr_id)
     PushID(ptr_id ? ptr_id : (const void*)"#TreePush");
 }
 
-
-// Horizontal distance preceding label when using TreeNode() or Bullet()
-float ImGui::GetTreeNodeToLabelSpacing()
-{
-   var g = GImGui
-    return g.FontSize + (g.Style.FramePadding.x * 2.0f);
-}
-
-// Set next TreeNode/CollapsingHeader open state.
-void ImGui::SetNextItemOpen(bool is_open, ImGuiCond cond)
-{
-   var g = GImGui
-    if (g.CurrentWindow.SkipItems)
-        return;
-    g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasOpen;
-    g.NextItemData.OpenVal = is_open;
-    g.NextItemData.OpenCond = cond ? cond : ImGuiCond_Always;
-}
 
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
@@ -4882,154 +4462,6 @@ bool ImGui::CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFl
 // - Selectable()
 //-------------------------------------------------------------------------
 
-// Tip: pass a non-visible label (e.g. "##hello") then you can use the space to draw other text or image.
-// But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
-// With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
-// FIXME: Selectable() with (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
-bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window.SkipItems)
-        return false;
-
-   var g = GImGui
-    const ImGuiStyle& style = g.Style;
-
-    // Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
-    ImGuiID id = window.GetID(label);
-    ImVec2 label_size = CalcTextSize(label, nil, true);
-    ImVec2 size(size_arg.x != 0.0f ? size_arg.x : label_size.x, size_arg.y != 0.0f ? size_arg.y : label_size.y);
-    ImVec2 pos = window.DC.CursorPos;
-    pos.y += window.DC.CurrLineTextBaseOffset;
-    ItemSize(size, 0.0f);
-
-    // Fill horizontal space
-    // We don't support (size < 0.0f) in Selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
-    const bool span_all_columns = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0;
-    const float min_x = span_all_columns ? window.ParentWorkRect.Min.x : pos.x;
-    const float max_x = span_all_columns ? window.ParentWorkRect.Max.x : window.WorkRect.Max.x;
-    if (size_arg.x == 0.0f || (flags & ImGuiSelectableFlags_SpanAvailWidth))
-        size.x = ImMax(label_size.x, max_x - min_x);
-
-    // Text stays at the submission position, but bounding box may be extended on both sides
-    const ImVec2 text_min = pos;
-    const ImVec2 text_max(min_x + size.x, pos.y + size.y);
-
-    // Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
-    ImRect bb(min_x, pos.y, text_max.x, text_max.y);
-    if ((flags & ImGuiSelectableFlags_NoPadWithHalfSpacing) == 0)
-    {
-        const float spacing_x = span_all_columns ? 0.0f : style.ItemSpacing.x;
-        const float spacing_y = style.ItemSpacing.y;
-        const float spacing_L = IM_FLOOR(spacing_x * 0.50f);
-        const float spacing_U = IM_FLOOR(spacing_y * 0.50f);
-        bb.Min.x -= spacing_L;
-        bb.Min.y -= spacing_U;
-        bb.Max.x += (spacing_x - spacing_L);
-        bb.Max.y += (spacing_y - spacing_U);
-    }
-    //if (g.IO.KeyCtrl) { GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
-
-    // Modify ClipRect for the ItemAdd(), faster than doing a PushColumnsBackground/PushTableBackground for every Selectable..
-    const float backup_clip_rect_min_x = window.ClipRect.Min.x;
-    const float backup_clip_rect_max_x = window.ClipRect.Max.x;
-    if (span_all_columns)
-    {
-        window.ClipRect.Min.x = window.ParentWorkRect.Min.x;
-        window.ClipRect.Max.x = window.ParentWorkRect.Max.x;
-    }
-
-    const bool disabled_item = (flags & ImGuiSelectableFlags_Disabled) != 0;
-    const bool item_add = ItemAdd(bb, id, nil, disabled_item ? ImGuiItemFlags_Disabled : ImGuiItemFlags_None);
-    if (span_all_columns)
-    {
-        window.ClipRect.Min.x = backup_clip_rect_min_x;
-        window.ClipRect.Max.x = backup_clip_rect_max_x;
-    }
-
-    if (!item_add)
-        return false;
-
-    const bool disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0;
-    if (disabled_item && !disabled_global) // Only testing this as an optimization
-        BeginDisabled();
-
-    // FIXME: We can standardize the behavior of those two, we could also keep the fast path of override ClipRect + full push on render only,
-    // which would be advantageous since most selectable are not selected.
-    if (span_all_columns && window.DC.CurrentColumns)
-        PushColumnsBackground();
-    else if (span_all_columns && g.CurrentTable)
-        TablePushBackgroundChannel();
-
-    // We use NoHoldingActiveID on menus so user can click and _hold_ on a menu then drag to browse child entries
-    ImGuiButtonFlags button_flags = 0;
-    if (flags & ImGuiSelectableFlags_NoHoldingActiveID) { button_flags |= ImGuiButtonFlags_NoHoldingActiveId; }
-    if (flags & ImGuiSelectableFlags_SelectOnClick)     { button_flags |= ImGuiButtonFlags_PressedOnClick; }
-    if (flags & ImGuiSelectableFlags_SelectOnRelease)   { button_flags |= ImGuiButtonFlags_PressedOnRelease; }
-    if (flags & ImGuiSelectableFlags_AllowDoubleClick)  { button_flags |= ImGuiButtonFlags_PressedOnClickRelease | ImGuiButtonFlags_PressedOnDoubleClick; }
-    if (flags & ImGuiSelectableFlags_AllowItemOverlap)  { button_flags |= ImGuiButtonFlags_AllowItemOverlap; }
-
-    const bool was_selected = selected;
-    bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held, button_flags);
-
-    // Auto-select when moved into
-    // - This will be more fully fleshed in the range-select branch
-    // - This is not exposed as it won't nicely work with some user side handling of shift/control
-    // - We cannot do 'if (g.NavJustMovedToId != id) { selected = false; pressed = was_selected; }' for two reasons
-    //   - (1) it would require focus scope to be set, need exposing PushFocusScope() or equivalent (e.g. BeginSelection() calling PushFocusScope())
-    //   - (2) usage will fail with clipped items
-    //   The multi-select API aim to fix those issues, e.g. may be replaced with a BeginSelection() API.
-    if ((flags & ImGuiSelectableFlags_SelectOnNav) && g.NavJustMovedToId != 0 && g.NavJustMovedToFocusScopeId == window.DC.NavFocusScopeIdCurrent)
-        if (g.NavJustMovedToId == id)
-            selected = pressed = true;
-
-    // Update NavId when clicking or when Hovering (this doesn't happen on most widgets), so navigation can be resumed with gamepad/keyboard
-    if (pressed || (hovered && (flags & ImGuiSelectableFlags_SetNavIdOnHover)))
-    {
-        if (!g.NavDisableMouseHover && g.NavWindow == window && g.NavLayer == window.DC.NavLayerCurrent)
-        {
-            SetNavID(id, window.DC.NavLayerCurrent, window.DC.NavFocusScopeIdCurrent, ImRect(bb.Min - window.Pos, bb.Max - window.Pos)); // (bb == NavRect)
-            g.NavDisableHighlight = true;
-        }
-    }
-    if (pressed)
-        MarkItemEdited(id);
-
-    if (flags & ImGuiSelectableFlags_AllowItemOverlap)
-        SetItemAllowOverlap();
-
-    // In this branch, Selectable() cannot toggle the selection so this will never trigger.
-    if (selected != was_selected) //-V547
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
-
-    // Render
-    if (held && (flags & ImGuiSelectableFlags_DrawHoveredWhenHeld))
-        hovered = true;
-    if (hovered || selected)
-    {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
-        RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
-    }
-    RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
-
-    if (span_all_columns && window.DC.CurrentColumns)
-        PopColumnsBackground();
-    else if (span_all_columns && g.CurrentTable)
-        TablePopBackgroundChannel();
-
-    RenderTextClipped(text_min, text_max, label, nil, &label_size, style.SelectableTextAlign, &bb);
-
-    // Automatically close popups
-    if (pressed && (window.Flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiSelectableFlags_DontClosePopups) && !(g.LastItemData.InFlags & ImGuiItemFlags_SelectableDontClosePopup))
-        CloseCurrentPopup();
-
-    if (disabled_item && !disabled_global)
-        EndDisabled();
-
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
-    return pressed; //-V1020
-}
 
 bool ImGui::Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
 {

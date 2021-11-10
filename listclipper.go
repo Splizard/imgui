@@ -84,7 +84,7 @@ func (this ImGuiListClipper) Step() bool {
 
 	// No items
 	if this.ItemsCount == 0 || GetSkipItemForListClipping() {
-		End()
+		this.End()
 		return false
 	}
 
@@ -130,7 +130,7 @@ func (this ImGuiListClipper) Step() bool {
 
 	// Reached end of list
 	if this.DisplayEnd >= this.ItemsCount {
-		End()
+		this.End()
 		return false
 	}
 

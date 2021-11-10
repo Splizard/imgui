@@ -4,8 +4,196 @@ package imgui
 // - A selectable highlights when hovered, and can display another color when selected.
 // - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
 // "selected bool" carry the selection state (read-only). Selectable() is clicked is returns true so you can modify your selection state. size.x==0.0: use remaining width, size.x>0.0: specify width. size.y==0.0: use label height, size.y>0.0: specify height
-func Selectable(label string, selected bool, flsgs ImGuiSelectableFlags, size ImVec2) bool {
-	panic("not implemented")
+// Tip: pass a non-visible label (e.g. "##hello") then you can use the space to draw other text or image.
+// But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
+// With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
+// FIXME: Selectable() with (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
+func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_arg ImVec2) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	var style = g.Style
+
+	// Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
+	var id ImGuiID = window.GetIDs(label)
+	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var size = ImVec2{label_size.x, label_size.y}
+	if size_arg.x != 0.0 {
+		size.x = size_arg.x
+	}
+	if size_arg.y != 0.0 {
+		size.y = size_arg.y
+	}
+	var pos ImVec2 = window.DC.CursorPos
+	pos.y += window.DC.CurrLineTextBaseOffset
+	ItemSizeVec(&size, 0.0)
+
+	// Fill horizontal space
+	// We don't support (size < 0.0f) in Selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
+	var span_all_columns bool = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0
+	var min_x float = pos.x
+	var max_x float = window.WorkRect.Max.x
+	if span_all_columns {
+		min_x = window.ParentWorkRect.Min.x
+		max_x = window.ParentWorkRect.Max.x
+	}
+	if size_arg.x == 0.0 || (flags&ImGuiSelectableFlags_SpanAvailWidth != 0) {
+		size.x = ImMax(label_size.x, max_x-min_x)
+	}
+
+	// Text stays at the submission position, but bounding box may be extended on both sides
+	var text_min ImVec2 = pos
+	var text_max = ImVec2{min_x + size.x, pos.y + size.y}
+
+	// Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
+	var bb = ImRect{ImVec2{min_x, pos.y}, ImVec2{text_max.x, text_max.y}}
+	if (flags & ImGuiSelectableFlags_NoPadWithHalfSpacing) == 0 {
+		var spacing_x float
+		if !span_all_columns {
+			spacing_x = style.ItemSpacing.x
+		}
+		var spacing_y float = style.ItemSpacing.y
+		var spacing_L float = IM_FLOOR(spacing_x * 0.50)
+		var spacing_U float = IM_FLOOR(spacing_y * 0.50)
+		bb.Min.x -= spacing_L
+		bb.Min.y -= spacing_U
+		bb.Max.x += (spacing_x - spacing_L)
+		bb.Max.y += (spacing_y - spacing_U)
+	}
+	//if (g.IO.KeyCtrl) { GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
+
+	// Modify ClipRect for the ItemAdd(), faster than doing a PushColumnsBackground/PushTableBackground for every Selectable..
+	var backup_clip_rect_min_x float = window.ClipRect.Min.x
+	var backup_clip_rect_max_x float = window.ClipRect.Max.x
+	if span_all_columns {
+		window.ClipRect.Min.x = window.ParentWorkRect.Min.x
+		window.ClipRect.Max.x = window.ParentWorkRect.Max.x
+	}
+
+	var disabled_item bool = (flags & ImGuiSelectableFlags_Disabled) != 0
+
+	var disabled_flags = ImGuiItemFlags_None
+	if disabled_item {
+		disabled_flags |= ImGuiItemFlags_Disabled
+	}
+
+	var item_add bool = ItemAdd(&bb, id, nil, disabled_flags)
+	if span_all_columns {
+		window.ClipRect.Min.x = backup_clip_rect_min_x
+		window.ClipRect.Max.x = backup_clip_rect_max_x
+	}
+
+	if !item_add {
+		return false
+	}
+
+	var disabled_global bool = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
+	if disabled_item && !disabled_global { // Only testing this as an optimization
+		BeginDisabled(true)
+	}
+
+	// FIXME: We can standardize the behavior of those two, we could also keep the fast path of override ClipRect + full push on render only,
+	// which would be advantageous since most selectable are not selected.
+	if span_all_columns && window.DC.CurrentColumns != nil {
+		PushColumnsBackground()
+	} else if span_all_columns && g.CurrentTable != nil {
+		TablePushBackgroundChannel()
+	}
+
+	// We use NoHoldingActiveID on menus so user can click and _hold_ on a menu then drag to browse child entries
+	var button_flags ImGuiButtonFlags = 0
+	if flags&ImGuiSelectableFlags_NoHoldingActiveID != 0 {
+		button_flags |= ImGuiButtonFlags_NoHoldingActiveId
+	}
+	if flags&ImGuiSelectableFlags_SelectOnClick != 0 {
+		button_flags |= ImGuiButtonFlags_PressedOnClick
+	}
+	if flags&ImGuiSelectableFlags_SelectOnRelease != 0 {
+		button_flags |= ImGuiButtonFlags_PressedOnRelease
+	}
+	if flags&ImGuiSelectableFlags_AllowDoubleClick != 0 {
+		button_flags |= ImGuiButtonFlags_PressedOnClickRelease | ImGuiButtonFlags_PressedOnDoubleClick
+	}
+	if flags&ImGuiSelectableFlags_AllowItemOverlap != 0 {
+		button_flags |= ImGuiButtonFlags_AllowItemOverlap
+	}
+
+	var was_selected bool = selected
+	var hovered, held bool
+	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, button_flags)
+
+	// Auto-select when moved into
+	// - This will be more fully fleshed in the range-select branch
+	// - This is not exposed as it won't nicely work with some user side handling of shift/control
+	// - We cannot do 'if (g.NavJustMovedToId != id) { selected = false; pressed = was_selected; }' for two reasons
+	//   - (1) it would require focus scope to be set, need exposing PushFocusScope() or equivalent (e.g. BeginSelection() calling PushFocusScope())
+	//   - (2) usage will fail with clipped items
+	//   The multi-select API aim to fix those issues, e.g. may be replaced with a BeginSelection() API.
+	if (flags&ImGuiSelectableFlags_SelectOnNav != 0) && g.NavJustMovedToId != 0 && g.NavJustMovedToFocusScopeId == window.DC.NavFocusScopeIdCurrent {
+		if g.NavJustMovedToId == id {
+			selected = true
+			pressed = true
+		}
+	}
+
+	// Update NavId when clicking or when Hovering (this doesn't happen on most widgets), so navigation can be resumed with gamepad/keyboard
+	if pressed || (hovered && (flags&ImGuiSelectableFlags_SetNavIdOnHover != 0)) {
+		if !g.NavDisableMouseHover && g.NavWindow == window && g.NavLayer == window.DC.NavLayerCurrent {
+			SetNavID(id, window.DC.NavLayerCurrent, window.DC.NavFocusScopeIdCurrent, &ImRect{bb.Min.Sub(window.Pos), bb.Max.Sub(window.Pos)}) // (bb == NavRect)
+			g.NavDisableHighlight = true
+		}
+	}
+	if pressed {
+		MarkItemEdited(id)
+	}
+
+	if flags&ImGuiSelectableFlags_AllowItemOverlap != 0 {
+		SetItemAllowOverlap()
+	}
+
+	// In this branch, Selectable() cannot toggle the selection so this will never trigger.
+	if selected != was_selected { //-V547
+		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection
+	}
+
+	// Render
+	if held && (flags&ImGuiSelectableFlags_DrawHoveredWhenHeld != 0) {
+		hovered = true
+	}
+	if hovered || selected {
+		var c = ImGuiCol_Header
+		switch {
+		case (held && hovered):
+			c = ImGuiCol_HeaderActive
+		case hovered:
+			c = ImGuiCol_HeaderHovered
+		}
+		var col = GetColorU32FromID(c, 1)
+		RenderFrame(bb.Min, bb.Max, col, false, 0.0)
+	}
+	RenderNavHighlight(&bb, id, ImGuiNavHighlightFlags_TypeThin|ImGuiNavHighlightFlags_NoRounding)
+
+	if span_all_columns && window.DC.CurrentColumns != nil {
+		PopColumnsBackground()
+	} else if span_all_columns && g.CurrentTable != nil {
+		TablePopBackgroundChannel()
+	}
+
+	RenderTextClipped(&text_min, &text_max, label, &label_size, &style.SelectableTextAlign, &bb)
+
+	// Automatically close popups
+	if pressed && (window.Flags&ImGuiWindowFlags_Popup != 0) && (flags&ImGuiSelectableFlags_DontClosePopups == 0) && (g.LastItemData.InFlags&ImGuiItemFlags_SelectableDontClosePopup == 0) {
+		CloseCurrentPopup()
+	}
+
+	if disabled_item && !disabled_global {
+		EndDisabled()
+	}
+
+	return pressed //-V1020
 }
 
 // Focus, Activation

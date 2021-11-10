@@ -178,7 +178,7 @@ type ImGuiContext struct {
 
 	// Tab bars
 	CurrentTabBar      *ImGuiTabBar
-	TabBars            map[ImGuiID]ImGuiTabBar
+	TabBars            map[ImGuiID]*ImGuiTabBar
 	CurrentTabBarStack []ImGuiPtrOrIndex
 	ShrinkWidthBuffer  []ImGuiShrinkWidthItem
 

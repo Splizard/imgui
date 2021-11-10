@@ -303,7 +303,7 @@ func ImFontAtlasBuildSetupFont(atlas *ImFontAtlas, font *ImFont, font_config *Im
 	if !font_config.MergeMode {
 		font.ClearOutputData()
 		font.FontSize = font_config.SizePixels
-		font.ConfigData = font_config
+		font.ConfigData = []ImFontConfig{*font_config}
 		font.ConfigDataCount = 0
 		font.ContainerAtlas = atlas
 		font.Ascent = ascent

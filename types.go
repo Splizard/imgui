@@ -443,6 +443,20 @@ type ImDrawCmd struct {
 	UserCallbackData interface{}    // 4-8  // The draw callback code can access this.
 }
 
+func (this *ImDrawCmd) HeaderEquals(other *ImDrawCmd) bool {
+	return this.ClipRect == other.ClipRect && this.TextureId == other.TextureId && this.VtxOffset == other.VtxOffset
+}
+
+func (this *ImDrawCmd) HeaderEqualsHeader(other *ImDrawCmdHeader) bool {
+	return this.ClipRect == other.ClipRect && this.TextureId == other.TextureId && this.VtxOffset == other.VtxOffset
+}
+
+func (this *ImDrawCmd) HeaderCopyFromHeader(other ImDrawCmdHeader) {
+	this.ClipRect = other.ClipRect
+	this.TextureId = other.TextureId
+	this.VtxOffset = other.VtxOffset
+}
+
 func (this *ImDrawCmd) GetTexID() ImTextureID {
 	return this.TextureId
 }
@@ -471,348 +485,6 @@ type ImDrawCmdHeader struct {
 type ImDrawChannel struct {
 	_CmdBuffer []ImDrawCmd
 	_IdxBuffer []ImDrawIdx
-}
-
-// Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order.
-// This is used by the Columns/Tables API, so items of each column can be batched together in a same draw call.
-type ImDrawListSplitter struct {
-	_Current  int             // Current channel number (0)
-	_Count    int             // Number of active channels (1+)
-	_Channels []ImDrawChannel // Draw channels (not resized down so _Count might be < Channels.Size)
-}
-
-func (this *ImDrawListSplitter) Clear() {
-	this._Current = 0
-	this._Count = 1 // Do not clear Channels[] so our allocations are reused next frame
-}
-func (this *ImDrawListSplitter) ClearFreeMemory()                       { panic("not implemented") }
-func (this *ImDrawListSplitter) Split(draw_list *ImDrawList, count int) { panic("not implemented") }
-func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList)            { panic("not implemented") }
-func (this *ImDrawListSplitter) SetCurrentChannel(draw_list *ImDrawList, channel_idx int) {
-	panic("not implemented")
-}
-
-// Draw command list
-// This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
-// all command lists are passed to your ImGuiIO::RenderDrawListFn function for rendering.
-// Each dear imgui window contains its own ImDrawList. You can use ImGui::GetWindowDrawList() to
-// access the current window draw list and draw custom primitives.
-// You can interleave normal ImGui:: calls and adding primitives to the current draw list.
-// In single viewport mode, top-left is == GetMainViewport()->Pos (generally 0,0), bottom-right is == GetMainViewport()->Pos+Size (generally io.DisplaySize).
-// You are totally free to apply whatever transformation matrix to want to the data (depending on the use of the transformation you may want to apply it to ClipRect as well!)
-// Important: Primitives are always added to the list and not culled (culling is done at higher-level by ImGui:: functions), if you use this API a lot consider coarse culling your drawn objects.
-type ImDrawList struct {
-	// This is what you have to render
-	CmdBuffer []ImDrawCmd     // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
-	IdxBuffer []ImDrawIdx     // Index buffer. Each command consume ImDrawCmd::ElemCount of those
-	VtxBuffer []ImDrawVert    // Vertex buffer.
-	Flags     ImDrawListFlags // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
-
-	// [Internal, used while building lists]
-	_VtxCurrentIdx  uint                  // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
-	_Data           *ImDrawListSharedData // Pointer to shared draw data (you can use ImGui::GetDrawListSharedData() to get the one from current ImGui context)
-	_OwnerName      string                // Pointer to owner window's name for debugging
-	_VtxWritePtr    int                   // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-	_IdxWritePtr    int                   // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-	_ClipRectStack  []ImVec4              // [Internal]
-	_TextureIdStack []ImTextureID         // [Internal]
-	_Path           []ImVec2              // [Internal] current path building
-	_CmdHeader      ImDrawCmdHeader       // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
-	_Splitter       ImDrawListSplitter    // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
-	_FringeScale    float                 // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
-}
-
-func NewImDrawList(shared_data *ImDrawListSharedData) ImDrawList {
-	return ImDrawList{
-		_Data: shared_data,
-	}
-}
-
-func (this *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_current_clip_rect bool) {
-	var cr = ImVec4{cr_min.x, cr_min.y, cr_max.x, cr_max.y}
-	if intersect_with_current_clip_rect {
-		var current ImVec4 = this._CmdHeader.ClipRect
-		if cr.x < current.x {
-			cr.x = current.x
-		}
-		if cr.y < current.y {
-			cr.y = current.y
-		}
-		if cr.z > current.z {
-			cr.z = current.z
-		}
-		if cr.w > current.w {
-			cr.w = current.w
-		}
-	}
-	cr.z = ImMax(cr.x, cr.z)
-	cr.w = ImMax(cr.y, cr.w)
-
-	this._ClipRectStack = append(this._ClipRectStack, cr)
-	this._CmdHeader.ClipRect = cr
-	this._OnChangedClipRect()
-}
-
-// Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
-func (this *ImDrawList) PushClipRectFullScreen() { panic("not implemented") }
-
-func (this *ImDrawList) PopClipRect() {
-	this._ClipRectStack = this._ClipRectStack[len(this._ClipRectStack)-1:]
-	if len(this._ClipRectStack) == 0 {
-		this._CmdHeader.ClipRect = this._Data.ClipRectFullscreen
-	} else {
-		this._CmdHeader.ClipRect = this._ClipRectStack[len(this._ClipRectStack)-1]
-	}
-	this._OnChangedClipRect()
-}
-
-func (this *ImDrawList) PopTextureID() { panic("not implemented") }
-func (this *ImDrawList) GetClipRectMin() ImVec2 {
-	var cr *ImVec4 = &this._ClipRectStack[len(this._ClipRectStack)-1]
-	return ImVec2{cr.x, cr.y}
-}
-func (this *ImDrawList) GetClipRectMax() ImVec2 {
-	var cr *ImVec4 = &this._ClipRectStack[len(this._ClipRectStack)-1]
-	return ImVec2{cr.x, cr.y}
-}
-
-// Primitives
-// - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
-// - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
-//   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
-//   In future versions we will use textures to provide cheaper and higher-quality circles.
-//   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-func (this *ImDrawList) AddLine(p1 *ImVec2, p2 *ImVec2, col ImU32, thickness float /*= 1.0f*/) {
-	if (col & IM_COL32_A_MASK) == 0 {
-		return
-	}
-	this.PathLineTo(p1.Add(ImVec2{0.5, 0.5}))
-	this.PathLineTo(p2.Add(ImVec2{0.5, 0.5}))
-	this.PathStroke(col, 0, thickness)
-}
-
-func (this *ImDrawList) AddRectFilledMultiColor(cp_min ImVec2, p_max ImVec2, col_upr_left, col_upr_right, col_bot_right, col_bot_left ImU32) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddQuad(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVec2, col ImU32, thickness float /*= 1.0f*/) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddQuadFilled(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVec2, col ImU32) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddTriangle(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32, thickness float /*= 1.0f*/) {
-	panic("not implemented")
-}
-
-func (this *ImDrawList) AddCircle(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
-	panic("not implemented")
-}
-
-func (this *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddNgonFilled(center ImVec2, radius float, col ImU32, num_segments int) {
-	panic("not implemented")
-}
-
-func (this *ImDrawList) AddBezierCubic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVec2, col ImU32, thickness float, num_segments int) {
-	panic("not implemented")
-} // Cubic Bezier (4 control points)
-func (this *ImDrawList) AddBezierQuadratic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32, thickness float, num_segments int) {
-	panic("not implemented")
-} // Quadratic Bezier (3 control points)
-
-// Image primitives
-// - Read FAQ to understand what ImTextureID is.
-// - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
-// - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-func (this *ImDrawList) AddImage(user_texture_id ImTextureID, cp_min ImVec2, p_max ImVec2, uv_min *ImVec2, uv_max *ImVec2, col ImU32) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddImageQuad(user_texture_id ImTextureID, p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVec2, uv1 *ImVec2, uv2 *ImVec2 /*= ImVec2(1, 0)*/, uv3 ImVec2 /*ImVec2(1, 1)*/, uv4 ImVec2 /*ImVec2(0, 1)*/, col ImU32) {
-	panic("not implemented")
-}
-func (this *ImDrawList) AddImageRounded(user_texture_id ImTextureID, cp_min ImVec2, p_max ImVec2, uv_min, uv_max *ImVec2, col ImU32, rounding float, flags ImDrawFlags) {
-	panic("not implemented")
-}
-
-// Stateful path API, add points then finish with PathFillConvex() or PathStroke()
-func (this *ImDrawList) PathClear() {
-	this._Path = this._Path[:0]
-}
-func (this *ImDrawList) PathLineTo(pos ImVec2) {
-	this._Path = append(this._Path, pos)
-}
-func (this *ImDrawList) PathLineToMergeDuplicate(pos ImVec2) {
-	if len(this._Path) == 0 || this._Path[len(this._Path)-1] == pos {
-		this._Path = append(this._Path, pos)
-	}
-}
-
-// Note: Anti-aliased filling requires points to be in clockwise order.
-func (this *ImDrawList) PathFillConvex(col ImU32) {
-	this.AddConvexPolyFilled(this._Path, int(len(this._Path)), col)
-	this._Path = this._Path[:0]
-}
-
-func (this *ImDrawList) PathStroke(col ImU32, flags ImDrawFlags, thickness float /*= 1.0f*/) {
-	this.AddPolyline(this._Path, int(len(this._Path)), col, flags, thickness)
-	this._Path = this._Path[:0]
-}
-
-func (this *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2, num_segments int) {
-	panic("not implemented")
-} // Cubic Bezier (4 control points)
-func (this *ImDrawList) PathBezierQuadraticCurveTo(p2 *ImVec2, p3 ImVec2, num_segments int) {
-	panic("not implemented")
-} // Quadratic Bezier (3 control points)
-
-func FixRectCornerFlags(flags ImDrawFlags) ImDrawFlags {
-	// If this triggers, please update your code replacing hardcoded values with new ImDrawFlags_RoundCorners* values.
-	// Note that ImDrawFlags_Closed (== 0x01) is an invalid flag for AddRect(), AddRectFilled(), PathRect() etc...
-	IM_ASSERT_USER_ERROR((flags&0x0F) == 0, "Misuse of legacy hardcoded ImDrawCornerFlags values!")
-
-	if (flags & ImDrawFlags_RoundCornersMask_) == 0 {
-		flags |= ImDrawFlags_RoundCornersAll
-	}
-
-	return flags
-}
-
-func (this *ImDrawList) PathRect(a, b *ImVec2, rounding float, flags ImDrawFlags) {
-	flags = FixRectCornerFlags(flags)
-
-	var xamount, yamount float = 1, 1
-	if ((flags & ImDrawFlags_RoundCornersTop) == ImDrawFlags_RoundCornersTop) || ((flags & ImDrawFlags_RoundCornersBottom) == ImDrawFlags_RoundCornersBottom) {
-		xamount = 0.5
-	}
-	if ((flags & ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft) || ((flags & ImDrawFlags_RoundCornersRight) == ImDrawFlags_RoundCornersRight) {
-		yamount = 0.5
-	}
-
-	rounding = ImMin(rounding, ImFabs(b.x-a.x)*(xamount)-1.0)
-	rounding = ImMin(rounding, ImFabs(b.y-a.y)*(yamount)-1.0)
-
-	if rounding <= 0.0 || (flags&ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
-		this.PathLineTo(*a)
-		this.PathLineTo(ImVec2{b.x, a.y})
-		this.PathLineTo(*b)
-		this.PathLineTo(ImVec2{a.x, b.y})
-	} else {
-		var rounding_tl, rounding_tr, rounding_br, rounding_bl float
-		if (flags & ImDrawFlags_RoundCornersTopLeft) != 0 {
-			rounding_tl = rounding
-		}
-		if (flags & ImDrawFlags_RoundCornersTopRight) != 0 {
-			rounding_tr = rounding
-		}
-		if (flags & ImDrawFlags_RoundCornersBottomRight) != 0 {
-			rounding_br = rounding
-		}
-		if (flags & ImDrawFlags_RoundCornersBottomLeft) != 0 {
-			rounding_bl = rounding
-		}
-		this.PathArcToFast(ImVec2{a.x + rounding_tl, a.y + rounding_tl}, rounding_tl, 6, 9)
-		this.PathArcToFast(ImVec2{b.x - rounding_tr, a.y + rounding_tr}, rounding_tr, 9, 12)
-		this.PathArcToFast(ImVec2{b.x - rounding_br, b.y - rounding_br}, rounding_br, 0, 3)
-		this.PathArcToFast(ImVec2{a.x + rounding_bl, b.y - rounding_bl}, rounding_bl, 3, 6)
-	}
-}
-
-// Advanced
-func AddCallback(callback ImDrawCallback, callback_data interface{}) { panic("not implemented") } // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
-
-// This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-func (this *ImDrawList) AddDrawCmd() {
-	var draw_cmd ImDrawCmd
-	draw_cmd.ClipRect = this._CmdHeader.ClipRect // Same as calling ImDrawCmd_HeaderCopy()
-	draw_cmd.TextureId = this._CmdHeader.TextureId
-
-	draw_cmd.VtxOffset = this._CmdHeader.VtxOffset
-	draw_cmd.IdxOffset = uint(len(this.IdxBuffer))
-
-	IM_ASSERT(draw_cmd.ClipRect.x <= draw_cmd.ClipRect.z && draw_cmd.ClipRect.y <= draw_cmd.ClipRect.w)
-	this.CmdBuffer = append(this.CmdBuffer, draw_cmd)
-}
-
-func (this *ImDrawList) CloneOutput() *ImDrawList { panic("not implemented") } // Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
-
-// Advanced: Channels
-// - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
-// - Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
-// - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
-//   Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
-//   Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
-func (this *ImDrawList) ChannelsSplit(count int)  { this._Splitter.Split(this, count) }
-func (this *ImDrawList) ChannelsMerge()           { this._Splitter.Merge(this) }
-func (this *ImDrawList) ChannelsSetCurrent(n int) { this._Splitter.SetCurrentChannel(this, n) }
-
-func (this *ImDrawList) PrimUnreserve(idx_count, vtx_count int) { panic("not implemented") }
-
-// Axis aligned rectangle (composed of two triangles)
-func (this *ImDrawList) PrimRectUV(a, b, uv_a, uv_b *ImVec2, col ImU32) { panic("not implemented") }
-func (this *ImDrawList) PrimQuadUV(a, b, c, d *ImVec2, uv_a, uv_b, yv_c, uv_d *ImVec2, col ImU32) {
-	panic("not implemented")
-}
-func (this *ImDrawList) PrimWriteVtx(pos ImVec2, uv *ImVec2, col ImU32) {
-	this.VtxBuffer[this._VtxWritePtr].pos = pos
-	this.VtxBuffer[this._VtxWritePtr].uv = *uv
-	this.VtxBuffer[this._VtxWritePtr].col = col
-	this._VtxWritePtr++
-
-	this._VtxCurrentIdx++
-}
-func (this *ImDrawList) PrimWriteIdx(idx ImDrawIdx) {
-	this.IdxBuffer[this._IdxWritePtr] = idx
-	this._IdxWritePtr++
-}
-
-func (this *ImDrawList) PrimVtx(pos ImVec2, uv *ImVec2, col ImU32) {
-	this.PrimWriteIdx((ImDrawIdx)(this._VtxCurrentIdx))
-	this.PrimWriteVtx(pos, uv, col)
-} // Write vertex with unique index
-
-func (this *ImDrawList) _ClearFreeMemory() { panic("not implemented") }
-
-// Pop trailing draw command (used before merging or presenting to user)
-// Note that this leaves the ImDrawList in a state unfit for further commands, as most code assume that CmdBuffer.Size > 0 && CmdBuffer.back().UserCallback == nil
-func (this *ImDrawList) _PopUnusedDrawCmd() {
-	if len(this.CmdBuffer) == 0 {
-		return
-	}
-	var curr_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
-	if curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == nil {
-		this.CmdBuffer = this.CmdBuffer[:len(this.CmdBuffer)-1]
-	}
-}
-
-func (this *ImDrawList) _TryMergeDrawCmds() { panic("not implemented") }
-
-func (this *ImDrawList) _OnChangedVtxOffset() { panic("not implemented") }
-
-func (this *ImDrawList) _CalcCircleAutoSegmentCount(radius float) int {
-	// Automatic segment count
-	var radius_idx int = (int)(radius + 0.999999) // ceil to never reduce accuracy
-	if radius_idx < int(len(this._Data.CircleSegmentCounts)) {
-		return int(this._Data.CircleSegmentCounts[radius_idx]) // Use cached value
-	} else {
-		return int(IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, this._Data.CircleSegmentMaxError))
-	}
-}
-
-func (this *ImDrawList) _PathArcToN(center ImVec2, radius, a_min, a_max float, num_segments int) {
-	if radius <= 0.0 {
-		this._Path = append(this._Path, center)
-		return
-	}
-
-	// Note that we are adding a point at both a_min and a_max.
-	// If you are trying to draw a full closed circle you don't want the overlapping points!
-	this._Path = reserveVec2Slice(this._Path, int(len(this._Path))+(num_segments+1))
-	for i := int(0); i <= num_segments; i++ {
-		var a float = a_min + ((float)(i)/(float)(num_segments))*(a_max-a_min)
-		this._Path = append(this._Path, ImVec2{center.x + ImCos(a)*radius, center.y + ImSin(a)*radius})
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -854,267 +526,6 @@ func NewImFontConfig() ImFontConfig {
 	}
 }
 
-// Hold rendering data for one glyph.
-// (Note: some language parsers may fail to convert the 31+1 bitfield members, in this case maybe drop store a single u32 or we can rework this)
-type ImFontGlyph struct {
-	Colored        uint  // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
-	Visible        uint  // Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
-	Codepoint      uint  // 0x0000..0x10FFFF
-	AdvanceX       float // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
-	X0, Y0, X1, Y1 float // Glyph corners
-	U0, V0, U1, V1 float // Texture coordinates
-}
-
-func NewImFontGlyph() ImFontGlyph {
-	return ImFontGlyph{}
-}
-
-// Helper to build glyph ranges from text/string data. Feed your application strings/characters to it then call BuildRanges().
-// This is essentially a tightly packed of vector of 64k booleans = 8KB storage.
-type ImFontGlyphRangesBuilder []ImU32
-
-func NewImFontGlyphRangesBuilder() ImFontGlyphRangesBuilder {
-	return make(ImFontGlyphRangesBuilder, (IM_UNICODE_CODEPOINT_MAX+1)/8)
-}
-
-func (this ImFontGlyphRangesBuilder) GetBit(n uintptr) bool {
-	var off int = (int)(n >> 5)
-	var mask ImU32 = uint(1) << (n & 31)
-	return (this[off] & mask) != 0
-}
-
-func (this ImFontGlyphRangesBuilder) SetBit(n uintptr) {
-	var off int = (int)(n >> 5)
-	var mask ImU32 = uint(1) << (n & 31)
-	this[off] |= mask
-}
-
-func (this ImFontGlyphRangesBuilder) AddChar(c ImWchar) {
-	this.SetBit(uintptr(c))
-}
-
-func AddText(text, text_end string)     { panic("not implemented") } // Add string (each character of the UTF-8 string are added)
-func AddRanges(ranges []ImWchar)        { panic("not implemented") } // Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
-func BuildRanges(out_ranges *[]ImWchar) { panic("not implemented") } // Output new ranges
-
-// See ImFontAtlas::AddCustomRectXXX functions.
-type ImFontAtlasCustomRect struct {
-	Width, Height uint16  // Input    // Desired rectangle dimension
-	X, Y          uint16  // Output   // Packed position in Atlas
-	GlyphID       uint    // Input    // For custom font glyphs only (ID < 0x110000)
-	GlyphAdvanceX float   // Input    // For custom font glyphs only: glyph xadvance
-	GlyphOffset   ImVec2  // Input    // For custom font glyphs only: glyph display offset
-	Font          *ImFont // Input    // For custom font glyphs only: target font
-}
-
-func NewImFontAtlasCustomRect() ImFontAtlasCustomRect {
-	return ImFontAtlasCustomRect{
-		Width:         0,
-		Height:        0,
-		X:             0xFFFF,
-		Y:             0xFFFF,
-		GlyphID:       0,
-		GlyphAdvanceX: 0,
-		GlyphOffset:   ImVec2{},
-		Font:          nil,
-	}
-}
-
-func (this ImFontAtlasCustomRect) IsPacked() bool {
-	return this.X != 0xFFFF
-}
-
-// Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
-//  - One or more fonts.
-//  - Custom graphics data needed to render the shapes needed by Dear ImGui.
-//  - Mouse cursor shapes for software cursor rendering (unless setting 'Flags |= ImFontAtlasFlags_NoMouseCursors' in the font atlas).
-// It is the user-code responsibility to setup/build the atlas, then upload the pixel data into a texture accessible by your graphics api.
-//  - Optionally, call any of the AddFont*** functions. If you don't call any, the default font embedded in the code will be loaded for you.
-//  - Call GetTexDataAsAlpha8() or GetTexDataAsRGBA32() to build and retrieve pixels data.
-//  - Upload the pixels data into a texture within your graphics system (see imgui_impl_xxxx.cpp examples)
-//  - Call SetTexID(my_tex_id); and pass the pointer/identifier to your texture in a format natural to your graphics API.
-//    This value will be passed back to you during rendering to identify the texture. Read FAQ entry about ImTextureID for more details.
-// Common pitfalls:
-// - If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist up until the
-//   atlas is build (when calling GetTexData*** or Build()). We only copy the pointer, not the data.
-// - Important: By default, AddFontFromMemoryTTF() takes ownership of the data. Even though we are not writing to it, we will free the pointer on destruction.
-//   You can set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed,
-// - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
-// - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
-type ImFontAtlas struct {
-	//-------------------------------------------
-	// Members
-	//-------------------------------------------
-
-	Flags           ImFontAtlasFlags // Build flags (see ImFontAtlasFlags_)
-	TexID           ImTextureID      // User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
-	TexDesiredWidth int              // Texture width desired by user before Build(). Must be a power-of-two. If have many glyphs your graphics API have texture size restrictions you may want to increase texture width to decrease height.
-	TexGlyphPadding int              // Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0.
-	Locked          bool             // Marked as Locked by ImGui::NewFrame() so attempt to modify the atlas will assert.
-
-	// [Internal]
-	// NB: Access texture data via GetTexData*() calls! Which will setup a default font for you.
-	TexReady           bool                                        // Set when texture was built matching current font input
-	TexPixelsUseColors bool                                        // Tell whether our texture data is known to use colors (rather than just alpha channel), in order to help backend select a format.
-	TexPixelsAlpha8    []byte                                      // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
-	TexPixelsRGBA32    []uint                                      // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
-	TexWidth           int                                         // Texture width calculated during Build().
-	TexHeight          int                                         // Texture height calculated during Build().
-	TexUvScale         ImVec2                                      // = (1.0f/TexWidth, 1.0f/TexHeight)
-	TexUvWhitePixel    ImVec2                                      // Texture coordinates to a white pixel
-	Fonts              []*ImFont                                   // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling ImGui::NewFrame(), use ImGui::PushFont()/PopFont() to change the current font.
-	CustomRects        []ImFontAtlasCustomRect                     // Rectangles for packing custom texture data into the atlas.
-	ConfigData         []ImFontConfig                              // Configuration data
-	TexUvLines         [IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1]ImVec4 // UVs for baked anti-aliased lines
-
-	// [Internal] Font builder
-	FontBuilderIO    *ImFontBuilderIO // Opaque interface to a font builder (default to stb_truetype, can be changed to use FreeType by defining IMGUI_ENABLE_FREETYPE).
-	FontBuilderFlags uint             // Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
-
-	// [Internal] Packing data
-	PackIdMouseCursors int // Custom texture rectangle ID for white pixel and mouse cursors
-	PackIdLines        int // Custom texture rectangle ID for baked anti-aliased lines
-}
-
-func NewImFontAtlas() ImFontAtlas {
-	return ImFontAtlas{
-		TexGlyphPadding:    1,
-		PackIdMouseCursors: -1,
-		PackIdLines:        -1,
-	}
-}
-
-func (atlas *ImFontAtlas) AddFont(font_cfg *ImFontConfig) *ImFont {
-	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render")
-	IM_ASSERT(font_cfg.FontData != nil && font_cfg.FontDataSize > 0)
-	IM_ASSERT(font_cfg.SizePixels > 0.0)
-
-	// Create new font
-	if !font_cfg.MergeMode {
-		f := NewImFont()
-		atlas.Fonts = append(atlas.Fonts, &f)
-	} else {
-		IM_ASSERT_USER_ERROR(len(atlas.Fonts) != 0, "Cannot use MergeMode for the first font") // When using MergeMode make sure that a font has already been added before. You can use ImGui::GetIO().Fonts.AddFontDefault() to add the default imgui font.
-	}
-
-	atlas.ConfigData = append(atlas.ConfigData, *font_cfg)
-	var new_font_cfg *ImFontConfig = &atlas.ConfigData[len(atlas.ConfigData)-1]
-	if new_font_cfg.DstFont == nil {
-		new_font_cfg.DstFont = atlas.Fonts[len(atlas.ConfigData)-1]
-	}
-	if !new_font_cfg.FontDataOwnedByAtlas {
-		new_font_cfg.FontData = make([]byte, new_font_cfg.FontDataSize)
-		new_font_cfg.FontDataOwnedByAtlas = true
-		copy(new_font_cfg.FontData, font_cfg.FontData[:(size_t)(new_font_cfg.FontDataSize)])
-	}
-
-	if new_font_cfg.DstFont.EllipsisChar == (ImWchar)(-1) {
-		new_font_cfg.DstFont.EllipsisChar = font_cfg.EllipsisChar
-	}
-
-	// Invalidate texture
-	atlas.TexReady = false
-	atlas.ClearTexData()
-	return new_font_cfg.DstFont
-}
-
-func (atlas *ImFontAtlas) AddFontFromFileTTF(filename string, size_pixels float, font_cfg *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	panic("not implemented")
-}
-
-func (atlas *ImFontAtlas) AddFontFromMemoryTTF(ttf_data []byte, ttf_size int, size_pixels float, font_cfg_template *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!")
-	var font_cfg ImFontConfig
-	if font_cfg_template != nil {
-		font_cfg = *font_cfg_template
-	} else {
-		font_cfg = NewImFontConfig()
-	}
-	IM_ASSERT(font_cfg.FontData == nil)
-	font_cfg.FontData = ttf_data
-	font_cfg.FontDataSize = ttf_size
-	if size_pixels > 0.0 {
-		font_cfg.SizePixels = size_pixels
-	}
-	if glyph_ranges != nil {
-		font_cfg.GlyphRanges = glyph_ranges
-	}
-	return atlas.AddFont(&font_cfg)
-}
-
-// Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
-// 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
-func (atlas *ImFontAtlas) ClearInputData() { panic("not implemented") } // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
-
-func (atlas *ImFontAtlas) ClearTexData() {
-	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!")
-	atlas.TexPixelsAlpha8 = nil
-	atlas.TexPixelsRGBA32 = nil
-	atlas.TexPixelsUseColors = false
-}
-
-// Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
-func (atlas *ImFontAtlas) ClearFonts() { panic("not implemented") } // Clear output font data (glyphs storage, UV coordinates).
-func (atlas *ImFontAtlas) Clear()      { panic("not implemented") } // Clear all input and output.
-
-func (atlas *ImFontAtlas) GetTexDataAsRGBA32(out_pixels *[]byte, out_width, out_height, iout_bytes_per_pixel *int) {
-	panic("not implemented")
-}                                                  // 4 bytes-per-pixel
-func (atlas *ImFontAtlas) IsBuilt() bool           { return len(atlas.Fonts) > 0 && atlas.TexReady } // Bit ambiguous: used to detect when user didn't built texture but effectively we should check TexID != 0 except that would be backend dependent...
-func (atlas *ImFontAtlas) SetTexID(id ImTextureID) { atlas.TexID = id }
-
-//-------------------------------------------
-// Glyph Ranges
-//-------------------------------------------
-
-// Helpers to retrieve list of common Unicode ranges (2 value per range, values are inclusive, zero-terminated list)
-// NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
-// NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
-func (atlas *ImFontAtlas) GetGlyphRangesKorean() []ImWchar                  { panic("not implemented") } // Default + Korean characters
-func (atlas *ImFontAtlas) GetGlyphRangesJapanese() []ImWchar                { panic("not implemented") } // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
-func (atlas *ImFontAtlas) GetGlyphRangesChineseFull() []ImWchar             { panic("not implemented") } // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
-func (atlas *ImFontAtlas) GetGlyphRangesChineseSimplifiedCommon() []ImWchar { panic("not implemented") } // Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
-func (atlas *ImFontAtlas) GetGlyphRangesCyrillic() []ImWchar                { panic("not implemented") } // Default + about 400 Cyrillic characters
-func (atlas *ImFontAtlas) GetGlyphRangesThai() []ImWchar                    { panic("not implemented") } // Default + Thai characters
-func (atlas *ImFontAtlas) GetGlyphRangesVietnamese() []ImWchar              { panic("not implemented") } // Default + Vietnamese characters
-
-//-------------------------------------------
-// [BETA] Custom Rectangles/Glyphs API
-//-------------------------------------------
-
-// You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
-// - After calling Build(), you can query the rectangle position and render your pixels.
-// - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
-// - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
-//   so you can render e.g. custom colorful icons and use them as regular glyphs.
-// - Read docs/FONTS.md for more details about using colorful icons.
-// - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
-func (atlas *ImFontAtlas) AddCustomRectRegular(width, height int) int {
-	IM_ASSERT(width > 0 && width <= 0xFFFF)
-	IM_ASSERT(height > 0 && height <= 0xFFFF)
-	var r ImFontAtlasCustomRect
-	r.Width = (uint16)(width)
-	r.Height = (uint16)(height)
-	atlas.CustomRects = append(atlas.CustomRects, r)
-	return int(len(atlas.CustomRects)) - 1 // Return index
-}
-
-func (atlas *ImFontAtlas) AddCustomRectFontGlyph(font *ImFont, id ImWchar, width, height int, advance_x float, offset *ImVec2) int {
-	panic("not implemented")
-}
-func (atlas *ImFontAtlas) GetCustomRectByIndex(index int) *ImFontAtlasCustomRect {
-	IM_ASSERT(index >= 0)
-	return &atlas.CustomRects[index]
-}
-
-// [Internal]
-func (atlas *ImFontAtlas) CalcCustomRectUV(rect *ImFontAtlasCustomRect, out_uv_min, out_uv_max *ImVec2) {
-	panic("not implemented")
-}
-func (atlas *ImFontAtlas) GetMouseCursorTexData(cursor ImGuiMouseCursor, out_offset, out_size *ImVec2, out_uv_border [2]ImVec2, out_uv_fill [2]ImVec2) bool {
-	panic("not implemented")
-}
-
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
 type ImFont struct {
@@ -1130,7 +541,7 @@ type ImFont struct {
 
 	// Members: Cold ~32/40 bytes
 	ContainerAtlas      *ImFontAtlas                                    // 4-8   // out //            // What we has been loaded into
-	ConfigData          *ImFontConfig                                   // 4-8   // in  //            // Pointer within ContainerAtlas->ConfigData
+	ConfigData          []ImFontConfig                                  // 4-8   // in  //            // Pointer within ContainerAtlas->ConfigData
 	ConfigDataCount     short                                           // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
 	FallbackChar        ImWchar                                         // 2     // out // = FFFD/'?' // Character used if a glyph isn't found.
 	EllipsisChar        ImWchar                                         // 2     // out // = '...'    // Character used for ellipsis rendering.
@@ -1162,22 +573,68 @@ func (this *ImFont) GetCharAdvance(c ImWchar) float {
 func (this *ImFont) IsLoaded() bool { return this.ContainerAtlas != nil }
 func (this *ImFont) GetDebugName() string {
 	if this.ConfigData != nil {
-		return string(this.ConfigData.Name[:])
+		return string(this.ConfigData[0].Name[:])
 	}
 	return "<unknown>"
 }
 
 func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, c ImWchar) {
-	panic("not implemented")
+	var glyph *ImFontGlyph = this.FindGlyph(c)
+	if glyph == nil || glyph.Visible == 0 {
+		return
+	}
+	if glyph.Colored != 0 {
+		col |= IM_COL32_A_MASK
+	}
+	var scale float = 1.0
+	if size >= 0.0 {
+		scale = (size / this.FontSize)
+	}
+	pos.x = IM_FLOOR(pos.x)
+	pos.y = IM_FLOOR(pos.y)
+	draw_list.PrimReserve(6, 4)
+	draw_list.PrimRectUV(&ImVec2{pos.x + glyph.X0*scale, pos.y + glyph.Y0*scale}, &ImVec2{pos.x + glyph.X1*scale, pos.y + glyph.Y1*scale}, &ImVec2{glyph.U0, glyph.V0}, &ImVec2{glyph.U1, glyph.V1}, col)
+
 }
 
 // [Internal] Don't use!
 
-func (this *ImFont) AddRemapChar(dst, src ImWchar, overwite_dst bool /*= true*/) {
-	panic("not implemented")
-} // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+// Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+func (this *ImFont) AddRemapChar(dst, src ImWchar, overwrite_dst bool /*= true*/) {
+	IM_ASSERT(len(this.IndexLookup) > 0) // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
+	var index_size = ImWchar(len(this.IndexLookup))
 
-func (this *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool { panic("not implemented") }
+	if dst < index_size && this.IndexLookup[dst] == (ImWchar)(-1) && !overwrite_dst { // 'dst' already exists
+		return
+	}
+	if src >= index_size && dst >= index_size { // both 'dst' and 'src' don't exist . no-op
+		return
+	}
+
+	this.GrowIndex(dst + 1)
+	if src < index_size {
+		this.IndexLookup[dst] = this.IndexLookup[src]
+		this.IndexAdvanceX[dst] = this.IndexAdvanceX[src]
+	} else {
+		this.IndexLookup[dst] = (ImWchar)(-1)
+		this.IndexAdvanceX[dst] = 1
+	}
+}
+
+// API is designed this way to avoid exposing the 4K page size
+// e.g. use with IsGlyphRangeUnused(0, 255)
+func (this *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
+	var page_begin uint = (c_begin / 4096)
+	var page_last uint = (c_last / 4096)
+	for page_n := page_begin; page_n <= page_last; page_n++ {
+		if uintptr(page_n>>3) < unsafe.Sizeof(this.Used4kPagesMap) {
+			if this.Used4kPagesMap[page_n>>3]&(1<<(page_n&7)) != 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
 // - In 'docking' branch with multi-viewport enabled, we extend this concept to have multiple active viewports.

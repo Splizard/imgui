@@ -30,9 +30,8 @@ func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
 	var text_display_end string
 	if hide_text_after_hash {
 		text_display_end = FindRenderedTextEnd(text)
+		text = text[:len(text_display_end)]
 	}
-
-	text = text[:len(text_display_end)]
 
 	if text != "" {
 		window.DrawList.AddTextV(g.Font, g.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, 0, nil)

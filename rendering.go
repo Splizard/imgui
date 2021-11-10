@@ -10,6 +10,10 @@ func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) {
 	}
 }
 
+func RenderBullet(draw_list *ImDrawList, pos ImVec2, col ImU32) {
+	draw_list.AddCircleFilled(pos, draw_list._Data.FontSize*0.20, col, 8)
+}
+
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, scale float /*= 1.0f*/) {
 	var h = draw_list._Data.FontSize * 1.00

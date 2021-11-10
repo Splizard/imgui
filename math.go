@@ -337,7 +337,12 @@ func ImSubClampOverflow(a, b, mn, mx float) float {
 }
 
 func ImBezierCubicCalc(p1, p2, p3, p4 *ImVec2, t float32) ImVec2 {
-	panic("not implemented")
+	var u = 1.0 - t
+	var w1 = u * u * u
+	var w2 = 3 * u * u * t
+	var w3 = 3 * u * t * t
+	var w4 = t * t * t
+	return ImVec2{w1*p1.x + w2*p2.x + w3*p3.x + w4*p4.x, w1*p1.y + w2*p2.y + w3*p3.y + w4*p4.y}
 }
 
 func ImBezierCubicClosestPoint(p1, p2, p3, p4 *ImVec2, p *ImVec2, num_segments int) ImVec2 {
@@ -410,7 +415,11 @@ func ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last *ImVec2, p_clos
 }
 
 func ImBezierQuadraticCalc(p1, p2, p3 *ImVec2, t float32) ImVec2 {
-	panic("not implemented")
+	var u = 1.0 - t
+	var w1 = u * u
+	var w2 = 2 * u * t
+	var w3 = t * t
+	return ImVec2{w1*p1.x + w2*p2.x + w3*p3.x, w1*p1.y + w2*p2.y + w3*p3.y}
 }
 
 func ImLineClosestPoint(a, b, p *ImVec2) ImVec2 {
@@ -682,5 +691,55 @@ func IM_FIXNORMAL2F(VX, VY *float) {
 		}
 		*VX *= inv_len2
 		*VY *= inv_len2
+	}
+}
+
+func ImAcos01(x float) float {
+	if x <= 0.0 {
+		return IM_PI * 0.5
+	}
+	if x >= 1.0 {
+		return 0.0
+	}
+	return ImAcos(x)
+}
+
+// Closely mimics ImBezierCubicClosestPointCasteljau() in imgui.cpp
+func PathBezierCubicCurveToCasteljau(path *[]ImVec2, x1, y1, x2, y2, x3, y3, x4, y4, tess_tol float, level int) {
+	var dx = x4 - x1
+	var dy = y4 - y1
+	var d2 = (x2-x4)*dy - (y2-y4)*dx
+	var d3 = (x3-x4)*dy - (y3-y4)*dx
+	if d2 < 0.0 {
+		d2 = -d2
+	}
+	if d3 < 0.0 {
+		d3 = -d3
+	}
+	if (d2+d3)*(d2+d3) < tess_tol*(dx*dx+dy*dy) {
+		*path = append(*path, ImVec2{x4, y4})
+	} else if level < 10 {
+		var x12, y12 = (x1 + x2) * 0.5, (y1 + y2) * 0.5
+		var x23, y23 = (x2 + x3) * 0.5, (y2 + y3) * 0.5
+		var x34, y34 = (x3 + x4) * 0.5, (y3 + y4) * 0.5
+		var x123, y123 = (x12 + x23) * 0.5, (y12 + y23) * 0.5
+		var x234, y234 = (x23 + x34) * 0.5, (y23 + y34) * 0.5
+		var x1234, y1234 = (x123 + x234) * 0., (y123 + y234) * 0.5
+		PathBezierCubicCurveToCasteljau(path, x1, y1, x12, y12, x123, y123, x1234, y1234, tess_tol, level+1)
+		PathBezierCubicCurveToCasteljau(path, x1234, y1234, x234, y234, x34, y34, x4, y4, tess_tol, level+1)
+	}
+}
+
+func PathBezierQuadraticCurveToCasteljau(path *[]ImVec2, x1, y1, x2, y2, x3, y3, tess_tol float, level int) {
+	var dx, dy = x3 - x1, y3 - y1
+	var det = (x2-x3)*dy - (y2-y3)*dx
+	if det*det*4.0 < tess_tol*(dx*dx+dy*dy) {
+		*path = append(*path, ImVec2{x3, y3})
+	} else if level < 10 {
+		var x12, y12 = (x1 + x2) * 0.5, (y1 + y2) * 0.5
+		var x23, y23 = (x2 + x3) * 0.5, (y2 + y3) * 0.5
+		var x123, y123 = (x12 + x23) * 0.5, (y12 + y23) * 0.5
+		PathBezierQuadraticCurveToCasteljau(path, x1, y1, x12, y12, x123, y123, tess_tol, level+1)
+		PathBezierQuadraticCurveToCasteljau(path, x123, y123, x23, y23, x3, y3, tess_tol, level+1)
 	}
 }

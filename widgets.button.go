@@ -12,6 +12,17 @@ func Button(label string) bool {
 	return ButtonEx(label, &ImVec2{}, ImGuiButtonFlags_None)
 }
 
+// Small buttons fits within text without additional vertical spacing.
+// button with FramePadding=(0,0) to easily embed within text
+func SmallButton(label string) bool {
+	var g = GImGui
+	var backup_padding_y float = g.Style.FramePadding.y
+	g.Style.FramePadding.y = 0.0
+	var pressed bool = ButtonEx(label, &ImVec2{}, ImGuiButtonFlags_AlignTextBaseLine)
+	g.Style.FramePadding.y = backup_padding_y
+	return pressed
+}
+
 func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {

@@ -8,6 +8,7 @@ import (
 	"unsafe"
 )
 
+const FLT_MIN = math.SmallestNonzeroFloat32
 const FLT_MAX = math.MaxFloat32
 const INT_MAX = math.MaxInt32
 
@@ -946,7 +947,7 @@ func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
 	return id
 }
 func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID {
-	rvalue := reflect.ValueOf(ptr)
+	rvalue := reflect.ValueOf(ptr).Elem()
 	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
 	var id ImGuiID = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	KeepAliveID(id)
@@ -967,7 +968,7 @@ func (this *ImGuiWindow) GetIDNoKeepAlive(str string) ImGuiID {
 }
 
 func (this *ImGuiWindow) GetIDNoKeepAliveInterface(ptr interface{}) ImGuiID {
-	rvalue := reflect.ValueOf(ptr)
+	rvalue := reflect.ValueOf(ptr).Elem()
 	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
 	var id ImGuiID = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	return id
