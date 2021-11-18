@@ -269,65 +269,6 @@ func FindOrCreateColumns(w *ImGuiWindow, id ImGuiID) *ImGuiOldColumns     { pani
 func GetColumnOffsetFromNorm(s *ImGuiOldColumns, offset_norm float) float { panic("not implemented") }
 func GetColumnNormFromOffset(s *ImGuiOldColumns, offset float) float      { panic("not implemented") }
 
-// Tables: Candidates for public API
-func TableOpenContextMenu(column_n int /*= -1*/)    { panic("not implemented") }
-func TableSetColumnWidth(column_n int, width float) { panic("not implemented") }
-func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection, append_to_sort_specs bool) {
-	panic("not implemented")
-}
-func TableGetHoveredColumn() int     { panic("not implemented") } // May use (TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered) instead. Return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
-func TableGetHeaderRowHeight() float { panic("not implemented") }
-func TablePushBackgroundChannel()    { panic("not implemented") }
-func TablePopBackgroundChannel()     { panic("not implemented") }
-
-// Tables: Internals
-func GetCurrentTable() *ImGuiTable         { var g *ImGuiContext = GImGui; return g.CurrentTable }
-func TableFindByID(id ImGuiID) *ImGuiTable { panic("not implemented") }
-func BeginTableEx(e string, id ImGuiID, columns_count int, flags ImGuiTableFlags, outer_size *ImVec2, inner_width float) bool {
-	panic("not implemented")
-}
-func TableBeginInitMemory(e *ImGuiTable, columns_count int) { panic("not implemented") }
-func TableBeginApplyRequests(e *ImGuiTable)                 { panic("not implemented") }
-func TableSetupDrawChannels(e *ImGuiTable)                  { panic("not implemented") }
-func TableUpdateLayout(e *ImGuiTable)                       { panic("not implemented") }
-func TableUpdateBorders(e *ImGuiTable)                      { panic("not implemented") }
-func TableUpdateColumnsWeightFromWidth(e *ImGuiTable)       { panic("not implemented") }
-func TableDrawBorders(e *ImGuiTable)                        { panic("not implemented") }
-func TableDrawContextMenu(e *ImGuiTable)                    { panic("not implemented") }
-func TableMergeDrawChannels(e *ImGuiTable)                  { panic("not implemented") }
-func TableSortSpecsSanitize(e *ImGuiTable)                  { panic("not implemented") }
-func TableSortSpecsBuild(e *ImGuiTable)                     { panic("not implemented") }
-func TableGetColumnNextSortDirection(n *ImGuiTableColumn) ImGuiSortDirection {
-	panic("not implemented")
-}
-func TableFixColumnSortDirection(e *ImGuiTable, n *ImGuiTableColumn)   { panic("not implemented") }
-func TableGetColumnWidthAuto(e *ImGuiTable, n *ImGuiTableColumn) float { panic("not implemented") }
-func TableBeginRow(e *ImGuiTable)                                      { panic("not implemented") }
-func TableEndRow(e *ImGuiTable)                                        { panic("not implemented") }
-func TableBeginCell(e *ImGuiTable, column_n int)                       { panic("not implemented") }
-func TableEndCell(e *ImGuiTable)                                       { panic("not implemented") }
-func TableGetCellBgRect(e *ImGuiTable, column_n int) ImRect            { panic("not implemented") }
-func tableGetColumnName(e *ImGuiTable, column_n int) string            { panic("not implemented") }
-func TableGetColumnResizeID(e *ImGuiTable, column_n int, instance_no int) ImGuiID {
-	panic("not implemented")
-}
-func TableGetMaxColumnWidth(e *ImGuiTable, column_n int) float     { panic("not implemented") }
-func TableSetColumnWidthAutoSingle(e *ImGuiTable, column_n int)    { panic("not implemented") }
-func TableSetColumnWidthAutoAll(e *ImGuiTable)                     { panic("not implemented") }
-func TableRemove(e *ImGuiTable)                                    { panic("not implemented") }
-func TableGcCompactTransientBuffers(e *ImGuiTable)                 { panic("not implemented") }
-func TableGcCompactTransientBuffersTempData(e *ImGuiTableTempData) { panic("not implemented") }
-func TableGcCompactSettings()                                      { panic("not implemented") }
-
-// Tables: Settings
-func TableLoadSettings(e *ImGuiTable)                                       { panic("not implemented") }
-func TableSaveSettings(e *ImGuiTable)                                       { panic("not implemented") }
-func TableResetSettings(e *ImGuiTable)                                      { panic("not implemented") }
-func TableGetBoundSettings(e *ImGuiTable) *ImGuiTableSettings               { panic("not implemented") }
-func TableSettingsInstallHandler(t *ImGuiContext)                           { panic("not implemented") }
-func TableSettingsCreate(id ImGuiID, columns_count int) *ImGuiTableSettings { panic("not implemented") }
-func TableSettingsFindByID(id ImGuiID) *ImGuiTableSettings                  { panic("not implemented") }
-
 // Tab Bars
 func BeginTabBarEx(r *ImGuiTabBar, bb *ImRect, flags ImGuiTabBarFlags) bool { panic("not implemented") }
 func TabBarFindTabByID(r *ImGuiTabBar, tab_id ImGuiID) *ImGuiTabItem        { panic("not implemented") }

@@ -228,6 +228,22 @@ func ImBitArraySetBitRange(arr []ImU32, n, n2 int) {
 
 type ImBitVector []ImU32
 
+func (this ImBitVector) SetBitRange(n, n2 int) { // Works on range [n..n2)
+	n2--
+	for n <= n2 {
+		var a_mod int = (n & 31)
+		var b_mod int
+		if n2 > (n | 31) {
+			b_mod = 31
+		} else {
+			b_mod = (n2 & 31) + 1
+		}
+		var mask ImU32 = (ImU32)(((ImU64)(1<<b_mod))-1) & ^(ImU32)(((ImU64)(1<<a_mod))-1)
+		this[n>>5] |= mask
+		n = (n + 32) & ^31
+	}
+}
+
 func (this *ImBitVector) Create(sz int) {
 	*this = make([]ImU32, (uint(sz)+31)>>5)
 }
@@ -1153,13 +1169,13 @@ type ImGuiTableColumn struct {
 	IsRequestOutput          bool // Return value for TableSetColumnIndex() / TableNextColumn(): whether we request user to output contents or not.
 	IsSkipItems              bool // Do we want item submissions to this column to be completely ignored (no layout will happen).
 	IsPreserveWidthAuto      bool
-	NavLayerCurrent          ImS8 // ImGuiNavLayer in 1 byte
-	AutoFitQueue             ImU8 // Queue of 8 values for the next 8 frames to request auto-fit
-	CannotSkipItemsQueue     ImU8 // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
-	SortDirection            ImU8 //2 //:                                           // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
-	SortDirectionsAvailCount ImU8 //2 //:                                           // Number of available sort directions (0 to 3)
-	SortDirectionsAvailMask  ImU8 //4 //:                                           // Mask of available sort directions (1-bit each)
-	SortDirectionsAvailList  ImU8 // Ordered of available sort directions (2-bits each)
+	NavLayerCurrent          ImS8               // ImGuiNavLayer in 1 byte
+	AutoFitQueue             ImU8               // Queue of 8 values for the next 8 frames to request auto-fit
+	CannotSkipItemsQueue     ImU8               // Queue of 8 values for the next 8 frames to disable Clipped/SkipItem
+	SortDirection            ImGuiSortDirection //2 //:                                           // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
+	SortDirectionsAvailCount ImU8               //2 //:                                           // Number of available sort directions (0 to 3)
+	SortDirectionsAvailMask  ImU8               //4 //:                                           // Mask of available sort directions (1-bit each)
+	SortDirectionsAvailList  ImU8               // Ordered of available sort directions (2-bits each)
 }
 
 func NewImGuiTableColumn() ImGuiTableColumn {
@@ -1189,17 +1205,17 @@ type ImGuiTableCellData struct {
 type ImGuiTable struct {
 	ID                         ImGuiID
 	Flags                      ImGuiTableFlags
-	RawData                    interface{}         // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
-	TempData                   *ImGuiTableTempData // Transient data while table is active. Point within g.CurrentTableStack[]
-	Columns                    ImSpan              // ImGuiTableColumn Point within RawData[]
-	DisplayOrderToIndex        ImSpan              // ImGuiTableColumnIdx Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
-	RowCellData                ImSpan              // ImGuiTableCellData Point within RawData[]. Store cells background requests for current row.
-	EnabledMaskByDisplayOrder  ImU64               // Column DisplayOrder -> IsEnabled map
-	EnabledMaskByIndex         ImU64               // Column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
-	VisibleMaskByIndex         ImU64               // Column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
-	RequestOutputMaskByIndex   ImU64               // Column Index -> IsVisible || AutoFit (== expect user to submit items)
-	SettingsLoadedFlags        ImGuiTableFlags     // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
-	SettingsOffset             int                 // Offset in g.SettingsTables
+	RawData                    interface{}           // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
+	TempData                   *ImGuiTableTempData   // Transient data while table is active. Point within g.CurrentTableStack[]
+	Columns                    []ImGuiTableColumn    // ImGuiTableColumn Point within RawData[]
+	DisplayOrderToIndex        []ImGuiTableColumnIdx // ImGuiTableColumnIdx Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
+	RowCellData                []ImGuiTableCellData  // ImGuiTableCellData Point within RawData[]. Store cells background requests for current row.
+	EnabledMaskByDisplayOrder  ImU64                 // Column DisplayOrder -> IsEnabled map
+	EnabledMaskByIndex         ImU64                 // Column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
+	VisibleMaskByIndex         ImU64                 // Column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
+	RequestOutputMaskByIndex   ImU64                 // Column Index -> IsVisible || AutoFit (== expect user to submit items)
+	SettingsLoadedFlags        ImGuiTableFlags       // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
+	SettingsOffset             int                   // Offset in g.SettingsTables
 	LastFrameActive            int
 	ColumnsCount               int // Number of columns declared in BeginTable()
 	CurrentRow                 int
@@ -1245,7 +1261,7 @@ type ImGuiTable struct {
 	HostBackupInnerClipRect    ImRect              // Backup of InnerWindow->ClipRect during PushTableBackground()/PopTableBackground()
 	OuterWindow                *ImGuiWindow        // Parent window for the table
 	InnerWindow                *ImGuiWindow        // Window holding the table data (== OuterWindow or a child window)
-	ColumnsNames               ImGuiTextBuffer     // Contiguous buffer holding columns names
+	ColumnsNames               []string            // Contiguous buffer holding columns names
 	DrawSplitter               *ImDrawListSplitter // Shortcut to TempData->DrawSplitter while in table. Isolate draw commands per columns to avoid switching clip rect constantly
 	SortSpecsSingle            ImGuiTableColumnSortSpecs
 	SortSpecsMulti             []ImGuiTableColumnSortSpecs // FIXME-OPT: Using a small-vector pattern would be good.
