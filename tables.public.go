@@ -1,5 +1,7 @@
 package imgui
 
+import "fmt"
+
 // Tables
 // [BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
 // - Full-featured replacement for old Columns API.
@@ -460,8 +462,226 @@ func TableSetupScrollFreeze(columns int, rows int) {
 	}
 }
 
-func TableHeadersRow()         { panic("not implemented") } // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
-func TableHeader(label string) { panic("not implemented") } // submit one header cell manually (rarely used)
+// [Public] This is a helper to output TableHeader() calls based on the column names declared in TableSetupColumn().
+// The intent is that advanced users willing to create customized headers would not need to use this helper
+// and can create their own! For example: TableHeader() may be preceeded by Checkbox() or other custom widgets.
+// See 'Demo.Tables.Custom headers' for a demonstration of implementing a custom version of this.
+// This code is constructed to not make much use of internal functions, as it is intended to be a template to copy.
+// FIXME-TABLE: TableOpenContextMenu() and TableGetHeaderRowHeight() are not public.
+// submit all headers cells based on data provided to TableSetupColumn() + submit context menu
+func TableHeadersRow() {
+	var g = GImGui
+	var table = g.CurrentTable
+	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableHeadersRow() after BeginTable()!")
+
+	// Layout if not already done (this is automatically done by TableNextRow, we do it here solely to facilitate stepping in debugger as it is frequent to step in TableUpdateLayout)
+	if !table.IsLayoutLocked {
+		TableUpdateLayout(table)
+	}
+
+	// Open row
+	var row_y1 float = GetCursorScreenPos().y
+	var row_height float = TableGetHeaderRowHeight()
+	TableNextRow(ImGuiTableRowFlags_Headers, row_height)
+	if table.HostSkipItems { // Merely an optimization, you may skip in your own code.
+		return
+	}
+
+	var columns_count int = TableGetColumnCount()
+	for column_n := int(0); column_n < columns_count; column_n++ {
+		if !TableSetColumnIndex(column_n) {
+			continue
+		}
+
+		// Push an id to allow unnamed labels (generally accidental, but let's behave nicely with them)
+		// - in your own code you may omit the PushID/PopID all-together, provided you know they won't collide
+		// - table.InstanceCurrent is only >0 when we use multiple BeginTable/EndTable calls with same identifier.
+		var name string
+		if (TableGetColumnFlags(column_n) & ImGuiTableColumnFlags_NoHeaderLabel) != 0 {
+			name = TableGetColumnName(column_n)
+		}
+		PushID(int(table.InstanceCurrent)*table.ColumnsCount + column_n)
+		TableHeader(name)
+		PopID()
+	}
+
+	// Allow opening popup from the right-most section after the last column.
+	var mouse_pos ImVec2 = GetMousePos()
+	if IsMouseReleased(1) && TableGetHoveredColumn() == columns_count {
+		if mouse_pos.y >= row_y1 && mouse_pos.y < row_y1+row_height {
+			TableOpenContextMenu(-1) // Will open a non-column-specific popup.
+		}
+	}
+}
+
+// Emit a column header (text + optional sort order)
+// We cpu-clip text here so that all columns headers can be merged into a same draw call.
+// Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use SameLine() after a TableHeader()
+// submit one header cell manually (rarely used)
+func TableHeader(label string) {
+	var g = GImGui
+	var window = g.CurrentWindow
+	if window.SkipItems {
+		return
+	}
+
+	var table = g.CurrentTable
+	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableHeader() after BeginTable()!")
+	IM_ASSERT(table.CurrentColumn != -1)
+	var column_n = table.CurrentColumn
+	var column = &table.Columns[column_n]
+
+	// Label
+	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var label_pos ImVec2 = window.DC.CursorPos
+
+	// If we already got a row height, there's use that.
+	// FIXME-TABLE: Padding problem if the correct outer-padding CellBgRect strays off our ClipRect?
+	var cell_r ImRect = TableGetCellBgRect(table, column_n)
+	var label_height float = ImMax(label_size.y, table.RowMinHeight-table.CellPaddingY*2.0)
+
+	// Calculate ideal size for sort order arrow
+	var w_arrow float = 0.0
+	var w_sort_text float = 0.0
+	var sort_order_suf string
+	var ARROW_SCALE float = 0.65
+	if (table.Flags&ImGuiTableFlags_Sortable) != 0 && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
+		w_arrow = ImFloor(g.FontSize*ARROW_SCALE + g.Style.FramePadding.x)
+		if column.SortOrder > 0 {
+			sort_order_suf = fmt.Sprintf("%d", column.SortOrder+1)
+			w_sort_text = g.Style.ItemInnerSpacing.x + CalcTextSize(sort_order_suf, true, -1).x
+		}
+	}
+
+	// We feed our unclipped width to the column without writing on CursorMaxPos, so that column is still considering for merging.
+	var max_pos_x float = label_pos.x + label_size.x + w_sort_text + w_arrow
+	column.ContentMaxXHeadersUsed = ImMax(column.ContentMaxXHeadersUsed, column.WorkMaxX)
+	column.ContentMaxXHeadersIdeal = ImMax(column.ContentMaxXHeadersIdeal, max_pos_x)
+
+	// Keep header highlighted when context menu is open.
+	var selected = (table.IsContextPopupOpen && int(table.ContextPopupColumn) == column_n && table.InstanceInteracted == table.InstanceCurrent)
+	var id ImGuiID = window.GetIDs(label)
+	var bb = ImRect{ImVec2{cell_r.Min.x, cell_r.Min.y}, ImVec2{cell_r.Max.x, ImMax(cell_r.Max.y, cell_r.Min.y+label_height+g.Style.CellPadding.y*2.0)}}
+	ItemSizeVec(&ImVec2{0.0, label_height}, 0) // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
+	if !ItemAdd(&bb, id, nil, 0) {
+		return
+	}
+
+	//GetForegroundDrawList().AddRect(cell_r.Min, cell_r.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
+	//GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
+
+	// Using AllowItemOverlap mode because we cover the whole cell, and we want user to be able to submit subsequent items.
+	var hovered, held bool
+	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_AllowItemOverlap)
+	if g.ActiveId != id {
+		SetItemAllowOverlap()
+	}
+	if held || hovered || selected {
+		var col ImU32
+		if held {
+			col = GetColorU32FromID(ImGuiCol_HeaderActive, 1)
+		} else if hovered {
+			col = GetColorU32FromID(ImGuiCol_HeaderHovered, 1)
+		} else {
+			col = GetColorU32FromID(ImGuiCol_Header, 1)
+		}
+		//RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
+		TableSetBgColor(ImGuiTableBgTarget_CellBg, col, table.CurrentColumn)
+	} else {
+		// Submit single cell bg color in the case we didn't submit a full header row
+		if (table.RowFlags & ImGuiTableRowFlags_Headers) == 0 {
+			TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32FromID(ImGuiCol_TableHeaderBg, 1), table.CurrentColumn)
+		}
+	}
+	RenderNavHighlight(&bb, id, ImGuiNavHighlightFlags_TypeThin|ImGuiNavHighlightFlags_NoRounding)
+	if held {
+		table.HeldHeaderColumn = (ImGuiTableColumnIdx)(column_n)
+	}
+	window.DC.CursorPos.y -= g.Style.ItemSpacing.y * 0.5
+
+	// Drag and drop to re-order columns.
+	// FIXME-TABLE: Scroll request while reordering a column and it lands out of the scrolling zone.
+	if held && (table.Flags&ImGuiTableFlags_Reorderable) != 0 && IsMouseDragging(0, -1) && !g.DragDropActive {
+		// While moving a column it will jump on the other side of the mouse, so we also test for MouseDelta.x
+		table.ReorderColumn = (ImGuiTableColumnIdx)(column_n)
+		table.InstanceInteracted = table.InstanceCurrent
+
+		// We don't reorder: through the frozen<>unfrozen line, or through a column that is marked with ImGuiTableColumnFlags_NoReorder.
+		if g.IO.MouseDelta.x < 0.0 && g.IO.MousePos.x < cell_r.Min.x {
+
+			var prev_column *ImGuiTableColumn
+			if column.PrevEnabledColumn != -1 {
+				prev_column = &table.Columns[column.PrevEnabledColumn]
+			}
+
+			if prev_column != nil {
+				if ((column.Flags | prev_column.Flags) & ImGuiTableColumnFlags_NoReorder) == 0 {
+					if (column.IndexWithinEnabledSet < table.FreezeColumnsRequest) == (prev_column.IndexWithinEnabledSet < table.FreezeColumnsRequest) {
+						table.ReorderColumnDir = -1
+					}
+				}
+			}
+		}
+		if g.IO.MouseDelta.x > 0.0 && g.IO.MousePos.x > cell_r.Max.x {
+
+			var next_column *ImGuiTableColumn
+			if column.NextEnabledColumn != -1 {
+				next_column = &table.Columns[column.NextEnabledColumn]
+			}
+
+			if next_column != nil {
+				if ((column.Flags | next_column.Flags) & ImGuiTableColumnFlags_NoReorder) == 0 {
+					if (column.IndexWithinEnabledSet < table.FreezeColumnsRequest) == (next_column.IndexWithinEnabledSet < table.FreezeColumnsRequest) {
+						table.ReorderColumnDir = +1
+					}
+				}
+			}
+		}
+	}
+
+	// Sort order arrow
+	var ellipsis_max float = cell_r.Max.x - w_arrow - w_sort_text
+	if (table.Flags&ImGuiTableFlags_Sortable) != 0 && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
+		if column.SortOrder != -1 {
+			var x float = ImMax(cell_r.Min.x, cell_r.Max.x-w_arrow-w_sort_text)
+			var y float = label_pos.y
+			if column.SortOrder > 0 {
+				PushStyleColorInt(ImGuiCol_Text, GetColorU32FromID(ImGuiCol_Text, 0.70))
+				RenderText(ImVec2{x + g.Style.ItemInnerSpacing.x, y}, sort_order_suf, true)
+				PopStyleColor(1)
+				x += w_sort_text
+			}
+
+			var dir = ImGuiDir_Down
+			if column.SortDirection == ImGuiSortDirection_Ascending {
+				dir = ImGuiDir_Up
+			}
+
+			RenderArrow(window.DrawList, ImVec2{x, y}, GetColorU32FromID(ImGuiCol_Text, 1), dir, ARROW_SCALE)
+		}
+
+		// Handle clicking on column header to adjust Sort Order
+		if pressed && int(table.ReorderColumn) != column_n {
+			var sort_direction = TableGetColumnNextSortDirection(column)
+			TableSetColumnSortDirection(column_n, sort_direction, g.IO.KeyShift)
+		}
+	}
+
+	// Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
+	// be merged into a single draw call.
+	//window.DrawList.AddCircleFilled(ImVec2(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
+	RenderTextEllipsis(window.DrawList, &label_pos, &ImVec2{ellipsis_max, label_pos.y + label_height + g.Style.FramePadding.y}, ellipsis_max, ellipsis_max, label, &label_size)
+
+	var text_clipped = label_size.x > (ellipsis_max - label_pos.x)
+	if text_clipped && hovered && g.HoveredIdNotActiveTimer > g.TooltipSlowDelay {
+		SetTooltip("%.*s", (int)(len(label)), label)
+	}
+
+	// We don't use BeginPopupContextItem() because we want the popup to stay up even after the column is hidden
+	if IsMouseReleased(1) && IsItemHovered(0) {
+		TableOpenContextMenu(column_n)
+	}
+}
 
 // Tables: Sorting
 // - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
@@ -469,7 +689,30 @@ func TableHeader(label string) { panic("not implemented") } // submit one header
 //   since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
 //   wastefully sort your data every frame!
 // - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
-func TableGetSortSpecs() *ImGuiTableSortSpecs { panic("not implemented") } // get latest sort specs for the table (NULL if not sorting).
+// get latest sort specs for the table (NULL if not sorting).
+func TableGetSortSpecs() *ImGuiTableSortSpecs {
+	var g = *GImGui
+	var table = g.CurrentTable
+	IM_ASSERT(table != nil)
+
+	if (table.Flags & ImGuiTableFlags_Sortable) == 0 {
+		return nil
+	}
+
+	// Require layout (in case TableHeadersRow() hasn't been called) as it may alter IsSortSpecsDirty in some paths.
+	if !table.IsLayoutLocked {
+		TableUpdateLayout(table)
+	}
+
+	TableSortSpecsBuild(table)
+
+	return &table.SortSpecs
+}
+
+func TableGetColumnAvailSortDirection(column *ImGuiTableColumn, n int) ImGuiSortDirection {
+	IM_ASSERT(n < int(column.SortDirectionsAvailCount))
+	return ImGuiSortDirection((column.SortDirectionsAvailList >> (n << 1)) & 0x03)
+}
 
 // Tables: Miscellaneous functions
 // - Functions args 'column_n int' treat the default value of -1 as the same as passing the current column index.

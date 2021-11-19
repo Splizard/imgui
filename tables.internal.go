@@ -1,6 +1,9 @@
 package imgui
 
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+)
 
 const (
 	TABLE_DRAW_CHANNEL_BG0                int   = 0
@@ -10,6 +13,19 @@ const (
 	TABLE_RESIZE_SEPARATOR_HALF_THICKNESS float = 4.0
 	TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER float = 0.06
 )
+
+func TableSettingsCalcChunkSize(columns_count int) size_t {
+	return unsafe.Sizeof(ImGuiTableSettings{}) + (size_t)(columns_count)*unsafe.Sizeof(ImGuiTableColumnSettings{})
+}
+
+// Clear and initialize empty settings instance
+func TableSettingsInit(settings *ImGuiTableSettings, id ImGuiID, columns_count, columns_count_max int) {
+	*settings = ImGuiTableSettings{}
+	settings.ID = id
+	settings.ColumnsCount = (ImGuiTableColumnIdx)(columns_count)
+	settings.ColumnsCountMax = (ImGuiTableColumnIdx)(columns_count_max)
+	settings.WantApply = true
+}
 
 // Helper
 func TableFixFlags(flags ImGuiTableFlags, outer_window *ImGuiWindow) ImGuiTableFlags {
@@ -56,7 +72,24 @@ func TableFixFlags(flags ImGuiTableFlags, outer_window *ImGuiWindow) ImGuiTableF
 }
 
 // Tables: Candidates for public API
-func TableOpenContextMenu(column_n int /*= -1*/) { panic("not implemented") }
+func TableOpenContextMenu(column_n int /*= -1*/) {
+	var g = GImGui
+	var table = g.CurrentTable
+	if column_n == -1 && table.CurrentColumn != -1 { // When called within a column automatically use this one (for consistency)
+		column_n = table.CurrentColumn
+	}
+	if column_n == table.ColumnsCount { // To facilitate using with TableGetHoveredColumn()
+		column_n = -1
+	}
+	IM_ASSERT(column_n >= -1 && column_n < table.ColumnsCount)
+	if table.Flags&(ImGuiTableFlags_Resizable|ImGuiTableFlags_Reorderable|ImGuiTableFlags_Hideable) != 0 {
+		table.IsContextPopupOpen = true
+		table.ContextPopupColumn = (ImGuiTableColumnIdx)(column_n)
+		table.InstanceInteracted = table.InstanceCurrent
+		var context_menu_id ImGuiID = ImHashStr("##ContextMenu", 0, table.ID)
+		OpenPopupEx(context_menu_id, ImGuiPopupFlags_None)
+	}
+}
 
 // 'width' = inner column width, without padding
 func TableSetColumnWidth(column_n int, width float) {
@@ -148,8 +181,47 @@ func TableSetColumnWidth(column_n int, width float) {
 	table.IsSettingsDirty = true
 }
 
+// Note that the NoSortAscending/NoSortDescending flags are processed in TableSortSpecsSanitize(), and they may change/revert
+// the value of SortDirection. We could technically also do it here but it would be unnecessary and duplicate code.
 func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection, append_to_sort_specs bool) {
-	panic("not implemented")
+	var g = *GImGui
+	var table = g.CurrentTable
+
+	if (table.Flags & ImGuiTableFlags_SortMulti) == 0 {
+		append_to_sort_specs = false
+	}
+	if table.Flags&ImGuiTableFlags_SortTristate == 0 {
+		IM_ASSERT(sort_direction != ImGuiSortDirection_None)
+	}
+
+	var sort_order_max ImGuiTableColumnIdx = 0
+	if append_to_sort_specs {
+		for other_column_n := int(0); other_column_n < table.ColumnsCount; other_column_n++ {
+			sort_order_max = int8(ImMaxInt(int(sort_order_max), int(table.Columns[other_column_n].SortOrder)))
+		}
+	}
+
+	var column = &table.Columns[column_n]
+	column.SortDirection = (ImGuiSortDirection)(sort_direction)
+	if column.SortDirection == ImGuiSortDirection_None {
+		column.SortOrder = -1
+	} else if column.SortOrder == -1 || !append_to_sort_specs {
+		if append_to_sort_specs {
+			column.SortOrder = sort_order_max + 1
+		} else {
+			column.SortOrder = 0
+		}
+	}
+
+	for other_column_n := int(0); other_column_n < table.ColumnsCount; other_column_n++ {
+		var other_column = &table.Columns[other_column_n]
+		if other_column != column && !append_to_sort_specs {
+			other_column.SortOrder = -1
+		}
+		TableFixColumnSortDirection(table, other_column)
+	}
+	table.IsSettingsDirty = true
+	table.IsSortSpecsDirty = true
 }
 
 // May use (TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered) instead. Return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
@@ -163,7 +235,22 @@ func TableGetHoveredColumn() int {
 	return (int)(table.HoveredColumnBody)
 }
 
-func TableGetHeaderRowHeight() float { panic("not implemented") }
+func TableGetHeaderRowHeight() float {
+	// Caring for a minor edge case:
+	// Calculate row height, for the unlikely case that some labels may be taller than others.
+	// If we didn't do that, uneven header height would highlight but smaller one before the tallest wouldn't catch input for all height.
+	// In your custom header row you may omit this all together and just call TableNextRow() without a height...
+	var row_height float = GetTextLineHeight()
+	var columns_count int = TableGetColumnCount()
+	for column_n := int(0); column_n < columns_count; column_n++ {
+		var flags ImGuiTableColumnFlags = TableGetColumnFlags(column_n)
+		if (flags&ImGuiTableColumnFlags_IsEnabled) != 0 && (flags&ImGuiTableColumnFlags_NoHeaderLabel) == 0 {
+			row_height = ImMax(row_height, CalcTextSize(TableGetColumnName(column_n), true, -1).y)
+		}
+	}
+	row_height += GetStyle().CellPadding.y * 2.0
+	return row_height
+}
 
 // Bg2 is used by Selectable (and possibly other widgets) to render to the background.
 // Unlike our Bg0/1 channel which we uses for RowBg/CellBg/Borders and where we guarantee all shapes to be CPU-clipped, the Bg2 channel being widgets-facing will rely on regular ClipRect.
@@ -1334,8 +1421,202 @@ func TableUpdateColumnsWeightFromWidth(table *ImGuiTable) {
 	}
 }
 
-func TableDrawBorders(e *ImGuiTable)     { panic("not implemented") }
-func TableDrawContextMenu(e *ImGuiTable) { panic("not implemented") }
+// FIXME-TABLE: This is a mess, need to redesign how we render borders (as some are also done in TableEndRow)
+func TableDrawBorders(table *ImGuiTable) {
+	var inner_window = table.InnerWindow
+	if !table.OuterWindow.ClipRect.Overlaps(table.OuterRect) {
+		return
+	}
+
+	var inner_drawlist = inner_window.DrawList
+	table.DrawSplitter.SetCurrentChannel(inner_drawlist, TABLE_DRAW_CHANNEL_BG0)
+	inner_drawlist.PushClipRect(table.Bg0ClipRectForDrawCmd.Min, table.Bg0ClipRectForDrawCmd.Max, false)
+
+	// Draw inner border and resizing feedback
+	var border_size = TABLE_BORDER_SIZE
+	var draw_y1 = table.InnerRect.Min.y
+	var draw_y2_body = table.InnerRect.Max.y
+	var draw_y2_head float = draw_y1
+	if table.IsUsingHeaders {
+		count := table.WorkRect.Min.y
+		if table.FreezeRowsCount >= 1 {
+			count = table.InnerRect.Min.y
+		}
+		draw_y2_head = ImMin(table.InnerRect.Max.y, count+table.LastFirstRowHeight)
+	}
+	if table.Flags&ImGuiTableFlags_BordersInnerV != 0 {
+		for order_n := int(0); order_n < table.ColumnsCount; order_n++ {
+			if (table.EnabledMaskByDisplayOrder & ((ImU64)(1 << order_n))) == 0 {
+				continue
+			}
+
+			var column_n = table.DisplayOrderToIndex[order_n]
+			var column = &table.Columns[column_n]
+			var is_hovered = (table.HoveredColumnBorder == column_n)
+			var is_resized = (table.ResizedColumn == column_n) && (table.InstanceInteracted == table.InstanceCurrent)
+			var is_resizable = (column.Flags & (ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoDirectResize_)) == 0
+			var is_frozen_separator = (int(table.FreezeColumnsCount) == order_n+1)
+			if column.MaxX > table.InnerClipRect.Max.x && !is_resized {
+				continue
+			}
+
+			// Decide whether right-most column is visible
+			if column.NextEnabledColumn == -1 && !is_resizable {
+				if (table.Flags&ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame || (table.Flags&ImGuiTableFlags_NoHostExtendX) != 0 {
+					continue
+				}
+			}
+			if column.MaxX <= column.ClipRect.Min.x { // FIXME-TABLE FIXME-STYLE: Assume BorderSize==1, this is problematic if we want to increase the border size..
+				continue
+			}
+
+			// Draw in outer window so right-most column won't be clipped
+			// Always draw full height border when being resized/hovered, or on the delimitation of frozen column scrolling.
+			var col ImU32
+			var draw_y2 float
+			if is_hovered || is_resized || is_frozen_separator {
+				draw_y2 = draw_y2_body
+				if is_resized {
+					col = GetColorU32FromID(ImGuiCol_SeparatorActive, 1)
+				} else if is_hovered {
+					col = GetColorU32FromID(ImGuiCol_SeparatorHovered, 1)
+				} else {
+					col = table.BorderColorStrong
+				}
+			} else {
+				if table.Flags&(ImGuiTableFlags_NoBordersInBody|ImGuiTableFlags_NoBordersInBodyUntilResize) != 0 {
+					draw_y2 = draw_y2_head
+				} else {
+					draw_y2 = draw_y2_body
+				}
+				if table.Flags&(ImGuiTableFlags_NoBordersInBody|ImGuiTableFlags_NoBordersInBodyUntilResize) != 0 {
+					col = table.BorderColorStrong
+				} else {
+					col = table.BorderColorLight
+				}
+			}
+
+			if draw_y2 > draw_y1 {
+				inner_drawlist.AddLine(&ImVec2{column.MaxX, draw_y1}, &ImVec2{column.MaxX, draw_y2}, col, border_size)
+			}
+		}
+	}
+
+	// Draw outer border
+	// FIXME: could use AddRect or explicit VLine/HLine helper?
+	if table.Flags&ImGuiTableFlags_BordersOuter != 0 {
+		// Display outer border offset by 1 which is a simple way to display it without adding an extra draw call
+		// (Without the offset, in outer_window it would be rendered behind cells, because child windows are above their
+		// parent. In inner_window, it won't reach out over scrollbars. Another weird solution would be to display part
+		// of it in inner window, and the part that's over scrollbars in the outer window..)
+		// Either solution currently won't allow us to use a larger border size: the border would clipped.
+		var outer_border = table.OuterRect
+		var outer_col = table.BorderColorStrong
+		if (table.Flags & ImGuiTableFlags_BordersOuter) == ImGuiTableFlags_BordersOuter {
+			inner_drawlist.AddRect(outer_border.Min, outer_border.Max, outer_col, 0.0, 0, border_size)
+		} else if table.Flags&ImGuiTableFlags_BordersOuterV != 0 {
+			inner_drawlist.AddLine(&outer_border.Min, &ImVec2{outer_border.Min.x, outer_border.Max.y}, outer_col, border_size)
+			inner_drawlist.AddLine(&ImVec2{outer_border.Max.x, outer_border.Min.y}, &outer_border.Max, outer_col, border_size)
+		} else if table.Flags&ImGuiTableFlags_BordersOuterH != 0 {
+			inner_drawlist.AddLine(&outer_border.Min, &ImVec2{outer_border.Max.x, outer_border.Min.y}, outer_col, border_size)
+			inner_drawlist.AddLine(&ImVec2{outer_border.Min.x, outer_border.Max.y}, &outer_border.Max, outer_col, border_size)
+		}
+	}
+	if (table.Flags&ImGuiTableFlags_BordersInnerH) != 0 && table.RowPosY2 < table.OuterRect.Max.y {
+		// Draw bottom-most row border
+		var border_y = table.RowPosY2
+		if border_y >= table.BgClipRect.Min.y && border_y < table.BgClipRect.Max.y {
+			inner_drawlist.AddLine(&ImVec2{table.BorderX1, border_y}, &ImVec2{table.BorderX2, border_y}, table.BorderColorLight, border_size)
+		}
+	}
+
+	inner_drawlist.PopClipRect()
+}
+
+// Output context menu into current window (generally a popup)
+// FIXME-TABLE: Ideally this should be writable by the user. Full programmatic access to that data?
+func TableDrawContextMenu(table *ImGuiTable) {
+	var g = GImGui
+	var window = g.CurrentWindow
+	if window.SkipItems {
+		return
+	}
+
+	var want_separator = false
+	var column_n int
+	if table.ContextPopupColumn >= 0 && int(table.ContextPopupColumn) < table.ColumnsCount {
+		column_n = int(table.ContextPopupColumn)
+	} else {
+		column_n = -1
+	}
+	var column *ImGuiTableColumn
+	if column_n != -1 {
+		column = &table.Columns[column_n]
+	}
+
+	// Sizing
+	if table.Flags&ImGuiTableFlags_Resizable != 0 {
+		if column != nil {
+			var can_resize = (column.Flags&ImGuiTableColumnFlags_NoResize) == 0 && column.IsEnabled
+			if MenuItem("Size column to fit###SizeOne", "", false, can_resize) {
+				TableSetColumnWidthAutoSingle(table, column_n)
+			}
+		}
+
+		var size_all_desc string
+		if table.ColumnsEnabledFixedCount == table.ColumnsEnabledCount && (table.Flags&ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame {
+			size_all_desc = "Size all columns to fit###SizeAll" // All fixed
+		} else {
+			size_all_desc = "Size all columns to default###SizeAll" // All stretch or mixed
+		}
+		if MenuItem(size_all_desc, "", false, false) {
+			TableSetColumnWidthAutoAll(table)
+		}
+		want_separator = true
+	}
+
+	// Ordering
+	if table.Flags&ImGuiTableFlags_Reorderable != 0 {
+		if MenuItem("Reset order", "", false, !table.IsDefaultDisplayOrder) {
+			table.IsResetDisplayOrderRequest = true
+		}
+		want_separator = true
+	}
+
+	// Hiding / Visibility
+	if (table.Flags & ImGuiTableFlags_Hideable) != 0 {
+		if want_separator {
+			Separator()
+		}
+		want_separator = true
+
+		PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true)
+		for other_column_n := int(0); other_column_n < table.ColumnsCount; other_column_n++ {
+			var other_column = &table.Columns[other_column_n]
+			if other_column.Flags&ImGuiTableColumnFlags_Disabled != 0 {
+				continue
+			}
+
+			var name = tableGetColumnName(table, other_column_n)
+			if name == "" {
+				name = "<Unknown>"
+			}
+
+			// Make sure we can't hide the last active column
+			var menu_item_active bool = true
+			if other_column.Flags&ImGuiTableColumnFlags_NoHide != 0 {
+				menu_item_active = false
+			}
+			if other_column.IsUserEnabled && table.ColumnsEnabledCount <= 1 {
+				menu_item_active = false
+			}
+			if MenuItem(name, "", other_column.IsUserEnabled, menu_item_active) {
+				other_column.IsUserEnabledNextFrame = !other_column.IsUserEnabled
+			}
+		}
+		PopItemFlag()
+	}
+}
 
 // This function reorder draw channels based on matching clip rectangle, to facilitate merging them. Called by EndTable().
 // For simplicity we call it TableMergeDrawChannels() but in fact it only reorder channels + overwrite ClipRect,
@@ -1555,12 +1836,143 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 	}
 }
 
-func TableSortSpecsSanitize(e *ImGuiTable) { panic("not implemented") }
-func TableSortSpecsBuild(e *ImGuiTable)    { panic("not implemented") }
-func TableGetColumnNextSortDirection(n *ImGuiTableColumn) ImGuiSortDirection {
-	panic("not implemented")
+func TableSortSpecsSanitize(table *ImGuiTable) {
+	IM_ASSERT(table.Flags&ImGuiTableFlags_Sortable != 0)
+
+	// Clear SortOrder from hidden column and verify that there's no gap or duplicate.
+	var sort_order_count int = 0
+	var sort_order_mask ImU64 = 0x00
+	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+		var column = &table.Columns[column_n]
+		if column.SortOrder != -1 && !column.IsEnabled {
+			column.SortOrder = -1
+		}
+		if column.SortOrder == -1 {
+			continue
+		}
+		sort_order_count++
+		sort_order_mask |= ((ImU64)(1 << column.SortOrder))
+		IM_ASSERT(sort_order_count < (int)(unsafe.Sizeof(sort_order_mask))*8)
+	}
+
+	var need_fix_linearize = ((ImU64)(1 << sort_order_count)) != (sort_order_mask + 1)
+	var need_fix_single_sort_order = (sort_order_count > 1) && (table.Flags&ImGuiTableFlags_SortMulti) == 0
+	if need_fix_linearize || need_fix_single_sort_order {
+		var fixed_mask ImU64 = 0x00
+		for sort_n := int(0); sort_n < sort_order_count; sort_n++ {
+			// Fix: Rewrite sort order fields if needed so they have no gap or duplicate.
+			// (e.g. SortOrder 0 disappeared, SortOrder 1..2 exists -. rewrite then as SortOrder 0..1)
+			var column_with_smallest_sort_order int = -1
+			for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+				if (fixed_mask&((ImU64)(1<<(ImU64)(column_n)))) == 0 && table.Columns[column_n].SortOrder != -1 {
+					if column_with_smallest_sort_order == -1 || table.Columns[column_n].SortOrder < table.Columns[column_with_smallest_sort_order].SortOrder {
+						column_with_smallest_sort_order = column_n
+					}
+				}
+			}
+			IM_ASSERT(column_with_smallest_sort_order != -1)
+			fixed_mask |= ((ImU64)(1 << column_with_smallest_sort_order))
+			table.Columns[column_with_smallest_sort_order].SortOrder = (ImGuiTableColumnIdx)(sort_n)
+
+			// Fix: Make sure only one column has a SortOrder if ImGuiTableFlags_MultiSortable is not set.
+			if need_fix_single_sort_order {
+				sort_order_count = 1
+				for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+					if column_n != column_with_smallest_sort_order {
+						table.Columns[column_n].SortOrder = -1
+					}
+				}
+				break
+			}
+		}
+	}
+
+	// Fallback default sort order (if no column had the ImGuiTableColumnFlags_DefaultSort flag)
+	if sort_order_count == 0 && (table.Flags&ImGuiTableFlags_SortTristate) == 0 {
+		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			var column = &table.Columns[column_n]
+			if column.IsEnabled && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
+				sort_order_count = 1
+				column.SortOrder = 0
+				column.SortDirection = (ImGuiSortDirection)(TableGetColumnAvailSortDirection(column, 0))
+				break
+			}
+		}
+	}
+
+	table.SortSpecsCount = (ImGuiTableColumnIdx)(sort_order_count)
 }
-func TableFixColumnSortDirection(e *ImGuiTable, n *ImGuiTableColumn) { panic("not implemented") }
+
+func TableSortSpecsBuild(table *ImGuiTable) {
+	var dirty = table.IsSortSpecsDirty
+	if dirty {
+		TableSortSpecsSanitize(table)
+		//resize
+		if int(table.SortSpecsCount) <= int(len(table.SortSpecsMulti)) {
+			table.SortSpecsMulti = table.SortSpecsMulti[:table.SortSpecsCount]
+		} else {
+			table.SortSpecsMulti = append(table.SortSpecsMulti, make([]ImGuiTableColumnSortSpecs, int(table.SortSpecsCount)-int(len(table.SortSpecsMulti)))...)
+		}
+		table.SortSpecs.SpecsDirty = true // Mark as dirty for user
+		table.IsSortSpecsDirty = false    // Mark as not dirty for us
+	}
+
+	// Write output
+	var sort_specs []ImGuiTableColumnSortSpecs
+	if table.SortSpecsCount == 0 {
+		sort_specs = nil
+	} else {
+		if table.SortSpecsCount == 1 {
+			sort_specs = []ImGuiTableColumnSortSpecs{table.SortSpecsSingle}
+		} else {
+			sort_specs = table.SortSpecsMulti
+		}
+	}
+
+	if dirty && sort_specs != nil {
+		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			var column = &table.Columns[column_n]
+			if column.SortOrder == -1 {
+				continue
+			}
+			IM_ASSERT(column.SortOrder < table.SortSpecsCount)
+			var sort_spec = &sort_specs[column.SortOrder]
+			sort_spec.ColumnUserID = column.UserID
+			sort_spec.ColumnIndex = (ImS16)(column_n)
+			sort_spec.SortOrder = (ImS16)(column.SortOrder)
+			sort_spec.SortDirection = column.SortDirection
+		}
+	}
+
+	table.SortSpecs.Specs = sort_specs
+	table.SortSpecs.SpecsCount = int(table.SortSpecsCount)
+}
+
+// Calculate next sort direction that would be set after clicking the column
+// - If the PreferSortDescending flag is set, we will default to a Descending direction on the first click.
+// - Note that the PreferSortAscending flag is never checked, it is essentially the default and therefore a no-op.
+func TableGetColumnNextSortDirection(column *ImGuiTableColumn) ImGuiSortDirection {
+	IM_ASSERT(column.SortDirectionsAvailCount > 0)
+	if column.SortOrder == -1 {
+		return TableGetColumnAvailSortDirection(column, 0)
+	}
+	for n := int(0); n < 3; n++ {
+		if column.SortDirection == TableGetColumnAvailSortDirection(column, n) {
+			return TableGetColumnAvailSortDirection(column, (n+1)%int(column.SortDirectionsAvailCount))
+		}
+	}
+	IM_ASSERT(false)
+	return ImGuiSortDirection_None
+}
+
+// Fix sort direction if currently set on a value which is unavailable (e.g. activating NoSortAscending/NoSortDescending)
+func TableFixColumnSortDirection(table *ImGuiTable, column *ImGuiTableColumn) {
+	if column.SortOrder == -1 || (column.SortDirectionsAvailMask&(1<<column.SortDirection)) != 0 {
+		return
+	}
+	column.SortDirection = (ImGuiSortDirection)(TableGetColumnAvailSortDirection(column, 0))
+	table.IsSortSpecsDirty = true
+}
 
 // Note this is meant to be stored in column.WidthAuto, please generally use the WidthAuto field
 func TableGetColumnWidthAuto(table *ImGuiTable, column *ImGuiTableColumn) float {
@@ -1938,16 +2350,433 @@ func TableSetColumnWidthAutoAll(table *ImGuiTable) {
 	}
 }
 
-func TableRemove(e *ImGuiTable)                                    { panic("not implemented") }
-func TableGcCompactTransientBuffers(e *ImGuiTable)                 { panic("not implemented") }
-func TableGcCompactTransientBuffersTempData(e *ImGuiTableTempData) { panic("not implemented") }
-func TableGcCompactSettings()                                      { panic("not implemented") }
+// Remove Table (currently only used by TestEngine)
+func TableRemove(table *ImGuiTable) {
+	//IMGUI_DEBUG_LOG("TableRemove() id=0x%08X\n", table.ID);
+	var g = GImGui
+	var table_idx uint
+	for i := range g.Tables {
+		if g.Tables[i] == table {
+			table_idx = i
+		}
+	}
+	delete(g.Tables, table.ID)
+	g.TablesLastTimeActive[table_idx] = -1.0
+}
+
+// Free up/compact internal Table buffers for when it gets unused
+func TableGcCompactTransientBuffers(table *ImGuiTable) {
+	//IMGUI_DEBUG_LOG("TableGcCompactTransientBuffers() id=0x%08X\n", table.ID);
+	var g = GImGui
+	IM_ASSERT(table.MemoryCompacted == false)
+	table.SortSpecs.Specs = nil
+	table.SortSpecsMulti = nil
+	table.IsSortSpecsDirty = true // FIXME: shouldn't have to leak into user performing a sort
+	table.ColumnsNames = nil
+	table.MemoryCompacted = true
+	for n := int(0); n < table.ColumnsCount; n++ {
+		table.Columns[n].NameOffset = -1
+	}
+
+	var table_idx uint
+	for i := range g.Tables {
+		if g.Tables[i] == table {
+			table_idx = i
+		}
+	}
+
+	g.TablesLastTimeActive[table_idx] = -1.0
+}
+
+func TableGcCompactTransientBuffersTempData(temp_data *ImGuiTableTempData) {
+	temp_data.DrawSplitter.ClearFreeMemory()
+	temp_data.LastTimeActive = -1.0
+}
+
+// Compact and remove unused settings data (currently only used by TestEngine)
+func TableGcCompactSettings() {
+	var g = GImGui;
+    var required_memory int = 0;
+    for _, settings := range g.SettingsTables {
+        if (settings.ID != 0) {
+            required_memory += (int)(TableSettingsCalcChunkSize(int(settings.ColumnsCount)));
+		}
+	}
+    if (required_memory == int(len(g.SettingsTables))) {
+        return;
+	}
+    var new_chunk_stream []ImGuiTableSettings = make([]ImGuiTableSettings, required_memory);
+    for _, settings := range g.SettingsTables {
+        if (settings.ID != 0) {
+            new_chunk_stream = append(new_chunk_stream, settings);
+		}
+	}
+
+	g.SettingsTables = new_chunk_stream
+}
 
 // Tables: Settings
-func TableLoadSettings(e *ImGuiTable)                                       { panic("not implemented") }
-func TableSaveSettings(e *ImGuiTable)                                       { panic("not implemented") }
-func TableResetSettings(e *ImGuiTable)                                      { panic("not implemented") }
-func TableGetBoundSettings(e *ImGuiTable) *ImGuiTableSettings               { panic("not implemented") }
-func TableSettingsInstallHandler(t *ImGuiContext)                           { panic("not implemented") }
-func TableSettingsCreate(id ImGuiID, columns_count int) *ImGuiTableSettings { panic("not implemented") }
-func TableSettingsFindByID(id ImGuiID) *ImGuiTableSettings                  { panic("not implemented") }
+func TableLoadSettings(table *ImGuiTable) {
+	var g = GImGui
+	table.IsSettingsRequestLoad = false
+	if table.Flags&ImGuiTableFlags_NoSavedSettings != 0 {
+		return
+	}
+
+	// Bind settings
+	var settings *ImGuiTableSettings
+	if table.SettingsOffset == -1 {
+		settings = TableSettingsFindByID(table.ID)
+		if settings == nil {
+			return
+		}
+		if int(settings.ColumnsCount) != table.ColumnsCount { // Allow settings if columns count changed. We could otherwise decide to return...
+			table.IsSettingsDirty = true
+		}
+		for i := range g.SettingsTables {
+			if &g.SettingsTables[i] == settings {
+				table.SettingsOffset = int(i)
+				return
+			}
+		}
+	} else {
+		settings = TableGetBoundSettings(table)
+	}
+
+	table.SettingsLoadedFlags = settings.SaveFlags
+	table.RefScale = settings.RefScale
+
+	// Serialize ImGuiTableSettings/ImGuiTableColumnSettings into ImGuiTable/ImGuiTableColumn
+	var column_settings = settings.Columns
+	var display_order_mask ImU64 = 0
+	for data_n := int(0); data_n < int(settings.ColumnsCount); data_n, column_settings = data_n+1, column_settings[1:] {
+		var column_n int = int(column_settings[0].Index)
+		if column_n < 0 || column_n >= table.ColumnsCount {
+			continue
+		}
+
+		var column = &table.Columns[column_n]
+		if settings.SaveFlags&ImGuiTableFlags_Resizable != 0 {
+			if column_settings[0].IsStretch != 0 {
+				column.StretchWeight = column_settings[0].WidthOrWeight
+			} else {
+				column.WidthRequest = column_settings[0].WidthOrWeight
+			}
+			column.AutoFitQueue = 0x00
+		}
+		if settings.SaveFlags&ImGuiTableFlags_Reorderable != 0 {
+			column.DisplayOrder = column_settings[0].DisplayOrder
+		} else {
+			column.DisplayOrder = (ImGuiTableColumnIdx)(column_n)
+		}
+		display_order_mask |= (ImU64)(1 << column.DisplayOrder)
+		column.IsUserEnabled = istrue(int(column_settings[0].IsEnabled))
+		column.IsUserEnabledNextFrame = istrue(int(column_settings[0].IsEnabled))
+		column.SortOrder = column_settings[0].SortOrder
+		column.SortDirection = ImGuiSortDirection(column_settings[0].SortDirection)
+	}
+
+	// Validate and fix invalid display order data
+	var expected_display_order_mask ImU64
+	if settings.ColumnsCount == 64 {
+		expected_display_order_mask = INT_MAX
+	} else {
+		expected_display_order_mask = ((ImU64)(1<<settings.ColumnsCount) - 1)
+	}
+	if display_order_mask != expected_display_order_mask {
+		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			table.Columns[column_n].DisplayOrder = (ImGuiTableColumnIdx)(column_n)
+		}
+	}
+
+	// Rebuild index
+	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+		table.DisplayOrderToIndex[table.Columns[column_n].DisplayOrder] = (ImGuiTableColumnIdx)(column_n)
+	}
+}
+
+func TableSaveSettings(table *ImGuiTable) {
+	table.IsSettingsDirty = false
+	if table.Flags&ImGuiTableFlags_NoSavedSettings != 0 {
+		return
+	}
+
+	// Bind or create settings data
+	var g = GImGui
+	var settings = TableGetBoundSettings(table)
+	if settings == nil {
+		settings = TableSettingsCreate(table.ID, table.ColumnsCount)
+		for i := range g.SettingsTables {
+			if &g.SettingsTables[i] == settings {
+				table.SettingsOffset = int(i)
+				break
+			}
+		}
+	}
+	settings.ColumnsCount = (ImGuiTableColumnIdx)(table.ColumnsCount)
+
+	// Serialize ImGuiTable/ImGuiTableColumn into ImGuiTableSettings/ImGuiTableColumnSettings
+	IM_ASSERT(settings.ID == table.ID)
+	IM_ASSERT(int(settings.ColumnsCount) == table.ColumnsCount && settings.ColumnsCountMax >= settings.ColumnsCount)
+	var column = table.Columns
+	var column_settings = settings.Columns
+
+	var save_ref_scale bool = false
+	settings.SaveFlags = ImGuiTableFlags_None
+	for n := int(0); n < table.ColumnsCount; n, column, column_settings = n+1, column[1:], column_settings[1:] {
+		var width_or_weight = column[0].WidthRequest
+		if (column[0].Flags & ImGuiTableColumnFlags_WidthStretch) != 0 {
+			width_or_weight = column[0].StretchWeight
+		}
+		column_settings[0].WidthOrWeight = width_or_weight
+		column_settings[0].Index = (ImGuiTableColumnIdx)(n)
+		column_settings[0].DisplayOrder = column[0].DisplayOrder
+		column_settings[0].SortOrder = column[0].SortOrder
+		column_settings[0].SortDirection = uint8(column[0].SortDirection)
+		column_settings[0].IsEnabled = uint8(bool2int(column[0].IsUserEnabled))
+		column_settings[0].IsStretch = 0
+		if (column[0].Flags & ImGuiTableColumnFlags_WidthStretch) != 0 {
+			column_settings[0].IsStretch = 1
+		}
+		if (column[0].Flags & ImGuiTableColumnFlags_WidthStretch) == 0 {
+			save_ref_scale = true
+		}
+
+		// We skip saving some data in the .ini file when they are unnecessary to restore our state.
+		// Note that fixed width where initial width was derived from auto-fit will always be saved as InitStretchWeightOrWidth will be 0.0f.
+		// FIXME-TABLE: We don't have logic to easily compare SortOrder to DefaultSortOrder yet so it's always saved when present.
+		if width_or_weight != column[0].InitStretchWeightOrWidth {
+			settings.SaveFlags |= ImGuiTableFlags_Resizable
+		}
+		if int(column[0].DisplayOrder) != n {
+			settings.SaveFlags |= ImGuiTableFlags_Reorderable
+		}
+		if column[0].SortOrder != -1 {
+			settings.SaveFlags |= ImGuiTableFlags_Sortable
+		}
+		if column[0].IsUserEnabled != ((column[0].Flags & ImGuiTableColumnFlags_DefaultHide) == 0) {
+			settings.SaveFlags |= ImGuiTableFlags_Hideable
+		}
+	}
+	settings.SaveFlags &= table.Flags
+	settings.RefScale = 0.0
+	if save_ref_scale {
+		settings.RefScale = table.RefScale
+	}
+
+	MarkIniSettingsDirty()
+}
+
+// Restore initial state of table (with or without saved settings)
+func TableResetSettings(table *ImGuiTable) {
+	table.IsInitializing = true
+	table.IsSettingsDirty = true
+	table.IsResetAllRequest = false
+	table.IsSettingsRequestLoad = false              // Don't reload from ini
+	table.SettingsLoadedFlags = ImGuiTableFlags_None // Mark as nothing loaded so our initialized data becomes authoritative
+}
+
+// Get settings for a given table, NULL if none
+func TableGetBoundSettings(table *ImGuiTable) *ImGuiTableSettings {
+	if table.SettingsOffset != -1 {
+		var g = GImGui
+		var settings = &g.SettingsTables[table.SettingsOffset]
+		IM_ASSERT(settings.ID == table.ID)
+		if int(settings.ColumnsCountMax) >= table.ColumnsCount {
+			return settings // OK
+		}
+		settings.ID = 0 // Invalidate storage, we won't fit because of a count change
+	}
+	return nil
+}
+
+func TableSettingsInstallHandler(context *ImGuiContext) {
+	var g = context
+	var ini_handler ImGuiSettingsHandler
+	ini_handler.TypeName = "Table"
+	ini_handler.TypeHash = ImHashStr("Table", uintptr(len("Table")), 0)
+	ini_handler.ClearAllFn = TableSettingsHandler_ClearAll
+	ini_handler.ReadOpenFn = TableSettingsHandler_ReadOpen
+	ini_handler.ReadLineFn = TableSettingsHandler_ReadLine
+	ini_handler.ApplyAllFn = TableSettingsHandler_ApplyAll
+	ini_handler.WriteAllFn = TableSettingsHandler_WriteAll
+	g.SettingsHandlers = append(g.SettingsHandlers, ini_handler)
+}
+
+func TableSettingsCreate(id ImGuiID, columns_count int) *ImGuiTableSettings {
+	var g = GImGui
+	g.SettingsTables = append(g.SettingsTables, ImGuiTableSettings{})
+	var settings = &g.SettingsTables[len(g.SettingsTables)-1]
+	TableSettingsInit(settings, id, columns_count, columns_count)
+	settings.Columns = make([]ImGuiTableColumnSettings, columns_count)
+	return settings
+}
+
+// Find existing settings
+func TableSettingsFindByID(id ImGuiID) *ImGuiTableSettings {
+	// FIXME-OPT: Might want to store a lookup map for this?
+	var g = GImGui
+	for i, settings := range g.SettingsTables {
+		if settings.ID == id {
+			return &g.SettingsTables[i]
+		}
+	}
+	return nil
+}
+
+func TableSettingsHandler_ClearAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) {
+	var g = ctx
+	for i := uint(0); i != uint(len(g.Tables)); i++ {
+		if table := g.Tables[i]; table != nil {
+			table.SettingsOffset = -1
+		}
+	}
+	g.SettingsTables = g.SettingsTables[:0]
+}
+
+// Apply to existing windows (if any)
+func TableSettingsHandler_ApplyAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) {
+	var g = ctx
+	for i := uint(0); i != uint(len(g.Tables)); i++ {
+		if table := g.Tables[i]; table != nil {
+			table.IsSettingsRequestLoad = true
+			table.SettingsOffset = -1
+		}
+	}
+}
+
+func TableSettingsHandler_ReadOpen(ctx *ImGuiContext, _ *ImGuiSettingsHandler, name string) interface{} {
+	var id ImGuiID = 0
+	var columns_count int = 0
+	if n, _ := fmt.Scanf(name, "0x%08X,%d", &id, &columns_count); n < 2 {
+		return nil
+	}
+
+	if settings := TableSettingsFindByID(id); settings != nil {
+		if int(settings.ColumnsCountMax) >= columns_count {
+			TableSettingsInit(settings, id, columns_count, int(settings.ColumnsCountMax)) // Recycle
+			return settings
+		}
+		settings.ID = 0 // Invalidate storage, we won't fit because of a count change
+	}
+	return TableSettingsCreate(id, columns_count)
+}
+
+func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, entry interface{}, line string) {
+	// "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
+	var settings = entry.(*ImGuiTableSettings)
+	var f float = 0.0
+	var column_n, r int
+	var x uint
+
+	if n, _ := fmt.Sscanf(line, "RefScale=%f", &f); n == 1 {
+		settings.RefScale = f
+		return
+	}
+
+	if n, _ := fmt.Sscanf(line, "Column %d%n", &column_n, &r); n == 1 {
+		if column_n < 0 || column_n >= int(settings.ColumnsCount) {
+			return
+		}
+		line = ImStrSkipBlank(line[r:])
+		var c byte = 0
+		var column = settings.Columns[column_n]
+		column.Index = (ImGuiTableColumnIdx)(column_n)
+		if n, _ := fmt.Sscanf(line, "UserID=0x%08X%n", (*ImU32)(&x), &r); n == 1 {
+			line = ImStrSkipBlank(line[r:])
+			column.UserID = (ImGuiID)(n)
+		}
+		if n, _ := fmt.Sscanf(line, "Width=%d%n", &n, &r); n == 1 {
+			line = ImStrSkipBlank(line[r:])
+			column.WidthOrWeight = (float)(n)
+			column.IsStretch = 0
+			settings.SaveFlags |= ImGuiTableFlags_Resizable
+		}
+		if n, _ := fmt.Sscanf(line, "Weight=%f%n", &f, &r); n == 1 {
+			line = ImStrSkipBlank(line[r:])
+			column.WidthOrWeight = f
+			column.IsStretch = 1
+			settings.SaveFlags |= ImGuiTableFlags_Resizable
+		}
+		if n, _ := fmt.Sscanf(line, "Visible=%d%n", &n, &r); n == 1 {
+			line = ImStrSkipBlank(line[r:])
+			column.IsEnabled = (ImU8)(n)
+			settings.SaveFlags |= ImGuiTableFlags_Hideable
+		}
+		if n, _ := fmt.Sscanf(line, "Order=%d%n", &n, &r); n == 1 {
+			line = ImStrSkipBlank(line[r:])
+			column.DisplayOrder = (ImGuiTableColumnIdx)(n)
+			settings.SaveFlags |= ImGuiTableFlags_Reorderable
+		}
+
+		dir := ImGuiSortDirection_Ascending
+		if c == '^' {
+			dir = ImGuiSortDirection_Descending
+		}
+
+		if n, _ := fmt.Sscanf(line, "Sort=%d%c%n", &n, &c, &r); n == 2 {
+			line = ImStrSkipBlank(line[r:])
+			column.SortDirection = uint8(dir)
+			settings.SaveFlags |= ImGuiTableFlags_Sortable
+		}
+	}
+}
+
+func TableSettingsHandler_WriteAll(ctx *ImGuiContext, handler *ImGuiSettingsHandler, buf *ImGuiTextBuffer) {
+	var g = ctx
+	for _, settings := range g.SettingsTables {
+		if settings.ID == 0 { // Skip ditched settings
+			continue
+		}
+
+		// TableSaveSettings() may clear some of those flags when we establish that the data can be stripped
+		// (e.g. Order was unchanged)
+		var save_size = (settings.SaveFlags & ImGuiTableFlags_Resizable) != 0
+		var save_visible = (settings.SaveFlags & ImGuiTableFlags_Hideable) != 0
+		var save_order = (settings.SaveFlags & ImGuiTableFlags_Reorderable) != 0
+		var save_sort = (settings.SaveFlags & ImGuiTableFlags_Sortable) != 0
+		if !save_size && !save_visible && !save_order && !save_sort {
+			continue
+		}
+
+		*buf = append(*buf, make([]byte, 0, 30+settings.ColumnsCount*50)...) // ballpark reserve
+		*buf = append(*buf, []byte(fmt.Sprintf("[%s][0x%08X,%d]\n", handler.TypeName, settings.ID, settings.ColumnsCount))...)
+
+		if settings.RefScale != 0.0 {
+			*buf = append(*buf, []byte(fmt.Sprintf("RefScale=%g\n", settings.RefScale))...)
+		}
+		var column = settings.Columns
+		for column_n := int(0); column_n < int(settings.ColumnsCount); column_n, column = column_n+1, column[1:] {
+			// "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
+			var save_column bool = column[0].UserID != 0 || save_size || save_visible || save_order || (save_sort && column[0].SortOrder != -1)
+			if !save_column {
+				continue
+			}
+			*buf = append(*buf, []byte(fmt.Sprintf("Column %-2d", column_n))...)
+			if column[0].UserID != 0 {
+				*buf = append(*buf, []byte(fmt.Sprintf(" UserID=%08X", column[0].UserID))...)
+			}
+			if save_size && column[0].IsStretch != 0 {
+				*buf = append(*buf, []byte(fmt.Sprintf(" Weight=%.4f", column[0].WidthOrWeight))...)
+			}
+			if save_size && column[0].IsStretch == 0 {
+				*buf = append(*buf, []byte(fmt.Sprintf(" Width=%d", (int)(column[0].WidthOrWeight)))...)
+			}
+			if save_visible {
+				*buf = append(*buf, []byte(fmt.Sprintf(" Visible=%d", column[0].IsEnabled))...)
+			}
+			if save_order {
+				*buf = append(*buf, []byte(fmt.Sprintf(" Order=%d", column[0].DisplayOrder))...)
+			}
+			if save_sort && column[0].SortOrder != -1 {
+				dir := '^'
+				if ImGuiSortDirection(column[0].SortDirection) == ImGuiSortDirection_Ascending {
+					dir = 'v'
+				}
+				*buf = append(*buf, []byte(fmt.Sprintf(" Sort=%d%v", column[0].SortOrder, string(dir)))...)
+			}
+			*buf = append(*buf, '\n')
+		}
+		*buf = append(*buf, '\n')
+	}
+}

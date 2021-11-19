@@ -1364,6 +1364,8 @@ type ImGuiTableSettings struct {
 	ColumnsCount    ImGuiTableColumnIdx
 	ColumnsCountMax ImGuiTableColumnIdx // Maximum number of columns this settings instance can store, we can recycle a settings instance with lower number of columns but not higher
 	WantApply       bool                // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
+
+	Columns []ImGuiTableColumnSettings
 }
 
 // This structure is likely to evolve as we add support for incremental atlas updates

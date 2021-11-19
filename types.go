@@ -367,9 +367,9 @@ func NewImGuiTableColumnSortSpecs() ImGuiTableColumnSortSpecs {
 // When 'SpecsDirty == true' you can sort your data. It will be true with sorting specs have changed since last call, or the first time.
 // Make sure to set 'SpecsDirty = false' after sorting, else you may wastefully sort your data every frame!
 type ImGuiTableSortSpecs struct {
-	Specs      *ImGuiTableColumnSortSpecs // Pointer to sort spec array.
-	SpecsCount int                        // Sort spec count. Most often 1. May be > 1 when ImGuiTableFlags_SortMulti is enabled. May be == 0 when ImGuiTableFlags_SortTristate is enabled.
-	SpecsDirty bool                       // Set to true when specs have changed since last time! Use this to sort again, then clear the flag.
+	Specs      []ImGuiTableColumnSortSpecs // Pointer to sort spec array.
+	SpecsCount int                         // Sort spec count. Most often 1. May be > 1 when ImGuiTableFlags_SortMulti is enabled. May be == 0 when ImGuiTableFlags_SortTristate is enabled.
+	SpecsDirty bool                        // Set to true when specs have changed since last time! Use this to sort again, then clear the flag.
 }
 
 const IM_UNICODE_CODEPOINT_INVALID = unicode.ReplacementChar
