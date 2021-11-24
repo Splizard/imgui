@@ -8,7 +8,7 @@ It is important to me to have an Imgui package in pure Go, without any C code.
 Ideally I would like the entire functionality of Imgui ported, including all
 current widgets and features.
 
-The end goal is to have the complete IMGUI debug window running 
+The end goal is to have the complete IMGUI demo window running 
 natively in Go. I started a on this but my attempt is largely incomplete...
 
 ## Current Status
@@ -18,7 +18,7 @@ The idea is that it panics on any unimplemented function.
 
 `go get && go mod download && go build` with Go 1.16+ should build it just fine.
 
-At the moment, the only thing that is implemented is imgui.Text in the implicit
+At the moment, the only thing that is implemented is imgui.Text and the implicit
 debug window.
 
 ![The Quick Brown Fox Jumps Over The Lazy Dog](media/quickbrownfox.png)

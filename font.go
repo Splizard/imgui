@@ -74,7 +74,7 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 
 	var i int
 	for i = 0; i < int(len(text)); {
-		var c uint = uint(text[i])
+		var c rune = rune(text[i])
 
 		var next_i int
 		if c < 0x80 {
@@ -197,7 +197,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 
 		// Decode and advance source
 		var prev_i = i
-		var c uint = uint(text[i])
+		var c rune = rune(text[i])
 		if c < 0x80 {
 			i += 1
 		} else {
