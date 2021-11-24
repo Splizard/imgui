@@ -256,19 +256,6 @@ func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
 	return (GetNavInputAmount(n, rm) > 0.0)
 }
 
-// Internal Columns API (this is not exposed because we will encourage transitioning to the Tables API)
-func SetWindowClipRectBeforeSetChannel(w *ImGuiWindow, clip_rect *ImRect) {
-	panic("not implemented")
-}
-func BeginColumns(d string, count int, flags ImGuiOldColumnFlags)         { panic("not implemented") } // setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
-func EndColumns()                                                         { panic("not implemented") } // close columns
-func PushColumnClipRect(column_index int)                                 { panic("not implemented") }
-func PopColumnsBackground()                                               { panic("not implemented") }
-func GetColumnsID(d string, count int) ImGuiID                            { panic("not implemented") }
-func FindOrCreateColumns(w *ImGuiWindow, id ImGuiID) *ImGuiOldColumns     { panic("not implemented") }
-func GetColumnOffsetFromNorm(s *ImGuiOldColumns, offset_norm float) float { panic("not implemented") }
-func GetColumnNormFromOffset(s *ImGuiOldColumns, offset float) float      { panic("not implemented") }
-
 // Tab Bars
 func BeginTabBarEx(r *ImGuiTabBar, bb *ImRect, flags ImGuiTabBarFlags) bool { panic("not implemented") }
 func TabBarFindTabByID(r *ImGuiTabBar, tab_id ImGuiID) *ImGuiTabItem        { panic("not implemented") }
@@ -540,26 +527,10 @@ func RenderRectFilledWithHole(draw_list *ImDrawList, outer ImRect, inner ImRect,
 
 // Widgets
 
-func CloseButton(id ImGuiID, pos *ImVec2) bool { panic("not implemented") }
-func ArrowButtonEx(d string, dir ImGuiDir, size_arg ImVec2, flags ImGuiButtonFlags) bool {
-	panic("not implemented")
-}
-
-func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2, uv1 *ImVec2, padding *ImVec2, bg_col *ImVec4, tint_col *ImVec4) bool {
-	panic("not implemented")
-}
-
 func CheckboxFlagsU(l string, s *ImS64, flags_value ImS64) bool { panic("not implemented") }
 func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool { panic("not implemented") }
 
 // Widgets low-level behaviors
-
-func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, v interface{}, n interface{}, x interface{}, t string, flags ImGuiSliderFlags, b *ImRect) bool {
-	panic("not implemented")
-}
-func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size2 *float, min_size1 float, min_size2 float, hover_extend float, hover_visibility_delay float) bool {
-	panic("not implemented")
-}
 
 // Template functions are instantiated in imgui_widgets.cpp for a finite number of types.
 // To use them externally (for custom widget) you may need an "extern template" statement in your code in order to link to existing instances and silence Clang warnings (see #2036).
@@ -572,44 +543,8 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 //template<typename T>                                        func  CheckboxFlagsT(l string, s *T, T flags_value) bool {panic("not implemented")}
 
 // Data type helpers
-func DataTypeGetInfo(data_type ImGuiDataType) *ImGuiDataTypeInfo { panic("not implemented") }
-func DataTypeFormatString(f *char, buf_size int, data_type ImGuiDataType, a interface{}, t string) int {
-	panic("not implemented")
-}
-func DataTypeApplyOp(data_type ImGuiDataType, op int, t interface{}, arg_1 interface{}, arg_2 interface{}) {
-	panic("not implemented")
-}
-func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImGuiDataType, a interface{}, t string) bool {
-	panic("not implemented")
-}
-func DataTypeCompare(data_type ImGuiDataType, arg_1 interface{}, arg_2 interface{}) int {
-	panic("not implemented")
-}
-func DataTypeClamp(data_type ImGuiDataType, a interface{}, n interface{}, x interface{}) bool {
-	panic("not implemented")
-}
 
 // InputText
-func InputTextEx(l string, t string, f *char, buf_size int, size_arg *ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, a interface{}) bool {
-	panic("not implemented")
-}
-func TempInputText(bb *ImRect, id ImGuiID, l string, f *char, buf_size int, flags ImGuiInputTextFlags) bool {
-	panic("not implemented")
-}
-func TempInputScalar(bb *ImRect, id ImGuiID, l string, data_type ImGuiDataType, a interface{}, t string, n interface{}, x interface{}) bool {
-	panic("not implemented")
-}
-func TempInputIsActive(id ImGuiID) bool {
-	var g *ImGuiContext = GImGui
-	return (g.ActiveId == id && g.TempInputId == id)
-}
-func GetInputTextState(id ImGuiID) *ImGuiInputTextState {
-	var g *ImGuiContext = GImGui
-	if g.InputTextState.ID == id {
-		return &g.InputTextState
-	}
-	return nil
-} // Get input text state if active
 
 // Color
 func ColorTooltip(t string, l *float, flags ImGuiColorEditFlags)  { panic("not implemented") }

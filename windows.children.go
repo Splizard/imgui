@@ -1,5 +1,7 @@
 package imgui
 
+import "fmt"
+
 // Popups, Modals, Tooltips
 func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags ImGuiWindowFlags) bool {
 	var g = GImGui
@@ -30,9 +32,9 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 
 	// Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
 	if name != "" {
-		ImFormatString(g.TempBuffer[:], uintptr(len(g.TempBuffer)), "%s/%s_%08X", parent_window.Name, name, id)
+		g.TempBuffer = fmt.Sprintf("%s/%s_%08X", parent_window.Name, name, id)
 	} else {
-		ImFormatString(g.TempBuffer[:], uintptr(len(g.TempBuffer)), "%s/%08X", parent_window.Name, id)
+		g.TempBuffer = fmt.Sprintf("%s/%08X", parent_window.Name, id)
 	}
 
 	var backup_border_size float = g.Style.ChildBorderSize

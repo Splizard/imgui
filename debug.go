@@ -457,8 +457,145 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 	}
 }
 
-func DebugNodeTable(e *ImGuiTable)                 { panic("not implemented") }
-func DebugNodeTableSettings(s *ImGuiTableSettings) { panic("not implemented") }
+func DebugNodeTable(table *ImGuiTable) {
+	var buf string
+	var is_active = (table.LastFrameActive >= GetFrameCount()-2) // Note that fully clipped early out scrolling tables will appear as inactive here.
+
+	var active string
+	if !is_active {
+		active = " *Inactive*"
+	}
+	buf = fmt.Sprintf("Table 0x%08X (%d columns, in '%s')%s", table.ID, table.ColumnsCount, table.OuterWindow.Name, active)
+	if !is_active {
+		PushStyleColorVec(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled))
+	}
+	var open bool = TreeNodeInterface(table, "%s", buf)
+	if !is_active {
+		PopStyleColor(1)
+	}
+	if IsItemHovered(0) {
+		GetForegroundDrawList(nil).AddRect(table.OuterRect.Min, table.OuterRect.Max, IM_COL32(255, 255, 0, 255), 0, 0, 1)
+	}
+	if IsItemVisible() && table.HoveredColumnBody != -1 {
+		GetForegroundDrawList(nil).AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255), 0, 0, 1)
+	}
+	if !open {
+		return
+	}
+	var clear_settings = SmallButton("Clear settings")
+	BulletText("OuterRect: Pos: (%.1f,%.1f) Size: (%.1f,%.1f) Sizing: '%s'", table.OuterRect.Min.x, table.OuterRect.Min.y, table.OuterRect.GetWidth(), table.OuterRect.GetHeight(), DebugNodeTableGetSizingPolicyDesc(table.Flags))
+	var auto string
+	if table.InnerWidth == 0.0 {
+		auto = " (auto)"
+	}
+	BulletText("ColumnsGivenWidth: %.1f, ColumnsAutoFitWidth: %.1f, InnerWidth: %.1f%s", table.ColumnsGivenWidth, table.ColumnsAutoFitWidth, table.InnerWidth, auto)
+	BulletText("CellPaddingX: %.1f, CellSpacingX: %.1f/%.1f, OuterPaddingX: %.1f", table.CellPaddingX, table.CellSpacingX1, table.CellSpacingX2, table.OuterPaddingX)
+	BulletText("HoveredColumnBody: %d, HoveredColumnBorder: %d", table.HoveredColumnBody, table.HoveredColumnBorder)
+	BulletText("ResizedColumn: %d, ReorderColumn: %d, HeldHeaderColumn: %d", table.ResizedColumn, table.ReorderColumn, table.HeldHeaderColumn)
+	//BulletText("BgDrawChannels: %d/%d", 0, table.BgDrawChannelUnfrozen);
+	var sum_weights float = 0.0
+	for n := int(0); n < table.ColumnsCount; n++ {
+		if table.Columns[n].Flags&ImGuiTableColumnFlags_WidthStretch != 0 {
+			sum_weights += table.Columns[n].StretchWeight
+		}
+	}
+	for n := int(0); n < table.ColumnsCount; n++ {
+		var column = &table.Columns[n]
+		var name = tableGetColumnName(table, n)
+
+		var frozen string
+		if n < int(table.FreezeColumnsRequest) {
+			frozen = " (Frozen)"
+		}
+		var stretch float
+		if column.StretchWeight > 0.0 {
+			stretch = (column.StretchWeight / sum_weights) * 100
+		}
+
+		var sorting string
+		if column.SortDirection == ImGuiSortDirection_Ascending {
+			sorting = " (Asc)"
+		} else {
+			if column.SortDirection == ImGuiSortDirection_Descending {
+				sorting = " (Desc)"
+			}
+		}
+
+		var flags string
+		if column.Flags&ImGuiTableColumnFlags_WidthStretch != 0 {
+			flags += "WidthStretch "
+		}
+		if column.Flags&ImGuiTableColumnFlags_WidthFixed != 0 {
+			flags += "WidthFixed "
+		}
+		if column.Flags&ImGuiTableColumnFlags_NoResize != 0 {
+			flags += "NoResize "
+		}
+
+		buf = fmt.Sprintf(
+			"Column %v order %v '%s': offset %+.2f to %+.2f%s\n"+
+				"Enabled: %v, VisibleX/Y: %v/%v, RequestOutput: %v, SkipItems: %v, DrawChannels: %v,%v\n"+
+				"WidthGiven: %.1f, Request/Auto: %.1f/%.1f, StretchWeight: %.3f (%.1f%%)\n"+
+				"MinX: %.1f, MaxX: %.1f (%+.1f), ClipRect: %.1f to %.1f (+%.1f)\n"+
+				"ContentWidth: %.1f,%.1f, HeadersUsed/Ideal %.1f/%.1f\n"+
+				"Sort: %d%s, UserID: 0x%08X, Flags: 0x%04X: %s..",
+			n, column.DisplayOrder, name, column.MinX-table.WorkRect.Min.x, column.MaxX-table.WorkRect.Min.x, frozen,
+			column.IsEnabled, column.IsVisibleX, column.IsVisibleY, column.IsRequestOutput, column.IsSkipItems, column.DrawChannelFrozen, column.DrawChannelUnfrozen,
+			column.WidthGiven, column.WidthRequest, column.WidthAuto, column.StretchWeight, stretch,
+			column.MinX, column.MaxX, column.MaxX-column.MinX, column.ClipRect.Min.x, column.ClipRect.Max.x, column.ClipRect.Max.x-column.ClipRect.Min.x,
+			column.ContentMaxXFrozen-column.WorkMinX, column.ContentMaxXUnfrozen-column.WorkMinX, column.ContentMaxXHeadersUsed-column.WorkMinX, column.ContentMaxXHeadersIdeal-column.WorkMinX,
+			column.SortOrder, sorting, column.UserID, column.Flags,
+			flags,
+		)
+		Bullet()
+		Selectable(buf, false, 0, ImVec2{})
+		if IsItemHovered(0) {
+			var r = ImRect{ImVec2{column.MinX, table.OuterRect.Min.y}, ImVec2{column.MaxX, table.OuterRect.Max.y}}
+			GetForegroundDrawList(nil).AddRect(r.Min, r.Max, IM_COL32(255, 255, 0, 255), 0, 0, 1)
+		}
+	}
+	if settings := TableGetBoundSettings(table); settings != nil {
+		DebugNodeTableSettings(settings)
+	}
+	if clear_settings {
+		table.IsResetAllRequest = true
+	}
+	TreePop()
+}
+
+func DebugNodeTableSettings(settings *ImGuiTableSettings) {
+	if !TreeNodeInterface(&settings.ID, "Settings 0x%08X (%d columns)", settings.ID, settings.ColumnsCount) {
+		return
+	}
+	BulletText("SaveFlags: 0x%08X", settings.SaveFlags)
+	BulletText("ColumnsCount: %d (max %d)", settings.ColumnsCount, settings.ColumnsCountMax)
+	for n := int(0); n < int(settings.ColumnsCount); n++ {
+		var column_settings = &settings.Columns[n]
+		var sort_dir = ImGuiSortDirection_None
+		if column_settings.SortOrder != -1 {
+			sort_dir = (ImGuiSortDirection)(column_settings.SortDirection)
+		}
+
+		var sorting string
+		if sort_dir == ImGuiSortDirection_Ascending {
+			sorting = "Asc"
+		} else if sort_dir == ImGuiSortDirection_Descending {
+			sorting = "Des"
+		} else {
+			sorting = "---"
+		}
+
+		var stretch string = "Width "
+		if column_settings.IsStretch != 0 {
+			stretch = "Weight"
+		}
+
+		BulletText("Column %d Order %d SortOrder %d %s Vis %d %s %7.3f UserID 0x%08X",
+			n, column_settings.DisplayOrder, column_settings.SortOrder, sorting,
+			column_settings.IsEnabled, stretch, column_settings.WidthOrWeight, column_settings.UserID)
+	}
+	TreePop()
+}
 
 func DebugNodeWindow(window *ImGuiWindow, label string) {
 	if window == nil {
@@ -875,7 +1012,7 @@ func ShowMetricsWindow(p_open *bool) {
 		SameLine(0, 0)
 
 		SetNextItemWidth(GetFontSize() * 12)
-		cfg.ShowWindowsRects = ComboSlice("##show_windows_rect_type", &cfg.ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count) || cfg.ShowWindowsRects
+		cfg.ShowWindowsRects = Combo("##show_windows_rect_type", &cfg.ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count) || cfg.ShowWindowsRects
 		if cfg.ShowWindowsRects && g.NavWindow != nil {
 			BulletText("'%s':", g.NavWindow.Name)
 			Indent(0)
@@ -891,7 +1028,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Checkbox("Show tables rectangles", &cfg.ShowTablesRects)
 		SameLine(0, 0)
 		SetNextItemWidth(GetFontSize() * 12)
-		cfg.ShowTablesRects = ComboSlice("##show_table_rects_type", &cfg.ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count) || cfg.ShowTablesRects
+		cfg.ShowTablesRects = Combo("##show_table_rects_type", &cfg.ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count) || cfg.ShowTablesRects
 
 		if cfg.ShowTablesRects && g.NavWindow != nil {
 			for _, table := range g.Tables {
@@ -1063,8 +1200,8 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var name, rootName, underName, movingName string = "nil", "nil", "nil", "nil"
 		if g.HoveredWindow != nil {
-			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
-				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
+			//name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
+			//	g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
 		}
 
 		Text("HoveredWindow: '%s'", name)
@@ -1089,7 +1226,7 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var navWindowName, navTargetName string = "nil", "nil"
 		if g.NavWindow != nil {
-			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
+			//navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
 		}
 
 		Text("NAV,FOCUS")

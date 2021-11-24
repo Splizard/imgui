@@ -815,7 +815,7 @@ const (
 type ImGuiInputSource int
 
 const (
-	ImGuiInputSource_None ImGuiInputSource = 0
+	ImGuiInputSource_None ImGuiInputSource = iota
 	ImGuiInputSource_Mouse
 	ImGuiInputSource_Keyboard
 	ImGuiInputSource_Gamepad

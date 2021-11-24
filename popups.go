@@ -1,5 +1,7 @@
 package imgui
 
+import "fmt"
+
 // Popups, Modals
 //  - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
 //  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
@@ -627,11 +629,11 @@ func BeginPopupEx(id ImGuiID, flags ImGuiWindowFlags) bool {
 		return false
 	}
 
-	var name [20]byte
+	var name string
 	if flags&ImGuiWindowFlags_ChildMenu != 0 {
-		ImFormatString(name[:], uintptr(len(name)), "##Menu_%02d", int(len(g.BeginPopupStack))) // Recycle windows based on depth
+		name = fmt.Sprintf("##Menu_%02d", int(len(g.BeginPopupStack))) // Recycle windows based on depth
 	} else {
-		ImFormatString(name[:], uintptr(len(name)), "##Popup_%08x", id) // Not recycling, so we can close/open during the same frame
+		name = fmt.Sprintf("##Popup_%08x", id) // Not recycling, so we can close/open during the same frame
 	}
 
 	flags |= ImGuiWindowFlags_Popup

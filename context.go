@@ -246,7 +246,7 @@ type ImGuiContext struct {
 	WantCaptureMouseNextFrame    int // Explicit capture via CaptureKeyboardFromApp()/CaptureMouseFromApp() sets those flags
 	WantCaptureKeyboardNextFrame int
 	WantTextInputNextFrame       int
-	TempBuffer                   [1024 * 31]byte // Temporary text buffer
+	TempBuffer                   string // Temporary text buffer
 
 	FontAtlasOwnedByContext bool
 }

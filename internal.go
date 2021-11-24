@@ -111,38 +111,8 @@ func ImUpperPowerOfTwo(v int) int {
 	return v
 }
 
-func ImStricmp(str1, str2 string) int                                { panic("not implemented") }
-func ImStrncpy(dst []byte, src string, count uintptr)                { panic("not implemented") }
-func ImStrdup(str string) []byte                                     { panic("not implemented") }
-func ImStrdupcpy(dst []byte, p_dst_size *uintptr, str string) []byte { panic("not implemented") }
-
-func ImStrchrRange(str_begin, str_end string, c char) string { panic("not implemented") }
-func ImStrlenW(str string) int                               { panic("not implemented") }
-func ImStreolRange(str, str_end string) string               { panic("not implemented") } // End end-of-line
-func ImStrbolW(buf_mid_line, buf_begin []ImWchar) []ImWchar  { panic("not implemented") } // Find beginning-of-line
-func ImStristr(haystack string, haystack_end string, needle string, needle_end string) string {
-	panic("not implemented")
-} //
-func ImStrTrimBlanks(str []byte) {
-	panic("not implemented")
-}
-func ImStrSkipBlank(str string) string { panic("not implemented") }
-
-func ImFormatString(buf []byte, buf_size uintptr, fmt string, args ...interface{}) int {
-	panic("not implemented")
-}
-
-func ImFormatStringV(buf []byte, buf_size uintptr, fmt string, args []interface{}) int {
-	panic("not implemented")
-}
-func ImParseFormatFindStart(format string) string { panic("not implemented") }
-func ImParseFormatFindEnd(format string) string   { panic("not implemented") }
-func ImParseFormatTrimDecorations(format string, buf []byte, buf_size size_t) string {
-	panic("not implemented")
-}
-func ImParseFormatPrecision(format string, default_value int) int { panic("not implemented") }
-func ImCharIsBlankA(c char) bool                                  { return c == ' ' || c == '\t' }
-func ImCharIsBlankW(c uint) bool                                  { return c == ' ' || c == '\t' || c == 0x3000 }
+func ImCharIsBlankA(c char) bool { return c == ' ' || c == '\t' }
+func ImCharIsBlankW(c rune) bool { return c == ' ' || c == '\t' || c == 0x3000 }
 
 // Helpers: UTF-8 <> wchar conversions
 func ImTextCharToUtf8(out_buf [5]char, c uint) string { panic("not implemented") } // return out_buf
@@ -363,7 +333,7 @@ func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
 	}
 }
 
-type ImGuiDataTypeTempStorage [8]byte
+type ImGuiDataTypeTempStorage interface{}
 
 // Type information associated to one ImGuiDataType. Retrieve with DataTypeGetInfo().
 type ImGuiDataTypeInfo struct {
@@ -487,7 +457,9 @@ func (this *ImGuiInputTextState) GetRedoAvailCount() int {
 }
 
 func (this *ImGuiInputTextState) OnKeyPressed(key int) {
-	panic("not implemented")
+	stb_textedit_key(this, &this.Stb, STB_TEXTEDIT_KEYTYPE(key))
+	this.CursorFollow = true
+	this.CursorAnimReset()
 }
 
 func (this *ImGuiInputTextState) CursorAnimReset() {

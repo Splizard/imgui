@@ -3,9 +3,9 @@ package imgui
 import "fmt"
 
 // read one character. return input UTF-8 bytes count
-func ImTextCharFromUtf8(out_char *uint, text string) int {
+func ImTextCharFromUtf8(out_char *rune, text string) int {
 	for i, c := range text {
-		*out_char = uint(c)
+		*out_char = rune(c)
 		return int(i) + 1
 	}
 	*out_char = 0
@@ -468,7 +468,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		}
 
 		// Decode and advance source
-		var c uint = (uint)(text[i])
+		var c rune = (rune)(text[i])
 		if c < 0x80 {
 			i += 1
 		} else {

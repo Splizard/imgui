@@ -1,5 +1,21 @@
 package imgui
 
+// stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
+// the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
+func stb_textedit_replace(str *ImGuiInputTextState, state * STB_TexteditState, text []STB_TEXTEDIT_CHARTYPE, text_len int) {
+    stb_text_makeundo_replace(str, state, 0, str.CurLenW, text_len);
+    STB_TEXTEDIT_DELETECHARS(str, 0, str.CurLenW);
+    if (text_len <= 0) {
+        return;
+	}
+    if (STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len)) {
+        state.cursor = text_len;
+        state.has_preferred_x = 0;
+        return;
+    }
+    IM_ASSERT(false); // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
+}
+
 type short = int16
 
 type (
@@ -14,40 +30,119 @@ const (
 	STB_TEXTEDIT_UNDOCHARCOUNT    = 999
 )
 
-func STB_TEXTEDIT_STRINGLEN(s *STB_TEXTEDIT_STRING) int {
-	panic("not implemented")
+func STB_TEXTEDIT_STRINGLEN(obj *STB_TEXTEDIT_STRING) int {
+	return obj.CurLenW
 }
 
-func STB_TEXTEDIT_LAYOUTROW(r *StbTexteditRow, obj *STB_TEXTEDIT_STRING, n int) {
-	panic("not implemented")
+func STB_TEXTEDIT_LAYOUTROW(r *StbTexteditRow, obj *STB_TEXTEDIT_STRING, line_start_idx int) {
+	var text = obj.TextW
+	var text_remaining []ImWchar
+	var size ImVec2 = InputTextCalcTextSizeW(text[line_start_idx:obj.CurLenW], &text_remaining, nil, true)
+	r.x0 = 0.0
+	r.x1 = size.x
+	r.baseline_y_delta = size.y
+	r.ymin = 0.0
+	r.ymax = size.y
+	r.num_chars = int(len(text) - len(text[line_start_idx:]))
 }
 
-func STB_TEXTEDIT_GETWIDTH(str *STB_TEXTEDIT_STRING, i, k int) float {
-	panic("not implemented")
+func STB_TEXTEDIT_GETWIDTH(obj *STB_TEXTEDIT_STRING, line_start_idx, char_idx int) float {
+	var c ImWchar = obj.TextW[line_start_idx+char_idx]
+	if c == '\n' {
+		return STB_TEXTEDIT_GETWIDTH_NEWLINE
+	}
+	var g = GImGui
+	return g.Font.GetCharAdvance(c) * (g.FontSize / g.Font.FontSize)
 }
 
-func STB_TEXTEDIT_GETCHAR(str *STB_TEXTEDIT_STRING, i int) STB_TEXTEDIT_CHARTYPE {
-	panic("not implemented")
+func STB_TEXTEDIT_GETCHAR(obj *STB_TEXTEDIT_STRING, idx int) STB_TEXTEDIT_CHARTYPE {
+	return obj.TextW[idx]
 }
 
-func STB_TEXTEDIT_DELETECHARS(str *STB_TEXTEDIT_STRING, pos, n int) {
-	panic("not implemented")
+func STB_TEXTEDIT_DELETECHARS(obj *STB_TEXTEDIT_STRING, pos, n int) {
+	var dst = obj.TextW[pos:]
+
+	// We maintain our buffer length in both UTF-8 and wchar formats
+	obj.Edited = true
+	obj.CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst[n:])
+	obj.CurLenW -= n
+
+	// Offset remaining text (FIXME-OPT: Use memmove)
+	src := obj.TextW[pos+n:]
+	copy(dst, src)
 }
 
-func STB_TEXTEDIT_INSERTCHARS(obj *STB_TEXTEDIT_STRING, i int, c []STB_TEXTEDIT_CHARTYPE, n int) int {
-	panic("not implemented")
+func STB_TEXTEDIT_INSERTCHARS(obj *STB_TEXTEDIT_STRING, pos int, new_text []STB_TEXTEDIT_CHARTYPE, new_text_len int) bool {
+	var is_resizable = (obj.Flags & ImGuiInputTextFlags_CallbackResize) != 0
+	var text_len int = obj.CurLenW
+	IM_ASSERT(pos <= text_len)
+
+	var new_text_len_utf8 = ImTextCountUtf8BytesFromStr(new_text, new_text[new_text_len:])
+	if !is_resizable && (new_text_len_utf8+obj.CurLenA+1 > obj.BufCapacityA) {
+		return false
+	}
+
+	// Grow internal buffer if needed
+	if new_text_len+text_len+1 > int(len(obj.TextW)) {
+		if !is_resizable {
+			return false
+		}
+		IM_ASSERT(text_len < int(len(obj.TextW)))
+		obj.TextW = append(obj.TextW, make([]rune, text_len+ImClampInt(new_text_len*4, 32, ImMaxInt(256, new_text_len))+1)...)
+	}
+
+	var text = obj.TextW
+	if pos != text_len {
+		copy(text[pos+new_text_len:], text[pos:text_len])
+	}
+	copy(text[pos:], new_text[new_text_len:])
+
+	obj.Edited = true
+	obj.CurLenW += new_text_len
+	obj.CurLenA += new_text_len_utf8
+
+	return true
 }
 
 func STB_TEXTEDIT_KEYTOTEXT(key STB_TEXTEDIT_KEYTYPE) STB_TEXTEDIT_CHARTYPE {
 	panic("not implemented")
 }
 
-func STB_TEXTEDIT_MOVEWORDLEFT(obj *STB_TEXTEDIT_STRING, i int) int {
-	panic("not implemented")
+func is_separator(c rune) bool {
+	return ImCharIsBlankW(c) || c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|'
 }
 
-func STB_TEXTEDIT_MOVEWORDRIGHT(obj *STB_TEXTEDIT_STRING, i int) int {
-	panic("not implemented")
+func is_word_boundary_from_right(obj *ImGuiInputTextState, idx int) bool {
+	if (obj.Flags & ImGuiInputTextFlags_Password) != 0 {
+		return false
+	}
+	if idx > 0 {
+		return is_separator(obj.TextW[idx-1]) && !is_separator(obj.TextW[idx])
+	}
+	return true
+}
+
+func STB_TEXTEDIT_MOVEWORDLEFT(obj *STB_TEXTEDIT_STRING, idx int) int {
+	idx--
+	for idx >= 0 && !is_word_boundary_from_right(obj, idx) {
+		idx--
+	}
+	if idx < 0 {
+		return 0
+	}
+	return idx
+}
+
+func STB_TEXTEDIT_MOVEWORDRIGHT(obj *STB_TEXTEDIT_STRING, idx int) int {
+	idx++
+	var len int = obj.CurLenW
+	for idx < len && !is_word_boundary_from_right(obj, idx) {
+		idx++
+	}
+	if idx > len {
+		return len
+	}
+	return idx
 }
 
 func STB_TEXTEDIT_IS_SPACE(char STB_TEXTEDIT_CHARTYPE) bool {
@@ -74,10 +169,10 @@ type StbUndoState struct {
 	undo_char_point, redo_char_point int
 }
 
-const STB_TEXTEDIT_K_SHIFT = 1 << 10
+const STB_TEXTEDIT_K_SHIFT = 0x400000
 
 const (
-	STB_TEXTEDIT_K_LEFT = iota
+	STB_TEXTEDIT_K_LEFT = 0x200000 + iota
 	STB_TEXTEDIT_K_RIGHT
 	STB_TEXTEDIT_K_UP
 	STB_TEXTEDIT_K_DOWN
@@ -606,7 +701,7 @@ func stb_textedit_paste_internal(str *STB_TEXTEDIT_STRING, state *STB_TexteditSt
 	stb_textedit_clamp(str, state)
 	stb_textedit_delete_selection(str, state)
 	// try to insert the characters
-	if STB_TEXTEDIT_INSERTCHARS(str, state.cursor, text, len) != 0 {
+	if STB_TEXTEDIT_INSERTCHARS(str, state.cursor, text, len) {
 		stb_text_makeundo_insert(state, state.cursor, len)
 		state.cursor += len
 		state.has_preferred_x = 0
@@ -640,13 +735,13 @@ retry:
 				if state.insert_mode != 0 && !STB_TEXT_HAS_SELECTION(state) && state.cursor < STB_TEXTEDIT_STRINGLEN(str) {
 					stb_text_makeundo_replace(str, state, state.cursor, 1, 1)
 					STB_TEXTEDIT_DELETECHARS(str, state.cursor, 1)
-					if STB_TEXTEDIT_INSERTCHARS(str, state.cursor, ch[:], 1) != 0 {
+					if STB_TEXTEDIT_INSERTCHARS(str, state.cursor, ch[:], 1) {
 						state.cursor++
 						state.has_preferred_x = 0
 					}
 				} else {
 					stb_textedit_delete_selection(str, state) // implicitly clamps
-					if STB_TEXTEDIT_INSERTCHARS(str, state.cursor, ch[:], 1) != 0 {
+					if STB_TEXTEDIT_INSERTCHARS(str, state.cursor, ch[:], 1) {
 						stb_text_makeundo_insert(state, state.cursor, 1)
 						state.cursor++
 						state.has_preferred_x = 0

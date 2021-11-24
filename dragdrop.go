@@ -188,7 +188,7 @@ func SetDragDropPayload(ptype string, data interface{}, data_size uintptr, cond 
 
 	if cond == ImGuiCond_Always || payload.DataFrameCount == -1 {
 		// Copy payload
-		ImStrncpy(payload.DataType[:], ptype, uintptr(len(payload.DataType)))
+		copy(payload.DataType[:], ptype[len(payload.DataType):])
 		g.DragDropPayloadBufHeap = g.DragDropPayloadBufHeap[:0]
 		payload.Data = data
 		payload.DataSize = (int)(data_size)

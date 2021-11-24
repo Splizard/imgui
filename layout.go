@@ -7,8 +7,33 @@ package imgui
 // - Attention! We currently have inconsistencies between window-local and absolute positions we will aim to fix with future API:
 //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
 //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
-func NewLine() { panic("not implemented") } // undo a SameLine() or force a new line when in an horizontal-layout context.
-func Spacing() { panic("not implemented") } // add vertical spacing.
+
+// undo a SameLine() or force a new line when in an horizontal-layout context.
+func NewLine() {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return
+	}
+
+	var g = GImGui
+	var backup_layout_type ImGuiLayoutType = window.DC.LayoutType
+	window.DC.LayoutType = ImGuiLayoutType_Vertical
+	if window.DC.CurrLineSize.y > 0.0 { // In the event that we are on a line with items that is smaller that FontSize high, we will preserve its height.
+		ItemSizeVec(&ImVec2{}, 0)
+	} else {
+		ItemSizeVec(&ImVec2{0.0, g.FontSize}, 0)
+	}
+	window.DC.LayoutType = backup_layout_type
+}
+
+// add vertical spacing.
+func Spacing() {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return
+	}
+	ItemSizeVec(&ImVec2{}, 0)
+}
 
 // add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
 func Dummy(size ImVec2) {
@@ -180,7 +205,17 @@ func SetCursorScreenPos(pos ImVec2) {
 	window.DC.CursorMaxPos = ImMaxVec2(&window.DC.CursorMaxPos, &window.DC.CursorPos)
 }
 
-func AlignTextToFramePadding() { panic("not implemented") } // vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
+// vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
+func AlignTextToFramePadding() {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return
+	}
+
+	var g = GImGui
+	window.DC.CurrLineSize.y = ImMax(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2)
+	window.DC.CurrLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, g.Style.FramePadding.y)
+}
 
 // ~ FontSize
 func GetTextLineHeight() float {

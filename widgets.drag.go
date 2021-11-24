@@ -1,6 +1,10 @@
 package imgui
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+	"strconv"
+)
 
 // Widgets: Drag Sliders
 // - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
@@ -17,32 +21,130 @@ func DragFloat(label string, v *float, v_speed float /*= 0*/, v_min float /*= 0*
 	return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, flags)
 }
 
-func DragFloat2(label string, v *[2]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+func DragFloat2(label string, v *[2]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarFloats(label, ImGuiDataType_Float, v[:], v_speed, &v_min, &v_max, format, flags)
 }
-func DragFloat3(label string, v *[3]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+
+func DragFloat3(label string, v *[3]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarFloats(label, ImGuiDataType_Float, v[:], v_speed, &v_min, &v_max, format, flags)
 }
-func DragFloat4(label string, v *[4]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+
+func DragFloat4(label string, v *[4]float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "%.3f"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarFloats(label, ImGuiDataType_Float, v[:], v_speed, &v_min, &v_max, format, flags)
 }
-func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "*/, format_max string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+
+// NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
+func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "*/, format_max string, flags ImGuiSliderFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	PushString(label)
+	BeginGroup()
+	PushMultiItemsWidths(2, CalcItemWidth())
+
+	var min_min = v_min
+	if v_min >= v_max {
+		min_min = -FLT_MAX
+	}
+	var min_max = ImMin(v_max, *v_current_max)
+	if v_min >= v_max {
+		min_max = *v_current_max
+	}
+	var min_flags ImGuiSliderFlags = flags
+	if min_min == min_max {
+		min_flags |= ImGuiSliderFlags_ReadOnly
+	}
+	var value_changed = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags)
+	PopItemWidth()
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+
+	var max_min = ImMax(v_min, *v_current_min)
+	if v_min >= v_max {
+		max_min = *v_current_min
+	}
+	var max_max = v_max
+	if v_min >= v_max {
+		max_max = FLT_MAX
+	}
+	var max_flags ImGuiSliderFlags = flags
+	if max_min == max_max {
+		max_flags |= ImGuiSliderFlags_ReadOnly
+	}
+	value_changed = DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &max_min, &max_max, format, max_flags) || value_changed
+	PopItemWidth()
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+
+	TextEx(label, 0)
+	EndGroup()
+	PopID()
+
+	return value_changed
 }
-func DragInt(label string, v *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-} // If v_min >= v_max we have no bound
-func DragInt2(label string, v [2]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+
+func DragInt(label string, v *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarInt(label, ImGuiDataType_S32, v, v_speed, &v_min, &v_max, format, flags)
 }
-func DragInt3(label string, v [3]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+
+func DragInt2(label string, v [2]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarInts(label, ImGuiDataType_S32, v[:], v_speed, &v_min, &v_max, format, flags)
 }
-func DragInt4(label string, v [4]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+func DragInt3(label string, v [3]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarInts(label, ImGuiDataType_S32, v[:], v_speed, &v_min, &v_max, format, flags)
 }
-func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "*/, format_max string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+func DragInt4(label string, v [4]int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
+	return DragScalarInts(label, ImGuiDataType_S32, v[:], v_speed, &v_min, &v_max, format, flags)
+}
+func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "*/, format_max string, flags ImGuiSliderFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	PushString(label)
+	BeginGroup()
+	PushMultiItemsWidths(2, CalcItemWidth())
+
+	var min_min = v_min
+	if v_min >= v_max {
+		min_min = math.MinInt32
+	}
+	var min_max = ImMinInt(v_max, *v_current_max)
+	if v_min >= v_max {
+		min_max = *v_current_max
+	}
+	var min_flags ImGuiSliderFlags = flags
+	if min_min == min_max {
+		min_flags |= ImGuiSliderFlags_ReadOnly
+	}
+	var value_changed = DragScalar("##min", ImGuiDataType_S32, v_current_min, v_speed, &min_min, &min_max, format, min_flags)
+	PopItemWidth()
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+
+	var max_min = ImMaxInt(v_min, *v_current_min)
+	if v_min >= v_max {
+		max_min = *v_current_min
+	}
+	var max_max = v_max
+	if v_min >= v_max {
+		max_max = INT_MAX
+	}
+	var max_flags ImGuiSliderFlags = flags
+	if max_min == max_max {
+		max_flags |= ImGuiSliderFlags_ReadOnly
+	}
+	value_changed = DragScalar("##max", ImGuiDataType_S32, v_current_max, v_speed, &max_min, &max_max, format, max_flags) || value_changed
+	PopItemWidth()
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+
+	TextEx(label, 0)
+	EndGroup()
+	PopID()
+
+	return value_changed
 }
 
 func GetMinimumStepAtDecimalPrecision(decimal_precision int) float {
@@ -168,19 +270,280 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 	return value_changed
 }
 
-func DragScalarN(label string, data_type ImGuiDataType, p_data interface{}, components int, v_speed float /*= 0*/, p_min interface{} /*= L*/, p_max interface{} /*= L*/, format string, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
+func DragScalarFloat(label string, data_type ImGuiDataType, p_data *float, v_speed float /*= 0*/, p_min *float /*= L*/, p_max *float /*= L*/, format string, flags ImGuiSliderFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	var value_changed = false
+	BeginGroup()
+	PushString(label)
+	PushMultiItemsWidths(1, CalcItemWidth())
+	value_changed = DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags) || value_changed
+	PopItemWidth()
+	PopID()
+
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+	TextEx(label, 0)
+
+	EndGroup()
+	return value_changed
 }
 
-func ScaleRatioFromValueT(v, v_min, v_max float, is_logarithmic bool, logarithmic_zero_epsilon, zero_deadzone_halfsize float) float {
-	panic("not implemented")
+func DragScalarFloats(label string, data_type ImGuiDataType, p_data []float, v_speed float /*= 0*/, p_min *float /*= L*/, p_max *float /*= L*/, format string, flags ImGuiSliderFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	var value_changed = false
+	BeginGroup()
+	PushString(label)
+	PushMultiItemsWidths(int(len(p_data)), CalcItemWidth())
+	for i := range p_data {
+		PushID(int(i))
+		if i > 0 {
+			SameLine(0, g.Style.ItemInnerSpacing.x)
+		}
+		value_changed = DragScalar("", data_type, &p_data[i], v_speed, p_min, p_max, format, flags) || value_changed
+		PopID()
+		PopItemWidth()
+	}
+	PopID()
+
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+	TextEx(label, 0)
+
+	EndGroup()
+	return value_changed
 }
-func ScaleValueFromRatioT(v, v_min, v_max float, is_logarithmic bool, logarithmic_zero_epsilon, zero_deadzone_halfsize float) float {
-	panic("not implemented")
+
+func DragScalarInt(label string, data_type ImGuiDataType, p_data *int, v_speed float /*= 0*/, p_min *int /*= L*/, p_max *int /*= L*/, format string, flags ImGuiSliderFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	var value_changed = false
+	BeginGroup()
+	PushString(label)
+	PushMultiItemsWidths(1, CalcItemWidth())
+	value_changed = DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags) || value_changed
+	PopItemWidth()
+	PopID()
+
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+	TextEx(label, 0)
+
+	EndGroup()
+	return value_changed
+}
+
+func DragScalarInts(label string, data_type ImGuiDataType, p_data []int, v_speed float /*= 0*/, p_min *int /*= L*/, p_max *int /*= L*/, format string, flags ImGuiSliderFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	var g = GImGui
+	var value_changed = false
+	BeginGroup()
+	PushString(label)
+	PushMultiItemsWidths(int(len(p_data)), CalcItemWidth())
+	for i := range p_data {
+		PushID(int(i))
+		if i > 0 {
+			SameLine(0, g.Style.ItemInnerSpacing.x)
+		}
+		value_changed = DragScalar("", data_type, &p_data[i], v_speed, p_min, p_max, format, flags) || value_changed
+		PopID()
+		PopItemWidth()
+	}
+	PopID()
+
+	SameLine(0, g.Style.ItemInnerSpacing.x)
+	TextEx(label, 0)
+
+	EndGroup()
+	return value_changed
+}
+
+// Convert a value v in the output space of a slider into a parametric position on the slider itself (the logical opposite of ScaleValueFromRatioT)
+func ScaleRatioFromValueT(v, v_min, v_max float, is_logarithmic bool, logarithmic_zero_epsilon, zero_deadzone_halfsize float) float {
+	if (v_min == v_max) {
+        return 0.0;
+	}
+
+    var v_clamped float = ImClamp(v, v_max, v_min);
+	if (v_min < v_max) {
+		v_clamped = ImClamp(v, v_min, v_max) 
+	}
+    if (is_logarithmic) {
+        var flipped bool = v_max < v_min;
+
+        if (flipped) {// Handle the case where the range is backwards
+            v_min, v_max = v_max, v_min
+		}
+
+        // Fudge min/max to avoid getting close to log(0)
+        var v_min_fudged float = v_min;
+		if (ImAbs(v_min) < logarithmic_zero_epsilon) {
+			if (v_min < 0.0) {
+				v_min_fudged = -logarithmic_zero_epsilon
+			} else {
+				v_min_fudged = logarithmic_zero_epsilon
+			}
+		}
+        var v_max_fudged float = v_max;
+		if (ImAbs(v_max) < logarithmic_zero_epsilon) {
+			if (v_max < 0.0) {
+				v_max_fudged = -logarithmic_zero_epsilon
+			} else {
+				v_max_fudged = logarithmic_zero_epsilon
+			}
+		}
+
+        // Awkward special cases - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
+        if ((v_min == 0.0) && (v_max < 0.0)) {
+            v_min_fudged = -logarithmic_zero_epsilon;
+		} else if ((v_max == 0.0) && (v_min < 0.0)) {
+            v_max_fudged = -logarithmic_zero_epsilon;
+		}
+
+        var result float
+
+        if (v_clamped <= v_min_fudged) {
+            result = 0.0; // Workaround for values that are in-range but below our fudge
+		} else if (v_clamped >= v_max_fudged) {
+            result = 1.0; // Workaround for values that are in-range but above our fudge
+		} else if ((v_min * v_max) < 0.0) { // Range crosses zero, so split into two portions
+        
+            var zero_point_center float = (-(float)(v_min)) / ((float)(v_max) - (float)(v_min)); // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
+            var zero_point_snap_L float = zero_point_center - zero_deadzone_halfsize;
+            var zero_point_snap_R float = zero_point_center + zero_deadzone_halfsize;
+            if (v == 0.0) {
+                result = zero_point_center; // Special case for exactly zero
+			} else if (v < 0.0) {
+                result = (1.0 - (float)(ImLog(-v_clamped / logarithmic_zero_epsilon) / ImLog(-v_min_fudged / logarithmic_zero_epsilon))) * zero_point_snap_L;
+			} else {
+                result = zero_point_snap_R + ((float)(ImLog(v_clamped / logarithmic_zero_epsilon) / ImLog(v_max_fudged / logarithmic_zero_epsilon)) * (1.0 - zero_point_snap_R));
+			}
+		} else if ((v_min < 0.0) || (v_max < 0.0)) { // Entirely negative slider
+            result = 1.0 - (float)(ImLog(-v_clamped / -v_max_fudged) / ImLog(-v_min_fudged / -v_max_fudged));
+		} else {
+            result = (float)(ImLog(v_clamped / v_min_fudged) / ImLog(v_max_fudged / v_min_fudged));
+		}
+		if flipped {
+			result = 1.0 - result
+		}
+        return result;
+    }
+
+    // Linear slider
+    return (v_clamped - v_min) / (v_max - v_min);
+}
+
+// Convert a parametric position on a slider into a value v in the output space (the logical opposite of ScaleRatioFromValueT)
+func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmic_zero_epsilon, zero_deadzone_halfsize float) float {
+	if (v_min == v_max) {
+        return v_min;
+	}
+
+    var is_floating_point = true;
+
+    var result float
+    if (is_logarithmic) {
+        // We special-case the extents because otherwise our fudging can lead to "mathematically correct" but non-intuitive behaviors like a fully-left slider not actually reaching the minimum value
+        if (t <= 0.0) {
+            result = v_min;
+		} else if (t >= 1.0) {
+            result = v_max;
+		} else {
+            var flipped bool = v_max < v_min; // Check if range is "backwards"
+
+            // Fudge min/max to avoid getting silly results close to zero
+            var v_min_fudged float = v_min;
+			if (ImAbs(v_min) < logarithmic_zero_epsilon) {
+				if (v_min < 0.0) {
+					v_min_fudged = -logarithmic_zero_epsilon 
+				} else {
+					v_min_fudged = logarithmic_zero_epsilon
+				}
+			}
+            var v_max_fudged float = v_max;
+			if (ImAbs(v_max) < logarithmic_zero_epsilon) {
+				if (v_max < 0.0) {
+					v_min_fudged = -logarithmic_zero_epsilon
+				} else {
+					v_min_fudged = logarithmic_zero_epsilon
+				}
+			}
+
+            if (flipped) {
+				v_min_fudged, v_max_fudged = v_max_fudged, v_min_fudged
+			}
+
+            // Awkward special case - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
+            if ((v_max == 0.0) && (v_min < 0.0)) {
+                v_max_fudged = -logarithmic_zero_epsilon;
+			}
+
+            var t_with_flip float =  t; // t, but flipped if necessary to account for us flipping the range
+			if flipped {
+				t_with_flip = (1.0 - t)
+			}
+
+            if ((v_min * v_max) < 0.0) { // Range crosses zero, so we have to do this in two parts
+                var zero_point_center = (-ImMin(v_min, v_max)) / ImAbs(v_max - v_min); // The zero point in parametric space
+                var zero_point_snap_L = zero_point_center - zero_deadzone_halfsize;
+                var zero_point_snap_R = zero_point_center + zero_deadzone_halfsize;
+                if (t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R) {
+                    result = 0.0; // Special case to make getting exactly zero possible (the epsilon prevents it otherwise)
+				} else if (t_with_flip < zero_point_center) {
+                    result = -(logarithmic_zero_epsilon * ImPow(-v_min_fudged / logarithmic_zero_epsilon, (float)(1.0 - (t_with_flip / zero_point_snap_L))));
+				} else {
+                    result = (logarithmic_zero_epsilon * ImPow(v_max_fudged / logarithmic_zero_epsilon, (float)((t_with_flip - zero_point_snap_R) / (1.0 - zero_point_snap_R))));
+				}
+			} else if ((v_min < 0.0) || (v_max < 0.0)) {// Entirely negative slider
+                result = -(-v_max_fudged * ImPow(-v_min_fudged / -v_max_fudged, (float)(1.0 - t_with_flip)));
+			} else {
+                result = (v_min_fudged * ImPow(v_max_fudged / v_min_fudged, (float)(t_with_flip)));
+			}
+        }
+    } else {
+        // Linear slider
+        if (is_floating_point) {
+            result = ImLerp(v_min, v_max, t);
+        } else {
+            // - For integer values we want the clicking position to match the grab box so we round above
+            //   This code is carefully tuned to work with large values (e.g. high ranges of U64) while preserving this property..
+            // - Not doing a *1.0 multiply at the end of a range as it tends to be lossy. While absolute aiming at a large s64/u64
+            //   range is going to be imprecise anyway, with this check we at least make the edge values matches expected limits.
+            if (t < 1.0) {
+                var v_new_off_f float = (v_max - v_min) * t;
+				if v_min > v_max {
+					result = v_min + (v_new_off_f + -0.5)
+				} else {
+					result = v_min + (v_new_off_f + 0.5)
+				}
+            } else {
+                result = v_max;
+            }
+        }
+    }
+
+    return result;
 }
 
 func RoundScalarWithFormatT(format string, v float) float {
-	panic("not implemented")
+	// Format value with our rounding, and read back
+	var v_str = fmt.Sprint(format, v)
+	f, _ := strconv.ParseFloat(v_str, 32)
+	return float(f)
 }
 
 func DragBehaviorT(v *float, v_speed float, v_min, v_max float, format string, flags ImGuiSliderFlags) bool {
@@ -213,7 +576,7 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max float, format string, f
 			adjust_delta *= 10.0
 		}
 	} else if g.ActiveIdSource == ImGuiInputSource_Nav {
-		var decimal_precision int = ImParseFormatPrecision(format, 3)
+		var decimal_precision int = 3
 		amount := GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 1.0/10.0, 10.0)
 		switch axis {
 		case ImGuiAxis_X:
@@ -259,7 +622,7 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max float, format string, f
 	var zero_deadzone_halfsize float   // Drag widgets have no deadzone (as it doesn't make sense)
 	if is_logarithmic {
 		// When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
-		var decimal_precision = ImParseFormatPrecision(format, 3)
+		var decimal_precision = 3
 		logarithmic_zero_epsilon = ImPow(0.1, (float)(decimal_precision))
 
 		// Convert to parametric space, apply delta, convert back

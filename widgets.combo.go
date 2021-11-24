@@ -117,8 +117,57 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 	return BeginComboPopup(popup_id, &bb, flags)
 }
 
-func BeginComboPreview() bool { panic("not implemented") }
-func EndComboPreview()        { panic("not implemented") }
+// Call directly after the BeginCombo/EndCombo block. The preview is designed to only host non-interactive elements
+// (Experimental, see GitHub issues: #1658, #4168)
+func BeginComboPreview() bool {
+	var g = GImGui
+	var window = g.CurrentWindow
+	var preview_data = &g.ComboPreviewData
+
+	if window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect) { // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
+		return false
+	}
+	IM_ASSERT(g.LastItemData.Rect.Min.x == preview_data.PreviewRect.Min.x && g.LastItemData.Rect.Min.y == preview_data.PreviewRect.Min.y) // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
+	if !window.ClipRect.ContainsRect(preview_data.PreviewRect) {                                                                          // Narrower test (optional)
+		return false
+	}
+
+	// FIXME: This could be contained in a PushWorkRect() api
+	preview_data.BackupCursorPos = window.DC.CursorPos
+	preview_data.BackupCursorMaxPos = window.DC.CursorMaxPos
+	preview_data.BackupCursorPosPrevLine = window.DC.CursorPosPrevLine
+	preview_data.BackupPrevLineTextBaseOffset = window.DC.PrevLineTextBaseOffset
+	preview_data.BackupLayout = window.DC.LayoutType
+	window.DC.CursorPos = preview_data.PreviewRect.Min.Add(g.Style.FramePadding)
+	window.DC.CursorMaxPos = window.DC.CursorPos
+	window.DC.LayoutType = ImGuiLayoutType_Horizontal
+	PushClipRect(preview_data.PreviewRect.Min, preview_data.PreviewRect.Max, true)
+
+	return true
+}
+
+func EndComboPreview() {
+	var g = GImGui
+	var window = g.CurrentWindow
+	var preview_data = &g.ComboPreviewData
+
+	// FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
+	var draw_list = window.DrawList
+	if window.DC.CursorMaxPos.x < preview_data.PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_data.PreviewRect.Max.y {
+		if len(draw_list.CmdBuffer) > 1 { // Unlikely case that the PushClipRect() didn't create a command
+			draw_list._CmdHeader.ClipRect = draw_list.CmdBuffer[len(draw_list.CmdBuffer)-2].ClipRect
+			draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].ClipRect = draw_list.CmdBuffer[len(draw_list.CmdBuffer)-2].ClipRect
+			draw_list._TryMergeDrawCmds()
+		}
+	}
+	PopClipRect()
+	window.DC.CursorPos = preview_data.BackupCursorPos
+	window.DC.CursorMaxPos = ImMaxVec2(&window.DC.CursorMaxPos, &preview_data.BackupCursorMaxPos)
+	window.DC.CursorPosPrevLine = preview_data.BackupCursorPosPrevLine
+	window.DC.PrevLineTextBaseOffset = preview_data.BackupPrevLineTextBaseOffset
+	window.DC.LayoutType = preview_data.BackupLayout
+	preview_data.PreviewRect = ImRect{}
+}
 
 func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 	var g = GImGui
@@ -189,10 +238,6 @@ func EndCombo() {
 	EndPopup()
 }
 
-func ComboString(label string, current_item *int, items_separated_by_zeros string, popup_max_height_in_items int /*= -1*/) bool {
-	panic("not implemented")
-} // Separate items with \0 within a string, end item-list with \0\0. e.g. "One\0Two\0Three\0"
-
 func CalcMaxPopupHeightFromItemCount(items_count int) float32 {
 	var g = GImGui
 	if items_count <= 0 {
@@ -202,7 +247,7 @@ func CalcMaxPopupHeightFromItemCount(items_count int) float32 {
 }
 
 // Combo box helper allowing to pass an array of strings.
-func ComboSlice(label string, current_item *int, items []string, items_count int, popup_max_height_in_items int /*= -1*/) bool {
+func Combo(label string, current_item *int, items []string, items_count int, popup_max_height_in_items int /*= -1*/) bool {
 	var value_changed = ComboFunc(label, current_item, func(slice interface{}, idx int, val *string) bool {
 		*val = slice.([]string)[idx]
 		return true

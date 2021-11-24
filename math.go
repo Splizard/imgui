@@ -21,6 +21,13 @@ func (v ImVec2) Y() float {
 	return v.y
 }
 
+func (v ImVec2) Axis(axis ImGuiAxis) float {
+	if axis == ImGuiAxis_X {
+		return v.x
+	}
+	return v.y
+}
+
 func (v ImVec2) Add(b ImVec2) ImVec2 {
 	return ImVec2{v.x + b.x, v.y + b.y}
 }
@@ -298,7 +305,38 @@ func ImClamp(v, mn, mx float) float {
 	return v
 }
 
+
+func ImClamp64(v, mn, mx float64) float64 {
+	if v < mn {
+		return mn
+	}
+	if v > mx {
+		return mx
+	}
+	return v
+}
+
 func ImClampInt(v, mn, mx int) int {
+	if v < mn {
+		return mn
+	}
+	if v > mx {
+		return mx
+	}
+	return v
+}
+
+func ImClampInt64(v, mn, mx int64) int64 {
+	if v < mn {
+		return mn
+	}
+	if v > mx {
+		return mx
+	}
+	return v
+}
+
+func ImClampUint64(v, mn, mx uint64) uint64 {
 	if v < mn {
 		return mn
 	}

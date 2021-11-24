@@ -297,11 +297,66 @@ type ImGuiInputTextCallbackData struct {
 	SelectionEnd   int      //                                      // Read-write   // [Completion,History,Always]
 }
 
-func NewImGuiInputTextCallbackData() *ImGuiInputTextCallbackData     { panic("not implemented") }
-func (*ImGuiInputTextCallbackData) DeleteChars(pos, bytes_count int) { panic("not implemented") }
-func (*ImGuiInputTextCallbackData) InsertChars(pos int, text, text_end string) {
-	panic("not implemented")
+func NewImGuiInputTextCallbackData() *ImGuiInputTextCallbackData {
+	return new(ImGuiInputTextCallbackData)
 }
+
+// Public API to manipulate UTF-8 text
+// We expose UTF-8 to the user (unlike the STB_TEXTEDIT_* functions which are manipulating wchar)
+// FIXME: The existence of this rarely exercised code path is a bit of a nuisance.
+func (this *ImGuiInputTextCallbackData) DeleteChars(pos, bytes_count int) {
+	IM_ASSERT(pos+bytes_count <= this.BufTextLen)
+	var dst = this.Buf[pos:]
+	var src = this.Buf[pos+bytes_count:]
+
+	copy(dst, src)
+
+	if this.CursorPos >= pos+bytes_count {
+		this.CursorPos -= bytes_count
+	} else if this.CursorPos >= pos {
+		this.CursorPos = pos
+	}
+	this.SelectionStart = this.CursorPos
+	this.SelectionEnd = this.CursorPos
+	this.BufDirty = true
+	this.BufTextLen -= bytes_count
+}
+
+func (this *ImGuiInputTextCallbackData) InsertChars(pos int, new_text string) {
+	var is_resizable = (this.Flags & ImGuiInputTextFlags_CallbackResize) != 0
+	var new_text_len = int(len(new_text))
+	if new_text_len+this.BufTextLen >= this.BufSize {
+		if !is_resizable {
+			return
+		}
+
+		// Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
+		var g = GImGui
+		var edit_state *ImGuiInputTextState = &g.InputTextState
+		IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID)
+		//IM_ASSERT(this.Buf == edit_state.TextA)
+		var new_buf_size = this.BufTextLen + ImClampInt(new_text_len*4, 32, ImMaxInt(256, new_text_len)) + 1
+		edit_state.TextA = append(edit_state.TextA, make([]byte, new_buf_size-int(len(edit_state.TextA)))...)
+
+		this.Buf = edit_state.TextA
+		this.BufSize = new_buf_size
+		edit_state.BufCapacityA = new_buf_size
+	}
+
+	if this.BufTextLen != pos {
+		copy(this.Buf[pos+new_text_len:], this.Buf[pos:])
+	}
+	copy(this.Buf[pos:], new_text)
+
+	if this.CursorPos >= pos {
+		this.CursorPos += new_text_len
+	}
+	this.SelectionStart = this.CursorPos
+	this.SelectionEnd = this.CursorPos
+	this.BufDirty = true
+	this.BufTextLen += new_text_len
+}
+
 func (this *ImGuiInputTextCallbackData) SelectAll() {
 	this.SelectionStart = 0
 	this.SelectionEnd = this.BufTextLen

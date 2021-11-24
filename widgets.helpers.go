@@ -1,6 +1,10 @@
 package imgui
 
-// Basic Helpers for widget code
+import (
+	"sort"
+
+	"github.com/splizard/imgui/golang"
+)
 
 // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.
 func ActivateItem(id ImGuiID) {
@@ -89,8 +93,57 @@ func IsItemToggledSelection() bool {
 	return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_ToggledSelection) != 0
 }
 
-func ShrinkWidths(s *ImGuiShrinkWidthItem, count int, width_excess float) {
-	panic("not implemented")
+// Shrink excess width from a set of item, by removing width from the larger items first.
+// Set items Width to -1.0f to disable shrinking this item.
+func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
+	if count == 1 {
+		if items[0].Width >= 0.0 {
+			items[0].Width = ImMax(items[0].Width-width_excess, 1.0)
+		}
+		return
+	}
+	sort.Slice(items, func(i, j golang.Int) bool {
+		var a = items[i]
+		var b = items[j]
+		if d := (int)(b.Width - a.Width); d != 0 {
+			return true
+		}
+		return (b.Index - a.Index) != 0
+	})
+	var count_same_width int = 1
+	for width_excess > 0.0 && count_same_width < count {
+		for count_same_width < count && items[0].Width <= items[count_same_width].Width {
+			count_same_width++
+		}
+		var max_width_to_remove_per_item float = (items[0].Width - 1.0)
+		if count_same_width < count && items[count_same_width].Width >= 0.0 {
+			max_width_to_remove_per_item = (items[0].Width - items[count_same_width].Width)
+		}
+		if max_width_to_remove_per_item <= 0.0 {
+			break
+		}
+		var width_to_remove_per_item float = ImMin(width_excess/float(count_same_width), max_width_to_remove_per_item)
+		for item_n := int(0); item_n < count_same_width; item_n++ {
+			items[item_n].Width -= width_to_remove_per_item
+		}
+		width_excess -= width_to_remove_per_item * float(count_same_width)
+	}
+
+	// Round width and redistribute remainder left-to-right (could make it an option of the function?)
+	// Ensure that e.g. the right-most tab of a shrunk tab-bar always reaches exactly at the same distance from the right-most edge of the tab bar separator.
+	width_excess = 0.0
+	for n := int(0); n < count; n++ {
+		var width_rounded float = ImFloor(items[n].Width)
+		width_excess += items[n].Width - width_rounded
+		items[n].Width = width_rounded
+	}
+	if width_excess > 0.0 {
+		for n := int(0); n < count; n++ {
+			if items[n].Index < (int)(width_excess+0.01) {
+				items[n].Width += 1.0
+			}
+		}
+	}
 }
 
 // Inputs

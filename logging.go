@@ -39,64 +39,7 @@ func LogToBuffer(auto_open_depth int /*= -1*/) {
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
 func LogRenderedText(ref_pos *ImVec2, text string) {
-	var g = GImGui
-	var window = g.CurrentWindow
-
-	var prefix = g.LogNextPrefix
-	var suffix = g.LogNextSuffix
-	g.LogNextPrefix = ""
-	g.LogNextSuffix = ""
-
-	text_end := FindRenderedTextEnd(text)
-
-	var log_new_line = ref_pos != nil && (ref_pos.y > g.LogLinePosY+g.Style.FramePadding.y+1)
-	if ref_pos != nil {
-		g.LogLinePosY = ref_pos.y
-	}
-	if log_new_line {
-		LogText(IM_NEWLINE)
-		g.LogLineFirstItem = true
-	}
-
-	if prefix != "" {
-		LogRenderedText(ref_pos, prefix) // Calculate end ourself to ensure "##" are included here.
-	}
-
-	// Re-adjust padding if we have popped out of our starting depth
-	if g.LogDepthRef > window.DC.TreeDepth {
-		g.LogDepthRef = window.DC.TreeDepth
-	}
-	var tree_depth = (window.DC.TreeDepth - g.LogDepthRef)
-
-	var text_remaining = text
-	for {
-		// Split the string. Each new line (after a '\n') is followed by indentation corresponding to the current depth of our log entry.
-		// We don't add a trailing \n yet to allow a subsequent item on the same line to be captured.
-		var line_start = text_remaining
-		var line_end = ImStreolRange(line_start, text_end)
-		var is_last_line bool = (line_end == text_end)
-		if line_start != line_end || !is_last_line {
-			var line_length int = (int)(len(line_end) - len(line_start))
-			var indentation int = 1
-			if g.LogLineFirstItem {
-				indentation = tree_depth * 4
-			}
-			LogText("%*s%.*s", indentation, "", line_length, line_start)
-			g.LogLineFirstItem = false
-			if line_end[0] == '\n' {
-				LogText(IM_NEWLINE)
-				g.LogLineFirstItem = true
-			}
-		}
-		if is_last_line {
-			break
-		}
-		text_remaining = line_end[1:]
-	}
-
-	if suffix != "" {
-		LogRenderedText(ref_pos, suffix)
-	}
+	LogText(text)
 }
 
 // Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)

@@ -20,8 +20,59 @@ func TextDisabled(format string, args ...interface{}) {
 	PopStyleColor(1)
 }
 
-func TextWrapped(fmt string, args ...interface{})             { panic("not implemented") } // shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
-func LabelText(label string, fmt string, args ...interface{}) { panic("not implemented") } // display text+label aligned the same way as value+label widgets
+// shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
+func TextWrapped(format string, args ...interface{}) {
+	var g = GImGui
+	var need_backup bool = (g.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
+	if need_backup {
+		PushTextWrapPos(0.0)
+	}
+	if format[0] == '%' && format[1] == 's' && format[2] == 0 {
+		TextEx(fmt.Sprintf(format, args...), ImGuiTextFlags_NoWidthForLargeClippedText) // Skip formatting
+	} else {
+		Text(format, args...)
+	}
+	if need_backup {
+		PopTextWrapPos()
+	}
+}
+
+// display text+label aligned the same way as value+label widgets
+func LabelText(label string, format string, args ...interface{}) {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return
+	}
+
+	var g = GImGui
+	var style = g.Style
+	var w = CalcItemWidth()
+
+	var value = fmt.Sprintf(format, args...)
+	var value_size ImVec2 = CalcTextSize(value, false, -1)
+	var label_size = CalcTextSize(label, true, -1)
+
+	var pos ImVec2 = window.DC.CursorPos
+	var value_bb = ImRect{pos, pos.Add(ImVec2{w, value_size.y + style.FramePadding.y*2})}
+
+	var padding float
+	if label_size.x > 0.0 {
+		padding = style.ItemInnerSpacing.x + label_size.x
+	}
+
+	var total_bb = ImRect{pos, pos.Add(ImVec2{w + padding, ImMax(value_size.y, label_size.y) + style.FramePadding.y*2})}
+	ItemSizeRect(&total_bb, style.FramePadding.y)
+	if !ItemAdd(&total_bb, 0, nil, 0) {
+		return
+	}
+
+	// Render
+	min := value_bb.Min.Add(style.FramePadding)
+	RenderTextClipped(&min, &value_bb.Max, value, &value_size, &ImVec2{}, nil)
+	if label_size.x > 0.0 {
+		RenderText(ImVec2{value_bb.Max.x + style.ItemInnerSpacing.x, value_bb.Min.y + style.FramePadding.y}, label, true)
+	}
+}
 
 // Text with a little bullet aligned to the typical tree node.
 // shortcut for Bullet()+Text()
@@ -55,4 +106,27 @@ func BulletText(format string, args ...interface{}) {
 	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
 	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + g.FontSize*0.5, g.FontSize * 0.5}), text_col)
 	RenderText(bb.Min.Add(ImVec2{g.FontSize + style.FramePadding.x*2, 0.0}), text, false)
+}
+
+// draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
+func Bullet() {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return
+	}
+
+	var g = GImGui
+	var style = g.Style
+	var line_height float = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
+	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{g.FontSize, line_height})}
+	ItemSizeRect(&bb, 0)
+	if !ItemAdd(&bb, 0, nil, 0) {
+		SameLine(0, style.FramePadding.x*2)
+		return
+	}
+
+	// Render and stay on same line
+	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
+	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + g.FontSize*0.5, line_height * 0.5}), text_col)
+	SameLine(0, style.FramePadding.x*2.0)
 }

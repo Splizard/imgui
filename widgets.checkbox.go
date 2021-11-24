@@ -1,5 +1,53 @@
 package imgui
 
+func CheckboxFlagsInt(label string, flags *int, flags_value int) bool {
+	var all_on bool = (*flags & flags_value) == flags_value
+	var any_on bool = (*flags & flags_value) != 0
+	var pressed bool
+	if !all_on && any_on {
+		var g = GImGui
+		var backup_item_flags ImGuiItemFlags = g.CurrentItemFlags
+		g.CurrentItemFlags |= ImGuiItemFlags_MixedValue
+		pressed = Checkbox(label, &all_on)
+		g.CurrentItemFlags = backup_item_flags
+	} else {
+		pressed = Checkbox(label, &all_on)
+
+	}
+	if pressed {
+		if all_on {
+			*flags |= flags_value
+		} else {
+			*flags &= ^flags_value
+		}
+	}
+	return pressed
+}
+
+func CheckboxFlagsUint(label string, flags *uint, flags_value uint) bool {
+	var all_on bool = (*flags & flags_value) == flags_value
+	var any_on bool = (*flags & flags_value) != 0
+	var pressed bool
+	if !all_on && any_on {
+		var g = GImGui
+		var backup_item_flags ImGuiItemFlags = g.CurrentItemFlags
+		g.CurrentItemFlags |= ImGuiItemFlags_MixedValue
+		pressed = Checkbox(label, &all_on)
+		g.CurrentItemFlags = backup_item_flags
+	} else {
+		pressed = Checkbox(label, &all_on)
+
+	}
+	if pressed {
+		if all_on {
+			*flags |= flags_value
+		} else {
+			*flags &= ^flags_value
+		}
+	}
+	return pressed
+}
+
 func Checkbox(label string, v *bool) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -70,9 +118,6 @@ func Checkbox(label string, v *bool) bool {
 
 	return pressed
 }
-
-func CheckboxFlagsInt(label string, flags *int, flags_value int) bool     { panic("not implemented") }
-func CheckboxFlagsUint(label string, flags *uint, uflags_value uint) bool { panic("not implemented") }
 
 func RenderCheckMark(draw_list *ImDrawList, pos ImVec2, col ImU32, sz float) {
 	var thickness float = ImMax(sz/5.0, 1.0)

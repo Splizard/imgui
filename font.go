@@ -107,7 +107,7 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 			char_width = this.IndexAdvanceX[c]
 		}
 
-		if ImCharIsBlankW(uint(c)) {
+		if ImCharIsBlankW(rune(c)) {
 			if inside_word {
 				line_width += blank_width
 				blank_width = 0.0

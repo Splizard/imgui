@@ -2,6 +2,7 @@ package imgui
 
 import (
 	"fmt"
+	"strings"
 	"unsafe"
 )
 
@@ -2395,20 +2396,20 @@ func TableGcCompactTransientBuffersTempData(temp_data *ImGuiTableTempData) {
 
 // Compact and remove unused settings data (currently only used by TestEngine)
 func TableGcCompactSettings() {
-	var g = GImGui;
-    var required_memory int = 0;
-    for _, settings := range g.SettingsTables {
-        if (settings.ID != 0) {
-            required_memory += (int)(TableSettingsCalcChunkSize(int(settings.ColumnsCount)));
+	var g = GImGui
+	var required_memory int = 0
+	for _, settings := range g.SettingsTables {
+		if settings.ID != 0 {
+			required_memory += (int)(TableSettingsCalcChunkSize(int(settings.ColumnsCount)))
 		}
 	}
-    if (required_memory == int(len(g.SettingsTables))) {
-        return;
+	if required_memory == int(len(g.SettingsTables)) {
+		return
 	}
-    var new_chunk_stream []ImGuiTableSettings = make([]ImGuiTableSettings, required_memory);
-    for _, settings := range g.SettingsTables {
-        if (settings.ID != 0) {
-            new_chunk_stream = append(new_chunk_stream, settings);
+	var new_chunk_stream []ImGuiTableSettings = make([]ImGuiTableSettings, required_memory)
+	for _, settings := range g.SettingsTables {
+		if settings.ID != 0 {
+			new_chunk_stream = append(new_chunk_stream, settings)
 		}
 	}
 
@@ -2678,33 +2679,33 @@ func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, e
 		if column_n < 0 || column_n >= int(settings.ColumnsCount) {
 			return
 		}
-		line = ImStrSkipBlank(line[r:])
+		line = strings.TrimSpace(line[r:])
 		var c byte = 0
 		var column = settings.Columns[column_n]
 		column.Index = (ImGuiTableColumnIdx)(column_n)
 		if n, _ := fmt.Sscanf(line, "UserID=0x%08X%n", (*ImU32)(&x), &r); n == 1 {
-			line = ImStrSkipBlank(line[r:])
+			line = strings.TrimSpace(line[r:])
 			column.UserID = (ImGuiID)(n)
 		}
 		if n, _ := fmt.Sscanf(line, "Width=%d%n", &n, &r); n == 1 {
-			line = ImStrSkipBlank(line[r:])
+			line = strings.TrimSpace(line[r:])
 			column.WidthOrWeight = (float)(n)
 			column.IsStretch = 0
 			settings.SaveFlags |= ImGuiTableFlags_Resizable
 		}
 		if n, _ := fmt.Sscanf(line, "Weight=%f%n", &f, &r); n == 1 {
-			line = ImStrSkipBlank(line[r:])
+			line = strings.TrimSpace(line[r:])
 			column.WidthOrWeight = f
 			column.IsStretch = 1
 			settings.SaveFlags |= ImGuiTableFlags_Resizable
 		}
 		if n, _ := fmt.Sscanf(line, "Visible=%d%n", &n, &r); n == 1 {
-			line = ImStrSkipBlank(line[r:])
+			line = strings.TrimSpace(line[r:])
 			column.IsEnabled = (ImU8)(n)
 			settings.SaveFlags |= ImGuiTableFlags_Hideable
 		}
 		if n, _ := fmt.Sscanf(line, "Order=%d%n", &n, &r); n == 1 {
-			line = ImStrSkipBlank(line[r:])
+			line = strings.TrimSpace(line[r:])
 			column.DisplayOrder = (ImGuiTableColumnIdx)(n)
 			settings.SaveFlags |= ImGuiTableFlags_Reorderable
 		}
@@ -2715,7 +2716,7 @@ func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, e
 		}
 
 		if n, _ := fmt.Sscanf(line, "Sort=%d%c%n", &n, &c, &r); n == 2 {
-			line = ImStrSkipBlank(line[r:])
+			line = strings.TrimSpace(line[r:])
 			column.SortDirection = uint8(dir)
 			settings.SaveFlags |= ImGuiTableFlags_Sortable
 		}
@@ -2779,4 +2780,21 @@ func TableSettingsHandler_WriteAll(ctx *ImGuiContext, handler *ImGuiSettingsHand
 		}
 		*buf = append(*buf, '\n')
 	}
+}
+
+func DebugNodeTableGetSizingPolicyDesc(sizing_policy ImGuiTableFlags) string {
+	sizing_policy &= ImGuiTableFlags_SizingMask_
+	if sizing_policy == ImGuiTableFlags_SizingFixedFit {
+		return "FixedFit"
+	}
+	if sizing_policy == ImGuiTableFlags_SizingFixedSame {
+		return "FixedSame"
+	}
+	if sizing_policy == ImGuiTableFlags_SizingStretchProp {
+		return "StretchProp"
+	}
+	if sizing_policy == ImGuiTableFlags_SizingStretchSame {
+		return "StretchSame"
+	}
+	return "N/A"
 }
