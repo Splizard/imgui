@@ -149,7 +149,7 @@ func EndMenu() {
 }
 
 // return true when activated.
-func MenuItem(label string, shortcut string /*= L*/, selected bool /*= e*/, enabled bool /*= true*/) bool {
+func MenuItem(label string, shortcut string /*= L*/, selected *bool /*= e*/, enabled bool /*= true*/) bool {
 	return MenuItemEx(label, "", shortcut, selected, enabled)
 }
 
@@ -159,7 +159,7 @@ func MenuItemSelected(label string, shortcut string, p_selected *bool, enabled b
 	if p_selected != nil {
 		b = *p_selected
 	}
-	if MenuItemEx(label, "", shortcut, b, enabled) {
+	if MenuItemEx(label, "", shortcut, &b, enabled) {
 		if p_selected != nil {
 			*p_selected = !*p_selected
 		}
@@ -430,7 +430,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 	return menu_is_open
 }
 
-func MenuItemEx(label string, icon string, shortcut string, selected bool, enabled bool /*= true*/) bool {
+func MenuItemEx(label string, icon string, shortcut string, selected *bool, enabled bool /*= true*/) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -456,7 +456,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected bool, enabl
 		var w float = label_size.x
 		window.DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5)
 		PushStyleVec(ImGuiStyleVar_ItemSpacing, ImVec2{style.ItemSpacing.x * 2.0, style.ItemSpacing.y})
-		pressed = Selectable("", selected, flags, ImVec2{w, 0.0})
+		pressed = SelectablePointer("", selected, flags, ImVec2{w, 0.0})
 		PopStyleVar(1)
 		RenderText(pos.Add(ImVec2{float(offsets.OffsetLabel), 0.0}), label, true)
 		window.DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * (-1.0 + 0.5)) // -1 spacing to compensate the spacing added when Selectable() did a SameLine(). It would also work to call SameLine() ourselves after the PopStyleVar().
@@ -485,7 +485,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected bool, enabl
 			RenderText(pos.Add(ImVec2{float(offsets.OffsetShortcut) + stretch_w, 0.0}), shortcut, false)
 			PopStyleColor(1)
 		}
-		if selected {
+		if *selected {
 			RenderCheckMark(window.DrawList, pos.Add(ImVec2{float(offsets.OffsetMark) + stretch_w + g.FontSize*0.40, g.FontSize * 0.134 * 0.5}), GetColorU32FromID(ImGuiCol_Text, 1), g.FontSize*0.866)
 		}
 	}

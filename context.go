@@ -173,7 +173,7 @@ type ImGuiContext struct {
 	CurrentTableStackIdx        int
 	Tables                      map[ImGuiID]*ImGuiTable
 	TablesTempDataStack         []ImGuiTableTempData
-	TablesLastTimeActive        []float // Last used timestamp of each tables (SOA, for efficient GC)
+	TablesLastTimeActive        map[int]float // Last used timestamp of each tables (SOA, for efficient GC)
 	DrawChannelsTempMergeBuffer []ImDrawChannel
 
 	// Tab bars

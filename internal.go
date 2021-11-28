@@ -402,12 +402,12 @@ func (this *ImGuiMenuColumns) Update(spacing float, window_reappearing bool) {
 }
 
 func (this *ImGuiMenuColumns) DeclColumns(w_icon float, w_label float, w_shortcut float, w_mark float) float {
-	this.Widths[0] = uint16(ImMaxInt(int(this.Widths[0]), ((int)(w_icon))));
-    this.Widths[1] = uint16(ImMaxInt(int(this.Widths[1]), (int)(w_label)));
-    this.Widths[2] = uint16(ImMaxInt(int(this.Widths[2]), (int)(w_shortcut)));
-	this. Widths[3] = uint16(ImMaxInt(int(this.Widths[3]), (int)(w_mark)));
-	this. CalcNextTotalWidth(false);
-    return (float)(ImMaxInt(int(this.TotalWidth), int(this.NextTotalWidth)));
+	this.Widths[0] = uint16(ImMaxInt(int(this.Widths[0]), ((int)(w_icon))))
+	this.Widths[1] = uint16(ImMaxInt(int(this.Widths[1]), (int)(w_label)))
+	this.Widths[2] = uint16(ImMaxInt(int(this.Widths[2]), (int)(w_shortcut)))
+	this.Widths[3] = uint16(ImMaxInt(int(this.Widths[3]), (int)(w_mark)))
+	this.CalcNextTotalWidth(false)
+	return (float)(ImMaxInt(int(this.TotalWidth), int(this.NextTotalWidth)))
 }
 
 func (this *ImGuiMenuColumns) CalcNextTotalWidth(update_offsets bool) {
@@ -1031,7 +1031,6 @@ func (this *ImGuiWindow) MenuBarRect() ImRect {
 	var y1 float = this.Pos.y + this.TitleBarHeight()
 	return ImRect{ImVec2{this.Pos.x, y1}, ImVec2{this.Pos.x + this.SizeFull.x, y1 + this.MenuBarHeight()}}
 }
-
 
 var IM_COL32_DISABLE = IM_COL32(0, 0, 0, 1) // Special sentinel code which cannot be used as a regular color.
 

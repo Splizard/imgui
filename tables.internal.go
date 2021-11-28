@@ -318,6 +318,9 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 	var table = g.Tables[id]
 	if table == nil {
 		table = &ImGuiTable{}
+		if g.Tables == nil {
+			g.Tables = make(map[uint32]*ImGuiTable)
+		}
 		g.Tables[id] = table
 	}
 	var instance_no int
@@ -519,8 +522,8 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 	}
 
 	// Mark as used
-	if table_idx >= int(len(g.TablesLastTimeActive)) {
-		g.TablesLastTimeActive = append(g.TablesLastTimeActive, -1.0)
+	if g.TablesLastTimeActive == nil {
+		g.TablesLastTimeActive = make(map[int32]float32)
 	}
 	g.TablesLastTimeActive[table_idx] = (float)(g.Time)
 	temp_data.LastTimeActive = (float)(g.Time)
@@ -556,9 +559,9 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 		table.AutoFitSingleColumn = -1
 		table.HoveredColumnBody = -1
 		table.HoveredColumnBorder = -1
-		for n := int(0); n < columns_count; n++ {
+		for n := range table.Columns {
 			var column = &table.Columns[n]
-			if old_columns_to_preserve != nil && n < old_columns_count {
+			if old_columns_to_preserve != nil && int(n) < old_columns_count {
 				// FIXME: We don't attempt to preserve column order in this path.
 				*column = old_columns_to_preserve[n]
 			} else {
@@ -1559,7 +1562,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 	if table.Flags&ImGuiTableFlags_Resizable != 0 {
 		if column != nil {
 			var can_resize = (column.Flags&ImGuiTableColumnFlags_NoResize) == 0 && column.IsEnabled
-			if MenuItem("Size column to fit###SizeOne", "", false, can_resize) {
+			if MenuItem("Size column to fit###SizeOne", "", nil, can_resize) {
 				TableSetColumnWidthAutoSingle(table, column_n)
 			}
 		}
@@ -1570,7 +1573,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 		} else {
 			size_all_desc = "Size all columns to default###SizeAll" // All stretch or mixed
 		}
-		if MenuItem(size_all_desc, "", false, false) {
+		if MenuItem(size_all_desc, "", nil, false) {
 			TableSetColumnWidthAutoAll(table)
 		}
 		want_separator = true
@@ -1578,7 +1581,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 
 	// Ordering
 	if table.Flags&ImGuiTableFlags_Reorderable != 0 {
-		if MenuItem("Reset order", "", false, !table.IsDefaultDisplayOrder) {
+		if MenuItem("Reset order", "", nil, !table.IsDefaultDisplayOrder) {
 			table.IsResetDisplayOrderRequest = true
 		}
 		want_separator = true
@@ -1611,7 +1614,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 			if other_column.IsUserEnabled && table.ColumnsEnabledCount <= 1 {
 				menu_item_active = false
 			}
-			if MenuItem(name, "", other_column.IsUserEnabled, menu_item_active) {
+			if MenuItem(name, "", &other_column.IsUserEnabled, menu_item_active) {
 				other_column.IsUserEnabledNextFrame = !other_column.IsUserEnabled
 			}
 		}
@@ -2362,7 +2365,7 @@ func TableRemove(table *ImGuiTable) {
 		}
 	}
 	delete(g.Tables, table.ID)
-	g.TablesLastTimeActive[table_idx] = -1.0
+	delete(g.TablesLastTimeActive, int(table_idx))
 }
 
 // Free up/compact internal Table buffers for when it gets unused
@@ -2386,7 +2389,7 @@ func TableGcCompactTransientBuffers(table *ImGuiTable) {
 		}
 	}
 
-	g.TablesLastTimeActive[table_idx] = -1.0
+	g.TablesLastTimeActive[int(table_idx)] = -1.0
 }
 
 func TableGcCompactTransientBuffersTempData(temp_data *ImGuiTableTempData) {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/splizard/imgui"
+
 	platforms "github.com/splizard/imgui/example/platforms/glfw"
 	"github.com/splizard/imgui/example/renderers"
 )
@@ -54,6 +55,8 @@ func main() {
 		imgui.NewFrame()
 
 		imgui.ShowMetricsWindow(nil)
+
+		imgui.ShowDemoWindow(nil)
 
 		// 1. Show a simple window.
 		// Tip: if we don't call imgui.Begin()/imgui.End() the widgets automatically appears in a window called "Debug".
