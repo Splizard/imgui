@@ -1,5 +1,14 @@
 package imgui
 
+// "bool* p_selected" poto int the selection state (read-write), as a convenient helper.
+func SelectablePointer(label string, p_selected *bool, flags ImGuiSelectableFlags, size_arg ImVec2) bool {
+	if (Selectable(label, *p_selected, flags, size_arg)) {
+        *p_selected = !*p_selected;
+        return true;
+    }
+    return false;
+} 
+
 // Widgets: Selectables
 // - A selectable highlights when hovered, and can display another color when selected.
 // - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.

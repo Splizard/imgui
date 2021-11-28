@@ -181,16 +181,6 @@ func PopItemFlag() {
 	g.CurrentItemFlags = g.ItemFlagsStack[len(g.ItemFlagsStack)-1]
 }
 
-func BeginViewportSideBar(e string, t *ImGuiViewport, dir ImGuiDir, size float, window_flags ImGuiWindowFlags) bool {
-	panic("not implemented")
-}
-
-// Menus
-func BeginMenuEx(l string, n string, enabled bool /*= true*/) bool { panic("not implemented") }
-func MenuItemEx(l string, n string, t string, selected bool, enabled bool /*= true*/) bool {
-	panic("not implemented")
-}
-
 // t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
 // t1 = current time (e.g.: g.Time)
 // An event is triggered at:
@@ -254,27 +244,6 @@ func IsNavInputDown(n ImGuiNavInput) bool {
 }
 func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
 	return (GetNavInputAmount(n, rm) > 0.0)
-}
-
-// Tab Bars
-func BeginTabBarEx(r *ImGuiTabBar, bb *ImRect, flags ImGuiTabBarFlags) bool { panic("not implemented") }
-func TabBarFindTabByID(r *ImGuiTabBar, tab_id ImGuiID) *ImGuiTabItem        { panic("not implemented") }
-func TabBarRemoveTab(r *ImGuiTabBar, tab_id ImGuiID)                        { panic("not implemented") }
-func TabBarCloseTab(r *ImGuiTabBar, b *ImGuiTabItem)                        { panic("not implemented") }
-func TabBarQueueReorder(r *ImGuiTabBar, b *ImGuiTabItem, offset int)        { panic("not implemented") }
-func TabBarQueueReorderFromMousePos(r *ImGuiTabBar, b *ImGuiTabItem, mouse_pos ImVec2) {
-	panic("not implemented")
-}
-func TabBarProcessReorder(r *ImGuiTabBar) bool { panic("not implemented") }
-func TabItemEx(r *ImGuiTabBar, l string, n *bool, flags ImGuiTabItemFlags) bool {
-	panic("not implemented")
-}
-func TabItemCalcSize(l string, has_close_button bool) ImVec2 { panic("not implemented") }
-func TabItemBackground(t *ImDrawList, bb *ImRect, flags ImGuiTabItemFlags, col ImU32) {
-	panic("not implemented")
-}
-func TabItemLabelAndCloseButton(t *ImDrawList, bb *ImRect, flags ImGuiTabItemFlags, frame_padding ImVec2, l string, tab_id ImGuiID, close_button_id ImGuiID, is_contents_visible bool, out_just_closed *bool, out_text_clipped *bool) {
-	panic("not implemented")
 }
 
 // Helper for ColorPicker4()
@@ -546,15 +515,7 @@ func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool { panic("not imp
 
 // InputText
 
-// Color
-func ColorTooltip(t string, l *float, flags ImGuiColorEditFlags)  { panic("not implemented") }
-func ColorEditOptionsPopup(l *float, flags ImGuiColorEditFlags)   { panic("not implemented") }
-func ColorPickerOptionsPopup(l *float, flags ImGuiColorEditFlags) { panic("not implemented") }
-
 // Plot
-func PlotEx(plot_type ImGuiPlotType, l string, values_getter func(data interface{}, idx int) float, a interface{}, values_count int, values_offset int, t string, scale_min float, scale_max float, frame_size ImVec2) int {
-	panic("not implemented")
-}
 
 func ImFontAtlasBuildMultiplyCalcLookupTable(out_table []byte, in_brighten_factor float32) {
 	for i := uint(0); i < 256; i++ {

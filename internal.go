@@ -389,34 +389,50 @@ func NewImGuiMenuColumns() ImGuiMenuColumns {
 	return ImGuiMenuColumns{}
 }
 
+// Helpers for internal use
 func (this *ImGuiMenuColumns) Update(spacing float, window_reappearing bool) {
 	if window_reappearing {
-		this.Spacing = ImU16(spacing)
-		this.NextTotalWidth = this.TotalWidth
-		this.OffsetLabel = 0
-		this.OffsetShortcut = 0
-		this.OffsetMark = 0
-		this.OffsetIcon = 0
+		this.Widths = [4]ImU16{}
 	}
+	this.Spacing = (ImU16)(spacing)
+	this.CalcNextTotalWidth(true)
+	this.Widths = [4]ImU16{}
+	this.TotalWidth = this.NextTotalWidth
+	this.NextTotalWidth = 0
 }
 
 func (this *ImGuiMenuColumns) DeclColumns(w_icon float, w_label float, w_shortcut float, w_mark float) float {
-	this.Widths[0] = ImU16(w_icon)
-	this.Widths[1] = ImU16(w_label)
-	this.Widths[2] = ImU16(w_shortcut)
-	this.Widths[3] = ImU16(w_mark)
-	this.TotalWidth = ImU32(this.Widths[0]) + ImU32(this.Widths[1]) + ImU32(this.Widths[2]) + ImU32(this.Widths[3])
-	return float(this.TotalWidth)
+	this.Widths[0] = uint16(ImMaxInt(int(this.Widths[0]), ((int)(w_icon))));
+    this.Widths[1] = uint16(ImMaxInt(int(this.Widths[1]), (int)(w_label)));
+    this.Widths[2] = uint16(ImMaxInt(int(this.Widths[2]), (int)(w_shortcut)));
+	this. Widths[3] = uint16(ImMaxInt(int(this.Widths[3]), (int)(w_mark)));
+	this. CalcNextTotalWidth(false);
+    return (float)(ImMaxInt(int(this.TotalWidth), int(this.NextTotalWidth)));
 }
 
 func (this *ImGuiMenuColumns) CalcNextTotalWidth(update_offsets bool) {
-	this.NextTotalWidth = ImU32(this.Widths[0]) + ImU32(this.Widths[1]) + ImU32(this.Widths[2]) + ImU32(this.Widths[3])
-	if update_offsets {
-		this.OffsetLabel = this.Widths[0]
-		this.OffsetShortcut = this.Widths[0] + this.Widths[1]
-		this.OffsetMark = this.OffsetShortcut + this.Widths[2]
-		this.OffsetIcon = this.OffsetMark + this.Widths[3]
+	var offset ImU16 = 0
+	var want_spacing = false
+	for i := 0; i < len(this.Widths); i++ {
+		var width = this.Widths[i]
+		if want_spacing && width > 0 {
+			offset += this.Spacing
+		}
+		want_spacing = want_spacing || (width > 0)
+		if update_offsets {
+			if i == 1 {
+				this.OffsetLabel = offset
+			}
+			if i == 2 {
+				this.OffsetShortcut = offset
+			}
+			if i == 3 {
+				this.OffsetMark = offset
+			}
+		}
+		offset += width
 	}
+	this.NextTotalWidth = uint(offset)
 }
 
 // Internal state of the currently focused/edited text input box
@@ -1016,82 +1032,6 @@ func (this *ImGuiWindow) MenuBarRect() ImRect {
 	return ImRect{ImVec2{this.Pos.x, y1}, ImVec2{this.Pos.x + this.SizeFull.x, y1 + this.MenuBarHeight()}}
 }
 
-type ImGuiTabItem struct {
-	ID                ImGuiID
-	Flags             ImGuiTabItemFlags
-	LastFrameVisible  int
-	LastFrameSelected int   // This allows us to infer an ordered list of the last activated tabs with little maintenance
-	Offset            float // Position relative to beginning of tab
-	Width             float // Width currently displayed
-	ContentWidth      float // Width of label, stored during BeginTabItem() call
-	NameOffset        int   // When Window==NULL, offset to name within parent ImGuiTabBar::TabsNames
-	BeginOrder        int   // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
-	IndexDuringLayout int   // Index only used during TabBarLayout()
-	WantClose         bool  // Marked as closed by SetTabItemClosed()
-}
-
-func NewImGuiTabItem() ImGuiTabItem {
-	return ImGuiTabItem{
-		LastFrameVisible:  -1,
-		LastFrameSelected: -1,
-		NameOffset:        -1,
-		BeginOrder:        -1,
-		IndexDuringLayout: -1,
-	}
-}
-
-type ImGuiTabBar struct {
-	Tabs                            []ImGuiTabItem
-	Flags                           ImGuiTabBarFlags
-	ID                              ImGuiID         // Zero for tab-bars used by docking
-	SelectedTabId                   ImGuiID         // Selected tab/window
-	NextSelectedTabId               ImGuiID         // Next selected tab/window. Will also trigger a scrolling animation
-	VisibleTabId                    ImGuiID         // Can occasionally be != SelectedTabId (e.g. when previewing contents for CTRL+TAB preview)
-	CurrFrameVisible                int             //
-	PrevFrameVisible                int             //
-	BarRect                         ImRect          //
-	CurrTabsContentsHeight          float           //
-	PrevTabsContentsHeight          float           // Record the height of contents submitted below the tab bar
-	WidthAllTabs                    float           // Actual width of all tabs (locked during layout)
-	WidthAllTabsIdeal               float           // Ideal width if all tabs were visible and not clipped
-	ScrollingAnim                   float           //
-	ScrollingTarget                 float           //
-	ScrollingTargetDistToVisibility float           //
-	ScrollingSpeed                  float           //
-	ScrollingRectMinX               float           //
-	ScrollingRectMaxX               float           //
-	ReorderRequestTabId             ImGuiID         //
-	ReorderRequestOffset            int             //
-	BeginCount                      int             //
-	WantLayout                      bool            //
-	VisibleTabWasSubmitted          bool            // Set to true when a new tab item or button has been added to the tab bar during last frame
-	TabsAddedNew                    bool            // Set to true when a new tab item or button has been added to the tab bar during last frame
-	TabsActiveCount                 int             // Number of tabs submitted this frame.
-	LastTabItemIdx                  int             // Index of last BeginTabItem() tab for use by EndTabItem()
-	ItemSpacingY                    float           //
-	FramePadding                    ImVec2          // style.FramePadding locked at the time of BeginTabBar()
-	BackupCursorPos                 ImVec2          //
-	TabsNames                       ImGuiTextBuffer // For non-docking tab bar we re-append names in a contiguous buffer.
-}
-
-func NewImGuiTabBar() ImGuiTabBar {
-	panic("not implemented")
-	return ImGuiTabBar{}
-}
-
-func (this ImGuiTabBar) GetTabOrder(tab *ImGuiTabItem) int {
-	for i := range this.Tabs {
-		if tab == &this.Tabs[i] {
-			return int(i)
-		}
-	}
-	return -1
-}
-
-func (this ImGuiTabBar) GetTabName(tab *ImGuiTabItem) string {
-	IM_ASSERT(tab.NameOffset != -1 && tab.NameOffset < int(len(this.TabsNames)))
-	return string(this.TabsNames[tab.NameOffset:]) //TODO/FIXME zero termination
-}
 
 var IM_COL32_DISABLE = IM_COL32(0, 0, 0, 1) // Special sentinel code which cannot be used as a regular color.
 

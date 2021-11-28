@@ -42,8 +42,28 @@ func TreeNodeInterfaceEx(ptr_id interface{}, flags ImGuiTreeNodeFlags, format st
 	return TreeNodeBehavior(window.GetIDInterface(ptr_id), flags, fmt.Sprintf(format, args...))
 }
 
-func TreePush(str_id string)               { panic("not implemented") } // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
-func TreePushInterface(ptr_id interface{}) { panic("not implemented") } // "
+// ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
+func TreePush(str_id string) {
+	var window = GetCurrentWindow()
+	Indent(0)
+	window.DC.TreeDepth++
+	if str_id != "" {
+		PushString(str_id)
+	} else {
+		PushString("#TreePush")
+	}
+}
+
+func TreePushInterface(ptr_id interface{}) {
+	var window = GetCurrentWindow()
+	Indent(0)
+	window.DC.TreeDepth++
+	if ptr_id != nil {
+		PushInterface(ptr_id)
+	} else {
+		PushString("#TreePush")
+	}
+} // "
 
 // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
 func GetTreeNodeToLabelSpacing() float {
@@ -51,10 +71,57 @@ func GetTreeNodeToLabelSpacing() float {
 	return g.FontSize + (g.Style.FramePadding.x * 2.0)
 }
 
-func CollapsingHeader(label string, flsgs ImGuiTreeNodeFlags) bool { panic("not implemented") } // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
-func CollapsingHeaderVisible(label string, p_visible *bool, flsgs ImGuiTreeNodeFlags) bool {
-	panic("not implemented")
-} // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the to bool false when clicked, if '*p_visible==false' don't display the header.
+// CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
+// This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
+// if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
+func CollapsingHeader(label string, flags ImGuiTreeNodeFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	return TreeNodeBehavior(window.GetIDs(label), flags|ImGuiTreeNodeFlags_CollapsingHeader, label)
+}
+
+// when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the to bool false when clicked, if '*p_visible==false' don't display the header.
+// p_visible == nil                        : regular collapsing header
+// p_visible != nil && *p_visible == true  : show a small close button on the corner of the header, clicking the button will set *p_visible = false
+// p_visible != nil && *p_visible == false : do not show the header at all
+// Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
+func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeFlags) bool {
+	var window = GetCurrentWindow()
+	if window.SkipItems {
+		return false
+	}
+
+	if p_visible != nil && !*p_visible {
+		return false
+	}
+
+	var id ImGuiID = window.GetIDs(label)
+	flags |= ImGuiTreeNodeFlags_CollapsingHeader
+	if p_visible != nil {
+		flags |= ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_ClipLabelForTrailingButton
+	}
+	var is_open = TreeNodeBehavior(id, flags, label)
+	if p_visible != nil {
+		// Create a small overlapping close button
+		// FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
+		// FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
+		var g = GImGui
+		var last_item_backup ImGuiLastItemData = g.LastItemData
+		var button_size = g.FontSize
+		var button_x = ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x-g.Style.FramePadding.x*2.0-button_size)
+		var button_y = g.LastItemData.Rect.Min.y
+		var close_button_id ImGuiID = GetIDWithSeed("#CLOSE", id)
+		if CloseButton(close_button_id, &ImVec2{button_x, button_y}) {
+			*p_visible = false
+		}
+		g.LastItemData = last_item_backup
+	}
+
+	return is_open
+}
 
 // set next TreeNode/CollapsingHeader open state.
 func SetNextItemOpen(is_open bool, cond ImGuiCond) {
