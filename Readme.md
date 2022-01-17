@@ -9,23 +9,21 @@ Ideally I would like the entire functionality of Imgui ported, including all
 current widgets and features.
 
 The end goal is to have the complete IMGUI demo window running 
-natively in Go. I started a on this but my attempt is largely incomplete...
+natively in Go (so far demo window is only partially implemented).
 
 ## Current Status
 The example directory contains a backend for glfw/opengl3 and a buildable
-program, however it won't be able to do much until more of the imgui source is ported.
-The idea is that it panics on any unimplemented function.
+program.
 
 `go get && go mod download && go build` with Go 1.16+ should build it just fine.
 
-At the moment, the only thing that is implemented is imgui.Text and the implicit
-debug window.
+Besides the demo window, the port is technically complete but I am sure to have made mistakes during the port which have introduced bugs here and there.
 
 ![The Quick Brown Fox Jumps Over The Lazy Dog](media/quickbrownfox.png)
 
 ## API Differences
 
-I'm trying to stick as close to the C++ API as possible at the moment, but once the port progresses, I think it would be nice to clean up the API to make it more idiomatic for Go
+I'm trying to stick as close to the C++ API as possible at the moment, at some stage, I think it would be nice to clean up the API to make it more idiomatic for Go
 
 ## Helpful tips for porting C++ to Go
 I have stumbled upon a number of
