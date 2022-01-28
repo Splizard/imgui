@@ -21,6 +21,12 @@ Besides the demo window, the port is technically complete but I am sure to have 
 
 ![The Quick Brown Fox Jumps Over The Lazy Dog](media/quickbrownfox.png)
 
+## How to debug bugs
+
+1. Clone imgui and checkout the commit hash specified at the top of this Readme,
+2. Create an identical program in Go and C++
+3. Either use a debugger and/or insert print lines and figure out how, why and when values are diverging.
+
 ## API Differences
 
 I'm trying to stick as close to the C++ API as possible at the moment, at some stage, I think it would be nice to clean up the API to make it more idiomatic for Go
