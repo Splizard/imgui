@@ -9,15 +9,6 @@ import (
 	"github.com/splizard/imgui/stb/stbtt"
 )
 
-/*
-extern void goIM_ASSERT(int x);
-extern void print(char *);
-
-#include "stb_compress.h"
-
-*/
-import "C"
-
 //-----------------------------------------------------------------------------
 // [SECTION] Default font data (ProggyClean.ttf)
 //-----------------------------------------------------------------------------
@@ -30,12 +21,8 @@ import "C"
 // Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).
 // The purpose of encoding as base85 instead of "0x00,0x01,..." style is only save on _source code_ size.
 //-----------------------------------------------------------------------------
-//go:embed proggy.txt
-var proggy_clean_ttf_compressed_data_base85 []byte
-
-func (atlas *ImFontAtlas) GetDefaultCompressedFontDataTTFBase85() []byte {
-	return proggy_clean_ttf_compressed_data_base85
-}
+//go:embed proggy.ttf
+var proggy_clean_ttf_decompressed_data_base85 []byte
 
 // A work of art lies ahead! (. = white layer, X = black layer, others are blank)
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
@@ -154,7 +141,6 @@ func (atlas *ImFontAtlas) AddFontDefault(font_cfg_template *ImFontConfig) *ImFon
 	font_cfg.EllipsisChar = (ImWchar)(0x0085)
 	font_cfg.GlyphOffset.y = 1.0 * IM_FLOOR(font_cfg.SizePixels/13.0) // Add +1 offset per 13 units
 
-	var ttf_compressed_base85 = atlas.GetDefaultCompressedFontDataTTFBase85()
 	var glyph_ranges []ImWchar
 	if font_cfg.GlyphRanges != nil {
 		glyph_ranges = font_cfg.GlyphRanges
@@ -162,7 +148,9 @@ func (atlas *ImFontAtlas) AddFontDefault(font_cfg_template *ImFontConfig) *ImFon
 		glyph_ranges = atlas.GetGlyphRangesDefault()
 	}
 
-	return atlas.AddFontFromMemoryCompressedBase85TTF(ttf_compressed_base85, font_cfg.SizePixels, &font_cfg, glyph_ranges)
+	data := proggy_clean_ttf_decompressed_data_base85
+
+	return atlas.AddFontFromMemoryTTF(proggy_clean_ttf_decompressed_data_base85, int32(len(data)), font_cfg.SizePixels, &font_cfg, glyph_ranges)
 }
 
 // Build atlas, retrieve pixel data.
@@ -218,35 +206,6 @@ func Decode85(src string, dst []byte) {
 		src = src[5:]
 		dst = dst[4:]
 	}
-}
-
-func (atlas *ImFontAtlas) AddFontFromMemoryCompressedBase85TTF(compressed_font_data_base85 []byte, size_pixels float, font_cfg *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	var compressed_ttf_size int = (((int)(len(compressed_font_data_base85) + 4)) / 5) * 4
-	var compressed_ttf []byte = make([]byte, compressed_ttf_size)
-	C.Decode85(cbytes([]byte(compressed_font_data_base85)), cbytes(compressed_ttf))
-	return atlas.AddFontFromMemoryCompressedTTF(compressed_ttf, compressed_ttf_size, size_pixels, font_cfg, glyph_ranges)
-}
-
-func cbytes(b []byte) *C.uchar {
-	return (*C.uchar)(unsafe.Pointer(&b[0]))
-}
-
-func (atlas *ImFontAtlas) AddFontFromMemoryCompressedTTF(compressed_ttf_data []byte, compressed_ttf_size int, size_pixels float, font_cfg_template *ImFontConfig, glyph_ranges []ImWchar) *ImFont {
-	var buf_decompressed_size uint = uint(C.stb_decompress_length(cbytes(compressed_ttf_data)))
-
-	var buf_decompressed_data []byte = make([]byte, buf_decompressed_size)
-	C.stb_decompress(cbytes(buf_decompressed_data), cbytes(compressed_ttf_data), C.uint(compressed_ttf_size))
-
-	var font_cfg ImFontConfig
-	if font_cfg_template != nil {
-		font_cfg = *font_cfg_template
-	} else {
-		font_cfg = NewImFontConfig()
-	}
-
-	IM_ASSERT(font_cfg.FontData == nil)
-	font_cfg.FontDataOwnedByAtlas = true
-	return atlas.AddFontFromMemoryTTF(buf_decompressed_data, (int)(buf_decompressed_size), size_pixels, &font_cfg, glyph_ranges)
 }
 
 func ImFontAtlasGetBuilderForStbTruetype() *ImFontBuilderIO {
