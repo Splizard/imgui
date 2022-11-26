@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/splizard/imgui"
+	"github.com/zeozeozeo/imgui"
 
-	platforms "github.com/splizard/imgui/example/platforms/glfw"
-	"github.com/splizard/imgui/example/renderers"
+	platforms "github.com/zeozeozeo/imgui/example/platforms/glfw"
+	"github.com/zeozeozeo/imgui/example/renderers"
 )
 
 // Renderer covers rendering imgui draw data.

@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-gl/gl/v3.2-core/gl"
 	"github.com/jojomi/go-spew/spew"
-	"github.com/splizard/imgui"
+	"github.com/zeozeozeo/imgui"
 )
 
 //go:embed shader/main.vert

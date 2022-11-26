@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/splizard/imgui/stb/stbrp"
-	"github.com/splizard/imgui/stb/stbtt"
+	"github.com/zeozeozeo/imgui/stb/stbrp"
+	"github.com/zeozeozeo/imgui/stb/stbtt"
 )
 
 //-----------------------------------------------------------------------------

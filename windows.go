@@ -3,7 +3,7 @@ package imgui
 import (
 	"sort"
 
-	"github.com/splizard/imgui/golang"
+	"github.com/zeozeozeo/imgui/golang"
 )
 
 const WINDOWS_HOVER_PADDING float = 4.0 // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().

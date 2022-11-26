@@ -15,9 +15,9 @@ func IMGUI_CHECKVERSION() {
 const IMGUI_HAS_TABLE = true
 
 // Enums/Flags (declared as for int compatibility with old C++, to allow using as flags without overhead, and to not pollute the top of this file)
-// - Tip: Use your programming IDE navigation facilities on the names in the _central column_ below to find the actual flags/enum lists!
-//   In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
-//   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
+//   - Tip: Use your programming IDE navigation facilities on the names in the _central column_ below to find the actual flags/enum lists!
+//     In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
+//     With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
 type ImGuiCol int              // -> enum ImGuiCol_             // Enum: A color identifier for styling
 type ImGuiCond int             // -> enum ImGuiCond_            // Enum: A condition for many Set*() functions
 type ImGuiDataType int         // -> enum ImGuiDataType_        // Enum: A primary data type
@@ -477,17 +477,19 @@ const IM_DRAWLIST_TEX_LINES_WIDTH_MAX = 63
 // ImDrawCallback: Draw callbacks for advanced uses [configurable type: override in imconfig.h]
 // NB: You most likely do NOT need to use draw callbacks just to create your own widget or customized UI rendering,
 // you can poke into the draw list for that! Draw callback may be useful for example to:
-//  A) Change your GPU render state,
-//  B) render a complex 3D scene inside a UI element without an intermediate texture/render target, etc.
+//
+//	A) Change your GPU render state,
+//	B) render a complex 3D scene inside a UI element without an intermediate texture/render target, etc.
+//
 // The expected behavior from your rendering function is 'if (cmd.UserCallback != NULL) { cmd) cmd.UserCallback(parent_list, } else { RenderTriangles() }'
 // If you want to override the signature of ImDrawCallback, you can simply use e.g. '#define ImDrawCallback MyDrawCallback' (in imconfig.h) + update rendering backend accordingly.
 type ImDrawCallback func(parent_list *ImDrawList, cmd *ImDrawCmd)
 
 // Typically, 1 command = 1 GPU draw call (unless command is a callback)
-// - VtxOffset/IdxOffset: When 'io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset' is enabled,
-//   those fields allow us to render meshes larger than 64K vertices while keeping 16-bit indices.
-//   Pre-1.71 backends will typically ignore the VtxOffset/IdxOffset fields.
-// - The ClipRect/TextureId/VtxOffset fields must be contiguous as we memcmp() them together (this is asserted for).
+//   - VtxOffset/IdxOffset: When 'io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset' is enabled,
+//     those fields allow us to render meshes larger than 64K vertices while keeping 16-bit indices.
+//     Pre-1.71 backends will typically ignore the VtxOffset/IdxOffset fields.
+//   - The ClipRect/TextureId/VtxOffset fields must be contiguous as we memcmp() them together (this is asserted for).
 type ImDrawCmd struct {
 	ClipRect         ImVec4         // 4*4  // Clipping rectangle (x1, y1, x2, y2). Subtract ImDrawData->DisplayPos to get clipping rectangle in "viewport" coordinates
 	TextureId        ImTextureID    // 4-8  // User-provided texture ID. Set by user in ImfontAtlas::SetTexID() for fonts or passed to Image*() functions. Ignore if never using images or multiple fonts atlas.
@@ -517,16 +519,16 @@ func (this *ImDrawCmd) GetTexID() ImTextureID {
 }
 
 type ImDrawVert struct {
-	pos ImVec2
-	uv  ImVec2
-	col ImU32
+	Pos ImVec2
+	Uv  ImVec2
+	Col ImU32
 }
 
 func ImDrawVertSizeAndOffset() (size, o1, o2, o3 uintptr) {
 	return unsafe.Sizeof(ImDrawVert{}),
-		unsafe.Offsetof(ImDrawVert{}.pos),
-		unsafe.Offsetof(ImDrawVert{}.uv),
-		unsafe.Offsetof(ImDrawVert{}.col)
+		unsafe.Offsetof(ImDrawVert{}.Pos),
+		unsafe.Offsetof(ImDrawVert{}.Uv),
+		unsafe.Offsetof(ImDrawVert{}.Col)
 }
 
 // [Internal] For use by ImDrawList

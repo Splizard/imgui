@@ -3,7 +3,7 @@ package imgui
 import (
 	"sort"
 
-	"github.com/splizard/imgui/golang"
+	"github.com/zeozeozeo/imgui/golang"
 )
 
 // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.

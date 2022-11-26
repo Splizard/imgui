@@ -1,4 +1,4 @@
-module github.com/splizard/imgui
+module github.com/zeozeozeo/imgui
 
 go 1.16
 

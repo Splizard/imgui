@@ -86,11 +86,11 @@ func (this *ImDrawList) GetClipRectMax() ImVec2 {
 }
 
 // Primitives
-// - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
-// - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
-//   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
-//   In future versions we will use textures to provide cheaper and higher-quality circles.
-//   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
+//   - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
+//   - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
+//     In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
+//     In future versions we will use textures to provide cheaper and higher-quality circles.
+//     Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
 func (this *ImDrawList) AddLine(p1 *ImVec2, p2 *ImVec2, col ImU32, thickness float /*= 1.0f*/) {
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
@@ -357,11 +357,11 @@ func (this *ImDrawList) CloneOutput() *ImDrawList {
 }
 
 // Advanced: Channels
-// - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
-// - Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
-// - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
-//   Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
-//   Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
+//   - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
+//   - Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
+//   - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
+//     Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
+//     Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.
 func (this *ImDrawList) ChannelsSplit(count int)  { this._Splitter.Split(this, count) }
 func (this *ImDrawList) ChannelsMerge()           { this._Splitter.Merge(this) }
 func (this *ImDrawList) ChannelsSetCurrent(n int) { this._Splitter.SetCurrentChannel(this, n) }
@@ -386,27 +386,27 @@ func (this *ImDrawList) PrimQuadUV(a, b, c, d *ImVec2, uv_a, uv_b, uv_c, uv_d *I
 	this.IdxBuffer[this._IdxWritePtr+3] = idx
 	this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx + 2)
 	this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx + 3)
-	this.VtxBuffer[this._VtxWritePtr+0].pos = *a
-	this.VtxBuffer[this._VtxWritePtr+0].uv = *uv_a
-	this.VtxBuffer[this._VtxWritePtr+0].col = col
-	this.VtxBuffer[this._VtxWritePtr+1].pos = *b
-	this.VtxBuffer[this._VtxWritePtr+1].uv = *uv_b
-	this.VtxBuffer[this._VtxWritePtr+1].col = col
-	this.VtxBuffer[this._VtxWritePtr+2].pos = *c
-	this.VtxBuffer[this._VtxWritePtr+2].uv = *uv_c
-	this.VtxBuffer[this._VtxWritePtr+2].col = col
-	this.VtxBuffer[this._VtxWritePtr+3].pos = *d
-	this.VtxBuffer[this._VtxWritePtr+3].uv = *uv_d
-	this.VtxBuffer[this._VtxWritePtr+3].col = col
+	this.VtxBuffer[this._VtxWritePtr+0].Pos = *a
+	this.VtxBuffer[this._VtxWritePtr+0].Uv = *uv_a
+	this.VtxBuffer[this._VtxWritePtr+0].Col = col
+	this.VtxBuffer[this._VtxWritePtr+1].Pos = *b
+	this.VtxBuffer[this._VtxWritePtr+1].Uv = *uv_b
+	this.VtxBuffer[this._VtxWritePtr+1].Col = col
+	this.VtxBuffer[this._VtxWritePtr+2].Pos = *c
+	this.VtxBuffer[this._VtxWritePtr+2].Uv = *uv_c
+	this.VtxBuffer[this._VtxWritePtr+2].Col = col
+	this.VtxBuffer[this._VtxWritePtr+3].Pos = *d
+	this.VtxBuffer[this._VtxWritePtr+3].Uv = *uv_d
+	this.VtxBuffer[this._VtxWritePtr+3].Col = col
 	this._VtxWritePtr += 4
 	this._VtxCurrentIdx += 4
 	this._IdxWritePtr += 6
 }
 
 func (this *ImDrawList) PrimWriteVtx(pos ImVec2, uv *ImVec2, col ImU32) {
-	this.VtxBuffer[this._VtxWritePtr].pos = pos
-	this.VtxBuffer[this._VtxWritePtr].uv = *uv
-	this.VtxBuffer[this._VtxWritePtr].col = col
+	this.VtxBuffer[this._VtxWritePtr].Pos = pos
+	this.VtxBuffer[this._VtxWritePtr].Uv = *uv
+	this.VtxBuffer[this._VtxWritePtr].Col = col
 	this._VtxWritePtr++
 
 	this._VtxCurrentIdx++
@@ -531,18 +531,18 @@ func (this *ImDrawList) PrimRectUV(a, c, uv_a, uv_c *ImVec2, col ImU32) {
 	this.IdxBuffer[this._IdxWritePtr+3] = idx
 	this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx + 2)
 	this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx + 3)
-	this.VtxBuffer[this._VtxWritePtr+0].pos = *a
-	this.VtxBuffer[this._VtxWritePtr+0].uv = *uv_a
-	this.VtxBuffer[this._VtxWritePtr+0].col = col
-	this.VtxBuffer[this._VtxWritePtr+1].pos = b
-	this.VtxBuffer[this._VtxWritePtr+1].uv = uv_b
-	this.VtxBuffer[this._VtxWritePtr+1].col = col
-	this.VtxBuffer[this._VtxWritePtr+2].pos = *c
-	this.VtxBuffer[this._VtxWritePtr+2].uv = *uv_c
-	this.VtxBuffer[this._VtxWritePtr+2].col = col
-	this.VtxBuffer[this._VtxWritePtr+3].pos = d
-	this.VtxBuffer[this._VtxWritePtr+3].uv = uv_d
-	this.VtxBuffer[this._VtxWritePtr+3].col = col
+	this.VtxBuffer[this._VtxWritePtr+0].Pos = *a
+	this.VtxBuffer[this._VtxWritePtr+0].Uv = *uv_a
+	this.VtxBuffer[this._VtxWritePtr+0].Col = col
+	this.VtxBuffer[this._VtxWritePtr+1].Pos = b
+	this.VtxBuffer[this._VtxWritePtr+1].Uv = uv_b
+	this.VtxBuffer[this._VtxWritePtr+1].Col = col
+	this.VtxBuffer[this._VtxWritePtr+2].Pos = *c
+	this.VtxBuffer[this._VtxWritePtr+2].Uv = *uv_c
+	this.VtxBuffer[this._VtxWritePtr+2].Col = col
+	this.VtxBuffer[this._VtxWritePtr+3].Pos = d
+	this.VtxBuffer[this._VtxWritePtr+3].Uv = uv_d
+	this.VtxBuffer[this._VtxWritePtr+3].Col = col
 	this._VtxWritePtr += 4
 	this._VtxCurrentIdx += 4
 	this._IdxWritePtr += 6

@@ -234,14 +234,14 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 			dm_y *= AA_SIZE * 0.5
 
 			// Add vertices
-			this.VtxBuffer[this._VtxWritePtr+0].pos.x = (points[i1].x - dm_x)
-			this.VtxBuffer[this._VtxWritePtr+0].pos.y = (points[i1].y - dm_y)
-			this.VtxBuffer[this._VtxWritePtr+0].uv = uv
-			this.VtxBuffer[this._VtxWritePtr+0].col = col // Inner
-			this.VtxBuffer[this._VtxWritePtr+1].pos.x = (points[i1].x + dm_x)
-			this.VtxBuffer[this._VtxWritePtr+1].pos.y = (points[i1].y + dm_y)
-			this.VtxBuffer[this._VtxWritePtr+1].uv = uv
-			this.VtxBuffer[this._VtxWritePtr+1].col = col_trans // Outer
+			this.VtxBuffer[this._VtxWritePtr+0].Pos.x = (points[i1].x - dm_x)
+			this.VtxBuffer[this._VtxWritePtr+0].Pos.y = (points[i1].y - dm_y)
+			this.VtxBuffer[this._VtxWritePtr+0].Uv = uv
+			this.VtxBuffer[this._VtxWritePtr+0].Col = col // Inner
+			this.VtxBuffer[this._VtxWritePtr+1].Pos.x = (points[i1].x + dm_x)
+			this.VtxBuffer[this._VtxWritePtr+1].Pos.y = (points[i1].y + dm_y)
+			this.VtxBuffer[this._VtxWritePtr+1].Uv = uv
+			this.VtxBuffer[this._VtxWritePtr+1].Col = col_trans // Outer
 
 			this._VtxWritePtr += 2
 
@@ -263,9 +263,9 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 		var vtx_count int = points_count
 		this.PrimReserve(idx_count, vtx_count)
 		for i := int(0); i < vtx_count; i++ {
-			this.VtxBuffer[this._VtxWritePtr+0].pos = points[i]
-			this.VtxBuffer[this._VtxWritePtr+0].uv = uv
-			this.VtxBuffer[this._VtxWritePtr+0].col = col
+			this.VtxBuffer[this._VtxWritePtr+0].Pos = points[i]
+			this.VtxBuffer[this._VtxWritePtr+0].Uv = uv
+			this.VtxBuffer[this._VtxWritePtr+0].Col = col
 			this._VtxWritePtr += 1
 		}
 		for i := uint(2); i < uint(points_count); i++ {
@@ -461,18 +461,18 @@ func (this *ImDrawList) PrimRect(a, c *ImVec2, col ImU32) {
 	this.IdxBuffer[this._IdxWritePtr+3] = idx
 	this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx + 2)
 	this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx + 3)
-	this.VtxBuffer[this._VtxWritePtr+0].pos = *a
-	this.VtxBuffer[this._VtxWritePtr+0].uv = uv
-	this.VtxBuffer[this._VtxWritePtr+0].col = col
-	this.VtxBuffer[this._VtxWritePtr+1].pos = b
-	this.VtxBuffer[this._VtxWritePtr+1].uv = uv
-	this.VtxBuffer[this._VtxWritePtr+1].col = col
-	this.VtxBuffer[this._VtxWritePtr+2].pos = *c
-	this.VtxBuffer[this._VtxWritePtr+2].uv = uv
-	this.VtxBuffer[this._VtxWritePtr+2].col = col
-	this.VtxBuffer[this._VtxWritePtr+3].pos = d
-	this.VtxBuffer[this._VtxWritePtr+3].uv = uv
-	this.VtxBuffer[this._VtxWritePtr+3].col = col
+	this.VtxBuffer[this._VtxWritePtr+0].Pos = *a
+	this.VtxBuffer[this._VtxWritePtr+0].Uv = uv
+	this.VtxBuffer[this._VtxWritePtr+0].Col = col
+	this.VtxBuffer[this._VtxWritePtr+1].Pos = b
+	this.VtxBuffer[this._VtxWritePtr+1].Uv = uv
+	this.VtxBuffer[this._VtxWritePtr+1].Col = col
+	this.VtxBuffer[this._VtxWritePtr+2].Pos = *c
+	this.VtxBuffer[this._VtxWritePtr+2].Uv = uv
+	this.VtxBuffer[this._VtxWritePtr+2].Col = col
+	this.VtxBuffer[this._VtxWritePtr+3].Pos = d
+	this.VtxBuffer[this._VtxWritePtr+3].Uv = uv
+	this.VtxBuffer[this._VtxWritePtr+3].Col = col
 	this._VtxWritePtr += 4
 	this._VtxCurrentIdx += 4
 	this._IdxWritePtr += 6
@@ -663,26 +663,26 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				var tex_uv0 = ImVec2{tex_uvs.x, tex_uvs.y}
 				var tex_uv1 = ImVec2{tex_uvs.z, tex_uvs.w}
 				for i := int(0); i < points_count; i++ {
-					this.VtxBuffer[this._VtxWritePtr+0].pos = temp_points[i*2+0]
-					this.VtxBuffer[this._VtxWritePtr+0].uv = tex_uv0
-					this.VtxBuffer[this._VtxWritePtr+0].col = col // Left-side outer edge
-					this.VtxBuffer[this._VtxWritePtr+1].pos = temp_points[i*2+1]
-					this.VtxBuffer[this._VtxWritePtr+1].uv = tex_uv1
-					this.VtxBuffer[this._VtxWritePtr+1].col = col // Right-side outer edge
+					this.VtxBuffer[this._VtxWritePtr+0].Pos = temp_points[i*2+0]
+					this.VtxBuffer[this._VtxWritePtr+0].Uv = tex_uv0
+					this.VtxBuffer[this._VtxWritePtr+0].Col = col // Left-side outer edge
+					this.VtxBuffer[this._VtxWritePtr+1].Pos = temp_points[i*2+1]
+					this.VtxBuffer[this._VtxWritePtr+1].Uv = tex_uv1
+					this.VtxBuffer[this._VtxWritePtr+1].Col = col // Right-side outer edge
 					this._VtxWritePtr += 2
 				}
 			} else {
 				// If we're not using a texture, we need the center vertex as well
 				for i := int(0); i < points_count; i++ {
-					this.VtxBuffer[this._VtxWritePtr+0].pos = points[i]
-					this.VtxBuffer[this._VtxWritePtr+0].uv = opaque_uv
-					this.VtxBuffer[this._VtxWritePtr+0].col = col // Center of line
-					this.VtxBuffer[this._VtxWritePtr+1].pos = temp_points[i*2+0]
-					this.VtxBuffer[this._VtxWritePtr+1].uv = opaque_uv
-					this.VtxBuffer[this._VtxWritePtr+1].col = col_trans // Left-side outer edge
-					this.VtxBuffer[this._VtxWritePtr+2].pos = temp_points[i*2+1]
-					this.VtxBuffer[this._VtxWritePtr+2].uv = opaque_uv
-					this.VtxBuffer[this._VtxWritePtr+2].col = col_trans // Right-side outer edge
+					this.VtxBuffer[this._VtxWritePtr+0].Pos = points[i]
+					this.VtxBuffer[this._VtxWritePtr+0].Uv = opaque_uv
+					this.VtxBuffer[this._VtxWritePtr+0].Col = col // Center of line
+					this.VtxBuffer[this._VtxWritePtr+1].Pos = temp_points[i*2+0]
+					this.VtxBuffer[this._VtxWritePtr+1].Uv = opaque_uv
+					this.VtxBuffer[this._VtxWritePtr+1].Col = col_trans // Left-side outer edge
+					this.VtxBuffer[this._VtxWritePtr+2].Pos = temp_points[i*2+1]
+					this.VtxBuffer[this._VtxWritePtr+2].Uv = opaque_uv
+					this.VtxBuffer[this._VtxWritePtr+2].Col = col_trans // Right-side outer edge
 					this._VtxWritePtr += 3
 				}
 			}
@@ -767,18 +767,18 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 
 			// Add vertices
 			for i := int(0); i < points_count; i++ {
-				this.VtxBuffer[this._VtxWritePtr+0].pos = temp_points[i*4+0]
-				this.VtxBuffer[this._VtxWritePtr+0].uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+0].col = col_trans
-				this.VtxBuffer[this._VtxWritePtr+1].pos = temp_points[i*4+1]
-				this.VtxBuffer[this._VtxWritePtr+1].uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+1].col = col
-				this.VtxBuffer[this._VtxWritePtr+2].pos = temp_points[i*4+2]
-				this.VtxBuffer[this._VtxWritePtr+2].uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+2].col = col
-				this.VtxBuffer[this._VtxWritePtr+3].pos = temp_points[i*4+3]
-				this.VtxBuffer[this._VtxWritePtr+3].uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+3].col = col_trans
+				this.VtxBuffer[this._VtxWritePtr+0].Pos = temp_points[i*4+0]
+				this.VtxBuffer[this._VtxWritePtr+0].Uv = opaque_uv
+				this.VtxBuffer[this._VtxWritePtr+0].Col = col_trans
+				this.VtxBuffer[this._VtxWritePtr+1].Pos = temp_points[i*4+1]
+				this.VtxBuffer[this._VtxWritePtr+1].Uv = opaque_uv
+				this.VtxBuffer[this._VtxWritePtr+1].Col = col
+				this.VtxBuffer[this._VtxWritePtr+2].Pos = temp_points[i*4+2]
+				this.VtxBuffer[this._VtxWritePtr+2].Uv = opaque_uv
+				this.VtxBuffer[this._VtxWritePtr+2].Col = col
+				this.VtxBuffer[this._VtxWritePtr+3].Pos = temp_points[i*4+3]
+				this.VtxBuffer[this._VtxWritePtr+3].Uv = opaque_uv
+				this.VtxBuffer[this._VtxWritePtr+3].Col = col_trans
 				this._VtxWritePtr += 4
 			}
 		}
@@ -805,22 +805,22 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			dx *= (thickness * 0.5)
 			dy *= (thickness * 0.5)
 
-			this.VtxBuffer[this._VtxWritePtr+0].pos.x = p1.x + dy
-			this.VtxBuffer[this._VtxWritePtr+0].pos.y = p1.y - dx
-			this.VtxBuffer[this._VtxWritePtr+0].uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+0].col = col
-			this.VtxBuffer[this._VtxWritePtr+1].pos.x = p2.x + dy
-			this.VtxBuffer[this._VtxWritePtr+1].pos.y = p2.y - dx
-			this.VtxBuffer[this._VtxWritePtr+1].uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+1].col = col
-			this.VtxBuffer[this._VtxWritePtr+2].pos.x = p2.x - dy
-			this.VtxBuffer[this._VtxWritePtr+2].pos.y = p2.y + dx
-			this.VtxBuffer[this._VtxWritePtr+2].uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+2].col = col
-			this.VtxBuffer[this._VtxWritePtr+3].pos.x = p1.x - dy
-			this.VtxBuffer[this._VtxWritePtr+3].pos.y = p1.y + dx
-			this.VtxBuffer[this._VtxWritePtr+3].uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+3].col = col
+			this.VtxBuffer[this._VtxWritePtr+0].Pos.x = p1.x + dy
+			this.VtxBuffer[this._VtxWritePtr+0].Pos.y = p1.y - dx
+			this.VtxBuffer[this._VtxWritePtr+0].Uv = opaque_uv
+			this.VtxBuffer[this._VtxWritePtr+0].Col = col
+			this.VtxBuffer[this._VtxWritePtr+1].Pos.x = p2.x + dy
+			this.VtxBuffer[this._VtxWritePtr+1].Pos.y = p2.y - dx
+			this.VtxBuffer[this._VtxWritePtr+1].Uv = opaque_uv
+			this.VtxBuffer[this._VtxWritePtr+1].Col = col
+			this.VtxBuffer[this._VtxWritePtr+2].Pos.x = p2.x - dy
+			this.VtxBuffer[this._VtxWritePtr+2].Pos.y = p2.y + dx
+			this.VtxBuffer[this._VtxWritePtr+2].Uv = opaque_uv
+			this.VtxBuffer[this._VtxWritePtr+2].Col = col
+			this.VtxBuffer[this._VtxWritePtr+3].Pos.x = p1.x - dy
+			this.VtxBuffer[this._VtxWritePtr+3].Pos.y = p1.y + dx
+			this.VtxBuffer[this._VtxWritePtr+3].Uv = opaque_uv
+			this.VtxBuffer[this._VtxWritePtr+3].Col = col
 			this._VtxWritePtr += 4
 
 			this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(this._VtxCurrentIdx)
