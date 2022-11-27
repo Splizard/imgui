@@ -167,7 +167,24 @@ func (this *ImDrawList) AddTriangleFilled(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col
 }
 
 func (this *ImDrawList) AddCircle(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
-	panic("not implemented")
+	if col&IM_COL32_A_MASK == 0 || radius < 0.0 {
+		return
+	}
+
+	if num_segments <= 0 {
+		// Use arc with automatic segment count
+		this.PathArcToFastEx(center, radius-0.5, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0)
+		this._Path = this._Path[:len(this._Path)-1]
+	} else {
+		// Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
+		num_segments = ImClampInt(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+
+		// Because we are filling a closed shape we remove 1 from the count of segments/points
+		var a_max float = (IM_PI * 2.0) * (float(num_segments) - 1.0) / float(num_segments)
+		this.PathArcTo(center, radius-0.5, 0.0, a_max, num_segments-1)
+	}
+
+	this.PathStroke(col, ImDrawFlags_Closed, thickness)
 }
 
 // Guaranteed to honor 'num_segments'

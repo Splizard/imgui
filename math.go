@@ -53,6 +53,10 @@ type ImVec4 struct {
 	x, y, z, w float
 }
 
+func NewImVec4(x, y, z, w float) *ImVec4 {
+	return &ImVec4{x, y, z, w}
+}
+
 func (v *ImVec4) X() float {
 	return v.x
 }
