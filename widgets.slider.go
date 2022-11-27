@@ -1,6 +1,9 @@
 package imgui
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 // Widgets: Regular Sliders
 // - CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
@@ -148,7 +151,8 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data interface{}, p_m
 	}
 
 	// Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-	var value_buf = fmt.Sprintf(format, p_data)
+	p_data_val := reflect.ValueOf(p_data).Elem()
+	var value_buf = fmt.Sprintf(format, p_data_val)
 	if g.LogEnabled {
 		LogSetNextTextDecoration("{", "}")
 	}

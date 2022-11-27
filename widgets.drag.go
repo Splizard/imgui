@@ -543,7 +543,7 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 
 func RoundScalarWithFormatT(format string, v float) float {
 	// Format value with our rounding, and read back
-	var v_str = fmt.Sprint(format, v)
+	var v_str = fmt.Sprintf(format, v)
 	f, _ := strconv.ParseFloat(v_str, 32)
 	return float(f)
 }
