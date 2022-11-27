@@ -72,6 +72,13 @@ func Scrollbar(axis ImGuiAxis) {
 	}
 
 	ScrollbarEx(&bb, id, axis, &amount, size_avail, size_contents, rounding_corners)
+
+	switch axis {
+	case ImGuiAxis_X:
+		window.Scroll.x = amount
+	case ImGuiAxis_Y:
+		window.Scroll.y = amount
+	}
 }
 
 // Vertical/Horizontal scrollbar
