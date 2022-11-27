@@ -7,7 +7,7 @@ func getBackgroundDrawList(t *ImGuiViewport) *ImDrawList    { panic("not impleme
 
 func getForegroundDrawListViewport(viewport *ImGuiViewport, drawlist_no int, drawlist_name string) *ImDrawList {
 	// Create the draw list on demand, because they are not frequently used for all viewports
-	var g = *GImGui
+	var g = GImGui
 	IM_ASSERT(drawlist_no < int(len(viewport.DrawLists)))
 	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {

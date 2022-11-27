@@ -600,7 +600,7 @@ func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) 
 }
 
 func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
-	var g = *GImGui
+	var g = GImGui
 	if (popup_flags & ImGuiPopupFlags_AnyPopupId) != 0 {
 		// Return true if any popup is open at the current BeginPopup() level of the popup stack
 		// This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.

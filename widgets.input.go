@@ -291,7 +291,7 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 		// We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
 		// Change the default decimal_point with:
 		//   ImGui::GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
-		var g = *GImGui
+		var g = GImGui
 		var c_decimal_point rune = (rune)(g.PlatformLocaleDecimalPoint)
 
 		// Allow 0-9 . - + * /

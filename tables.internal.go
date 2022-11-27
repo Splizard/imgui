@@ -185,7 +185,7 @@ func TableSetColumnWidth(column_n int, width float) {
 // Note that the NoSortAscending/NoSortDescending flags are processed in TableSortSpecsSanitize(), and they may change/revert
 // the value of SortDirection. We could technically also do it here but it would be unnecessary and duplicate code.
 func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection, append_to_sort_specs bool) {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 
 	if (table.Flags & ImGuiTableFlags_SortMulti) == 0 {
@@ -228,7 +228,7 @@ func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection
 // May use (TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered) instead. Return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
 // Return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
 func TableGetHoveredColumn() int {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return -1
@@ -281,12 +281,12 @@ func TablePopBackgroundChannel() {
 func GetCurrentTable() *ImGuiTable { var g *ImGuiContext = GImGui; return g.CurrentTable }
 
 func TableFindByID(id ImGuiID) *ImGuiTable {
-	var g = *GImGui
+	var g = GImGui
 	return g.Tables[id]
 }
 
 func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFlags, outer_size *ImVec2, inner_width float) bool {
-	var g = *GImGui
+	var g = GImGui
 	var outer_window = GetCurrentWindow()
 	if outer_window.SkipItems { // Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
 		return false
@@ -864,7 +864,7 @@ func TableSetupDrawChannels(table *ImGuiTable) {
 // FIXME-TABLE: Our width (and therefore our WorkRect) will be minimal in the first frame for _WidthAuto columns.
 // Increase feedback side-effect with widgets relying on WorkRect.Max.x... Maybe provide a default distribution for _WidthAuto columns?
 func TableUpdateLayout(table *ImGuiTable) {
-	var g = *GImGui
+	var g = GImGui
 	IM_ASSERT(table.IsLayoutLocked == false)
 
 	var table_sizing_policy ImGuiTableFlags = (table.Flags & ImGuiTableFlags_SizingMask_)
@@ -1331,7 +1331,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 //   - Submit ahead of table contents and header, use ImGuiButtonFlags_AllowItemOverlap to prioritize widgets
 //     overlapping the same area.
 func TableUpdateBorders(table *ImGuiTable) {
-	var g = *GImGui
+	var g = GImGui
 	IM_ASSERT(table.Flags&ImGuiTableFlags_Resizable != 0)
 
 	// At this point OuterRect height may be zero or under actual final height, so we rely on temporal coherency and
@@ -1654,7 +1654,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 //
 // This function is particularly tricky to understand.. take a breath.
 func TableMergeDrawChannels(table *ImGuiTable) {
-	var g = *GImGui
+	var g = GImGui
 	var splitter = table.DrawSplitter
 	var has_freeze_v = (table.FreezeRowsCount > 0)
 	var has_freeze_h = (table.FreezeColumnsCount > 0)
@@ -2037,7 +2037,7 @@ func TableBeginRow(table *ImGuiTable) {
 
 // [Internal] Called by TableNextRow()
 func TableEndRow(table *ImGuiTable) {
-	var g = *GImGui
+	var g = GImGui
 	var window = g.CurrentWindow
 	IM_ASSERT(window == table.InnerWindow)
 	IM_ASSERT(table.IsInsideRow)
@@ -2222,7 +2222,7 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 
 	window.SkipItems = column.IsSkipItems
 	if column.IsSkipItems {
-		var g = *GImGui
+		var g = GImGui
 		g.LastItemData.ID = 0
 		g.LastItemData.StatusFlags = 0
 	}
@@ -2238,7 +2238,7 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 	}
 
 	// Logging
-	var g = *GImGui
+	var g = GImGui
 	if g.LogEnabled && !column.IsSkipItems {
 		LogRenderedText(&window.DC.CursorPos, "|")
 		g.LogLinePosY = FLT_MAX
