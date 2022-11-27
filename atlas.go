@@ -9,18 +9,19 @@ import (
 	"github.com/zeozeozeo/imgui/stb/stbtt"
 )
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // [SECTION] Default font data (ProggyClean.ttf)
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // ProggyClean.ttf
 // Copyright (c) 2004, 2005 Tristan Grimmer
 // MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
 // Download and more information at http://upperbounds.net
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // File: 'ProggyClean.ttf' (41208 bytes)
 // Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).
 // The purpose of encoding as base85 instead of "0x00,0x01,..." style is only save on _source code_ size.
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+//
 //go:embed proggy.ttf
 var proggy_clean_ttf_decompressed_data_base85 []byte
 

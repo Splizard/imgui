@@ -1,12 +1,12 @@
 package imgui
 
 // Push a new Dear ImGui window to add widgets to.
-// - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
-// - Begin/End can be called multiple times during the frame with the same window name to append content.
-// - The window name is used as a unique identifier to preserve window information across frames (and save rudimentary information to the .ini file).
-//   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
-// - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
-// - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
+//   - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
+//   - Begin/End can be called multiple times during the frame with the same window name to append content.
+//   - The window name is used as a unique identifier to preserve window information across frames (and save rudimentary information to the .ini file).
+//     You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
+//   - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
+//   - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
 func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	var g = GImGui
 	var style = g.Style
@@ -243,7 +243,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Collapse window by double-clicking on title bar
 		// At this point we don't have a clipping rectangle setup yet, so we can use the title bar area for hit detection and drawing
-		if (0 == flags&ImGuiWindowFlags_NoTitleBar) && (0 == flags&ImGuiWindowFlags_NoCollapse) {
+		if flags&ImGuiWindowFlags_NoTitleBar == 0 && flags&ImGuiWindowFlags_NoCollapse == 0 {
 			// We don't use a regular button+id to test for double-click on title bar (mostly due to legacy reason, could be fixed), so verify that we don't have items over the title bar.
 			var title_bar_rect ImRect = window.TitleBarRect()
 			if g.HoveredWindow == window && g.HoveredId == 0 && g.HoveredIdPreviousFrame == 0 && IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max, true) && g.IO.MouseDoubleClicked[0] {
@@ -303,7 +303,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Apply minimum/maximum window size constraints and final size
 		window.SizeFull = CalcWindowSizeAfterConstraint(window, &window.SizeFull)
-		if window.Collapsed && 0 == (flags&ImGuiWindowFlags_ChildWindow) {
+		if window.Collapsed && flags&ImGuiWindowFlags_ChildWindow == 0 {
 			titlebar := window.TitleBarRect()
 			window.SizeFull = titlebar.GetSize()
 		}
@@ -316,7 +316,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// Popup latch its initial position, will position itself when it appears next frame
 		if window_just_activated_by_user {
 			window.AutoPosLastDirection = ImGuiDir_None
-			if (flags&ImGuiWindowFlags_Popup) != 0 && 0 == (flags&ImGuiWindowFlags_Modal) && !window_pos_set_by_api { // FIXME: BeginPopup() could use SetNextWindowPos()
+			if (flags&ImGuiWindowFlags_Popup) != 0 && flags&ImGuiWindowFlags_Modal == 0 && !window_pos_set_by_api { // FIXME: BeginPopup() could use SetNextWindowPos()
 				window.Pos = g.BeginPopupStack[len(g.BeginPopupStack)-1].OpenPopupPos
 			}
 		}

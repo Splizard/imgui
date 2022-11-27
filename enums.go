@@ -90,13 +90,13 @@ const (
 )
 
 // Flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
-// - To be backward compatible with older API which took an 'int mouse_button = 1' argument, we need to treat
-//   small flags values as a mouse button index, so we encode the mouse button in the first few bits of the flags.
-//   It is therefore guaranteed to be legal to pass a mouse button index in ImGuiPopupFlags.
-// - For the same reason, we exceptionally default the ImGuiPopupFlags argument of BeginPopupContextXXX functions to 1 instead of 0.
-//   IMPORTANT: because the default parameter is 1 (==ImGuiPopupFlags_MouseButtonRight), if you rely on the default parameter
-//   and want to another another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag.
-// - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
+//   - To be backward compatible with older API which took an 'int mouse_button = 1' argument, we need to treat
+//     small flags values as a mouse button index, so we encode the mouse button in the first few bits of the flags.
+//     It is therefore guaranteed to be legal to pass a mouse button index in ImGuiPopupFlags.
+//   - For the same reason, we exceptionally default the ImGuiPopupFlags argument of BeginPopupContextXXX functions to 1 instead of 0.
+//     IMPORTANT: because the default parameter is 1 (==ImGuiPopupFlags_MouseButtonRight), if you rely on the default parameter
+//     and want to another another flag, you need to pass in the ImGuiPopupFlags_MouseButtonRight flag.
+//   - Multiple buttons currently cannot be combined/or-ed in those functions (we could allow it later).
 const (
 	ImGuiPopupFlags_None                    ImGuiPopupFlags = 0
 	ImGuiPopupFlags_MouseButtonLeft         ImGuiPopupFlags = 0 // For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)
@@ -164,27 +164,27 @@ const (
 
 // Flags for ImGui::BeginTable()
 // [BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
-// - Important! Sizing policies have complex and subtle side effects, more so than you would expect.
-//   Read comments/demos carefully + experiment with live demos to get acquainted with them.
-// - The DEFAULT sizing policies are:
-//    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
-//    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
-// - When ScrollX is off:
-//    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
-//    - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
-//    - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
-//    - Stretch Columns will share the remaining width.
-//    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
-//      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
-//      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
-// - When ScrollX is on:
-//    - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
-//    - Columns sizing policy allowed: Fixed/Auto mostly.
-//    - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
-//    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
-//    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
-//      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
-// - Read on documentation at the top of imgui_tables.cpp for details.
+//   - Important! Sizing policies have complex and subtle side effects, more so than you would expect.
+//     Read comments/demos carefully + experiment with live demos to get acquainted with them.
+//   - The DEFAULT sizing policies are:
+//   - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
+//   - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
+//   - When ScrollX is off:
+//   - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
+//   - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
+//   - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
+//   - Stretch Columns will share the remaining width.
+//   - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
+//     The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
+//     (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
+//   - When ScrollX is on:
+//   - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
+//   - Columns sizing policy allowed: Fixed/Auto mostly.
+//   - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
+//   - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
+//   - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+//     If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
+//   - Read on documentation at the top of imgui_tables.cpp for details.
 const (
 
 	// Features
@@ -280,9 +280,10 @@ const (
 
 // const (
 // Background colors are rendering in 3 layers:
-//  - Layer 0: draw with RowBg0 color if set, otherwise draw with ColumnBg0 if set.
-//  - Layer 1: draw with RowBg1 color if set, otherwise draw with ColumnBg1 if set.
-//  - Layer 2: draw with CellBg color if set.
+//   - Layer 0: draw with RowBg0 color if set, otherwise draw with ColumnBg0 if set.
+//   - Layer 1: draw with RowBg1 color if set, otherwise draw with ColumnBg1 if set.
+//   - Layer 2: draw with CellBg color if set.
+//
 // The purpose of the two row/columns layers is to let you decide if a background color changes should override or blend with the existing color.
 // When using ImGuiTableFlags_RowBg on the table, each row has the RowBg0 color automatically set for odd/even rows.
 // If you set the color of RowBg0 target, your color will override the existing RowBg0 color.

@@ -305,7 +305,6 @@ func ImClamp(v, mn, mx float) float {
 	return v
 }
 
-
 func ImClamp64(v, mn, mx float64) float64 {
 	if v < mn {
 		return mn
@@ -680,14 +679,15 @@ func (this *ImRect) ToVec4() ImVec4 {
 // ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
 // Estimation of number of circle segment based on error is derived using method described in https://stackoverflow.com/a/2244088/15194693
 // Number of segments (N) is calculated using equation:
-//   N = ceil ( pi / acos(1 - error / r) )     where r > 0, error <= r
+//
+//	N = ceil ( pi / acos(1 - error / r) )     where r > 0, error <= r
+//
 // Our equation is significantly simpler that one in the post thanks for choosing segment that is
 // perpendicular to X axis. Follow steps in the article from this starting condition and you will
 // will get this result.
 //
 // Rendering circles with an odd number of segments, while mathematically correct will produce
 // asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
-//
 func IM_ROUNDUP_TO_EVEN(V float) float {
 	return ((((V) + 1) / 2) * 2)
 }

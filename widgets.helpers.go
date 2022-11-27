@@ -87,7 +87,7 @@ func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float {
 	return ImMax(wrap_pos_x-pos.x, 1.0)
 }
 
-//Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
+// Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
 func IsItemToggledSelection() bool {
 	var g = GImGui
 	return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_ToggledSelection) != 0

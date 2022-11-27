@@ -82,46 +82,46 @@ func ListBox(label string, current_item *int, items []string, items_count int, h
 func ListBoxFunc(label string, current_item *int, items_getter func(data interface{}, idx int, out_text *string) bool, data interface{}, items_count int, height_in_items int /*= -1*/) bool {
 	var g = GImGui
 
-    // Calculate size from "height_in_items"
-    if (height_in_items < 0) {
-        height_in_items = ImMinInt(items_count, 7);
+	// Calculate size from "height_in_items"
+	if height_in_items < 0 {
+		height_in_items = ImMinInt(items_count, 7)
 	}
-    var height_in_items_f float = float(height_in_items) + 0.25;
-    var size = ImVec2{0.0, ImFloor(GetTextLineHeightWithSpacing() * height_in_items_f + g.Style.FramePadding.y * 2.0)};
+	var height_in_items_f float = float(height_in_items) + 0.25
+	var size = ImVec2{0.0, ImFloor(GetTextLineHeightWithSpacing()*height_in_items_f + g.Style.FramePadding.y*2.0)}
 
-    if (!BeginListBox(label, size)) {
-        return false;
+	if !BeginListBox(label, size) {
+		return false
 	}
 
-    // Assume all items have even height (= 1 line of text). If you need items of different height,
-    // you can create a custom version of ListBox() in your code without using the clipper.
-    var value_changed = false;
-    var clipper ImGuiListClipper
-    clipper.Begin(items_count, GetTextLineHeightWithSpacing()); // We know exactly our line height here so we pass it as a minor optimization, but generally you don't need to.
-    for (clipper.Step()) {
-        for i := clipper.DisplayStart; i < clipper.DisplayEnd; i++ {
-            var item_text string
-            if (!items_getter(data, i, &item_text)) {
-                item_text = "*Unknown item*";
+	// Assume all items have even height (= 1 line of text). If you need items of different height,
+	// you can create a custom version of ListBox() in your code without using the clipper.
+	var value_changed = false
+	var clipper ImGuiListClipper
+	clipper.Begin(items_count, GetTextLineHeightWithSpacing()) // We know exactly our line height here so we pass it as a minor optimization, but generally you don't need to.
+	for clipper.Step() {
+		for i := clipper.DisplayStart; i < clipper.DisplayEnd; i++ {
+			var item_text string
+			if !items_getter(data, i, &item_text) {
+				item_text = "*Unknown item*"
 			}
 
-            PushID(i);
-            var item_selected = (i == *current_item);
-            if (Selectable(item_text, item_selected, 0, ImVec2{})) {
-                *current_item = i;
-                value_changed = true;
-            }
-            if (item_selected) {
-                SetItemDefaultFocus();
+			PushID(i)
+			var item_selected = (i == *current_item)
+			if (Selectable(item_text, item_selected, 0, ImVec2{})) {
+				*current_item = i
+				value_changed = true
 			}
-            PopID();
-        }
+			if item_selected {
+				SetItemDefaultFocus()
+			}
+			PopID()
+		}
 	}
-    EndListBox();
+	EndListBox()
 
-    if (value_changed) {
-        MarkItemEdited(g.LastItemData.ID);
+	if value_changed {
+		MarkItemEdited(g.LastItemData.ID)
 	}
 
-    return value_changed;
+	return value_changed
 }

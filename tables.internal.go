@@ -781,15 +781,16 @@ func TableSetupColumnFlags(table *ImGuiTable, column *ImGuiTableColumn, flags_in
 }
 
 // Allocate draw channels. Called by TableUpdateLayout()
-// - We allocate them following storage order instead of display order so reordering columns won't needlessly
-//   increase overall dormant memory cost.
-// - We isolate headers draw commands in their own channels instead of just altering clip rects.
-//   This is in order to facilitate merging of draw commands.
-// - After crossing FreezeRowsCount, all columns see their current draw channel changed to a second set of channels.
-// - We only use the dummy draw channel so we can push a null clipping rectangle into it without affecting other
-//   channels, while simplifying per-row/per-cell overhead. It will be empty and discarded when merged.
-// - We allocate 1 or 2 background draw channels. This is because we know TablePushBackgroundChannel() is only used for
-//   horizontal spanning. If we allowed vertical spanning we'd need one background draw channel per merge group (1-4).
+//   - We allocate them following storage order instead of display order so reordering columns won't needlessly
+//     increase overall dormant memory cost.
+//   - We isolate headers draw commands in their own channels instead of just altering clip rects.
+//     This is in order to facilitate merging of draw commands.
+//   - After crossing FreezeRowsCount, all columns see their current draw channel changed to a second set of channels.
+//   - We only use the dummy draw channel so we can push a null clipping rectangle into it without affecting other
+//     channels, while simplifying per-row/per-cell overhead. It will be empty and discarded when merged.
+//   - We allocate 1 or 2 background draw channels. This is because we know TablePushBackgroundChannel() is only used for
+//     horizontal spanning. If we allowed vertical spanning we'd need one background draw channel per merge group (1-4).
+//
 // Draw channel allocation (before merging):
 // - NoClip                       -. 2+D+1 channels: bg0/1 + bg2 + foreground (same clip rect == always 1 draw call)
 // - Clip                         -. 2+D+N channels
@@ -1326,9 +1327,9 @@ func TableUpdateLayout(table *ImGuiTable) {
 }
 
 // Process hit-testing on resizing borders. Actual size change will be applied in EndTable()
-// - Set table.HoveredColumnBorder with a short delay/timer to reduce feedback noise
-// - Submit ahead of table contents and header, use ImGuiButtonFlags_AllowItemOverlap to prioritize widgets
-//   overlapping the same area.
+//   - Set table.HoveredColumnBorder with a short delay/timer to reduce feedback noise
+//   - Submit ahead of table contents and header, use ImGuiButtonFlags_AllowItemOverlap to prioritize widgets
+//     overlapping the same area.
 func TableUpdateBorders(table *ImGuiTable) {
 	var g = *GImGui
 	IM_ASSERT(table.Flags&ImGuiTableFlags_Resizable != 0)
@@ -1631,9 +1632,9 @@ func TableDrawContextMenu(table *ImGuiTable) {
 // by the call to DrawSplitter.Merge() following to the call to this function.
 // We reorder draw commands by arranging them into a maximum of 4 distinct groups:
 //
-//   1 group:               2 groups:              2 groups:              4 groups:
-//   [ 0. ] no freeze       [ 0. ] row freeze      [ 01 ] col freeze      [ 01 ] row+col freeze
-//   [ .. ]  or no scroll   [ 2. ]  and v-scroll   [ .. ]  and h-scroll   [ 23 ]  and v+h-scroll
+//	1 group:               2 groups:              2 groups:              4 groups:
+//	[ 0. ] no freeze       [ 0. ] row freeze      [ 01 ] col freeze      [ 01 ] row+col freeze
+//	[ .. ]  or no scroll   [ 2. ]  and v-scroll   [ .. ]  and h-scroll   [ 23 ]  and v+h-scroll
 //
 // Each column itself can use 1 channel (row freeze disabled) or 2 channels (row freeze enabled).
 // When the contents of a column didn't stray off its limit, we move its channels into the corresponding group
@@ -1643,11 +1644,12 @@ func TableDrawContextMenu(table *ImGuiTable) {
 // otherwise merge_group.ChannelsCount will not match set bit count of merge_group.ChannelsMask.
 //
 // Column channels will not be merged into one of the 1-4 groups in the following cases:
-// - The contents stray off its clipping rectangle (we only compare the MaxX value, not the MinX value).
-//   Direct ImDrawList calls won't be taken into account by default, if you use them make sure the ImGui:: bounds
-//   matches, by e.g. calling SetCursorScreenPos().
-// - The channel uses more than one draw command itself. We drop all our attempt at merging stuff here..
-//   we could do better but it's going to be rare and probably not worth the hassle.
+//   - The contents stray off its clipping rectangle (we only compare the MaxX value, not the MinX value).
+//     Direct ImDrawList calls won't be taken into account by default, if you use them make sure the ImGui:: bounds
+//     matches, by e.g. calling SetCursorScreenPos().
+//   - The channel uses more than one draw command itself. We drop all our attempt at merging stuff here..
+//     we could do better but it's going to be rare and probably not worth the hassle.
+//
 // Columns for which the draw channel(s) haven't been merged with other will use their own ImDrawCmd.
 //
 // This function is particularly tricky to understand.. take a breath.
@@ -2269,10 +2271,10 @@ func TableEndCell(table *ImGuiTable) {
 }
 
 // Return the cell rectangle based on currently known height.
-// - Important: we generally don't know our row height until the end of the row, so Max.y will be incorrect in many situations.
-//   The only case where this is correct is if we provided a min_row_height to TableNextRow() and don't go below it.
-// - Important: if ImGuiTableFlags_PadOuterX is set but ImGuiTableFlags_PadInnerX is not set, the outer-most left and right
-//   columns report a small offset so their CellBgRect can extend up to the outer border.
+//   - Important: we generally don't know our row height until the end of the row, so Max.y will be incorrect in many situations.
+//     The only case where this is correct is if we provided a min_row_height to TableNextRow() and don't go below it.
+//   - Important: if ImGuiTableFlags_PadOuterX is set but ImGuiTableFlags_PadInnerX is not set, the outer-most left and right
+//     columns report a small offset so their CellBgRect can extend up to the outer border.
 func TableGetCellBgRect(table *ImGuiTable, column_n int) ImRect {
 	var column *ImGuiTableColumn = &table.Columns[column_n]
 	var x1 float = column.MinX

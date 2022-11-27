@@ -365,13 +365,15 @@ func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find 
 */
 
 // Edit a string of text
-// - buf_size account for the zero-terminator, so a buf_size of 6 can hold "Hello" but not "Hello!".
-//   This is so we can easily call InputText() on static arrays using ARRAYSIZE() and to match
-//   Note that in std::string world, capacity() would omit 1 byte used by the zero-terminator.
-// - When active, hold on a privately held copy of the text (and apply back to 'buf'). So changing 'buf' while the InputText is active has no effect.
-// - If you want to use ImGui::InputText() with std::string, see misc/cpp/imgui_stdlib.h
+//   - buf_size account for the zero-terminator, so a buf_size of 6 can hold "Hello" but not "Hello!".
+//     This is so we can easily call InputText() on static arrays using ARRAYSIZE() and to match
+//     Note that in std::string world, capacity() would omit 1 byte used by the zero-terminator.
+//   - When active, hold on a privately held copy of the text (and apply back to 'buf'). So changing 'buf' while the InputText is active has no effect.
+//   - If you want to use ImGui::InputText() with std::string, see misc/cpp/imgui_stdlib.h
+//
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
-//  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
+//
+//	doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
 func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, callback_user_data interface{}) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -1264,7 +1266,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	} else {
 		// Render text only (no selection, no cursor)
 		if is_multiline {
-			buf_display_end = buf_display[:len(buf_display)]
+			buf_display_end = buf_display[:]
 			text_size = ImVec2{inner_size.x, float(bytes.Count(buf_display, []byte{'\n'})) * g.FontSize} // We don't need width
 		} else if !is_displaying_hint && g.ActiveId == id {
 			buf_display_end = buf_display[state.CurLenA:]

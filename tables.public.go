@@ -14,18 +14,19 @@ import "fmt"
 // - 3. Optionally call TableSetupScrollFreeze() to request scroll freezing of columns/rows.
 // - 4. Optionally call TableHeadersRow() to submit a header row. Names are pulled from TableSetupColumn() data.
 // - 5. Populate contents:
-//    - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
-//    - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
-//      you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
-//      TableNextColumn() will automatically wrap-around into the next row if needed.
-//    - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
-//    - Summary of possible call flow:
-//        --------------------------------------------------------------------------------------------------------
-//        TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
-//        TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
-//                          TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
-//        TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
-//        --------------------------------------------------------------------------------------------------------
+//   - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
+//   - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
+//     you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
+//     TableNextColumn() will automatically wrap-around into the next row if needed.
+//   - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
+//   - Summary of possible call flow:
+//     --------------------------------------------------------------------------------------------------------
+//     TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
+//     TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
+//     TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
+//     TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
+//     --------------------------------------------------------------------------------------------------------
+//
 // - 5. Call EndTable()
 // Read about "TABLE SIZING" at the top of this file.
 func BeginTable(str_id string, columns_count int, flags ImGuiTableFlags, outer_size ImVec2, inner_width float) bool {
@@ -331,13 +332,14 @@ func TableSetColumnIndex(column_n int) bool {
 }
 
 // Tables: Headers & Columns declaration
-// - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
-// - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
-//   Headers are required to perform: reordering, sorting, and opening the context menu.
-//   The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
-// - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
-//   some advanced use cases (e.g. adding custom widgets in header row).
-// - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+//   - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
+//   - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
+//     Headers are required to perform: reordering, sorting, and opening the context menu.
+//     The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
+//   - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
+//     some advanced use cases (e.g. adding custom widgets in header row).
+//   - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+//
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0.0f) it is ignored
 func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_weight float /*= 0*/, user_id ImGuiID) {
@@ -684,11 +686,12 @@ func TableHeader(label string) {
 }
 
 // Tables: Sorting
-// - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
-// - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
-//   since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
-//   wastefully sort your data every frame!
-// - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
+//   - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
+//   - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
+//     since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
+//     wastefully sort your data every frame!
+//   - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
+//
 // get latest sort specs for the table (NULL if not sorting).
 func TableGetSortSpecs() *ImGuiTableSortSpecs {
 	var g = *GImGui

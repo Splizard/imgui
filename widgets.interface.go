@@ -324,8 +324,8 @@ func DataTypeClamp(data_type ImGuiDataType, a interface{}, n interface{}, x inte
 	case ImGuiDataType_Double:
 		*a.(*float64) = float64(ImClamp64(float64(a.(float64)), float64(n.(float64)), float64(x.(float64))))
 	}
-	IM_ASSERT(false);
-    return false;
+	IM_ASSERT(false)
+	return false
 }
 
 func DataTypeGetInfo(data_type ImGuiDataType) *ImGuiDataTypeInfo {

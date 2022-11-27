@@ -119,8 +119,9 @@ type Rect struct {
 }
 
 // Initialize a rectangle packer to:
-//    pack a rectangle that is 'width' by 'height' in dimensions
-//    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
+//
+//	pack a rectangle that is 'width' by 'height' in dimensions
+//	using temporary storage provided by the array 'nodes', which is 'num_nodes' long
 //
 // You must call this function every time you start packing into a new target.
 //
@@ -129,8 +130,8 @@ type Rect struct {
 // the call (or calls) finish.
 //
 // Note: to guarantee best results, either:
-//       1. make sure 'num_nodes' >= 'width'
-//   or  2. call stbrp_allow_out_of_mem() defined below with 'allow_out_of_mem = 1'
+//  1. make sure 'num_nodes' >= 'width'
+//     or  2. call stbrp_allow_out_of_mem() defined below with 'allow_out_of_mem = 1'
 //
 // If you don't do either of the above things, widths will be quantized to multiples
 // of small integers to guarantee the algorithm doesn't run out of temporary storage.

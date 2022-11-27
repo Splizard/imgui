@@ -23,10 +23,10 @@ func bool2int(b bool) int {
 }
 
 const (
-	IM_S8_MIN = -128
-	IM_S8_MAX = 127
-	IM_U8_MIN = 0
-	IM_U8_MAX = 255
+	IM_S8_MIN  = -128
+	IM_S8_MAX  = 127
+	IM_U8_MIN  = 0
+	IM_U8_MAX  = 255
 	IM_S16_MIN = -32768
 	IM_S16_MAX = 32767
 	IM_U16_MIN = 0

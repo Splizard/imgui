@@ -2,18 +2,18 @@ package imgui
 
 // stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
 // the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
-func stb_textedit_replace(str *ImGuiInputTextState, state * STB_TexteditState, text []STB_TEXTEDIT_CHARTYPE, text_len int) {
-    stb_text_makeundo_replace(str, state, 0, str.CurLenW, text_len);
-    STB_TEXTEDIT_DELETECHARS(str, 0, str.CurLenW);
-    if (text_len <= 0) {
-        return;
+func stb_textedit_replace(str *ImGuiInputTextState, state *STB_TexteditState, text []STB_TEXTEDIT_CHARTYPE, text_len int) {
+	stb_text_makeundo_replace(str, state, 0, str.CurLenW, text_len)
+	STB_TEXTEDIT_DELETECHARS(str, 0, str.CurLenW)
+	if text_len <= 0 {
+		return
 	}
-    if (STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len)) {
-        state.cursor = text_len;
-        state.has_preferred_x = 0;
-        return;
-    }
-    IM_ASSERT(false); // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
+	if STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len) {
+		state.cursor = text_len
+		state.has_preferred_x = 0
+		return
+	}
+	IM_ASSERT(false) // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
 }
 
 type short = int16
@@ -233,9 +233,9 @@ type STB_TexteditState struct {
 	undostate                    StbUndoState
 }
 
-////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////
 //
-//     StbTexteditRow
+//	StbTexteditRow
 //
 // Result of layout query, used by stb_textedit to determine where
 // the text in each row is.

@@ -232,8 +232,9 @@ func STBTT_POINT_SIZE(x int) int {
 // as computed by stbtt_ScaleForPixelHeight. To use a point size as computed
 // by stbtt_ScaleForMappingEmToPixels, wrap the point size in STBTT_POINT_SIZE()
 // and pass that result as 'font_size':
-//       ...,                  20 , ... // font max minus min y is 20 pixels tall
-//       ..., STBTT_POINT_SIZE(20), ... // 'M' is 20 pixels tall
+//
+//	...,                  20 , ... // font max minus min y is 20 pixels tall
+//	..., STBTT_POINT_SIZE(20), ... // 'M' is 20 pixels tall
 func stbtt_PackFontRange(spc *PackContext, fontdata []byte, font_index int, font_size float,
 	first_unicode_char_in_range, num_chars_in_range int, chardata_for_range []PackedChar) int {
 
@@ -687,7 +688,9 @@ func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
 // Height is measured as the distance from the highest ascender to the lowest
 // descender; in other words, it's equivalent to calling stbtt_GetFontVMetrics
 // and computing:
-//       scale = pixels / (ascent - descent)
+//
+//	scale = pixels / (ascent - descent)
+//
 // so if you prefer to measure height by the ascent only, use a similar calculation.
 func ScaleForPixelHeight(info *FontInfo, pixels float) float {
 	var fheight int = int(ttSHORT(info.data[info.hhea+4:])) - int(ttSHORT(info.data[info.hhea+6:]))
@@ -706,8 +709,9 @@ func ScaleForMappingEmToPixels(info *FontInfo, pixels float) float {
 // is the coordinate below the baseline the font extends (i.e. it is typically negative)
 // lineGap is the spacing between one row's descent and the next row's ascent...
 // so you should advance the vertical position by "*ascent - *descent + *lineGap"
-//   these are expressed in unscaled coordinates, so you must multiply by
-//   the scale factor for a given size
+//
+//	these are expressed in unscaled coordinates, so you must multiply by
+//	the scale factor for a given size
 func GetFontVMetrics(info *FontInfo, ascent, descent, lineGap *int) {
 	if ascent != nil {
 		*ascent = int(ttSHORT(info.data[info.hhea+4:]))
@@ -751,7 +755,8 @@ func stbtt_GetFontBoundingBox(info *FontInfo, x0, y0, x1, y1 *int) {
 
 // leftSideBearing is the offset from the current horizontal position to the left edge of the character
 // advanceWidth is the offset from the current horizontal position to the next horizontal position
-//   these are expressed in unscaled coordinates
+//
+//	these are expressed in unscaled coordinates
 func stbtt_GetCodepointHMetrics(info *FontInfo, codepoint int, advanceWidth, leftSideBearing *int) {
 	stbtt_GetGlyphHMetrics(info, FindGlyphIndex(info, codepoint), advanceWidth, leftSideBearing)
 }
@@ -858,7 +863,8 @@ func stbtt_IsGlyphEmpty(info *FontInfo, glyph_index int) int {
 }
 
 // returns # of vertices and fills *vertices with the pointer to them
-//   these are expressed in "unscaled" coordinates
+//
+//	these are expressed in "unscaled" coordinates
 //
 // The shape is a series of contours. Each one starts with
 // a STBTT_moveto, then consists of a series of mixed
@@ -1333,40 +1339,42 @@ func stbtt_GetGlyphSDF(info *FontInfo, scale float, glyph, padding int, onedge_v
 // These functions compute a discretized SDF field for a single character, suitable for storing
 // in a single-channel texture, sampling with bilinear filtering, and testing against
 // larger than some threshold to produce scalable fonts.
-//        info              --  the font
-//        scale             --  controls the size of the resulting SDF bitmap, same as it would be creating a regular bitmap
-//        glyph/codepoint   --  the character to generate the SDF for
-//        padding           --  extra "pixels" around the character which are filled with the distance to the character (not 0),
-//                                 which allows effects like bit outlines
-//        onedge_value      --  value 0-255 to test the SDF against to reconstruct the character (i.e. the isocontour of the character)
-//        pixel_dist_scale  --  what value the SDF should increase by when moving one SDF "pixel" away from the edge (on the 0..255 scale)
-//                                 if positive, > onedge_value is inside; if negative, < onedge_value is inside
-//        width,height      --  output height & width of the SDF bitmap (including padding)
-//        xoff,yoff         --  output origin of the character
-//        return value      --  a 2D array of bytes 0..255, width*height in size
+//
+//	info              --  the font
+//	scale             --  controls the size of the resulting SDF bitmap, same as it would be creating a regular bitmap
+//	glyph/codepoint   --  the character to generate the SDF for
+//	padding           --  extra "pixels" around the character which are filled with the distance to the character (not 0),
+//	                         which allows effects like bit outlines
+//	onedge_value      --  value 0-255 to test the SDF against to reconstruct the character (i.e. the isocontour of the character)
+//	pixel_dist_scale  --  what value the SDF should increase by when moving one SDF "pixel" away from the edge (on the 0..255 scale)
+//	                         if positive, > onedge_value is inside; if negative, < onedge_value is inside
+//	width,height      --  output height & width of the SDF bitmap (including padding)
+//	xoff,yoff         --  output origin of the character
+//	return value      --  a 2D array of bytes 0..255, width*height in size
 //
 // pixel_dist_scale & onedge_value are a scale & bias that allows you to make
 // optimal use of the limited 0..255 for your application, trading off precision
 // and special effects. SDF values outside the range 0..255 are clamped to 0..255.
 //
 // Example:
-//      scale = stbtt_ScaleForPixelHeight(22)
-//      padding = 5
-//      onedge_value = 180
-//      pixel_dist_scale = 180/5.0 = 36.0
 //
-//      This will create an SDF bitmap in which the character is about 22 pixels
-//      high but the whole bitmap is about 22+5+5=32 pixels high. To produce a filled
-//      shape, sample the SDF at each pixel and fill the pixel if the SDF value
-//      is greater than or equal to 180/255. (You'll actually want to antialias,
-//      which is beyond the scope of this example.) Additionally, you can compute
-//      offset outlines (e.g. to stroke the character border inside & outside,
-//      or only outside). For example, to fill outside the character up to 3 SDF
-//      pixels, you would compare against (180-36.0*3)/255 = 72/255. The above
-//      choice of variables maps a range from 5 pixels outside the shape to
-//      2 pixels inside the shape to 0..255; this is intended primarily for apply
-//      outside effects only (the interior range is needed to allow proper
-//      antialiasing of the font at *smaller* sizes)
+//	scale = stbtt_ScaleForPixelHeight(22)
+//	padding = 5
+//	onedge_value = 180
+//	pixel_dist_scale = 180/5.0 = 36.0
+//
+//	This will create an SDF bitmap in which the character is about 22 pixels
+//	high but the whole bitmap is about 22+5+5=32 pixels high. To produce a filled
+//	shape, sample the SDF at each pixel and fill the pixel if the SDF value
+//	is greater than or equal to 180/255. (You'll actually want to antialias,
+//	which is beyond the scope of this example.) Additionally, you can compute
+//	offset outlines (e.g. to stroke the character border inside & outside,
+//	or only outside). For example, to fill outside the character up to 3 SDF
+//	pixels, you would compare against (180-36.0*3)/255 = 72/255. The above
+//	choice of variables maps a range from 5 pixels outside the shape to
+//	2 pixels inside the shape to 0..255; this is intended primarily for apply
+//	outside effects only (the interior range is needed to allow proper
+//	antialiasing of the font at *smaller* sizes)
 //
 // The function computes the SDF analytically at each SDF pixel, not by e.g.
 // building a higher-res bitmap and approximating it. In theory the quality
@@ -1402,9 +1410,10 @@ func stbtt_GetCodepointSDF(info *FontInfo, scale float, codepoint, padding int, 
 //             You have to have called stbtt_InitFont() first.
 
 // returns the offset (not index) of the font that matches, or -1 if none
-//   if you use STBTT_MACSTYLE_DONTCARE, use a font name like "Arial Bold".
-//   if you use any other flag, use a font name like "Arial"; this checks
-//     the 'macStyle' header field; i don't know if fonts set this consistently
+//
+//	if you use STBTT_MACSTYLE_DONTCARE, use a font name like "Arial Bold".
+//	if you use any other flag, use a font name like "Arial"; this checks
+//	  the 'macStyle' header field; i don't know if fonts set this consistently
 func stbtt_FindMatchingFont(fontdata []byte, name string, flags int) int {
 	return stbtt_FindMatchingFont_internal(fontdata, []byte(name), flags)
 }
@@ -1427,8 +1436,9 @@ func stbtt_CompareUTF8toUTF16_bigendian(s1 string, len1 int, s2 string, len2 int
 // and puts the length in bytes in *length.
 //
 // some of the values for the IDs are below; for more see the truetype spec:
-//     http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6name.html
-//     http://www.microsoft.com/typography/otspec/name.htm
+//
+//	http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6name.html
+//	http://www.microsoft.com/typography/otspec/name.htm
 func stbtt_GetFontNameString(font FontInfo, length *int, platformID, encodingID, languageID, nameID int) string {
 	var i, count, stringOffset stbtt_int32
 	var fc []byte = font.data

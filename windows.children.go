@@ -65,13 +65,13 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 }
 
 // Child Windows
-// - Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
-// - For each independent axis of 'size': ==0.0: use remaining host window size / >0.0: fixed size / <0.0: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. ImVec2(0,400).
-// - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
-//   Always call a matching EndChild() for each BeginChild() call, regardless of its return value.
-//   [Important: due to legacy reason, this is inconsistent with most other functions such as BeginMenu/EndMenu,
-//    BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function
-//    returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
+//   - Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
+//   - For each independent axis of 'size': ==0.0: use remaining host window size / >0.0: fixed size / <0.0: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. ImVec2(0,400).
+//   - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
+//     Always call a matching EndChild() for each BeginChild() call, regardless of its return value.
+//     [Important: due to legacy reason, this is inconsistent with most other functions such as BeginMenu/EndMenu,
+//     BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function
+//     returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
 func BeginChild(str_id string, size ImVec2, border bool, flags ImGuiWindowFlags) bool {
 	var window = GetCurrentWindow()
 	return BeginChildEx(str_id, window.GetIDs(str_id), &size, border, flags)

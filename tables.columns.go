@@ -126,7 +126,7 @@ func EndColumns() {
 	// Draw columns borders and handle resize
 	// The IsBeingResized flag ensure we preserve pre-resize columns width so back-and-forth are not lossy
 	var is_being_resized = false
-	if ((flags & ImGuiOldColumnFlags_NoBorder) == 0 && !window.SkipItems) {
+	if (flags&ImGuiOldColumnFlags_NoBorder) == 0 && !window.SkipItems {
 		// We clip Y boundaries CPU side because very long triangles are mishandled by some GPU drivers.
 		var y1 float = ImMax(columns.HostCursorPosY, window.ClipRect.Min.y)
 		var y2 float = ImMin(window.DC.CursorPos.y, window.ClipRect.Max.y)
@@ -148,7 +148,7 @@ func EndColumns() {
 				if hovered || held {
 					g.MouseCursor = ImGuiMouseCursor_ResizeEW
 				}
-				if held && (column.Flags & ImGuiOldColumnFlags_NoResize) == 0 {
+				if held && (column.Flags&ImGuiOldColumnFlags_NoResize) == 0 {
 					dragging_column = n
 				}
 			}
@@ -255,25 +255,25 @@ func GetColumnNormFromOffset(columns *ImGuiOldColumns, offset float) float {
 // - You can also use SameLine(pos_x) to mimic simplified columns.
 
 func Columns(columns_count int /*= 1*/, id string /*= L*/, border bool /*= true*/) {
-	var window = GetCurrentWindow();
-    IM_ASSERT(columns_count >= 1);
+	var window = GetCurrentWindow()
+	IM_ASSERT(columns_count >= 1)
 
-    var flags ImGuiOldColumnFlags = ImGuiOldColumnFlags_NoBorder
+	var flags ImGuiOldColumnFlags = ImGuiOldColumnFlags_NoBorder
 	if border {
 		flags = 0
 	}
-    //flags |= ImGuiOldColumnFlags_NoPreserveWidths; // NB: Legacy behavior
-    var columns = window.DC.CurrentColumns;
-    if (columns != nil && columns.Count == columns_count && columns.Flags == flags) {
-        return;
+	//flags |= ImGuiOldColumnFlags_NoPreserveWidths; // NB: Legacy behavior
+	var columns = window.DC.CurrentColumns
+	if columns != nil && columns.Count == columns_count && columns.Flags == flags {
+		return
 	}
 
-    if (columns != nil) {
-        EndColumns();
+	if columns != nil {
+		EndColumns()
 	}
 
-    if (columns_count != 1) {
-        BeginColumns(id, columns_count, flags);
+	if columns_count != 1 {
+		BeginColumns(id, columns_count, flags)
 	}
 }
 

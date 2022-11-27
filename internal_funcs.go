@@ -184,7 +184,8 @@ func PopItemFlag() {
 // t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
 // t1 = current time (e.g.: g.Time)
 // An event is triggered at:
-//  t = 0.0f     t = repeat_delay,    t = repeat_delay + repeat_rate*N
+//
+//	t = 0.0f     t = repeat_delay,    t = repeat_delay + repeat_rate*N
 func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
 	if t1 == 0.0 {
 		return 1

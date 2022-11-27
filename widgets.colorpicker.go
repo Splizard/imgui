@@ -867,7 +867,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 }
 
 // initialize current options (generally on application startup) if you want to select a default format, picker type, etc.
-//User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
+// User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
 func SetColorEditOptions(flags ImGuiColorEditFlags) {
 	var g = GImGui
 	if (flags & ImGuiColorEditFlags_DisplayMask_) == 0 {

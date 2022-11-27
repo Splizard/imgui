@@ -246,7 +246,7 @@ func TabItemButton(label string, flags ImGuiTabItemFlags) bool {
 }
 
 // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars).
-//For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
+// For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
 // [Public] This is call is 100% optional but it allows to remove some one-frame glitches when a tab has been unexpectedly removed.
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
@@ -871,8 +871,8 @@ func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTa
 	}
 	RenderTextEllipsis(draw_list, &text_ellipsis_clip_bb.Min, &text_ellipsis_clip_bb.Max, text_pixel_clip_bb.Max.x, ellipsis_max_x, label, &label_size)
 
-	if (out_just_closed != nil) {
-        *out_just_closed = close_button_pressed;
+	if out_just_closed != nil {
+		*out_just_closed = close_button_pressed
 	}
 }
 

@@ -2,7 +2,7 @@ package imgui
 
 import "fmt"
 
-//reserveVec2Slice operates like C++ vector reserve.
+// reserveVec2Slice operates like C++ vector reserve.
 func reserveVec2Slice(slice []ImVec2, capacity int) []ImVec2 {
 	if int(cap(slice)) < capacity {
 		bigger := make([]ImVec2, len(slice), capacity)

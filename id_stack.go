@@ -21,7 +21,8 @@ func PushOverrideID(id ImGuiID) {
 
 // Helper to avoid a common series of PushOverrideID . GetID() . PopID() call
 // (note that when using this pattern, TestEngine's "Stack Tool" will tend to not display the intermediate stack level.
-//  for that to work we would need to do PushOverrideID() . ItemAdd() . PopID() which would alter widget code a little more)
+//
+//	for that to work we would need to do PushOverrideID() . ItemAdd() . PopID() which would alter widget code a little more)
 func GetIDWithSeed(str string, seed ImGuiID) ImGuiID {
 	var id = ImHashStr(str, uintptr(len(str)), seed)
 	KeepAliveID(id)
