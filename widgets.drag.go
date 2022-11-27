@@ -3,6 +3,7 @@ package imgui
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 )
 
@@ -257,7 +258,8 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 	}
 
 	// Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-	var value_buf = fmt.Sprint(p_data)
+	p_data_val := reflect.ValueOf(p_data).Elem() // get actual value of the interface, not a pointer
+	var value_buf = fmt.Sprint(p_data_val)
 	if g.LogEnabled {
 		LogSetNextTextDecoration("{", "}")
 	}
