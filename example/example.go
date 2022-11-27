@@ -21,6 +21,7 @@ type Renderer interface {
 
 func main() {
 	imgui.CreateContext(nil)
+	imgui.GetCurrentContext().IO.IniFilename = "" // disable imgui.ini
 
 	io := imgui.GetIO()
 
