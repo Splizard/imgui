@@ -280,7 +280,7 @@ func NewFrame() {
 	g.WithinFrameScopeWithImplicitWindow = true
 	SetNextWindowSize(&ImVec2{400, 400}, ImGuiCond_FirstUseEver)
 	Begin("Debug##Default", nil, 0)
-	IM_ASSERT(g.CurrentWindow.IsFallbackWindow == true)
+	IM_ASSERT(g.CurrentWindow.IsFallbackWindow)
 
 	CallContextHooks(g, ImGuiContextHookType_NewFramePost)
 }
@@ -357,7 +357,7 @@ func EndFrame() {
 	}
 
 	// Drag and Drop: Fallback for source tooltip. This is not ideal but better than nothing.
-	if g.DragDropActive && g.DragDropSourceFrameCount < g.FrameCount && 0 == (g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoPreviewTooltip) {
+	if g.DragDropActive && g.DragDropSourceFrameCount < g.FrameCount && g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoPreviewTooltip == 0 {
 		g.DragDropWithinSource = true
 		SetTooltip("...")
 		g.DragDropWithinSource = false

@@ -1284,7 +1284,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	}
 
 	// If we have lost the selected tab, select the next most recently active one
-	if found_selected_tab_id == false {
+	if !found_selected_tab_id {
 		tab_bar.SelectedTabId = 0
 	}
 	if tab_bar.SelectedTabId == 0 && tab_bar.NextSelectedTabId == 0 && most_recently_selected_tab != nil {

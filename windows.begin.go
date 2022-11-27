@@ -326,7 +326,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			IM_ASSERT(parent_window != nil && parent_window.Active)
 			window.BeginOrderWithinParent = (short)(len(parent_window.DC.ChildWindows))
 			parent_window.DC.ChildWindows = append(parent_window.DC.ChildWindows, window)
-			if 0 == (flags&ImGuiWindowFlags_Popup) && !window_pos_set_by_api && !window_is_child_tooltip {
+			if flags&ImGuiWindowFlags_Popup == 0 && !window_pos_set_by_api && !window_is_child_tooltip {
 				window.Pos = parent_window.DC.CursorPos
 			}
 		}
@@ -353,7 +353,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Clamp position/size so window stays visible within its viewport or monitor
 		// Ignore zero-sized display explicitly to avoid losing positions if a window manager reports zero-sized window when initializing or minimizing.
-		if !window_pos_set_by_api && 0 == (flags&ImGuiWindowFlags_ChildWindow) && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 {
+		if !window_pos_set_by_api && flags&ImGuiWindowFlags_ChildWindow == 0 && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 {
 			if viewport_rect.GetWidth() > 0.0 && viewport_rect.GetHeight() > 0.0 {
 				ClampWindowRect(window, &visibility_rect)
 			}
@@ -365,7 +365,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		if flags&ImGuiWindowFlags_ChildWindow != 0 {
 			window.WindowRounding = style.ChildRounding
 		} else {
-			if (flags&ImGuiWindowFlags_Popup != 0) && 0 == (flags&ImGuiWindowFlags_Modal) {
+			if (flags&ImGuiWindowFlags_Popup != 0) && flags&ImGuiWindowFlags_Modal == 0 {
 				window.WindowRounding = style.PopupRounding
 			} else {
 				window.WindowRounding = style.WindowRounding
@@ -378,7 +378,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Apply window focus (new and reactivated windows are moved to front)
 		var want_focus bool = false
-		if window_just_activated_by_user && 0 == (flags&ImGuiWindowFlags_NoFocusOnAppearing) {
+		if window_just_activated_by_user && flags&ImGuiWindowFlags_NoFocusOnAppearing == 0 {
 			if flags&ImGuiWindowFlags_Popup != 0 {
 				want_focus = true
 			} else if (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Tooltip)) == 0 {
@@ -425,16 +425,16 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 				size_x_for_scrollbars = avail_size_from_current_frame.y
 			}
 			//bool scrollbar_y_from_last_frame = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
-			window.ScrollbarY = (flags&ImGuiWindowFlags_AlwaysVerticalScrollbar != 0) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && 0 == (flags&ImGuiWindowFlags_NoScrollbar))
+			window.ScrollbarY = (flags&ImGuiWindowFlags_AlwaysVerticalScrollbar != 0) || ((needed_size_from_last_frame.y > size_y_for_scrollbars) && flags&ImGuiWindowFlags_NoScrollbar == 0)
 
 			var scroll_bar_size_y float
 			if window.ScrollbarY {
 				scroll_bar_size_y = style.ScrollbarSize
 			}
 
-			window.ScrollbarX = (flags&ImGuiWindowFlags_AlwaysHorizontalScrollbar != 0) || ((needed_size_from_last_frame.x > size_x_for_scrollbars-(scroll_bar_size_y)) && 0 == (flags&ImGuiWindowFlags_NoScrollbar) && (flags&ImGuiWindowFlags_HorizontalScrollbar != 0))
+			window.ScrollbarX = (flags&ImGuiWindowFlags_AlwaysHorizontalScrollbar != 0) || ((needed_size_from_last_frame.x > size_x_for_scrollbars-(scroll_bar_size_y)) && flags&ImGuiWindowFlags_NoScrollbar == 0 && (flags&ImGuiWindowFlags_HorizontalScrollbar != 0))
 			if window.ScrollbarX && !window.ScrollbarY {
-				window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && 0 == (flags&ImGuiWindowFlags_NoScrollbar)
+				window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && flags&ImGuiWindowFlags_NoScrollbar == 0
 			}
 			var scroll_bar_size_x float
 			if window.ScrollbarX {
@@ -453,7 +453,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// - Begin() initial clipping rect for drawing window background and borders.
 		// - Begin() clipping whole child
 		var host_rect ImRect = viewport_rect
-		if (flags&ImGuiWindowFlags_ChildWindow != 0) && 0 == (flags&ImGuiWindowFlags_Popup) && !window_is_child_tooltip {
+		if (flags&ImGuiWindowFlags_ChildWindow != 0) && flags&ImGuiWindowFlags_Popup == 0 && !window_is_child_tooltip {
 			host_rect = parent_window.ClipRect
 		}
 		var outer_rect ImRect = window.Rect()
@@ -480,7 +480,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// Affected by window/frame border size. Used by:
 		// - Begin() initial clip rect
 		var top_border_size float
-		if (flags&ImGuiWindowFlags_MenuBar != 0) || 0 == (flags&ImGuiWindowFlags_NoTitleBar) {
+		if (flags&ImGuiWindowFlags_MenuBar != 0) || flags&ImGuiWindowFlags_NoTitleBar == 0 {
 			top_border_size = style.FrameBorderSize
 		}
 		window.InnerClipRect.Min.x = ImFloor(0.5 + window.InnerRect.Min.x + ImMax(ImFloor(window.WindowPadding.x*0.5), window.WindowBorderSize))
@@ -490,7 +490,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		window.InnerClipRect.ClipWithFull(host_rect)
 
 		// Default item width. Make it proportional to window size if window manually resizes
-		if window.Size.x > 0.0 && 0 == (flags&ImGuiWindowFlags_Tooltip) && 0 == (flags&ImGuiWindowFlags_AlwaysAutoResize) {
+		if window.Size.x > 0.0 && flags&ImGuiWindowFlags_Tooltip == 0 && flags&ImGuiWindowFlags_AlwaysAutoResize == 0 {
 			window.ItemWidthDefault = ImFloor(window.Size.x * 0.65)
 		} else {
 			window.ItemWidthDefault = ImFloor(g.FontSize * 16.0)
@@ -545,7 +545,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// FIXME: User code may rely on explicit sorting of overlapping child window and would need to disable this somehow. Please get in contact if you are affected (github #4493)
 		{
 			var render_decorations_in_parent bool = false
-			if (flags&ImGuiWindowFlags_ChildWindow != 0) && 0 == (flags&ImGuiWindowFlags_Popup) && !window_is_child_tooltip {
+			if (flags&ImGuiWindowFlags_ChildWindow != 0) && flags&ImGuiWindowFlags_Popup == 0 && !window_is_child_tooltip {
 				// - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
 				// - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
 				var previous_child *ImGuiWindow
@@ -599,8 +599,8 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// - Columns() for right-most edge
 		// - TreeNode(), CollapsingHeader() for right-most edge
 		// - BeginTabBar() for right-most edge
-		var allow_scrollbar_x bool = 0 == (flags&ImGuiWindowFlags_NoScrollbar) && (flags&ImGuiWindowFlags_HorizontalScrollbar != 0)
-		var allow_scrollbar_y bool = 0 == (flags & ImGuiWindowFlags_NoScrollbar)
+		var allow_scrollbar_x bool = flags&ImGuiWindowFlags_NoScrollbar == 0 && (flags&ImGuiWindowFlags_HorizontalScrollbar != 0)
+		var allow_scrollbar_y bool = flags&ImGuiWindowFlags_NoScrollbar == 0
 
 		var work_rect_size_x float
 		if window.ContentSizeExplicit.x != 0.0 {
@@ -709,7 +709,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		}
 
 		// Title bar
-		if 0 == (flags & ImGuiWindowFlags_NoTitleBar) {
+		if flags & ImGuiWindowFlags_NoTitleBar == 0 {
 			RenderWindowTitleBarContents(window, &ImRect{ImVec2{title_bar_rect.Min.x + window.WindowBorderSize, title_bar_rect.Min.y}, ImVec2{title_bar_rect.Max.x - window.WindowBorderSize, title_bar_rect.Max.y}}, name, p_open)
 		}
 
@@ -764,7 +764,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			// Child window can be out of sight and have "negative" clip windows.
 			// Mark them as collapsed so commands are skipped earlier (we can't manually collapse them because they have no title bar).
 			IM_ASSERT((flags & ImGuiWindowFlags_NoTitleBar) != 0)
-			if 0 == (flags&ImGuiWindowFlags_AlwaysAutoResize) && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 { // FIXME: Doesn't make sense for ChildWindow??
+			if flags&ImGuiWindowFlags_AlwaysAutoResize == 0 && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 { // FIXME: Doesn't make sense for ChildWindow??
 				if !g.LogEnabled {
 					if window.OuterRectClipped.Min.x >= window.OuterRectClipped.Max.x || window.OuterRectClipped.Min.y >= window.OuterRectClipped.Max.y {
 						window.HiddenFramesCanSkipItems = 1

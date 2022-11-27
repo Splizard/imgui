@@ -346,7 +346,7 @@ func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_w
 	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
-	IM_ASSERT_USER_ERROR(table.IsLayoutLocked == false, "Need to call call TableSetupColumn() before first row!")
+	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call call TableSetupColumn() before first row!")
 	IM_ASSERT_USER_ERROR((flags&ImGuiTableColumnFlags_StatusMask_) == 0, "Illegal to pass StatusMask values to TableSetupColumn()")
 	if int(table.DeclColumnsCount) >= table.ColumnsCount {
 		IM_ASSERT_USER_ERROR(int(table.DeclColumnsCount) < table.ColumnsCount, "Called TableSetupColumn() too many times!")
@@ -425,7 +425,7 @@ func TableSetupScrollFreeze(columns int, rows int) {
 	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
-	IM_ASSERT_USER_ERROR(table.IsLayoutLocked == false, "Need to call TableSetupColumn() before first row!")
+	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call TableSetupColumn() before first row!")
 	IM_ASSERT(columns >= 0 && columns < IMGUI_TABLE_MAX_COLUMNS)
 	IM_ASSERT(rows >= 0 && rows < 128) // Arbitrary limit
 
@@ -834,7 +834,6 @@ func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1
 		var cell_data *ImGuiTableCellData = &table.RowCellData[table.RowCellDataCurrent]
 		cell_data.BgColor = color
 		cell_data.Column = (ImGuiTableColumnIdx)(column_n)
-		break
 	case ImGuiTableBgTarget_RowBg0:
 		fallthrough
 	case ImGuiTableBgTarget_RowBg1:
@@ -847,7 +846,6 @@ func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1
 			bg_idx = 1
 		}
 		table.RowBgColor[bg_idx] = color
-		break
 	default:
 		IM_ASSERT(false)
 	}

@@ -519,7 +519,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 	for dst_i := range dst_tmp_array {
 		dst_tmp_array[dst_i].GlyphsSet.Clear()
 	}
-	dst_tmp_array = dst_tmp_array[:0]
+	// dst_tmp_array = dst_tmp_array[:0]
 
 	// Allocate packing character data and flag packed characters buffer as non-packed (x0=y0=x1=y1=0)
 	// (We technically don't need to zero-clear buf_rects, but let's do it for the sake of sanity)
@@ -654,7 +654,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 	}
 
 	// End packing
-	buf_rects = buf_rects[:0]
+	// buf_rects = buf_rects[:0]
 
 	// 9. Setup ImFont and glyphs for runtime
 	for src_i := range src_tmp_array {

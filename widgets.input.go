@@ -613,7 +613,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	var backup_current_text_length int = 0
 	if g.ActiveId == id {
 		IM_ASSERT(state != nil)
-		backup_current_text_length = state.CurLenA
+		// backup_current_text_length = state.CurLenA
 		state.Edited = false
 		state.BufCapacityA = int(len(*buf))
 		state.Flags = flags
@@ -825,9 +825,11 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 					ib = ImMinInt(state.Stb.select_start, state.Stb.select_end)
 				}
 				var ie = state.CurLenW
-				if state.HasSelection() {
-					ImMaxInt(state.Stb.select_start, state.Stb.select_end)
-				}
+				/*  TODO (the return value of ImMaxInt is unused):
+					if state.HasSelection() {
+						ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+					}
+				*/
 				var clipboard_data_len = ImTextCountUtf8BytesFromStr(state.TextW[ib:], state.TextW[ie:]) + 1
 				var clipboard_data = make([]byte, clipboard_data_len)
 				ImTextStrToUtf8(clipboard_data, clipboard_data_len, state.TextW[ib:], state.TextW[ie:])
@@ -1070,9 +1072,11 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	// FIXME: We could remove the '&& render_cursor' to keep rendering selection when inactive.
 	if render_cursor || render_selection {
 		IM_ASSERT(state != nil)
-		if !is_displaying_hint {
-			buf_display_end = buf_display[state.CurLenA:]
-		}
+		/*  TODO (this value of buf_display_end is unused):
+			if !is_displaying_hint {
+				buf_display_end = buf_display[state.CurLenA:]
+			}
+		*/
 
 		// Render text (with cursor and selection)
 		// This is going to be messy. We need to:

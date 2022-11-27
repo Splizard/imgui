@@ -20,7 +20,7 @@ func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool {
 		return false
 	}
 
-	IM_ASSERT(g.DragDropWithinTarget == false)
+	IM_ASSERT(!g.DragDropWithinTarget)
 	g.DragDropTargetRect = *bb
 	g.DragDropTargetId = id
 	g.DragDropWithinTarget = true
@@ -81,13 +81,13 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 			if g.ActiveIdMouseButton != -1 {
 				mouse_button = g.ActiveIdMouseButton
 			}
-			if g.IO.MouseDown[mouse_button] == false {
+			if !g.IO.MouseDown[mouse_button] {
 				return false
 			}
 			g.ActiveIdAllowOverlap = false
 		} else {
 			// Uncommon path: items without ID
-			if g.IO.MouseDown[mouse_button] == false {
+			if !g.IO.MouseDown[mouse_button] {
 				return false
 			}
 
@@ -247,7 +247,7 @@ func BeginDragDropTarget() bool {
 		return false
 	}
 
-	IM_ASSERT(g.DragDropWithinTarget == false)
+	IM_ASSERT(!g.DragDropWithinTarget)
 	g.DragDropTargetRect = display_rect
 	g.DragDropTargetId = id
 	g.DragDropWithinTarget = true

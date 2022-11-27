@@ -113,7 +113,7 @@ func MarkIniSettingsDirty() {
 
 func MarkIniSettingsDirtyWindow(window *ImGuiWindow) {
 	var g = GImGui
-	if 0 == (window.Flags & ImGuiWindowFlags_NoSavedSettings) {
+	if window.Flags&ImGuiWindowFlags_NoSavedSettings == 0 {
 		if g.SettingsDirtyTimer <= 0.0 {
 			g.SettingsDirtyTimer = g.IO.IniSavingRate
 		}

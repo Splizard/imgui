@@ -753,18 +753,12 @@ retry:
 
 	case STB_TEXTEDIT_K_INSERT:
 		state.insert_mode = byte(bool2int(state.insert_mode == 0))
-		break
-
 	case STB_TEXTEDIT_K_UNDO:
 		stb_text_undo(str, state)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_REDO:
 		stb_text_redo(str, state)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LEFT:
 		// if currently there's a selection, move cursor to start of selection
 		if STB_TEXT_HAS_SELECTION(state) {
@@ -775,8 +769,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_RIGHT:
 		// if currently there's a selection, move cursor to end of selection
 		if STB_TEXT_HAS_SELECTION(state) {
@@ -786,8 +778,6 @@ retry:
 		}
 		stb_textedit_clamp(str, state)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LEFT | STB_TEXTEDIT_K_SHIFT:
 		stb_textedit_clamp(str, state)
 		stb_textedit_prep_selection_at_cursor(state)
@@ -797,8 +787,6 @@ retry:
 		}
 		state.cursor = state.select_end
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_WORDLEFT:
 		if STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_move_to_first(state)
@@ -806,8 +794,6 @@ retry:
 			state.cursor = STB_TEXTEDIT_MOVEWORDLEFT(str, state.cursor)
 			stb_textedit_clamp(str, state)
 		}
-		break
-
 	case STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT:
 		if !STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_prep_selection_at_cursor(state)
@@ -817,8 +803,6 @@ retry:
 		state.select_end = state.cursor
 
 		stb_textedit_clamp(str, state)
-		break
-
 	case STB_TEXTEDIT_K_WORDRIGHT:
 		if STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_move_to_last(str, state)
@@ -826,8 +810,6 @@ retry:
 			state.cursor = STB_TEXTEDIT_MOVEWORDRIGHT(str, state.cursor)
 			stb_textedit_clamp(str, state)
 		}
-		break
-
 	case STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT:
 		if !STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_prep_selection_at_cursor(state)
@@ -837,8 +819,6 @@ retry:
 		state.select_end = state.cursor
 
 		stb_textedit_clamp(str, state)
-		break
-
 	case STB_TEXTEDIT_K_RIGHT | STB_TEXTEDIT_K_SHIFT:
 		stb_textedit_prep_selection_at_cursor(state)
 		// move selection right
@@ -846,8 +826,6 @@ retry:
 		stb_textedit_clamp(str, state)
 		state.cursor = state.select_end
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_DOWN:
 		fallthrough
 	case STB_TEXTEDIT_K_DOWN | STB_TEXTEDIT_K_SHIFT:
@@ -1033,8 +1011,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_BACKSPACE:
 		fallthrough
 	case STB_TEXTEDIT_K_BACKSPACE | STB_TEXTEDIT_K_SHIFT:
@@ -1048,8 +1024,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTSTART2:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTSTART:
@@ -1057,8 +1031,6 @@ retry:
 		state.select_start = 0
 		state.select_end = 0
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTEND2:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTEND:
@@ -1066,8 +1038,6 @@ retry:
 		state.select_start = 0
 		state.select_end = 0
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTSTART2 | STB_TEXTEDIT_K_SHIFT:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTSTART | STB_TEXTEDIT_K_SHIFT:
@@ -1075,8 +1045,6 @@ retry:
 		state.cursor = 0
 		state.select_end = 0
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTEND2 | STB_TEXTEDIT_K_SHIFT:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTEND | STB_TEXTEDIT_K_SHIFT:
@@ -1084,8 +1052,6 @@ retry:
 		state.cursor = STB_TEXTEDIT_STRINGLEN(str)
 		state.select_end = STB_TEXTEDIT_STRINGLEN(str)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LINESTART2:
 		fallthrough
 	case STB_TEXTEDIT_K_LINESTART:
@@ -1099,8 +1065,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LINEEND2:
 		fallthrough
 	case STB_TEXTEDIT_K_LINEEND:
@@ -1133,8 +1097,6 @@ retry:
 		}
 		state.select_end = state.cursor
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LINEEND2 | STB_TEXTEDIT_K_SHIFT:
 		fallthrough
 	case STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT:

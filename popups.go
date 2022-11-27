@@ -72,7 +72,7 @@ func EndPopup() {
 	}
 
 	// Child-popups don't need to be laid out
-	IM_ASSERT(g.WithinEndChild == false)
+	IM_ASSERT(!g.WithinEndChild)
 	if window.Flags&ImGuiWindowFlags_ChildWindow != 0 {
 		g.WithinEndChild = true
 	}
@@ -233,7 +233,7 @@ func IsPopupOpen(str_id string, flags ImGuiPopupFlags) bool {
 	if (flags&ImGuiPopupFlags_AnyPopupLevel != 0) && id != 0 {
 		IM_ASSERT_USER_ERROR(false, "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel.") // But non-string version is legal and used internally
 	}
-	return IsPopupOpen(str_id, flags)
+	return IsPopupOpenID(id, flags)
 }
 
 func GetTopMostPopupModal() *ImGuiWindow {
@@ -293,7 +293,7 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 		var sc float = g.Style.MouseCursorScale
 		var ref_pos ImVec2 = NavCalcPreferredRefPos()
 		var r_avoid ImRect
-		if !g.NavDisableHighlight && g.NavDisableMouseHover && 0 == (g.IO.ConfigFlags&ImGuiConfigFlags_NavEnableSetMousePos) {
+		if !g.NavDisableHighlight && g.NavDisableMouseHover && g.IO.ConfigFlags&ImGuiConfigFlags_NavEnableSetMousePos == 0 {
 			r_avoid = ImRect{ImVec2{ref_pos.x - 16, ref_pos.y - 8}, ImVec2{ref_pos.x + 16, ref_pos.y + 8}}
 		} else {
 			r_avoid = ImRect{ImVec2{ref_pos.x - 16, ref_pos.y - 8}, ImVec2{ref_pos.x + 24*sc, ref_pos.y + 24*sc}} // FIXME: Hard-coded based on mouse cursor shape expectation. Exact dimension not very important.

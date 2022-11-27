@@ -212,7 +212,7 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 
 	// When logging is enabled, we automatically expand tree nodes (but *NOT* collapsing headers.. seems like sensible behavior).
 	// NB- If we are above max depth we still allow manually opened nodes to be logged.
-	if g.LogEnabled && 0 == (flags&ImGuiTreeNodeFlags_NoAutoOpenOnLog) && (window.DC.TreeDepth-g.LogDepthRef) < g.LogDepthToExpand {
+	if g.LogEnabled && (flags&ImGuiTreeNodeFlags_NoAutoOpenOnLog) == 0 && (window.DC.TreeDepth-g.LogDepthRef) < g.LogDepthToExpand {
 		is_open = true
 	}
 
@@ -282,7 +282,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	// This is currently only support 32 level deep and we are fine with (1 << Depth) overflowing into a zero.
 	var is_leaf bool = (flags & ImGuiTreeNodeFlags_Leaf) != 0
 	var is_open bool = TreeNodeBehaviorIsOpen(id, flags)
-	if is_open && !g.NavIdIsAlive && (flags&ImGuiTreeNodeFlags_NavLeftJumpsBackHere) != 0 && 0 == (flags&ImGuiTreeNodeFlags_NoTreePushOnOpen) {
+	if is_open && !g.NavIdIsAlive && (flags&ImGuiTreeNodeFlags_NavLeftJumpsBackHere) != 0 && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
 		window.DC.TreeJumpToParentOnPopMask |= (1 << window.DC.TreeDepth)
 	}
 
@@ -291,7 +291,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	g.LastItemData.DisplayRect = frame_bb
 
 	if !item_add {
-		if is_open && 0 == (flags&ImGuiTreeNodeFlags_NoTreePushOnOpen) {
+		if is_open && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
 			TreePushOverrideID(id)
 		}
 		return is_open
@@ -447,7 +447,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		RenderText(text_pos, label, false)
 	}
 
-	if is_open && 0 == (flags&ImGuiTreeNodeFlags_NoTreePushOnOpen) {
+	if is_open && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
 		TreePushOverrideID(id)
 	}
 	return is_open

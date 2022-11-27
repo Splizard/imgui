@@ -273,8 +273,8 @@ func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 		// When the window cannot fit all contents (either because of constraints, either because screen is too small),
 		// we are growing the size on the other axis to compensate for expected scrollbar. FIXME: Might turn bigger than ViewportSize-WindowPadding.
 		var size_auto_fit_after_constraint ImVec2 = CalcWindowSizeAfterConstraint(window, &size_auto_fit)
-		var will_have_scrollbar_x bool = (size_auto_fit_after_constraint.x-size_pad.x-0.0 < size_contents.x && (0 == window.Flags&ImGuiWindowFlags_NoScrollbar) && (window.Flags&ImGuiWindowFlags_HorizontalScrollbar != 0)) || (window.Flags&ImGuiWindowFlags_AlwaysHorizontalScrollbar != 0)
-		var will_have_scrollbar_y bool = (size_auto_fit_after_constraint.y-size_pad.y-decoration_up_height < size_contents.y && (0 == window.Flags&ImGuiWindowFlags_NoScrollbar)) || (window.Flags&ImGuiWindowFlags_AlwaysVerticalScrollbar != 0)
+		var will_have_scrollbar_x bool = (size_auto_fit_after_constraint.x-size_pad.x-0.0 < size_contents.x && (window.Flags&ImGuiWindowFlags_NoScrollbar == 0) && (window.Flags&ImGuiWindowFlags_HorizontalScrollbar != 0)) || (window.Flags&ImGuiWindowFlags_AlwaysHorizontalScrollbar != 0)
+		var will_have_scrollbar_y bool = (size_auto_fit_after_constraint.y-size_pad.y-decoration_up_height < size_contents.y && (window.Flags&ImGuiWindowFlags_NoScrollbar == 0) || (window.Flags&ImGuiWindowFlags_AlwaysVerticalScrollbar != 0))
 		if will_have_scrollbar_x {
 			size_auto_fit.y += style.ScrollbarSize
 		}
@@ -288,7 +288,7 @@ func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
 	var g = GImGui
 	var size_for_clamping ImVec2 = window.Size
-	if g.IO.ConfigWindowsMoveFromTitleBarOnly && 0 == (window.Flags&ImGuiWindowFlags_NoTitleBar) {
+	if g.IO.ConfigWindowsMoveFromTitleBarOnly && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 		size_for_clamping.y = window.TitleBarHeight()
 	}
 	sub := visibility_rect.Min.Sub(size_for_clamping)
@@ -325,7 +325,7 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 	}
 
 	// Minimum size
-	if 0 == (window.Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_AlwaysAutoResize)) {
+	if window.Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_AlwaysAutoResize) == 0 {
 		var window_for_height *ImGuiWindow = window
 		var decoration_up_height float = window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight()
 		new_size = ImMaxVec2(&new_size, &g.Style.WindowMinSize)
@@ -397,7 +397,7 @@ func End() {
 	PopClipRect() // Inner window clip rectangle
 
 	// Stop logging
-	if 0 == (window.Flags & ImGuiWindowFlags_ChildWindow) { // FIXME: add more options for scope of logging
+	if window.Flags & ImGuiWindowFlags_ChildWindow == 0 { // FIXME: add more options for scope of logging
 		LogFinish()
 	}
 

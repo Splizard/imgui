@@ -7,9 +7,11 @@ type float = float32
 type size_t = uintptr
 type char = byte
 
+/*
 func isfalse(x int) bool {
 	return x == 0
 }
+*/
 
 func istrue(x int) bool {
 	return x != 0

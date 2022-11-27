@@ -50,7 +50,7 @@ func Scrollbar(axis ImGuiAxis) {
 			rounding_corners |= ImDrawFlags_RoundCornersBottomRight
 		}
 	} else {
-		if (window.Flags&ImGuiWindowFlags_NoTitleBar != 0) && 0 == (window.Flags&ImGuiWindowFlags_MenuBar) {
+		if (window.Flags&ImGuiWindowFlags_NoTitleBar != 0) && window.Flags&ImGuiWindowFlags_MenuBar == 0 {
 			rounding_corners |= ImDrawFlags_RoundCornersTopRight
 		}
 		if !window.ScrollbarX {

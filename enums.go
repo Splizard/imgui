@@ -784,7 +784,7 @@ const (
 // Horizontal/Vertical enums are fixed to 0/1 so they may be used to index ImVec2
 const (
 	ImGuiLayoutType_Horizontal ImGuiLayoutType = 0
-	ImGuiLayoutType_Vertical                   = 1
+	ImGuiLayoutType_Vertical   ImGuiLayoutType = 1
 )
 
 type ImGuiLogType int

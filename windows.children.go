@@ -86,7 +86,7 @@ func EndChild() {
 	var g = GImGui
 	var window = g.CurrentWindow
 
-	IM_ASSERT(g.WithinEndChild == false)
+	IM_ASSERT(!g.WithinEndChild)
 	IM_ASSERT(window.Flags&ImGuiWindowFlags_ChildWindow != 0) // Mismatched BeginChild()/EndChild() calls
 
 	g.WithinEndChild = true

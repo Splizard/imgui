@@ -311,7 +311,7 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	if id != g.NavId {
 		return
 	}
-	if g.NavDisableHighlight && 0 == (flags&ImGuiNavHighlightFlags_AlwaysDraw) {
+	if g.NavDisableHighlight && flags&ImGuiNavHighlightFlags_AlwaysDraw == 0 {
 		return
 	}
 	var window = g.CurrentWindow
@@ -320,7 +320,7 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	}
 
 	var rounding float
-	if 0 == (flags & ImGuiNavHighlightFlags_NoRounding) {
+	if flags & ImGuiNavHighlightFlags_NoRounding == 0 {
 		rounding = g.Style.FrameRounding
 	}
 

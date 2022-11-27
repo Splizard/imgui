@@ -1,7 +1,5 @@
 package imgui
 
-import "fmt"
-
 // reserveVec2Slice operates like C++ vector reserve.
 func reserveVec2Slice(slice []ImVec2, capacity int) []ImVec2 {
 	if int(cap(slice)) < capacity {
@@ -12,9 +10,11 @@ func reserveVec2Slice(slice []ImVec2, capacity int) []ImVec2 {
 	return slice
 }
 
+/*
 func printf(format string, v ...interface{}) {
 	fmt.Printf(format, v...)
 }
+*/
 
 // CRC32 needs a 1KB lookup table (not cache friendly)
 // Although the code to generate the table is simple and shorter than the table itself, using a const table allows us to easily:

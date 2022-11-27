@@ -407,7 +407,7 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 		if tab.NameOffset != -1 {
 			p += fmt.Sprint(tab_bar.GetTabName(tab))
 		} else {
-			p += fmt.Sprintf("???")
+			p += "???"
 		}
 	}
 	if len(tab_bar.Tabs) > 3 {
@@ -1200,8 +1200,8 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var name, rootName, underName, movingName string = "nil", "nil", "nil", "nil"
 		if g.HoveredWindow != nil {
-			//name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
-			//	g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
+			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
+				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
 		}
 
 		Text("HoveredWindow: '%s'", name)
@@ -1226,7 +1226,7 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var navWindowName, navTargetName string = "nil", "nil"
 		if g.NavWindow != nil {
-			//navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
+			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
 		}
 
 		Text("NAV,FOCUS")

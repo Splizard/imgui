@@ -511,7 +511,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 		var use_texture bool = (this.Flags&ImDrawListFlags_AntiAliasedLinesUseTex != 0) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0)
 
 		// We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-		IM_ASSERT(!use_texture || 0 == (this._Data.Font.ContainerAtlas.Flags&ImFontAtlasFlags_NoBakedLines))
+		IM_ASSERT(!use_texture || this._Data.Font.ContainerAtlas.Flags&ImFontAtlasFlags_NoBakedLines == 0)
 
 		var idx_count int
 		var vtx_count int
