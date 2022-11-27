@@ -294,8 +294,6 @@ func (renderer *OpenGL3) createDeviceObjects() {
 		panic(err)
 	}
 
-	fmt.Println("no errors")
-
 	gl.CompileShader(renderer.vertHandle)
 	gl.CompileShader(renderer.fragHandle)
 	gl.AttachShader(renderer.shaderHandle, renderer.vertHandle)

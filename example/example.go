@@ -73,10 +73,10 @@ func main() {
 
 		imgui.SliderFloat(
 			"Slider",
-			&sliderValue,
-			0,
-			10,
-			"%.3f",
+			&sliderValue, // value
+			0,            // minimum value
+			10,           // maximum value
+			"%.3f",       // float format string (round to 3 digits after the decimal point)
 			imgui.ImGuiSliderFlags_None,
 		)
 

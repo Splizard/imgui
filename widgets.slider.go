@@ -38,16 +38,16 @@ func SliderAngle(label string, v_rad *float, v_degrees_min float /*= 0*/, v_degr
 	return value_changed
 }
 
-func SliderInt(label string, v *int, v_min int, v_max int, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
+func SliderInt(label string, v *int, v_min int, v_max int, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
+	return SliderScalar(label, ImGuiDataType_S32, v, &v_min, &v_max, format, flags)
+}
+func SliderInt2(label string, v [2]int, v_min int, v_max int, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
 	panic("not implemented")
 }
-func SliderInt2(label string, v [2]int, v_min int, v_max int, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
+func SliderInt3(label string, v [3]int, v_min int, v_max int, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
 	panic("not implemented")
 }
-func SliderInt3(label string, v [3]int, v_min int, v_max int, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
-	panic("not implemented")
-}
-func SliderInt4(label string, v [4]int, v_min int, v_max int, format string /*= "%d"*/, flsgs ImGuiSliderFlags) bool {
+func SliderInt4(label string, v [4]int, v_min int, v_max int, format string /*= "%d"*/, flags ImGuiSliderFlags) bool {
 	panic("not implemented")
 }
 
