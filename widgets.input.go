@@ -352,9 +352,9 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find beginning-of-line
 	// FIXME: this is probably wrong
 	/*
-	while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
-	    buf_mid_line--;
-	return buf_mid_line;
+		while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
+		    buf_mid_line--;
+		return buf_mid_line;
 	*/
 
 	var i int
@@ -829,16 +829,17 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		} else if is_cut || is_copy {
 			// Cut, Copy
 			if io.SetClipboardTextFn != nil {
-				var ib int
+				var ib int = 0
 				if state.HasSelection() {
 					ib = ImMinInt(state.Stb.select_start, state.Stb.select_end)
 				}
-				var ie = state.CurLenW
-				/*  TODO (the return value of ImMaxInt is unused):
+				var ie int
 				if state.HasSelection() {
-					ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+					ie = ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+				} else {
+					ie = state.CurLenW
 				}
-				*/
+				
 				var clipboard_data_len = ImTextCountUtf8BytesFromStr(state.TextW[ib:], state.TextW[ie:]) + 1
 				var clipboard_data = make([]byte, clipboard_data_len)
 				ImTextStrToUtf8(clipboard_data, clipboard_data_len, state.TextW[ib:], state.TextW[ie:])
@@ -1081,11 +1082,10 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	// FIXME: We could remove the '&& render_cursor' to keep rendering selection when inactive.
 	if render_cursor || render_selection {
 		IM_ASSERT(state != nil)
-		/*  TODO (this value of buf_display_end is unused):
 		if !is_displaying_hint {
 			buf_display_end = buf_display[state.CurLenA:]
 		}
-		*/
+		
 
 		// Render text (with cursor and selection)
 		// This is going to be messy. We need to:
@@ -1120,7 +1120,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			}
 
 			var line_count int = 0
-			//for (const ImWchar* s = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != nil; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
+			// for (const ImWchar* s = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != nil; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
 			for s := text_begin; len(s) > 0; s = s[1:] {
 				if s[0] == '\n' {
 					line_count++
