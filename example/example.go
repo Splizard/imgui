@@ -49,6 +49,7 @@ func main() {
 		counter := 0
 		showAnotherWindow := false
 	*/
+	clearColor := [3]float32{0.45, 0.55, 0.60}
 	sliderValue := float32(0)
 	inputText := []byte{}
 
@@ -59,8 +60,8 @@ func main() {
 		p.NewFrame()
 		imgui.NewFrame()
 
-		imgui.ShowMetricsWindow(nil)
-		imgui.ShowDemoWindow(nil)
+		// imgui.ShowMetricsWindow(nil)
+		// imgui.ShowDemoWindow(nil)
 
 		// 1. Show a simple window.
 		// Tip: if we don't call imgui.Begin()/imgui.End() the widgets automatically appears in a window called "Debug".
@@ -81,12 +82,19 @@ func main() {
 			imgui.ImGuiSliderFlags_None,
 		)
 
+		// doesn't work yet
 		imgui.InputText(
 			"Text input",
 			&inputText,
 			imgui.ImGuiInputTextFlags_None,
 			nil,
 			nil,
+		)
+
+		imgui.ColorEdit3(
+			"Clear color",
+			&clearColor,
+			imgui.ImGuiColorEditFlags_DisplayRGB,
 		)
 
 		/*
@@ -138,7 +146,7 @@ func main() {
 		// Rendering
 		imgui.Render() // This call only creates the draw data list. Actual rendering to framebuffer is done below.
 
-		r.PreRender([3]float32{0.45, 0.55, 0.60})
+		r.PreRender(clearColor)
 		// A this point, the application could perform its own rendering...
 		// app.RenderScene()
 

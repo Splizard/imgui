@@ -694,5 +694,65 @@ func DragBehavior(id ImGuiID, data_type ImGuiDataType, v interface{}, v_speed fl
 		return false
 	}
 
-	return DragBehaviorT(v.(*float), v_speed, n.(*float), x.(*float), t, flags)
+	// FIXME: this is kinda hacky, we can't just convert a float
+	// interface to an int interface, but we can use reflection
+	// to get the value as a float, pass it to DragBehaviourT,
+	// and set the value back
+	// convert v to float
+	v_value := reflect.ValueOf(v).Elem()
+	var v_float float
+	if !v_value.CanFloat() {
+		v_float = float(v_value.Int())
+	} else {
+		v_float = float(v_value.Float())
+	}
+
+	// convert n to float
+	n_value := reflect.ValueOf(n).Elem()
+	var n_float float
+	if !n_value.CanFloat() {
+		n_float = float(n_value.Int())
+	} else {
+		n_float = float(n_value.Float())
+	}
+
+	// convert x to float
+	x_value := reflect.ValueOf(x).Elem()
+	var x_float float
+	if !x_value.CanFloat() {
+		x_float = float(x_value.Int())
+	} else {
+		x_float = float(x_value.Float())
+	}
+
+	dragRet := DragBehaviorT(&v_float, v_speed, &n_float, &x_float, t, flags)
+
+	// set new value of v
+	if v_value.CanSet() {
+		if v_value.CanFloat() {
+			v_value.SetFloat(float64(v_float))
+		} else {
+			v_value.SetInt(int64(v_float))
+		}
+	}
+
+	// set new value of n
+	if n_value.CanSet() {
+		if n_value.CanFloat() {
+			n_value.SetFloat(float64(n_float))
+		} else {
+			n_value.SetInt(int64(n_float))
+		}
+	}
+
+	// set new value of x
+	if x_value.CanSet() {
+		if x_value.CanFloat() {
+			x_value.SetFloat(float64(x_float))
+		} else {
+			x_value.SetInt(int64(x_float))
+		}
+	}
+
+	return dragRet
 }

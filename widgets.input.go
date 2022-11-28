@@ -390,6 +390,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	IM_ASSERT(buf != nil && int(len(*buf)) >= 0)
+	// TODO: check these asserts
 	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
 	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
 
@@ -839,7 +840,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				} else {
 					ie = state.CurLenW
 				}
-				
+
 				var clipboard_data_len = ImTextCountUtf8BytesFromStr(state.TextW[ib:], state.TextW[ie:]) + 1
 				var clipboard_data = make([]byte, clipboard_data_len)
 				ImTextStrToUtf8(clipboard_data, clipboard_data_len, state.TextW[ib:], state.TextW[ie:])
@@ -1085,7 +1086,6 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		if !is_displaying_hint {
 			buf_display_end = buf_display[state.CurLenA:]
 		}
-		
 
 		// Render text (with cursor and selection)
 		// This is going to be messy. We need to:
