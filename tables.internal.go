@@ -626,7 +626,9 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 // + 2 * active_channels_count (for ImDrawCmd and ImDrawIdx buffers inside channels)
 // Where active_channels_count is variable but often == columns_count or columns_count + 1, see TableSetupDrawChannels() for details.
 // Unused channels don't perform their +2 allocations.
-func TableBeginInitMemory(e *ImGuiTable, columns_count int) {}
+func TableBeginInitMemory(e *ImGuiTable, columns_count int) {
+
+}
 
 // Apply queued resizing/reordering/hiding requests
 func TableBeginApplyRequests(table *ImGuiTable) {
@@ -859,13 +861,20 @@ func TableSetupDrawChannels(table *ImGuiTable) {
 	IM_ASSERT(table.BgClipRect.Min.y <= table.BgClipRect.Max.y)
 }
 
+// helper
+func addMissingDisplayTableOrdersToIndex(table *ImGuiTable, idx int) {
+	for i := int(0); i < (idx+1)-int(len(table.DisplayOrderToIndex)); i++ {
+		table.DisplayOrderToIndex = append(table.DisplayOrderToIndex, 0)
+	}
+}
+
 // Layout columns for the frame. This is in essence the followup to BeginTable().
 // Runs on the first call to TableNextRow(), to give a chance for TableSetupColumn() to be called first.
 // FIXME-TABLE: Our width (and therefore our WorkRect) will be minimal in the first frame for _WidthAuto columns.
 // Increase feedback side-effect with widgets relying on WorkRect.Max.x... Maybe provide a default distribution for _WidthAuto columns?
 func TableUpdateLayout(table *ImGuiTable) {
 	var g = GImGui
-	IM_ASSERT(table.IsLayoutLocked == false)
+	IM_ASSERT(!table.IsLayoutLocked)
 
 	var table_sizing_policy ImGuiTableFlags = (table.Flags & ImGuiTableFlags_SizingMask_)
 	table.IsDefaultDisplayOrder = true
@@ -885,6 +894,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 	var stretch_sum_width_auto float = 0.0
 	var fixed_max_width_auto float = 0.0
 	for order_n := int(0); order_n < table.ColumnsCount; order_n++ {
+		addMissingDisplayTableOrdersToIndex(table, order_n)
 		var column_n = table.DisplayOrderToIndex[order_n]
 		if int(column_n) != order_n {
 			table.IsDefaultDisplayOrder = false
@@ -1270,7 +1280,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 			table.HoveredColumnBody = (ImGuiTableColumnIdx)(table.ColumnsCount)
 		}
 	}
-	if has_resizable == false && (table.Flags&ImGuiTableFlags_Resizable) != 0 {
+	if !has_resizable && (table.Flags&ImGuiTableFlags_Resizable) != 0 {
 		table.Flags &= ^ImGuiTableFlags_Resizable
 	}
 
@@ -1359,7 +1369,7 @@ func TableUpdateBorders(table *ImGuiTable) {
 		if table.Flags&ImGuiTableFlags_NoBordersInBody != 0 {
 			border_y2_hit = hit_y2_head
 		}
-		if (table.Flags&ImGuiTableFlags_NoBordersInBody) != 0 && table.IsUsingHeaders == false {
+		if (table.Flags&ImGuiTableFlags_NoBordersInBody) != 0 && !table.IsUsingHeaders {
 			continue
 		}
 
