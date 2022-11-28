@@ -105,7 +105,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 		var text_size_clipped_x float = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, &s).x
 		if text_end_ellipsis == 0 && text_end_ellipsis < int(len(text)) {
 			// Always display at least 1 character if there's no room for character + ellipsis
-			text_end_ellipsis = ImTextCountUtf8BytesFromChar(text, "")
+			text_end_ellipsis = ImTextCountUtf8BytesFromChar([]char(text), nil)
 
 			s = text[text_end_ellipsis:]
 

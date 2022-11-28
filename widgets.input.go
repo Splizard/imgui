@@ -350,10 +350,19 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 }
 
 func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find beginning-of-line
-	/*while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
+	// FIXME: this is probably wrong
+	/*
+	while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
 	    buf_mid_line--;
-	return buf_mid_line;*/
-	panic("impossible?")
+	return buf_mid_line;
+	*/
+
+	var i int
+	for i = int(len(buf_mid_line) - 1); i > 0 && buf_mid_line[i] != '\n'; i-- {
+		// noop
+	}
+
+	return []ImWchar{ImWchar(i)}
 }
 
 /*
@@ -381,8 +390,8 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	IM_ASSERT(buf != nil && int(len(*buf)) >= 0)
-	IM_ASSERT(((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
-	IM_ASSERT(((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
+	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
+	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
 
 	var g = GImGui
 	var io = g.IO
@@ -826,9 +835,9 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				}
 				var ie = state.CurLenW
 				/*  TODO (the return value of ImMaxInt is unused):
-					if state.HasSelection() {
-						ImMaxInt(state.Stb.select_start, state.Stb.select_end)
-					}
+				if state.HasSelection() {
+					ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+				}
 				*/
 				var clipboard_data_len = ImTextCountUtf8BytesFromStr(state.TextW[ib:], state.TextW[ie:]) + 1
 				var clipboard_data = make([]byte, clipboard_data_len)
@@ -1073,9 +1082,9 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	if render_cursor || render_selection {
 		IM_ASSERT(state != nil)
 		/*  TODO (this value of buf_display_end is unused):
-			if !is_displaying_hint {
-				buf_display_end = buf_display[state.CurLenA:]
-			}
+		if !is_displaying_hint {
+			buf_display_end = buf_display[state.CurLenA:]
+		}
 		*/
 
 		// Render text (with cursor and selection)

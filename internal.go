@@ -114,11 +114,70 @@ func ImUpperPowerOfTwo(v int) int {
 func ImCharIsBlankA(c char) bool { return c == ' ' || c == '\t' }
 func ImCharIsBlankW(c rune) bool { return c == ' ' || c == '\t' || c == 0x3000 }
 
+// Based on stb_to_utf8() from github.com/nothings/stb/
+func ImTextCharToUtf8_inline(buf []char, buf_size int, c uint) int {
+	if c < 0x80 {
+		buf[0] = char(c)
+		return 1
+	}
+	if c < 0x800 {
+		if buf_size < 2 {
+			return 0
+		}
+		buf[0] = char(0xc0 + (c >> 6))
+		buf[1] = char(0x80 + (c & 0x3f))
+		return 2
+	}
+	if c < 0x10000 {
+		if buf_size < 3 {
+			return 0
+		}
+		buf[0] = char(0xe0 + (c >> 12))
+		buf[1] = char(0x80 + ((c >> 6) & 0x3f))
+		buf[2] = char(0x80 + (c & 0x3f))
+		return 3
+	}
+	if c <= 0x10FFFF {
+		if buf_size < 4 {
+			return 0
+		}
+		buf[0] = char(0xf0 + (c >> 18))
+		buf[1] = char(0x80 + ((c >> 12) & 0x3f))
+		buf[2] = char(0x80 + ((c >> 6) & 0x3f))
+		buf[3] = char(0x80 + (c & 0x3f))
+		return 4
+	}
+	// Invalid code point, the max unicode is 0x10FFFF
+	return 0
+}
+
 // Helpers: UTF-8 <> wchar conversions
-func ImTextCharToUtf8(out_buf [5]char, c uint) string { panic("not implemented") } // return out_buf
+func ImTextCharToUtf8(out_buf [5]char, c uint) []char {
+	count := ImTextCharToUtf8_inline(out_buf[:], 5, c)
+	out_buf[count] = 0
+	return out_buf[:]
+}
+
 func ImTextStrToUtf8(out_buf []byte, out_buf_size int, in_text []ImWchar, in_text_end []ImWchar) int {
-	panic("not implemented")
-} // return out_// return output UTF-8 bytes count
+	var out_buf_offset int32 = 0
+	var final_buf_offset int32 = 0
+
+	for i := int32(0); i < out_buf_size && i < int32(len(in_text)); i++ {
+		c := in_text[i]
+		final_buf_offset = i + out_buf_offset
+		if c < 0x80 {
+			out_buf[final_buf_offset] = char(c)
+		} else {
+			out_buf_offset += ImTextCharToUtf8_inline(
+				out_buf[final_buf_offset:],
+				int32(len(out_buf))-final_buf_offset,
+				uint32(c),
+			)
+		}
+	}
+
+	return int(final_buf_offset)
+}
 
 func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, text string, in_remaining *string) int {
 	var count int
@@ -133,17 +192,38 @@ func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, text string, in_rema
 	return int(len(text))
 }
 
-// return number of UTF-8 code-points (NOT bytes count)
 func ImTextCountCharsFromUtf8(in_text string) int {
 	var count int
-	for range in_text {
+	for _, val := range in_text {
+		var c rune
+		ImTextCharFromUtf8(&c, string(val))
+		if c == 0 {
+			break
+		}
 		count++
 	}
 	return count
 }
 
-func ImTextCountUtf8BytesFromChar(in_text, in_text_end string) int   { panic("not implemented") } // return number of bytes to express one char in UTF-8
-func ImTextCountUtf8BytesFromStr(in_text, in_text_end []ImWchar) int { panic("not implemented") } // return number of bytes to express string in UTF-8
+// Not optimal but we very rarely use this function.
+func ImTextCountUtf8BytesFromChar(in_text, in_text_end []char) int {
+	var unused rune = 0
+	return ImTextCharFromUtf8(&unused, string(in_text))
+}
+
+func ImTextCountUtf8BytesFromStr(in_text, in_text_end []ImWchar) int {
+	// return number of bytes to express string in UTF-8
+	var bytes_count int = 0
+	for _, c := range in_text {
+		c_char := char(c)
+		if c_char < 0x80 {
+			bytes_count++
+		} else {
+			bytes_count += ImTextCountUtf8BytesFromChar([]char{c_char}, nil)
+		}
+	}
+	return bytes_count
+}
 
 type ImFileHandle = *os.File
 

@@ -50,6 +50,7 @@ func main() {
 		showAnotherWindow := false
 	*/
 	sliderValue := float32(0)
+	inputText := []byte{}
 
 	for !p.ShouldStop() {
 		p.ProcessEvents()
@@ -78,6 +79,14 @@ func main() {
 			10,           // maximum value
 			"%.3f",       // float format string (round to 3 digits after the decimal point)
 			imgui.ImGuiSliderFlags_None,
+		)
+
+		imgui.InputText(
+			"Text input",
+			&inputText,
+			imgui.ImGuiInputTextFlags_None,
+			nil,
+			nil,
 		)
 
 		/*

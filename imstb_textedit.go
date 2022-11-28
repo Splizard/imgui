@@ -105,7 +105,8 @@ func STB_TEXTEDIT_INSERTCHARS(obj *STB_TEXTEDIT_STRING, pos int, new_text []STB_
 }
 
 func STB_TEXTEDIT_KEYTOTEXT(key STB_TEXTEDIT_KEYTYPE) STB_TEXTEDIT_CHARTYPE {
-	panic("not implemented")
+	// if i understand everything correctly, it just converts it into a rune
+	return STB_TEXTEDIT_CHARTYPE(key)
 }
 
 func is_separator(c rune) bool {
