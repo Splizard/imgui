@@ -3,12 +3,10 @@ package renderers
 import (
 	_ "embed" // using embed for the shader sources
 	"fmt"
-	"os"
 	"strings"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.2-core/gl"
-	"github.com/jojomi/go-spew/spew"
 	"github.com/zeozeozeo/imgui"
 )
 
@@ -63,7 +61,7 @@ func (renderer *OpenGL3) PreRender(clearColor [3]float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 }
 
-var frames int
+// var frames int
 
 // Render translates the ImGui draw data to OpenGL3 commands.
 func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float32, drawData *imgui.ImDrawData) {
@@ -170,15 +168,17 @@ func (renderer *OpenGL3) Render(displaySize [2]float32, framebufferSize [2]float
 	for _, list := range drawData.CmdLists {
 		var indexBufferOffset uintptr
 
-		if os.Getenv("DUMP") != "" {
-			if frames == 2 {
-				fmt.Println(list.IdxBuffer)
-				spew.Dump(list.VtxBuffer)
-				os.Exit(0)
-			} else {
-				frames++
+		/*
+			if os.Getenv("DUMP") != "" {
+				if frames == 2 {
+					fmt.Println(list.IdxBuffer)
+					spew.Dump(list.VtxBuffer)
+					os.Exit(0)
+				} else {
+					frames++
+				}
 			}
-		}
+		*/
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, renderer.vboHandle)
 		gl.BufferData(gl.ARRAY_BUFFER, len(list.VtxBuffer)*int(unsafe.Sizeof(list.VtxBuffer[0])), unsafe.Pointer(&list.VtxBuffer[0]), gl.STREAM_DRAW)

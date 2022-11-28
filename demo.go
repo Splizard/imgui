@@ -7,7 +7,9 @@ import (
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 func HelpMarker(desc string) {
-	TextDisabled("(?)")
+	TextDisabled(" (?)")
+
+	// TODO: this is never true for some reason
 	if IsItemHovered(0) {
 		BeginTooltip()
 		PushTextWrapPos(GetFontSize() * 35.0)

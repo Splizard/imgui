@@ -1031,7 +1031,11 @@ func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
 	return id
 }
 func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID {
-	rvalue := reflect.ValueOf(ptr).Elem()
+	rvalue := reflect.ValueOf(ptr)
+	if rvalue.Kind() != reflect.Ptr {
+		rvalue = rvalue.Elem()
+	}
+
 	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
 	var id ImGuiID = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	KeepAliveID(id)
