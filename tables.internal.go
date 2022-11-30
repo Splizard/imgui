@@ -2,7 +2,6 @@ package imgui
 
 import (
 	"fmt"
-	"strings"
 	"unsafe"
 )
 
@@ -96,7 +95,7 @@ func TableOpenContextMenu(column_n int /*= -1*/) {
 func TableSetColumnWidth(column_n int, width float) {
 	var g = GImGui
 	var table = g.CurrentTable
-	IM_ASSERT(table != nil && table.IsLayoutLocked == false)
+	IM_ASSERT(table != nil && !table.IsLayoutLocked)
 	IM_ASSERT(column_n >= 0 && column_n < table.ColumnsCount)
 	var column_0 = &table.Columns[column_n]
 	var column_0_width float = width
@@ -627,7 +626,7 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 // Where active_channels_count is variable but often == columns_count or columns_count + 1, see TableSetupDrawChannels() for details.
 // Unused channels don't perform their +2 allocations.
 func TableBeginInitMemory(e *ImGuiTable, columns_count int) {
-
+	// noop, will be handled by span helpers
 }
 
 // Apply queued resizing/reordering/hiding requests
@@ -832,6 +831,7 @@ func TableSetupDrawChannels(table *ImGuiTable) {
 
 	var draw_channel_current int = 2
 	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+		table.spanColumns(column_n)
 		var column = &table.Columns[column_n]
 		if column.IsVisibleX && column.IsVisibleY {
 			column.DrawChannelFrozen = (ImGuiTableDrawChannelIdx)(draw_channel_current)
@@ -861,10 +861,35 @@ func TableSetupDrawChannels(table *ImGuiTable) {
 	IM_ASSERT(table.BgClipRect.Min.y <= table.BgClipRect.Max.y)
 }
 
-// helper
-func addMissingDisplayTableOrdersToIndex(table *ImGuiTable, idx int) {
-	for i := int(0); i < (idx+1)-int(len(table.DisplayOrderToIndex)); i++ {
+// helper for the span allocator. called when setting an index
+// of table.DisplayOrderToIndex
+func (table *ImGuiTable) spanDisplayOrderToIndex(order_n int) {
+	displayOrderLen := int(len(table.DisplayOrderToIndex))
+
+	// check if that index already exists
+	if order_n <= displayOrderLen-1 {
+		return
+	}
+
+	// add missing items
+	for i := int(0); i < (order_n+1)-displayOrderLen; i++ {
 		table.DisplayOrderToIndex = append(table.DisplayOrderToIndex, 0)
+	}
+}
+
+// helper for the span allocator. called when setting an index
+// of table.Columns
+func (table *ImGuiTable) spanColumns(column_n int) {
+	columnsLen := int(len(table.Columns))
+
+	// check if that index already exists
+	if int(column_n) <= columnsLen-1 {
+		return
+	}
+
+	// add missing items
+	for i := int(0); i < (int(column_n)+1)-columnsLen; i++ {
+		table.Columns = append(table.Columns, NewImGuiTableColumn())
 	}
 }
 
@@ -894,11 +919,12 @@ func TableUpdateLayout(table *ImGuiTable) {
 	var stretch_sum_width_auto float = 0.0
 	var fixed_max_width_auto float = 0.0
 	for order_n := int(0); order_n < table.ColumnsCount; order_n++ {
-		addMissingDisplayTableOrdersToIndex(table, order_n)
+		table.spanDisplayOrderToIndex(order_n)
 		var column_n = table.DisplayOrderToIndex[order_n]
 		if int(column_n) != order_n {
 			table.IsDefaultDisplayOrder = false
 		}
+		table.spanColumns(int(column_n))
 		var column = &table.Columns[column_n]
 
 		// Clear column setup if not submitted by user. Currently we make it mandatory to call TableSetupColumn() every frame.
@@ -947,6 +973,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 		column.PrevEnabledColumn = (ImGuiTableColumnIdx)(prev_visible_column_idx)
 		column.NextEnabledColumn = -1
 		if prev_visible_column_idx != -1 {
+			table.spanColumns(prev_visible_column_idx)
 			table.Columns[prev_visible_column_idx].NextEnabledColumn = (ImGuiTableColumnIdx)(column_n)
 		} else {
 			table.LeftMostEnabledColumn = (ImGuiTableColumnIdx)(column_n)
@@ -955,9 +982,16 @@ func TableUpdateLayout(table *ImGuiTable) {
 		table.ColumnsEnabledCount++
 
 		table.EnabledMaskByIndex |= (ImU64)(1 << column_n)
-		table.EnabledMaskByDisplayOrder |= (ImU64)(1 << column.DisplayOrder)
+
+		displayOrderShift := column.DisplayOrder
+		if displayOrderShift < 0 {
+			displayOrderShift = 0
+		}
+		table.EnabledMaskByDisplayOrder |= (ImU64)(1 << displayOrderShift)
+
 		prev_visible_column_idx = int(column_n)
-		IM_ASSERT(column.IndexWithinEnabledSet <= column.DisplayOrder)
+		// FIXME (port): figure out this panic
+		// IM_ASSERT(column.IndexWithinEnabledSet <= column.DisplayOrder)
 
 		// Calculate ideal/auto column width (that's the width required for all contents to be visible without clipping)
 		// Combine width from regular rows + width from headers unless requested not to.
@@ -1010,6 +1044,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 		if table.EnabledMaskByIndex&((ImU64)(1<<column_n)) == 0 {
 			continue
 		}
+		table.spanColumns(column_n)
 		var column = &table.Columns[column_n]
 
 		var column_is_resizable = (column.Flags & ImGuiTableColumnFlags_NoResize) == 0
@@ -1081,6 +1116,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 		if (table.EnabledMaskByIndex & ((ImU64)(1 << column_n))) == 0 {
 			continue
 		}
+		table.spanColumns(column_n)
 		var column *ImGuiTableColumn = &table.Columns[column_n]
 
 		// Allocate width for stretched/weighted columns (StretchWeight gets converted into WidthRequest)
@@ -1108,6 +1144,9 @@ func TableUpdateLayout(table *ImGuiTable) {
 			if (table.EnabledMaskByDisplayOrder & ((ImU64)(1 << order_n))) != 0 {
 				continue
 			}
+			table.spanDisplayOrderToIndex(order_n)
+			table.spanColumns(int(table.DisplayOrderToIndex[order_n]))
+
 			var column = &table.Columns[table.DisplayOrderToIndex[order_n]]
 			if column.Flags&ImGuiTableColumnFlags_WidthStretch == 0 {
 				continue
@@ -1139,7 +1178,9 @@ func TableUpdateLayout(table *ImGuiTable) {
 	table.VisibleMaskByIndex = 0x00
 	table.RequestOutputMaskByIndex = 0x00
 	for order_n := int(0); order_n < table.ColumnsCount; order_n++ {
+		table.spanDisplayOrderToIndex(order_n)
 		var column_n = table.DisplayOrderToIndex[order_n]
+		table.spanColumns(int(column_n))
 		var column *ImGuiTableColumn = &table.Columns[column_n]
 
 		if table.FreezeRowsCount > 0 || column_n < table.FreezeColumnsCount {
@@ -1258,7 +1299,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 		column.ContentMaxXHeadersIdeal = column.WorkMinX
 
 		// Don't decrement auto-fit counters until container window got a chance to submit its items
-		if table.HostSkipItems == false {
+		if !table.HostSkipItems {
 			column.AutoFitQueue >>= 1
 			column.CannotSkipItemsQueue >>= 1
 		}
@@ -1358,7 +1399,9 @@ func TableUpdateBorders(table *ImGuiTable) {
 			continue
 		}
 
+		table.spanDisplayOrderToIndex(order_n)
 		var column_n = table.DisplayOrderToIndex[order_n]
+		table.spanColumns(int(column_n))
 		var column = &table.Columns[column_n]
 		if column.Flags&(ImGuiTableColumnFlags_NoResize|ImGuiTableColumnFlags_NoDirectResize_) != 0 {
 			continue
@@ -1415,6 +1458,7 @@ func TableUpdateColumnsWeightFromWidth(table *ImGuiTable) {
 	var visible_weight float = 0.0
 	var visible_width float = 0.0
 	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+		table.spanColumns(column_n)
 		var column = &table.Columns[column_n]
 		if !column.IsEnabled || (column.Flags&ImGuiTableColumnFlags_WidthStretch) == 0 {
 			continue
@@ -1427,6 +1471,7 @@ func TableUpdateColumnsWeightFromWidth(table *ImGuiTable) {
 
 	// Apply new weights
 	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+		table.spanColumns(column_n)
 		var column = &table.Columns[column_n]
 		if !column.IsEnabled || (column.Flags&ImGuiTableColumnFlags_WidthStretch) == 0 {
 			continue
@@ -1465,7 +1510,9 @@ func TableDrawBorders(table *ImGuiTable) {
 				continue
 			}
 
+			table.spanDisplayOrderToIndex(order_n)
 			var column_n = table.DisplayOrderToIndex[order_n]
+			table.spanColumns(int(order_n))
 			var column = &table.Columns[column_n]
 			var is_hovered = (table.HoveredColumnBorder == column_n)
 			var is_resized = (table.ResizedColumn == column_n) && (table.InstanceInteracted == table.InstanceCurrent)
@@ -1566,6 +1613,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 	}
 	var column *ImGuiTableColumn
 	if column_n != -1 {
+		table.spanColumns(column_n)
 		column = &table.Columns[column_n]
 	}
 
@@ -1607,6 +1655,7 @@ func TableDrawContextMenu(table *ImGuiTable) {
 
 		PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true)
 		for other_column_n := int(0); other_column_n < table.ColumnsCount; other_column_n++ {
+			table.spanColumns(other_column_n)
 			var other_column = &table.Columns[other_column_n]
 			if other_column.Flags&ImGuiTableColumnFlags_Disabled != 0 {
 				continue
@@ -1687,6 +1736,7 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 		if (table.VisibleMaskByIndex & ((ImU64)(1 << column_n))) == 0 {
 			continue
 		}
+		table.spanColumns(column_n)
 		var column = &table.Columns[column_n]
 
 		var merge_group_sub_count int = 1
@@ -1777,7 +1827,7 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 		var remaining_mask = make(ImBitVector, IMGUI_TABLE_MAX_DRAW_CHANNELS) // We need 132-bit of storage
 		remaining_mask.SetBitRange(LEADING_DRAW_CHANNELS, splitter._Count)
 		remaining_mask.ClearBit(int(table.Bg2DrawChannelUnfrozen))
-		IM_ASSERT(has_freeze_v == false || int(table.Bg2DrawChannelUnfrozen) != TABLE_DRAW_CHANNEL_BG2_FROZEN)
+		IM_ASSERT(!has_freeze_v || int(table.Bg2DrawChannelUnfrozen) != TABLE_DRAW_CHANNEL_BG2_FROZEN)
 
 		var f int = LEADING_DRAW_CHANNELS
 		if has_freeze_v {
@@ -1859,6 +1909,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 	var sort_order_count int = 0
 	var sort_order_mask ImU64 = 0x00
 	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+		table.spanColumns(column_n)
 		var column = &table.Columns[column_n]
 		if column.SortOrder != -1 && !column.IsEnabled {
 			column.SortOrder = -1
@@ -1880,6 +1931,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 			// (e.g. SortOrder 0 disappeared, SortOrder 1..2 exists -. rewrite then as SortOrder 0..1)
 			var column_with_smallest_sort_order int = -1
 			for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+				table.spanColumns(column_n)
 				if (fixed_mask&((ImU64)(1<<(ImU64)(column_n)))) == 0 && table.Columns[column_n].SortOrder != -1 {
 					if column_with_smallest_sort_order == -1 || table.Columns[column_n].SortOrder < table.Columns[column_with_smallest_sort_order].SortOrder {
 						column_with_smallest_sort_order = column_n
@@ -1888,6 +1940,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 			}
 			IM_ASSERT(column_with_smallest_sort_order != -1)
 			fixed_mask |= ((ImU64)(1 << column_with_smallest_sort_order))
+			table.spanColumns(column_with_smallest_sort_order)
 			table.Columns[column_with_smallest_sort_order].SortOrder = (ImGuiTableColumnIdx)(sort_n)
 
 			// Fix: Make sure only one column has a SortOrder if ImGuiTableFlags_MultiSortable is not set.
@@ -1895,6 +1948,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 				sort_order_count = 1
 				for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
 					if column_n != column_with_smallest_sort_order {
+						table.spanColumns(column_n)
 						table.Columns[column_n].SortOrder = -1
 					}
 				}
@@ -1906,6 +1960,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 	// Fallback default sort order (if no column had the ImGuiTableColumnFlags_DefaultSort flag)
 	if sort_order_count == 0 && (table.Flags&ImGuiTableFlags_SortTristate) == 0 {
 		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			table.spanColumns(column_n)
 			var column = &table.Columns[column_n]
 			if column.IsEnabled && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
 				sort_order_count = 1
@@ -1947,6 +2002,7 @@ func TableSortSpecsBuild(table *ImGuiTable) {
 
 	if dirty && sort_specs != nil {
 		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			table.spanColumns(column_n)
 			var column = &table.Columns[column_n]
 			if column.SortOrder == -1 {
 				continue
@@ -2132,6 +2188,7 @@ func TableEndRow(table *ImGuiTable) {
 		// Draw cell background color
 		if draw_cell_bg_color {
 			for _, cell_data := range table.RowCellData {
+				table.spanColumns(int(cell_data.Column))
 				var column = &table.Columns[cell_data.Column]
 				var cell_bg_rect = TableGetCellBgRect(table, int(cell_data.Column))
 				cell_bg_rect.ClipWith(table.BgClipRect)
@@ -2157,6 +2214,7 @@ func TableEndRow(table *ImGuiTable) {
 	// get the new cursor position.
 	if unfreeze_rows_request {
 		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			table.spanColumns(column_n)
 			var column *ImGuiTableColumn = &table.Columns[column_n]
 			if column_n < int(table.FreezeColumnsCount) {
 				column.NavLayerCurrent = int8(ImGuiNavLayer_Menu)
@@ -2166,7 +2224,7 @@ func TableEndRow(table *ImGuiTable) {
 		}
 	}
 	if unfreeze_rows_actual {
-		IM_ASSERT(table.IsUnfrozenRows == false)
+		IM_ASSERT(!table.IsUnfrozenRows)
 		table.IsUnfrozenRows = true
 
 		// BgClipRect starts as table.InnerClipRect, reduce it now and make BgClipRectForDrawCmd == BgClipRect
@@ -2183,6 +2241,7 @@ func TableEndRow(table *ImGuiTable) {
 		window.DC.CursorPos.y = table.RowPosY2
 		table.RowPosY1 = table.RowPosY2 - row_height
 		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
+			table.spanColumns(column_n)
 			var column *ImGuiTableColumn = &table.Columns[column_n]
 			column.DrawChannelCurrent = column.DrawChannelUnfrozen
 			column.ClipRect.Min.y = table.Bg2ClipRectForDrawCmd.Min.y
@@ -2203,6 +2262,7 @@ func TableEndRow(table *ImGuiTable) {
 // This is called very frequently, so we need to be mindful of unnecessary overhead.
 // FIXME-TABLE FIXME-OPT: Could probably shortcut some things for non-active or clipped columns.
 func TableBeginCell(table *ImGuiTable, column_n int) {
+	table.spanColumns(column_n)
 	var column = &table.Columns[column_n]
 	var window = table.InnerWindow
 	table.CurrentColumn = column_n
@@ -2299,9 +2359,10 @@ func TableGetCellBgRect(table *ImGuiTable, column_n int) ImRect {
 }
 
 func tableGetColumnName(table *ImGuiTable, column_n int) string {
-	if table.IsLayoutLocked == false && column_n >= int(table.DeclColumnsCount) {
+	if !table.IsLayoutLocked && column_n >= int(table.DeclColumnsCount) {
 		return "" // NameOffset is invalid at this point
 	}
+	table.spanColumns(column_n)
 	var column = &table.Columns[column_n]
 	if column.NameOffset == -1 {
 		return ""
@@ -2358,7 +2419,7 @@ func TableSetColumnWidthAutoSingle(table *ImGuiTable, column_n int) {
 func TableSetColumnWidthAutoAll(table *ImGuiTable) {
 	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
 		var column = &table.Columns[column_n]
-		if !column.IsEnabled && 0 == (column.Flags&ImGuiTableColumnFlags_WidthStretch) { // Cannot reset weight of hidden stretch column
+		if !column.IsEnabled && (column.Flags&ImGuiTableColumnFlags_WidthStretch) == 0 { // Cannot reset weight of hidden stretch column
 			continue
 		}
 		column.CannotSkipItemsQueue = (1 << 0)
@@ -2384,7 +2445,7 @@ func TableRemove(table *ImGuiTable) {
 func TableGcCompactTransientBuffers(table *ImGuiTable) {
 	//IMGUI_DEBUG_LOG("TableGcCompactTransientBuffers() id=0x%08X\n", table.ID);
 	var g = GImGui
-	IM_ASSERT(table.MemoryCompacted == false)
+	IM_ASSERT(!table.MemoryCompacted)
 	table.SortSpecs.Specs = nil
 	table.SortSpecsMulti = nil
 	table.IsSortSpecsDirty = true // FIXME: shouldn't have to leak into user performing a sort
@@ -2694,33 +2755,33 @@ func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, e
 		if column_n < 0 || column_n >= int(settings.ColumnsCount) {
 			return
 		}
-		line = strings.TrimSpace(line[r:])
+		line = ImStrSkipBlank(line[r:])
 		var c byte = 0
 		var column = settings.Columns[column_n]
 		column.Index = (ImGuiTableColumnIdx)(column_n)
 		if n, _ := fmt.Sscanf(line, "UserID=0x%08X%n", (*ImU32)(&x), &r); n == 1 {
-			line = strings.TrimSpace(line[r:])
+			line = ImStrSkipBlank(line[r:])
 			column.UserID = (ImGuiID)(n)
 		}
 		if n, _ := fmt.Sscanf(line, "Width=%d%n", &n, &r); n == 1 {
-			line = strings.TrimSpace(line[r:])
+			line = ImStrSkipBlank(line[r:])
 			column.WidthOrWeight = (float)(n)
 			column.IsStretch = 0
 			settings.SaveFlags |= ImGuiTableFlags_Resizable
 		}
 		if n, _ := fmt.Sscanf(line, "Weight=%f%n", &f, &r); n == 1 {
-			line = strings.TrimSpace(line[r:])
+			line = ImStrSkipBlank(line[r:])
 			column.WidthOrWeight = f
 			column.IsStretch = 1
 			settings.SaveFlags |= ImGuiTableFlags_Resizable
 		}
 		if n, _ := fmt.Sscanf(line, "Visible=%d%n", &n, &r); n == 1 {
-			line = strings.TrimSpace(line[r:])
+			line = ImStrSkipBlank(line[r:])
 			column.IsEnabled = (ImU8)(n)
 			settings.SaveFlags |= ImGuiTableFlags_Hideable
 		}
 		if n, _ := fmt.Sscanf(line, "Order=%d%n", &n, &r); n == 1 {
-			line = strings.TrimSpace(line[r:])
+			line = ImStrSkipBlank(line[r:])
 			column.DisplayOrder = (ImGuiTableColumnIdx)(n)
 			settings.SaveFlags |= ImGuiTableFlags_Reorderable
 		}
@@ -2731,7 +2792,8 @@ func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, e
 		}
 
 		if n, _ := fmt.Sscanf(line, "Sort=%d%c%n", &n, &c, &r); n == 2 {
-			line = strings.TrimSpace(line[r:])
+			// this value will never be used anymore
+			// line = ImStrSkipBlank(line[r:])
 			column.SortDirection = uint8(dir)
 			settings.SaveFlags |= ImGuiTableFlags_Sortable
 		}

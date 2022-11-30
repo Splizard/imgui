@@ -293,10 +293,6 @@ func TableNextColumn() bool {
 		return false
 	}
 
-	// FIXME: i have no idea if this should work like that
-	table.Columns = append(table.Columns, ImGuiTableColumn{})
-	// fmt.Println(len(table.Columns))
-
 	if table.IsInsideRow && table.CurrentColumn+1 < table.ColumnsCount {
 		if table.CurrentColumn != -1 {
 			TableEndCell(table)

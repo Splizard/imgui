@@ -97,13 +97,18 @@ func main() {
 			imgui.ImGuiColorEditFlags_DisplayRGB,
 		)
 
-		/*
-			if (imgui.BeginTable("split", 3, 0, imgui.ImVec2{}, 0)) {
-				imgui.TableNextColumn()
-				imgui.Checkbox("No titlebar", nil)
-				imgui.EndTable()
-			}
-		*/
+		if (imgui.BeginTable("test table", 3, 0, imgui.ImVec2{}, 0)) {
+			imgui.TableNextColumn()
+			imgui.Checkbox("checkbox!", nil)
+			imgui.TableNextColumn()
+			imgui.Checkbox("Another checkbox", nil)
+			imgui.TableNextRow(imgui.ImGuiTableRowFlags_None, 0)
+			imgui.TableNextColumn()
+			imgui.Text("text 1")
+			imgui.TableNextColumn()
+			imgui.Text("text 2")
+			imgui.EndTable()
+		}
 
 		/*
 			imgui.SliderFloat("float", &f, 0.0, 1.0)     // Edit 1 float using a slider from 0.0f to 1.0f

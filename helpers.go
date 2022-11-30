@@ -73,3 +73,10 @@ func ImHashStr(data_p string, data_size size_t, seed ImU32) ImGuiID {
 	}
 	return ^crc
 }
+
+func ImStrSkipBlank(str string) string {
+	for str[0] == ' ' || str[0] == '\t' {
+		str = str[1:]
+	}
+	return str
+}
