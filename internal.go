@@ -1030,10 +1030,18 @@ func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
 	KeepAliveID(id)
 	return id
 }
+
 func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID {
 	rvalue := reflect.ValueOf(ptr)
-	if rvalue.Kind() != reflect.Ptr {
+
+	// .Elem() will panic if it's not an interface or a pointer
+	if rvalue.Kind() == reflect.Interface || rvalue.Kind() == reflect.Pointer {
 		rvalue = rvalue.Elem()
+	}
+
+	// If we can't get the address of the value, make it a reference
+	if !rvalue.CanAddr() {
+		rvalue = reflect.ValueOf(&ptr).Elem()
 	}
 
 	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]

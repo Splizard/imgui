@@ -623,7 +623,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	var backup_current_text_length int = 0
 	if g.ActiveId == id {
 		IM_ASSERT(state != nil)
-		// backup_current_text_length = state.CurLenA
+		backup_current_text_length = state.CurLenA
 		state.Edited = false
 		state.BufCapacityA = int(len(*buf))
 		state.Flags = flags
@@ -672,7 +672,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if !runesContains(io.InputQueueCharacters, '\t') {
 				var c rune = '\t' // Insert TAB
 				if InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
-					state.OnKeyPressed((int)(c))
+					state.OnKeyPressed((int)(c)) // TODO: check this
 				}
 			}
 		}
@@ -972,11 +972,13 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 					callback(&callback_data)
 
 					// Read back what user may have modified
-					//IM_ASSERT(callback_data.Buf == state.TextA) // Invalid to modify those fields
+					IM_ASSERT(bytes.Equal(callback_data.Buf, state.TextA)) // Invalid to modify those fields
 					IM_ASSERT(callback_data.BufSize == state.BufCapacityA)
 					IM_ASSERT(callback_data.Flags == flags)
 					var buf_dirty = callback_data.BufDirty
 					if callback_data.CursorPos != utf8_cursor_pos || buf_dirty {
+						// TODO (port): check if ImTextCountCharsFromUtf8 works correctly, and the line below
+						// state->Stb.cursor = ImTextCountCharsFromUtf8(callback_data.Buf, callback_data.Buf + callback_data.CursorPos)
 						state.Stb.cursor = ImTextCountCharsFromUtf8(string(callback_data.Buf[:callback_data.CursorPos]))
 						state.CursorFollow = true
 					}
@@ -1019,6 +1021,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			// of our owned buffer matches the size of the string object held by the user, and by design we allow InputText() to be used
 			// without any storage on user's side.
 			IM_ASSERT(apply_new_text_length >= 0)
+			var buf_size int
 			if is_resizable {
 				var callback_data ImGuiInputTextCallbackData
 				callback_data.EventFlag = ImGuiInputTextFlags_CallbackResize
@@ -1028,14 +1031,16 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				callback_data.BufSize = ImMaxInt(int(len(*buf)), apply_new_text_length+1)
 				callback_data.UserData = callback_user_data
 				callback(&callback_data)
-				*buf = callback_data.Buf[:callback_data.BufSize]
-				apply_new_text_length = ImMinInt(callback_data.BufTextLen, int(len(*buf))-1)
-				IM_ASSERT(apply_new_text_length <= int(len(*buf)))
+				// *buf = callback_data.Buf[:callback_data.BufSize]
+				*buf = callback_data.Buf
+				buf_size = callback_data.BufSize
+				apply_new_text_length = ImMinInt(callback_data.BufTextLen, buf_size-1)
+				IM_ASSERT(apply_new_text_length <= buf_size)
 			}
 			//IMGUI_DEBUG_LOG("InputText(\"%s\"): apply_new_text length %d\n", label, apply_new_text_length);
 
 			// If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
-			copy(*buf, apply_new_text[:ImMinInt(apply_new_text_length+1, int(len(*buf)))])
+			copy(*buf, apply_new_text[:ImMinInt(apply_new_text_length+1, buf_size)])
 			value_changed = true
 		}
 
