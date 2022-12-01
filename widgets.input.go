@@ -34,7 +34,8 @@ func TempInputText(bb *ImRect, id ImGuiID, label string, buf *[]byte, flags ImGu
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
 func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataType, p_data interface{}, format string, p_clamp_min interface{}, p_clamp_max interface{}) bool {
 	var g = GImGui
-	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data)))
+	p_data_val := reflect.ValueOf(p_data).Elem()
+	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data_val)))
 
 	var flags ImGuiInputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited
 	flags |= ImGuiInputTextFlags_CharsDecimal

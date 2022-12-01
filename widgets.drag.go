@@ -259,7 +259,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 
 	// Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
 	p_data_val := reflect.ValueOf(p_data).Elem() // get actual value of the interface, not a pointer
-	var value_buf = fmt.Sprint(p_data_val)
+	var value_buf = fmt.Sprintf(format, p_data_val)
 	if g.LogEnabled {
 		LogSetNextTextDecoration("{", "}")
 	}
@@ -339,7 +339,7 @@ func DragScalarInt(label string, data_type ImGuiDataType, p_data *int, v_speed f
 	PopID()
 
 	SameLine(0, g.Style.ItemInnerSpacing.x)
-	TextEx(label, 0)
+	TextEx(FindRenderedTextEnd(label), 0)
 
 	EndGroup()
 	return value_changed

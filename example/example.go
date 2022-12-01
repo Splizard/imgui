@@ -97,12 +97,13 @@ func main() {
 			imgui.ImGuiColorEditFlags_DisplayRGB,
 		)
 
-		if (imgui.BeginTable("test table", 3, 0, imgui.ImVec2{}, 0)) {
+		// for some reason, tables will panic if they're in a CollapsingHeader
+		if imgui.BeginTable("test table", 3, 0, imgui.ImVec2{}, 0) {
 			imgui.TableNextColumn()
 			imgui.Checkbox("checkbox!", nil)
 			imgui.TableNextColumn()
 			imgui.Checkbox("Another checkbox", nil)
-			imgui.TableNextRow(imgui.ImGuiTableRowFlags_None, 0)
+			imgui.TableNextRow(0, 0)
 			imgui.TableNextColumn()
 			imgui.Text("text 1")
 			imgui.TableNextColumn()
