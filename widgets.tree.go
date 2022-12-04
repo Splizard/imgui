@@ -235,6 +235,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		padding = ImVec2{style.FramePadding.x, ImMin(window.DC.CurrLineTextBaseOffset, style.FramePadding.y)}
 	}
 
+	label = FindRenderedTextEnd(label)
 	var label_size ImVec2 = CalcTextSize(label, false, 0)
 
 	// We vertically grow up to current line height up the typical widget height.
