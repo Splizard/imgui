@@ -153,6 +153,11 @@ func (platform *GLFW) PostRender() {
 	platform.window.SwapBuffers()
 }
 
+// SwapInterval sets the GLFW swap interval.
+func (platform *GLFW) SwapInterval(interval int) {
+	glfw.SwapInterval(interval)
+}
+
 func (platform *GLFW) setKeyMapping() {
 	// Keyboard mapping. ImGui will use those indices to peek into the io.KeysDown[] array.
 	platform.imguiIO.KeyMap[imgui.ImGuiKey_Tab] = int32(glfw.KeyTab)

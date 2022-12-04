@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/zeozeozeo/imgui"
 
@@ -31,6 +30,8 @@ func main() {
 		os.Exit(-1)
 	}
 	defer p.Dispose()
+	// the swap interval is 1 by default, use
+	// p.SwapInterval(n) to set it
 
 	r, err := renderers.NewOpenGL3(io)
 	if err != nil {
@@ -166,8 +167,5 @@ func main() {
 
 		r.Render(p.DisplaySize(), p.FramebufferSize(), imgui.GetDrawData())
 		p.PostRender()
-
-		// sleep to avoid 100% CPU usage for this demo
-		<-time.After(time.Millisecond * 10)
 	}
 }
