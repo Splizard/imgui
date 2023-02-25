@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/zeozeozeo/imgui"
+	"github.com/Splizard/imgui"
 )
 
 const (

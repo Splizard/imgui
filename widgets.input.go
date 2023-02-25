@@ -673,7 +673,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if !runesContains(io.InputQueueCharacters, '\t') {
 				var c rune = '\t' // Insert TAB
 				if InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
-					state.OnKeyPressed((int)(c)) // TODO: check this
+					state.OnKeyPressed((int)(c))
 				}
 			}
 		}

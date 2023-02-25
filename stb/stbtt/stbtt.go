@@ -4,8 +4,8 @@ import (
 	"math"
 	"unsafe"
 
-	"github.com/zeozeozeo/imgui/golang"
-	"github.com/zeozeozeo/imgui/stb/stbrp"
+	"github.com/Splizard/imgui/golang"
+	"github.com/Splizard/imgui/stb/stbrp"
 )
 
 //PORTING STATUS = DONE - Quentin Quaadgras

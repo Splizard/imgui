@@ -3,7 +3,7 @@ package imgui
 import (
 	"sort"
 
-	"github.com/zeozeozeo/imgui/golang"
+	"github.com/Splizard/imgui/golang"
 )
 
 type ImGuiTabItem struct {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/zeozeozeo/imgui"
+	"github.com/Splizard/imgui"
 
-	platforms "github.com/zeozeozeo/imgui/example/platforms/glfw"
-	"github.com/zeozeozeo/imgui/example/renderers"
+	platforms "github.com/Splizard/imgui/example/platforms/glfw"
+	"github.com/Splizard/imgui/example/renderers"
 )
 
 // Renderer covers rendering imgui draw data.

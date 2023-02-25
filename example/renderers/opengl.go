@@ -7,7 +7,7 @@ import (
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.2-core/gl"
-	"github.com/zeozeozeo/imgui"
+	"github.com/Splizard/imgui"
 )
 
 //go:embed shader/main.vert
