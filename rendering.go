@@ -31,7 +31,6 @@ func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, sca
 		a = ImVec2{+0.000, +0.750}.Scale(r)
 		b = ImVec2{-0.866, -0.750}.Scale(r)
 		c = ImVec2{+0.866, -0.750}.Scale(r)
-		break
 	case ImGuiDir_Left:
 		fallthrough
 	case ImGuiDir_Right:
@@ -41,12 +40,10 @@ func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, sca
 		a = ImVec2{+0.750, +0.000}.Scale(r)
 		b = ImVec2{-0.750, +0.866}.Scale(r)
 		c = ImVec2{-0.750, -0.866}.Scale(r)
-		break
 	case ImGuiDir_None:
 		fallthrough
 	case ImGuiDir_COUNT:
 		IM_ASSERT(false)
-		break
 	}
 
 	p1, p2 := center.Add(a), center.Add(b)
@@ -80,7 +77,7 @@ func Render() {
 
 	// Add ImDrawList to render
 	var windows_to_render_top_most [2]*ImGuiWindow
-	if g.NavWindowingTarget != nil && 0 == (g.NavWindowingTarget.Flags&ImGuiWindowFlags_NoBringToFrontOnFocus) {
+	if g.NavWindowingTarget != nil && g.NavWindowingTarget.Flags&ImGuiWindowFlags_NoBringToFrontOnFocus == 0 {
 		windows_to_render_top_most[0] = g.NavWindowingTarget.RootWindow
 	}
 	if g.NavWindowingTarget != nil {

@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/splizard/imgui/golang"
+	"github.com/Splizard/imgui/golang"
 )
 
 // Enumeration for PushStyleVar() / PopStyleVar() to temporarily modify the ImGuiStyle structure.
-// - The const (
-//   During initialization or between frames, feel free to just poke into ImGuiStyle directly.
-// - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
-//   In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
-//   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
-// - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link const (
+//   - The const (
+//     During initialization or between frames, feel free to just poke into ImGuiStyle directly.
+//   - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
+//     In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
+//     With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
+//   - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link const (
 const (
 	ImGuiStyleVar_Alpha               ImGuiStyleVar = iota // float     Alpha
 	ImGuiStyleVar_DisabledAlpha                            // float     DisabledAlpha
@@ -72,13 +72,13 @@ func (mod ImGuiStyleMod) Vec2() ImVec2 {
 	return ImVec2{*(*float)(unsafe.Pointer(&mod.BackupValue[0])), *(*float)(unsafe.Pointer(&mod.BackupValue[1]))}
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // [SECTION] ImGuiStyle
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // You may modify the ImGui::GetStyle() main instance during initialization and before NewFrame().
 // During the frame, use ImGui::PushStyleVar(ImGuiStyleVar_XXXX)/PopStyleVar() to alter the main style values,
 // and ImGui::PushStyleColor(ImGuiCol_XXX)/PopStyleColor() for colors.
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type ImGuiStyle struct {
 	Alpha               float  // Global alpha applies to everything in Dear ImGui.
 	DisabledAlpha       float  // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.

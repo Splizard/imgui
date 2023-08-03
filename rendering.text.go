@@ -105,7 +105,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 		var text_size_clipped_x float = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, &s).x
 		if text_end_ellipsis == 0 && text_end_ellipsis < int(len(text)) {
 			// Always display at least 1 character if there's no room for character + ellipsis
-			text_end_ellipsis = ImTextCountUtf8BytesFromChar(text, "")
+			text_end_ellipsis = ImTextCountUtf8BytesFromChar([]char(text), nil)
 
 			s = text[text_end_ellipsis:]
 
@@ -548,26 +548,26 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 					draw_list.IdxBuffer[idx_write+3] = (ImDrawIdx)(vtx_current_idx)
 					draw_list.IdxBuffer[idx_write+4] = (ImDrawIdx)(vtx_current_idx + 2)
 					draw_list.IdxBuffer[idx_write+5] = (ImDrawIdx)(vtx_current_idx + 3)
-					draw_list.VtxBuffer[vtx_write+0].pos.x = x1
-					draw_list.VtxBuffer[vtx_write+0].pos.y = y1
-					draw_list.VtxBuffer[vtx_write+0].col = glyph_col
-					draw_list.VtxBuffer[vtx_write+0].uv.x = u1
-					draw_list.VtxBuffer[vtx_write+0].uv.y = v1
-					draw_list.VtxBuffer[vtx_write+1].pos.x = x2
-					draw_list.VtxBuffer[vtx_write+1].pos.y = y1
-					draw_list.VtxBuffer[vtx_write+1].col = glyph_col
-					draw_list.VtxBuffer[vtx_write+1].uv.x = u2
-					draw_list.VtxBuffer[vtx_write+1].uv.y = v1
-					draw_list.VtxBuffer[vtx_write+2].pos.x = x2
-					draw_list.VtxBuffer[vtx_write+2].pos.y = y2
-					draw_list.VtxBuffer[vtx_write+2].col = glyph_col
-					draw_list.VtxBuffer[vtx_write+2].uv.x = u2
-					draw_list.VtxBuffer[vtx_write+2].uv.y = v2
-					draw_list.VtxBuffer[vtx_write+3].pos.x = x1
-					draw_list.VtxBuffer[vtx_write+3].pos.y = y2
-					draw_list.VtxBuffer[vtx_write+3].col = glyph_col
-					draw_list.VtxBuffer[vtx_write+3].uv.x = u1
-					draw_list.VtxBuffer[vtx_write+3].uv.y = v2
+					draw_list.VtxBuffer[vtx_write+0].Pos.x = x1
+					draw_list.VtxBuffer[vtx_write+0].Pos.y = y1
+					draw_list.VtxBuffer[vtx_write+0].Col = glyph_col
+					draw_list.VtxBuffer[vtx_write+0].Uv.x = u1
+					draw_list.VtxBuffer[vtx_write+0].Uv.y = v1
+					draw_list.VtxBuffer[vtx_write+1].Pos.x = x2
+					draw_list.VtxBuffer[vtx_write+1].Pos.y = y1
+					draw_list.VtxBuffer[vtx_write+1].Col = glyph_col
+					draw_list.VtxBuffer[vtx_write+1].Uv.x = u2
+					draw_list.VtxBuffer[vtx_write+1].Uv.y = v1
+					draw_list.VtxBuffer[vtx_write+2].Pos.x = x2
+					draw_list.VtxBuffer[vtx_write+2].Pos.y = y2
+					draw_list.VtxBuffer[vtx_write+2].Col = glyph_col
+					draw_list.VtxBuffer[vtx_write+2].Uv.x = u2
+					draw_list.VtxBuffer[vtx_write+2].Uv.y = v2
+					draw_list.VtxBuffer[vtx_write+3].Pos.x = x1
+					draw_list.VtxBuffer[vtx_write+3].Pos.y = y2
+					draw_list.VtxBuffer[vtx_write+3].Col = glyph_col
+					draw_list.VtxBuffer[vtx_write+3].Uv.x = u1
+					draw_list.VtxBuffer[vtx_write+3].Uv.y = v2
 					vtx_write += 4
 					vtx_current_idx += 4
 					idx_write += 6

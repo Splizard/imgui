@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
-	"github.com/splizard/imgui"
+	"github.com/Splizard/imgui"
 
-	platforms "github.com/splizard/imgui/example/platforms/glfw"
-	"github.com/splizard/imgui/example/renderers"
+	platforms "github.com/Splizard/imgui/example/platforms/glfw"
+	"github.com/Splizard/imgui/example/renderers"
 )
 
 // Renderer covers rendering imgui draw data.
@@ -21,6 +20,7 @@ type Renderer interface {
 
 func main() {
 	imgui.CreateContext(nil)
+	imgui.GetCurrentContext().IO.IniFilename = "" // disable imgui.ini
 
 	io := imgui.GetIO()
 
@@ -30,6 +30,8 @@ func main() {
 		os.Exit(-1)
 	}
 	defer p.Dispose()
+	// the swap interval is 1 by default, use
+	// p.SwapInterval(n) to set it
 
 	r, err := renderers.NewOpenGL3(io)
 	if err != nil {
@@ -40,12 +42,17 @@ func main() {
 
 	//imgui.CurrentIO().SetClipboard(clipboard{platform: p})
 
-	/*showDemoWindow := false
-	showGoDemoWindow := false
-	clearColor := [3]float32{0.0, 0.0, 0.0}
-	f := float32(0)
-	counter := 0
-	showAnotherWindow := false*/
+	/*
+		showDemoWindow := false
+		showGoDemoWindow := false
+		clearColor := [3]float32{0.0, 0.0, 0.0}
+		f := float32(0)
+		counter := 0
+		showAnotherWindow := false
+	*/
+	clearColor := [3]float32{0.45, 0.55, 0.60}
+	sliderValue := float32(0)
+	inputText := []byte{}
 
 	for !p.ShouldStop() {
 		p.ProcessEvents()
@@ -55,7 +62,6 @@ func main() {
 		imgui.NewFrame()
 
 		imgui.ShowMetricsWindow(nil)
-
 		imgui.ShowDemoWindow(nil)
 
 		// 1. Show a simple window.
@@ -67,60 +73,99 @@ func main() {
 			imgui.Text("the quick brown fox jumped over the lazy dog") // Display some text
 			imgui.Text("THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG") // Display some text (all caps, as if drawn manually)
 		}
-		/*imgui.SliderFloat("float", &f, 0.0, 1.0)     // Edit 1 float using a slider from 0.0f to 1.0f
-			imgui.ColorEdit3("clear color", &clearColor) // Edit 3 floats representing a color
 
-			imgui.Checkbox("Demo Window", &showDemoWindow) // Edit bools storing our window open/close state
-			imgui.Checkbox("Go Demo Window", &showGoDemoWindow)
-			imgui.Checkbox("Another Window", &showAnotherWindow)
+		imgui.SliderFloat(
+			"Slider",
+			&sliderValue, // value
+			0,            // minimum value
+			10,           // maximum value
+			"%.3f",       // float format string (round to 3 digits after the decimal point)
+			imgui.ImGuiSliderFlags_None,
+		)
 
-			if imgui.Button("Button") { // Buttons return true when clicked (most widgets return true when edited/activated)
-				counter++
+		// doesn't work yet
+		imgui.InputText(
+			"Text input",
+			&inputText,
+			imgui.ImGuiInputTextFlags_None,
+			nil,
+			nil,
+		)
+
+		imgui.ColorEdit3(
+			"Clear color",
+			&clearColor,
+			imgui.ImGuiColorEditFlags_DisplayRGB,
+		)
+
+		// for some reason, tables will panic if they're in a CollapsingHeader
+		if imgui.BeginTable("test table", 3, 0, imgui.ImVec2{}, 0) {
+			imgui.TableNextColumn()
+			imgui.Checkbox("checkbox!", nil)
+			imgui.TableNextColumn()
+			imgui.Checkbox("Another checkbox", nil)
+			imgui.TableNextRow(0, 0)
+			imgui.TableNextColumn()
+			imgui.Text("text 1")
+			imgui.TableNextColumn()
+			imgui.Text("text 2")
+			imgui.EndTable()
+		}
+
+		/*
+			imgui.SliderFloat("float", &f, 0.0, 1.0)     // Edit 1 float using a slider from 0.0f to 1.0f
+			{
+				imgui.ColorEdit3("clear color", &clearColor) // Edit 3 floats representing a color
+
+				imgui.Checkbox("Demo Window", &showDemoWindow) // Edit bools storing our window open/close state
+				imgui.Checkbox("Go Demo Window", &showGoDemoWindow)
+				imgui.Checkbox("Another Window", &showAnotherWindow)
+
+				if imgui.Button("Button") { // Buttons return true when clicked (most widgets return true when edited/activated)
+					counter++
+				}
+				imgui.SameLine()
+				imgui.Text(fmt.Sprintf("counter = %d", counter))
+
+				imgui.Text(fmt.Sprintf("Application average %.3f ms/frame (%.1f FPS)",
+					millisPerSecond/imgui.CurrentIO().Framerate(), imgui.CurrentIO().Framerate()))
 			}
-			imgui.SameLine()
-			imgui.Text(fmt.Sprintf("counter = %d", counter))
 
-			imgui.Text(fmt.Sprintf("Application average %.3f ms/frame (%.1f FPS)",
-				millisPerSecond/imgui.CurrentIO().Framerate(), imgui.CurrentIO().Framerate()))
-		}
-
-		// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-		if showAnotherWindow {
-			// Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-			imgui.BeginV("Another window", &showAnotherWindow, 0)
-			imgui.Text("Hello from another window!")
-			if imgui.Button("Close Me") {
-				showAnotherWindow = false
+			// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
+			if showAnotherWindow {
+				// Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+				imgui.BeginV("Another window", &showAnotherWindow, 0)
+				imgui.Text("Hello from another window!")
+				if imgui.Button("Close Me") {
+					showAnotherWindow = false
+				}
+				imgui.End()
 			}
-			imgui.End()
-		}
 
-		// 3. Show the ImGui demo window. Most of the sample code is in imgui.ShowDemoWindow().
-		// Read its code to learn more about Dear ImGui!
-		if showDemoWindow {
-			// Normally user code doesn't need/want to call this because positions are saved in .ini file anyway.
-			// Here we just want to make the demo initial state a bit more friendly!
-			const demoX = 650
-			const demoY = 20
-			imgui.SetNextWindowPosV(imgui.Vec2{X: demoX, Y: demoY}, imgui.ConditionFirstUseEver, imgui.Vec2{})
+			// 3. Show the ImGui demo window. Most of the sample code is in imgui.ShowDemoWindow().
+			// Read its code to learn more about Dear ImGui!
+			if showDemoWindow {
+				// Normally user code doesn't need/want to call this because positions are saved in .ini file anyway.
+				// Here we just want to make the demo initial state a bit more friendly!
+				const demoX = 650
+				const demoY = 20
+				imgui.SetNextWindowPosV(imgui.Vec2{X: demoX, Y: demoY}, imgui.ConditionFirstUseEver, imgui.Vec2{})
 
-			imgui.ShowDemoWindow(&showDemoWindow)
-		}
-		if showGoDemoWindow {
-			demo.Show(&showGoDemoWindow)
-		}*/
+				imgui.ShowDemoWindow(&showDemoWindow)
+			}
+			if showGoDemoWindow {
+				demo.Show(&showGoDemoWindow)
+			}
+		*/
 
 		// Rendering
 		imgui.Render() // This call only creates the draw data list. Actual rendering to framebuffer is done below.
 
-		r.PreRender([3]float32{0.45, 0.55, 0.60})
+		r.PreRender(clearColor)
 		// A this point, the application could perform its own rendering...
 		// app.RenderScene()
 
 		r.Render(p.DisplaySize(), p.FramebufferSize(), imgui.GetDrawData())
 		p.PostRender()
-
-		// sleep to avoid 100% CPU usage for this demo
-		<-time.After(time.Millisecond * 10)
 	}
 }

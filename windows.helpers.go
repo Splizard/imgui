@@ -22,10 +22,10 @@ func UpdateWindowParentAndRootLinks(window *ImGuiWindow, flags ImGuiWindowFlags,
 	window.RootWindow = window
 	window.RootWindowForTitleBarHighlight = window
 	window.RootWindowForNav = window
-	if parent_window != nil && (flags&ImGuiWindowFlags_ChildWindow != 0) && 0 == (flags&ImGuiWindowFlags_Tooltip) {
+	if parent_window != nil && (flags&ImGuiWindowFlags_ChildWindow != 0) && flags&ImGuiWindowFlags_Tooltip == 0 {
 		window.RootWindow = parent_window.RootWindow
 	}
-	if parent_window != nil && 0 == (flags&ImGuiWindowFlags_Modal) && (flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_Popup) != 0) {
+	if parent_window != nil && flags&ImGuiWindowFlags_Modal == 0 && (flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_Popup) != 0) {
 		window.RootWindowForTitleBarHighlight = parent_window.RootWindowForTitleBarHighlight
 	}
 	for window.RootWindowForNav.Flags&ImGuiWindowFlags_NavFlattened != 0 {

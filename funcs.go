@@ -20,11 +20,11 @@ func GetVersion() string {
 // Clipping
 // - Mouse hovering is affected by ImGui::PushClipRect() calls, unlike direct calls to ImDrawList::PushClipRect() which are render only.
 // Push a clipping rectangle for both ImGui logic (hit-testing etc.) and low-level ImDrawList rendering.
-// - When using this function it is sane to ensure that float are perfectly rounded to integer values,
-//   so that e.g. (int)(max.x-min.x) in user's render produce correct result.
-// - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
-//   some frequently called functions which to modify both channels and clipping simultaneously tend to use the
-//   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
+//   - When using this function it is sane to ensure that float are perfectly rounded to integer values,
+//     so that e.g. (int)(max.x-min.x) in user's render produce correct result.
+//   - If the code here changes, may need to update code of functions like NextColumn() and PushColumnClipRect():
+//     some frequently called functions which to modify both channels and clipping simultaneously tend to use the
+//     more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
 func PushClipRect(cr_min ImVec2, cr_max ImVec2, intersect_with_current_clip_rect bool) {
 	var window *ImGuiWindow = GetCurrentWindow()
 	window.DrawList.PushClipRect(cr_min, cr_max, intersect_with_current_clip_rect)

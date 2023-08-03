@@ -18,7 +18,7 @@ func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OP
 // Forward will reuse the move request again on the next frame (generally with modifications done to it)
 func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
 	var g = GImGui
-	IM_ASSERT(g.NavMoveForwardToNextFrame == false)
+	IM_ASSERT(!g.NavMoveForwardToNextFrame)
 	NavMoveRequestCancel()
 	g.NavMoveForwardToNextFrame = true
 	g.NavMoveDir = move_dir
@@ -147,7 +147,7 @@ func NavProcessItem() {
 	// Process Move Request (scoring for navigation)
 	// FIXME-NAV: Consider policy for double scoring (scoring from NavScoringRect + scoring from a rect wrapped according to current wrapping policy)
 	if g.NavMoveScoringItems {
-		if (g.NavId != id || (g.NavMoveFlags&ImGuiNavMoveFlags_AllowCurrentNavId != 0)) && 0 == (item_flags&(ImGuiItemFlags_Disabled|ImGuiItemFlags_NoNav)) {
+		if (g.NavId != id || (g.NavMoveFlags&ImGuiNavMoveFlags_AllowCurrentNavId != 0)) && item_flags&(ImGuiItemFlags_Disabled|ImGuiItemFlags_NoNav) == 0 {
 			var result *ImGuiNavItemData
 			if window == g.NavWindow {
 				result = &g.NavMoveResultLocal
@@ -1029,7 +1029,7 @@ func NavScoreItem(result *ImGuiNavItemData) bool {
 	// 2017/09/29: FIXME: This now currently only enabled inside menu bars, ideally we'd disable it everywhere. Menus in particular need to catch failure. For general navigation it feels awkward.
 	// Disabling it may lead to disconnected graphs when nodes are very spaced out on different axis. Perhaps consider offering this as an option?
 	if result.DistBox == FLT_MAX && dist_axial < result.DistAxial { // Check axial match
-		if g.NavLayer == ImGuiNavLayer_Menu && 0 == (g.NavWindow.Flags&ImGuiWindowFlags_ChildMenu) {
+		if g.NavLayer == ImGuiNavLayer_Menu && g.NavWindow.Flags&ImGuiWindowFlags_ChildMenu == 0 {
 			if (move_dir == ImGuiDir_Left && dax < 0.0) || (move_dir == ImGuiDir_Right && dax > 0.0) || (move_dir == ImGuiDir_Up && day < 0.0) || (move_dir == ImGuiDir_Down && day > 0.0) {
 				result.DistAxial = dist_axial
 				new_best = true

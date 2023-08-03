@@ -50,7 +50,7 @@ func Scrollbar(axis ImGuiAxis) {
 			rounding_corners |= ImDrawFlags_RoundCornersBottomRight
 		}
 	} else {
-		if (window.Flags&ImGuiWindowFlags_NoTitleBar != 0) && 0 == (window.Flags&ImGuiWindowFlags_MenuBar) {
+		if (window.Flags&ImGuiWindowFlags_NoTitleBar != 0) && window.Flags&ImGuiWindowFlags_MenuBar == 0 {
 			rounding_corners |= ImDrawFlags_RoundCornersTopRight
 		}
 		if !window.ScrollbarX {
@@ -72,6 +72,13 @@ func Scrollbar(axis ImGuiAxis) {
 	}
 
 	ScrollbarEx(&bb, id, axis, &amount, size_avail, size_contents, rounding_corners)
+
+	switch axis {
+	case ImGuiAxis_X:
+		window.Scroll.x = amount
+	case ImGuiAxis_Y:
+		window.Scroll.y = amount
+	}
 }
 
 // Vertical/Horizontal scrollbar

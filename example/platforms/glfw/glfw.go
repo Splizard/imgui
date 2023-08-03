@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/splizard/imgui"
+	"github.com/Splizard/imgui"
 )
 
 const (
@@ -151,6 +151,11 @@ func (platform *GLFW) NewFrame() {
 // PostRender performs a buffer swap.
 func (platform *GLFW) PostRender() {
 	platform.window.SwapBuffers()
+}
+
+// SwapInterval sets the GLFW swap interval.
+func (platform *GLFW) SwapInterval(interval int) {
+	glfw.SwapInterval(interval)
 }
 
 func (platform *GLFW) setKeyMapping() {

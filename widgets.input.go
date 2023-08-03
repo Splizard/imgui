@@ -34,7 +34,8 @@ func TempInputText(bb *ImRect, id ImGuiID, label string, buf *[]byte, flags ImGu
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
 func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataType, p_data interface{}, format string, p_clamp_min interface{}, p_clamp_max interface{}) bool {
 	var g = GImGui
-	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data)))
+	p_data_val := reflect.ValueOf(p_data).Elem()
+	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data_val)))
 
 	var flags ImGuiInputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited
 	flags |= ImGuiInputTextFlags_CharsDecimal
@@ -291,7 +292,7 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 		// We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
 		// Change the default decimal_point with:
 		//   ImGui::GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
-		var g = *GImGui
+		var g = GImGui
 		var c_decimal_point rune = (rune)(g.PlatformLocaleDecimalPoint)
 
 		// Allow 0-9 . - + * /
@@ -350,10 +351,19 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 }
 
 func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find beginning-of-line
-	/*while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
-	    buf_mid_line--;
-	return buf_mid_line;*/
-	panic("impossible?")
+	// FIXME: this is probably wrong
+	/*
+		while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
+		    buf_mid_line--;
+		return buf_mid_line;
+	*/
+
+	var i int
+	for i = int(len(buf_mid_line) - 1); i > 0 && buf_mid_line[i] != '\n'; i-- {
+		// noop
+	}
+
+	return []ImWchar{ImWchar(i)}
 }
 
 /*
@@ -365,13 +375,15 @@ func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find 
 */
 
 // Edit a string of text
-// - buf_size account for the zero-terminator, so a buf_size of 6 can hold "Hello" but not "Hello!".
-//   This is so we can easily call InputText() on static arrays using ARRAYSIZE() and to match
-//   Note that in std::string world, capacity() would omit 1 byte used by the zero-terminator.
-// - When active, hold on a privately held copy of the text (and apply back to 'buf'). So changing 'buf' while the InputText is active has no effect.
-// - If you want to use ImGui::InputText() with std::string, see misc/cpp/imgui_stdlib.h
+//   - buf_size account for the zero-terminator, so a buf_size of 6 can hold "Hello" but not "Hello!".
+//     This is so we can easily call InputText() on static arrays using ARRAYSIZE() and to match
+//     Note that in std::string world, capacity() would omit 1 byte used by the zero-terminator.
+//   - When active, hold on a privately held copy of the text (and apply back to 'buf'). So changing 'buf' while the InputText is active has no effect.
+//   - If you want to use ImGui::InputText() with std::string, see misc/cpp/imgui_stdlib.h
+//
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
-//  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
+//
+//	doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
 func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, callback_user_data interface{}) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -379,8 +391,9 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	IM_ASSERT(buf != nil && int(len(*buf)) >= 0)
-	IM_ASSERT(((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
-	IM_ASSERT(((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
+	// TODO: check these asserts
+	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
+	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
 
 	var g = GImGui
 	var io = g.IO
@@ -818,14 +831,17 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		} else if is_cut || is_copy {
 			// Cut, Copy
 			if io.SetClipboardTextFn != nil {
-				var ib int
+				var ib int = 0
 				if state.HasSelection() {
 					ib = ImMinInt(state.Stb.select_start, state.Stb.select_end)
 				}
-				var ie = state.CurLenW
+				var ie int
 				if state.HasSelection() {
-					ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+					ie = ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+				} else {
+					ie = state.CurLenW
 				}
+
 				var clipboard_data_len = ImTextCountUtf8BytesFromStr(state.TextW[ib:], state.TextW[ie:]) + 1
 				var clipboard_data = make([]byte, clipboard_data_len)
 				ImTextStrToUtf8(clipboard_data, clipboard_data_len, state.TextW[ib:], state.TextW[ie:])
@@ -957,11 +973,13 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 					callback(&callback_data)
 
 					// Read back what user may have modified
-					//IM_ASSERT(callback_data.Buf == state.TextA) // Invalid to modify those fields
+					IM_ASSERT(bytes.Equal(callback_data.Buf, state.TextA)) // Invalid to modify those fields
 					IM_ASSERT(callback_data.BufSize == state.BufCapacityA)
 					IM_ASSERT(callback_data.Flags == flags)
 					var buf_dirty = callback_data.BufDirty
 					if callback_data.CursorPos != utf8_cursor_pos || buf_dirty {
+						// TODO (port): check if ImTextCountCharsFromUtf8 works correctly, and the line below
+						// state->Stb.cursor = ImTextCountCharsFromUtf8(callback_data.Buf, callback_data.Buf + callback_data.CursorPos)
 						state.Stb.cursor = ImTextCountCharsFromUtf8(string(callback_data.Buf[:callback_data.CursorPos]))
 						state.CursorFollow = true
 					}
@@ -1004,6 +1022,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			// of our owned buffer matches the size of the string object held by the user, and by design we allow InputText() to be used
 			// without any storage on user's side.
 			IM_ASSERT(apply_new_text_length >= 0)
+			var buf_size int
 			if is_resizable {
 				var callback_data ImGuiInputTextCallbackData
 				callback_data.EventFlag = ImGuiInputTextFlags_CallbackResize
@@ -1013,14 +1032,16 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				callback_data.BufSize = ImMaxInt(int(len(*buf)), apply_new_text_length+1)
 				callback_data.UserData = callback_user_data
 				callback(&callback_data)
-				*buf = callback_data.Buf[:callback_data.BufSize]
-				apply_new_text_length = ImMinInt(callback_data.BufTextLen, int(len(*buf))-1)
-				IM_ASSERT(apply_new_text_length <= int(len(*buf)))
+				// *buf = callback_data.Buf[:callback_data.BufSize]
+				*buf = callback_data.Buf
+				buf_size = callback_data.BufSize
+				apply_new_text_length = ImMinInt(callback_data.BufTextLen, buf_size-1)
+				IM_ASSERT(apply_new_text_length <= buf_size)
 			}
 			//IMGUI_DEBUG_LOG("InputText(\"%s\"): apply_new_text length %d\n", label, apply_new_text_length);
 
 			// If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
-			copy(*buf, apply_new_text[:ImMinInt(apply_new_text_length+1, int(len(*buf)))])
+			copy(*buf, apply_new_text[:ImMinInt(apply_new_text_length+1, buf_size)])
 			value_changed = true
 		}
 
@@ -1105,7 +1126,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			}
 
 			var line_count int = 0
-			//for (const ImWchar* s = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != nil; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
+			// for (const ImWchar* s = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != nil; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
 			for s := text_begin; len(s) > 0; s = s[1:] {
 				if s[0] == '\n' {
 					line_count++
@@ -1264,7 +1285,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	} else {
 		// Render text only (no selection, no cursor)
 		if is_multiline {
-			buf_display_end = buf_display[:len(buf_display)]
+			buf_display_end = buf_display[:]
 			text_size = ImVec2{inner_size.x, float(bytes.Count(buf_display, []byte{'\n'})) * g.FontSize} // We don't need width
 		} else if !is_displaying_hint && g.ActiveId == id {
 			buf_display_end = buf_display[state.CurLenA:]

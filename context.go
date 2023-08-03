@@ -292,9 +292,9 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 }
 
 // Context creation and access
-// - Each context create its own ImFontAtlas by default. You may instance one yourself and pass it to CreateContext() to share a font atlas between contexts.
-// - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
-//   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
+//   - Each context create its own ImFontAtlas by default. You may instance one yourself and pass it to CreateContext() to share a font atlas between contexts.
+//   - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
+//     for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
 	var ctx ImGuiContext = NewImGuiContext(shared_font_atlas)
 	if GImGui == nil {

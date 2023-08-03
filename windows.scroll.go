@@ -98,13 +98,15 @@ func setScrollY(window *ImGuiWindow, scroll_y float) {
 
 // Note that a local position will vary depending on initial scroll value,
 // This is a little bit confusing so bear with us:
-//  - local_pos = (absolution_pos - window.Pos)
-//  - So local_x/local_y are 0.0f for a position at the upper-left corner of a window,
-//    and generally local_x/local_y are >(padding+decoration) && <(size-padding-decoration) when in the visible area.
-//  - They mostly exists because of legacy API.
+//   - local_pos = (absolution_pos - window.Pos)
+//   - So local_x/local_y are 0.0f for a position at the upper-left corner of a window,
+//     and generally local_x/local_y are >(padding+decoration) && <(size-padding-decoration) when in the visible area.
+//   - They mostly exists because of legacy API.
+//
 // Following the rules above, when trying to work with scrolling code, consider that:
-//  - SetScrollFromPosY(0.0f) == SetScrollY(0.0f + scroll.y) == has no effect!
-//  - SetScrollFromPosY(-scroll.y) == SetScrollY(-scroll.y + scroll.y) == SetScrollY(0.0f) == reset scroll. Of course writing SetScrollY(0.0f) directly then makes more sense
+//   - SetScrollFromPosY(0.0f) == SetScrollY(0.0f + scroll.y) == has no effect!
+//   - SetScrollFromPosY(-scroll.y) == SetScrollY(-scroll.y + scroll.y) == SetScrollY(0.0f) == reset scroll. Of course writing SetScrollY(0.0f) directly then makes more sense
+//
 // We store a target position so centering and clamping can occur on the next frame when we are guaranteed to have a known window size
 func setScrollFromPosX(window *ImGuiWindow, local_x float, center_x_ratio float) {
 	IM_ASSERT(center_x_ratio >= 0.0 && center_x_ratio <= 1.0)

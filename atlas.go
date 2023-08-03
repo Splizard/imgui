@@ -5,22 +5,23 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/splizard/imgui/stb/stbrp"
-	"github.com/splizard/imgui/stb/stbtt"
+	"github.com/Splizard/imgui/stb/stbrp"
+	"github.com/Splizard/imgui/stb/stbtt"
 )
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // [SECTION] Default font data (ProggyClean.ttf)
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // ProggyClean.ttf
 // Copyright (c) 2004, 2005 Tristan Grimmer
 // MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
 // Download and more information at http://upperbounds.net
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // File: 'ProggyClean.ttf' (41208 bytes)
 // Exported using misc/fonts/binary_to_compressed_c.cpp (with compression + base85 string encoding).
 // The purpose of encoding as base85 instead of "0x00,0x01,..." style is only save on _source code_ size.
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+//
 //go:embed proggy.ttf
 var proggy_clean_ttf_decompressed_data_base85 []byte
 
@@ -518,7 +519,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 	for dst_i := range dst_tmp_array {
 		dst_tmp_array[dst_i].GlyphsSet.Clear()
 	}
-	dst_tmp_array = dst_tmp_array[:0]
+	// dst_tmp_array = dst_tmp_array[:0]
 
 	// Allocate packing character data and flag packed characters buffer as non-packed (x0=y0=x1=y1=0)
 	// (We technically don't need to zero-clear buf_rects, but let's do it for the sake of sanity)
@@ -653,7 +654,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 	}
 
 	// End packing
-	buf_rects = buf_rects[:0]
+	// buf_rects = buf_rects[:0]
 
 	// 9. Setup ImFont and glyphs for runtime
 	for src_i := range src_tmp_array {

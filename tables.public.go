@@ -14,18 +14,19 @@ import "fmt"
 // - 3. Optionally call TableSetupScrollFreeze() to request scroll freezing of columns/rows.
 // - 4. Optionally call TableHeadersRow() to submit a header row. Names are pulled from TableSetupColumn() data.
 // - 5. Populate contents:
-//    - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
-//    - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
-//      you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
-//      TableNextColumn() will automatically wrap-around into the next row if needed.
-//    - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
-//    - Summary of possible call flow:
-//        --------------------------------------------------------------------------------------------------------
-//        TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
-//        TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
-//                          TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
-//        TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
-//        --------------------------------------------------------------------------------------------------------
+//   - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
+//   - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
+//     you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
+//     TableNextColumn() will automatically wrap-around into the next row if needed.
+//   - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
+//   - Summary of possible call flow:
+//     --------------------------------------------------------------------------------------------------------
+//     TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
+//     TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
+//     TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
+//     TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
+//     --------------------------------------------------------------------------------------------------------
+//
 // - 5. Call EndTable()
 // Read about "TABLE SIZING" at the top of this file.
 func BeginTable(str_id string, columns_count int, flags ImGuiTableFlags, outer_size ImVec2, inner_width float) bool {
@@ -35,7 +36,7 @@ func BeginTable(str_id string, columns_count int, flags ImGuiTableFlags, outer_s
 
 // only call EndTable() if BeginTable() returns true!
 func EndTable() {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Only call EndTable() if BeginTable() returns true!")
 
@@ -311,7 +312,7 @@ func TableNextColumn() bool {
 // [Public] Append into a specific column
 // append into the specified column. Return true when column is visible.
 func TableSetColumnIndex(column_n int) bool {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return false
@@ -331,20 +332,21 @@ func TableSetColumnIndex(column_n int) bool {
 }
 
 // Tables: Headers & Columns declaration
-// - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
-// - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
-//   Headers are required to perform: reordering, sorting, and opening the context menu.
-//   The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
-// - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
-//   some advanced use cases (e.g. adding custom widgets in header row).
-// - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+//   - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
+//   - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
+//     Headers are required to perform: reordering, sorting, and opening the context menu.
+//     The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
+//   - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
+//     some advanced use cases (e.g. adding custom widgets in header row).
+//   - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+//
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0.0f) it is ignored
 func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_weight float /*= 0*/, user_id ImGuiID) {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
-	IM_ASSERT_USER_ERROR(table.IsLayoutLocked == false, "Need to call call TableSetupColumn() before first row!")
+	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call call TableSetupColumn() before first row!")
 	IM_ASSERT_USER_ERROR((flags&ImGuiTableColumnFlags_StatusMask_) == 0, "Illegal to pass StatusMask values to TableSetupColumn()")
 	if int(table.DeclColumnsCount) >= table.ColumnsCount {
 		IM_ASSERT_USER_ERROR(int(table.DeclColumnsCount) < table.ColumnsCount, "Called TableSetupColumn() too many times!")
@@ -420,10 +422,10 @@ func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_w
 // [Public]
 // lock columns/rows so they stay visible when scrolled.
 func TableSetupScrollFreeze(columns int, rows int) {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
-	IM_ASSERT_USER_ERROR(table.IsLayoutLocked == false, "Need to call TableSetupColumn() before first row!")
+	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call TableSetupColumn() before first row!")
 	IM_ASSERT(columns >= 0 && columns < IMGUI_TABLE_MAX_COLUMNS)
 	IM_ASSERT(rows >= 0 && rows < 128) // Arbitrary limit
 
@@ -684,14 +686,15 @@ func TableHeader(label string) {
 }
 
 // Tables: Sorting
-// - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
-// - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
-//   since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
-//   wastefully sort your data every frame!
-// - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
+//   - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
+//   - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
+//     since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
+//     wastefully sort your data every frame!
+//   - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
+//
 // get latest sort specs for the table (NULL if not sorting).
 func TableGetSortSpecs() *ImGuiTableSortSpecs {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(table != nil)
 
@@ -718,7 +721,7 @@ func TableGetColumnAvailSortDirection(column *ImGuiTableColumn, n int) ImGuiSort
 // - Functions args 'column_n int' treat the default value of -1 as the same as passing the current column index.
 // return number of columns (value passed to BeginTable)
 func TableGetColumnCount() int {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	if table != nil {
 		return int(table.ColumnsCount)
@@ -728,7 +731,7 @@ func TableGetColumnCount() int {
 
 // return current column index.
 func TableGetColumnIndex() int {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return 0
@@ -749,7 +752,7 @@ func TableGetRowIndex() int {
 
 // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
 func TableGetColumnName(column_n int /*= -1*/) string {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return ""
@@ -763,7 +766,7 @@ func TableGetColumnName(column_n int /*= -1*/) string {
 // We allow querying for an extra column in order to poll the IsHovered state of the right-most section
 // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return ImGuiTableColumnFlags_None
@@ -788,7 +791,7 @@ func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
 // - Alternative: the ImGuiTableColumnFlags_Disabled is an overriding/master disable flag which will also hide the column from context menu.
 // change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
 func TableSetColumnEnabled(column_n int, enabled bool) {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(table != nil)
 	if table == nil {
@@ -805,7 +808,7 @@ func TableSetColumnEnabled(column_n int, enabled bool) {
 
 // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1*/) {
-	var g = *GImGui
+	var g = GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(target != ImGuiTableBgTarget_None)
 
@@ -831,7 +834,6 @@ func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1
 		var cell_data *ImGuiTableCellData = &table.RowCellData[table.RowCellDataCurrent]
 		cell_data.BgColor = color
 		cell_data.Column = (ImGuiTableColumnIdx)(column_n)
-		break
 	case ImGuiTableBgTarget_RowBg0:
 		fallthrough
 	case ImGuiTableBgTarget_RowBg1:
@@ -844,7 +846,6 @@ func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1
 			bg_idx = 1
 		}
 		table.RowBgColor[bg_idx] = color
-		break
 	default:
 		IM_ASSERT(false)
 	}

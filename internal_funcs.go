@@ -7,7 +7,7 @@ func getBackgroundDrawList(t *ImGuiViewport) *ImDrawList    { panic("not impleme
 
 func getForegroundDrawListViewport(viewport *ImGuiViewport, drawlist_no int, drawlist_name string) *ImDrawList {
 	// Create the draw list on demand, because they are not frequently used for all viewports
-	var g = *GImGui
+	var g = GImGui
 	IM_ASSERT(drawlist_no < int(len(viewport.DrawLists)))
 	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {
@@ -184,7 +184,8 @@ func PopItemFlag() {
 // t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
 // t1 = current time (e.g.: g.Time)
 // An event is triggered at:
-//  t = 0.0f     t = repeat_delay,    t = repeat_delay + repeat_rate*N
+//
+//	t = 0.0f     t = repeat_delay,    t = repeat_delay + repeat_rate*N
 func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
 	if t1 == 0.0 {
 		return 1
@@ -310,7 +311,7 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	if id != g.NavId {
 		return
 	}
-	if g.NavDisableHighlight && 0 == (flags&ImGuiNavHighlightFlags_AlwaysDraw) {
+	if g.NavDisableHighlight && flags&ImGuiNavHighlightFlags_AlwaysDraw == 0 {
 		return
 	}
 	var window = g.CurrentWindow
@@ -319,7 +320,7 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	}
 
 	var rounding float
-	if 0 == (flags & ImGuiNavHighlightFlags_NoRounding) {
+	if flags&ImGuiNavHighlightFlags_NoRounding == 0 {
 		rounding = g.Style.FrameRounding
 	}
 

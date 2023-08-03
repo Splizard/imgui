@@ -56,22 +56,18 @@ func IsWindowHovered(flags ImGuiHoveredFlags) bool {
 			if g.HoveredWindow.RootWindow != window.RootWindow {
 				return false
 			}
-			break
 		case ImGuiHoveredFlags_RootWindow:
 			if g.HoveredWindow != window.RootWindow {
 				return false
 			}
-			break
 		case ImGuiHoveredFlags_ChildWindows:
 			if !IsWindowChildOf(g.HoveredWindow, window) {
 				return false
 			}
-			break
 		default:
 			if g.HoveredWindow != window {
 				return false
 			}
-			break
 		}
 	}
 

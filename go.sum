@@ -1,8 +1,4 @@
-github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
-github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-gl/gl v0.0.0-20210813123233-e4099ee2221f h1:s0O46d8fPwk9kU4k1jj76wBquMVETx7uveQD9MCIQoU=
 github.com/go-gl/gl v0.0.0-20210813123233-e4099ee2221f/go.mod h1:wjpnOv6ONl2SuJSxqCPVaPZibGFdSci9HFocT9qtVYM=
 github.com/go-gl/glfw v0.0.0-20210727001814-0db043d8d5be h1:UVW91pfMB1GRQfVwC7//RGVbqX6Ea8jURmJhlANak1M=
 github.com/go-gl/glfw v0.0.0-20210727001814-0db043d8d5be/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
-github.com/jojomi/go-spew v1.1.0 h1:yMsiXD0RdP0bNgipDDb8wD6HdEolq01p9i45xZaOjWk=
-github.com/jojomi/go-spew v1.1.0/go.mod h1:/8AXJSDFeVKowsL5GiXhfUy9lT6JtLVxbY3H6qhBXtE=

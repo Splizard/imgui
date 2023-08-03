@@ -76,7 +76,9 @@ func Checkbox(label string, v *bool) bool {
 	var hovered, held bool
 	var pressed bool = ButtonBehavior(&total_bb, id, &hovered, &held, 0)
 	if pressed {
-		*v = !(*v)
+		if v != nil {
+			*v = !(*v)
+		}
 		MarkItemEdited(id)
 	}
 
@@ -97,7 +99,7 @@ func Checkbox(label string, v *bool) bool {
 		// This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
 		var pad = ImVec2{ImMax(1.0, IM_FLOOR(square_sz/3.6)), ImMax(1.0, IM_FLOOR(square_sz/3.6))}
 		window.DrawList.AddRectFilled(check_bb.Min.Add(pad), check_bb.Max.Sub(pad), check_col, style.FrameRounding, 0)
-	} else if *v {
+	} else if v != nil && *v {
 		var pad float = ImMax(1.0, IM_FLOOR(square_sz/6.0))
 		RenderCheckMark(window.DrawList, check_bb.Min.Add(ImVec2{pad, pad}), check_col, square_sz-pad*2.0)
 	}

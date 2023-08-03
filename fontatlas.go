@@ -30,22 +30,24 @@ func (this ImFontAtlasCustomRect) IsPacked() bool {
 }
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
-//  - One or more fonts.
-//  - Custom graphics data needed to render the shapes needed by Dear ImGui.
-//  - Mouse cursor shapes for software cursor rendering (unless setting 'Flags |= ImFontAtlasFlags_NoMouseCursors' in the font atlas).
+//   - One or more fonts.
+//   - Custom graphics data needed to render the shapes needed by Dear ImGui.
+//   - Mouse cursor shapes for software cursor rendering (unless setting 'Flags |= ImFontAtlasFlags_NoMouseCursors' in the font atlas).
+//
 // It is the user-code responsibility to setup/build the atlas, then upload the pixel data into a texture accessible by your graphics api.
-//  - Optionally, call any of the AddFont*** functions. If you don't call any, the default font embedded in the code will be loaded for you.
-//  - Call GetTexDataAsAlpha8() or GetTexDataAsRGBA32() to build and retrieve pixels data.
-//  - Upload the pixels data into a texture within your graphics system (see imgui_impl_xxxx.cpp examples)
-//  - Call SetTexID(my_tex_id); and pass the pointer/identifier to your texture in a format natural to your graphics API.
-//    This value will be passed back to you during rendering to identify the texture. Read FAQ entry about ImTextureID for more details.
+//   - Optionally, call any of the AddFont*** functions. If you don't call any, the default font embedded in the code will be loaded for you.
+//   - Call GetTexDataAsAlpha8() or GetTexDataAsRGBA32() to build and retrieve pixels data.
+//   - Upload the pixels data into a texture within your graphics system (see imgui_impl_xxxx.cpp examples)
+//   - Call SetTexID(my_tex_id); and pass the pointer/identifier to your texture in a format natural to your graphics API.
+//     This value will be passed back to you during rendering to identify the texture. Read FAQ entry about ImTextureID for more details.
+//
 // Common pitfalls:
-// - If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist up until the
-//   atlas is build (when calling GetTexData*** or Build()). We only copy the pointer, not the data.
-// - Important: By default, AddFontFromMemoryTTF() takes ownership of the data. Even though we are not writing to it, we will free the pointer on destruction.
-//   You can set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed,
-// - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
-// - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
+//   - If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist up until the
+//     atlas is build (when calling GetTexData*** or Build()). We only copy the pointer, not the data.
+//   - Important: By default, AddFontFromMemoryTTF() takes ownership of the data. Even though we are not writing to it, we will free the pointer on destruction.
+//     You can set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed,
+//   - Even though many functions are suffixed with "TTF", OTF data is supported just as well.
+//   - This is an old API and it is currently awkward for those and and various other reasons! We will address them in the future!
 type ImFontAtlas struct {
 	//-------------------------------------------
 	// Members
@@ -262,12 +264,12 @@ func UnpackAccumulativeOffsetsIntoRanges(base_codepoint int, accumulative_offset
 //-------------------------------------------
 
 // You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
-// - After calling Build(), you can query the rectangle position and render your pixels.
-// - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
-// - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
-//   so you can render e.g. custom colorful icons and use them as regular glyphs.
-// - Read docs/FONTS.md for more details about using colorful icons.
-// - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
+//   - After calling Build(), you can query the rectangle position and render your pixels.
+//   - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
+//   - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
+//     so you can render e.g. custom colorful icons and use them as regular glyphs.
+//   - Read docs/FONTS.md for more details about using colorful icons.
+//   - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
 func (atlas *ImFontAtlas) AddCustomRectRegular(width, height int) int {
 	IM_ASSERT(width > 0 && width <= 0xFFFF)
 	IM_ASSERT(height > 0 && height <= 0xFFFF)

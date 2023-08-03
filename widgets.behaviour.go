@@ -271,8 +271,8 @@ func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v interfa
 		return sliderBehaviour(bb, id, p_v.(*float), *p_min.(*float), *p_max.(*float), format, flags, out_grab_bb)
 	}
 
-	//FIXME (porting) support other slider types.
-
+	// FIXME: support other slider types
+	// https://github.com/ocornut/imgui/blob/5ee40c8d34bea3009cf462ec963225bd22067e5e/imgui_widgets.cpp#L2959
 	IM_ASSERT(false)
 	return false
 }

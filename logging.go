@@ -10,7 +10,7 @@ import (
 func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
 	var g = GImGui
 	var window = g.CurrentWindow
-	IM_ASSERT(g.LogEnabled == false)
+	IM_ASSERT(!g.LogEnabled)
 	IM_ASSERT(g.LogFile == nil)
 	IM_ASSERT(g.LogBuffer.Len() == 0)
 	g.LogEnabled = true
@@ -107,20 +107,15 @@ func LogFinish() {
 	switch g.LogType {
 	case ImGuiLogType_TTY:
 		//g.LogFile
-		break
 	case ImGuiLogType_File:
 		ImFileClose(g.LogFile)
-		break
 	case ImGuiLogType_Buffer:
-		break
 	case ImGuiLogType_Clipboard:
 		if g.LogBuffer.Len() > 0 {
 			SetClipboardText(g.LogBuffer.String())
 		}
-		break
 	case ImGuiLogType_None:
 		IM_ASSERT(false)
-		break
 	}
 
 	g.LogEnabled = false

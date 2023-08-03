@@ -2,18 +2,18 @@ package imgui
 
 // stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
 // the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
-func stb_textedit_replace(str *ImGuiInputTextState, state * STB_TexteditState, text []STB_TEXTEDIT_CHARTYPE, text_len int) {
-    stb_text_makeundo_replace(str, state, 0, str.CurLenW, text_len);
-    STB_TEXTEDIT_DELETECHARS(str, 0, str.CurLenW);
-    if (text_len <= 0) {
-        return;
+func stb_textedit_replace(str *ImGuiInputTextState, state *STB_TexteditState, text []STB_TEXTEDIT_CHARTYPE, text_len int) {
+	stb_text_makeundo_replace(str, state, 0, str.CurLenW, text_len)
+	STB_TEXTEDIT_DELETECHARS(str, 0, str.CurLenW)
+	if text_len <= 0 {
+		return
 	}
-    if (STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len)) {
-        state.cursor = text_len;
-        state.has_preferred_x = 0;
-        return;
-    }
-    IM_ASSERT(false); // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
+	if STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len) {
+		state.cursor = text_len
+		state.has_preferred_x = 0
+		return
+	}
+	IM_ASSERT(false) // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
 }
 
 type short = int16
@@ -105,7 +105,8 @@ func STB_TEXTEDIT_INSERTCHARS(obj *STB_TEXTEDIT_STRING, pos int, new_text []STB_
 }
 
 func STB_TEXTEDIT_KEYTOTEXT(key STB_TEXTEDIT_KEYTYPE) STB_TEXTEDIT_CHARTYPE {
-	panic("not implemented")
+	// if i understand everything correctly, it just converts it into a rune
+	return STB_TEXTEDIT_CHARTYPE(key)
 }
 
 func is_separator(c rune) bool {
@@ -233,9 +234,9 @@ type STB_TexteditState struct {
 	undostate                    StbUndoState
 }
 
-////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////
 //
-//     StbTexteditRow
+//	StbTexteditRow
 //
 // Result of layout query, used by stb_textedit to determine where
 // the text in each row is.
@@ -753,18 +754,12 @@ retry:
 
 	case STB_TEXTEDIT_K_INSERT:
 		state.insert_mode = byte(bool2int(state.insert_mode == 0))
-		break
-
 	case STB_TEXTEDIT_K_UNDO:
 		stb_text_undo(str, state)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_REDO:
 		stb_text_redo(str, state)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LEFT:
 		// if currently there's a selection, move cursor to start of selection
 		if STB_TEXT_HAS_SELECTION(state) {
@@ -775,8 +770,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_RIGHT:
 		// if currently there's a selection, move cursor to end of selection
 		if STB_TEXT_HAS_SELECTION(state) {
@@ -786,8 +779,6 @@ retry:
 		}
 		stb_textedit_clamp(str, state)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LEFT | STB_TEXTEDIT_K_SHIFT:
 		stb_textedit_clamp(str, state)
 		stb_textedit_prep_selection_at_cursor(state)
@@ -797,8 +788,6 @@ retry:
 		}
 		state.cursor = state.select_end
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_WORDLEFT:
 		if STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_move_to_first(state)
@@ -806,8 +795,6 @@ retry:
 			state.cursor = STB_TEXTEDIT_MOVEWORDLEFT(str, state.cursor)
 			stb_textedit_clamp(str, state)
 		}
-		break
-
 	case STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT:
 		if !STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_prep_selection_at_cursor(state)
@@ -817,8 +804,6 @@ retry:
 		state.select_end = state.cursor
 
 		stb_textedit_clamp(str, state)
-		break
-
 	case STB_TEXTEDIT_K_WORDRIGHT:
 		if STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_move_to_last(str, state)
@@ -826,8 +811,6 @@ retry:
 			state.cursor = STB_TEXTEDIT_MOVEWORDRIGHT(str, state.cursor)
 			stb_textedit_clamp(str, state)
 		}
-		break
-
 	case STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT:
 		if !STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_prep_selection_at_cursor(state)
@@ -837,8 +820,6 @@ retry:
 		state.select_end = state.cursor
 
 		stb_textedit_clamp(str, state)
-		break
-
 	case STB_TEXTEDIT_K_RIGHT | STB_TEXTEDIT_K_SHIFT:
 		stb_textedit_prep_selection_at_cursor(state)
 		// move selection right
@@ -846,8 +827,6 @@ retry:
 		stb_textedit_clamp(str, state)
 		state.cursor = state.select_end
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_DOWN:
 		fallthrough
 	case STB_TEXTEDIT_K_DOWN | STB_TEXTEDIT_K_SHIFT:
@@ -1033,8 +1012,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_BACKSPACE:
 		fallthrough
 	case STB_TEXTEDIT_K_BACKSPACE | STB_TEXTEDIT_K_SHIFT:
@@ -1048,8 +1025,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTSTART2:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTSTART:
@@ -1057,8 +1032,6 @@ retry:
 		state.select_start = 0
 		state.select_end = 0
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTEND2:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTEND:
@@ -1066,8 +1039,6 @@ retry:
 		state.select_start = 0
 		state.select_end = 0
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTSTART2 | STB_TEXTEDIT_K_SHIFT:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTSTART | STB_TEXTEDIT_K_SHIFT:
@@ -1075,8 +1046,6 @@ retry:
 		state.cursor = 0
 		state.select_end = 0
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_TEXTEND2 | STB_TEXTEDIT_K_SHIFT:
 		fallthrough
 	case STB_TEXTEDIT_K_TEXTEND | STB_TEXTEDIT_K_SHIFT:
@@ -1084,8 +1053,6 @@ retry:
 		state.cursor = STB_TEXTEDIT_STRINGLEN(str)
 		state.select_end = STB_TEXTEDIT_STRINGLEN(str)
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LINESTART2:
 		fallthrough
 	case STB_TEXTEDIT_K_LINESTART:
@@ -1099,8 +1066,6 @@ retry:
 			}
 		}
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LINEEND2:
 		fallthrough
 	case STB_TEXTEDIT_K_LINEEND:
@@ -1133,8 +1098,6 @@ retry:
 		}
 		state.select_end = state.cursor
 		state.has_preferred_x = 0
-		break
-
 	case STB_TEXTEDIT_K_LINEEND2 | STB_TEXTEDIT_K_SHIFT:
 		fallthrough
 	case STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT:

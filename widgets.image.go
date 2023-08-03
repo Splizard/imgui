@@ -64,21 +64,21 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 // frame_padding > 0: set framing size
 func ImageButton(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec2, frame_padding int /*/*= /*/, bg_col ImVec4, tint_col ImVec4) bool {
 	var g = GImGui
-    var window = g.CurrentWindow
-    if (window.SkipItems) {
-        return false;
+	var window = g.CurrentWindow
+	if window.SkipItems {
+		return false
 	}
 
-    // Default to using texture ID as ID. User can still push string/integer prefixes.
-    PushID(int(user_texture_id));
-    var id ImGuiID = window.GetIDs("#image");
-    PopID();
+	// Default to using texture ID as ID. User can still push string/integer prefixes.
+	PushID(int(user_texture_id))
+	var id ImGuiID = window.GetIDs("#image")
+	PopID()
 
-    var padding =  g.Style.FramePadding;
-	if (frame_padding >= 0) {
+	var padding = g.Style.FramePadding
+	if frame_padding >= 0 {
 		padding = ImVec2{(float)(frame_padding), (float)(frame_padding)}
 	}
-    return ImageButtonEx(id, user_texture_id, &size, &uv0, &uv1, &padding, &bg_col, &tint_col);
+	return ImageButtonEx(id, user_texture_id, &size, &uv0, &uv1, &padding, &bg_col, &tint_col)
 }
 
 // Image primitives

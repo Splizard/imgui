@@ -37,7 +37,7 @@ func ColorConvertRGBtoHSV(r float, g float, b float, out_h, out_s, out_v *float)
 	}
 	if r < g {
 		r, g = g, r
-		K = -2/6 - K
+		K = float(-2)/float(6) - K
 	}
 
 	var chroma float = r
@@ -74,33 +74,27 @@ func ColorConvertHSVtoRGB(h float, s float, v float, out_r, out_g, out_b *float)
 		*out_r = v
 		*out_g = t
 		*out_b = p
-		break
 	case 1:
 		*out_r = q
 		*out_g = v
 		*out_b = p
-		break
 	case 2:
 		*out_r = p
 		*out_g = v
 		*out_b = t
-		break
 	case 3:
 		*out_r = p
 		*out_g = q
 		*out_b = v
-		break
 	case 4:
 		*out_r = t
 		*out_g = p
 		*out_b = v
-		break
 	case 5:
 		fallthrough
 	default:
 		*out_r = v
 		*out_g = p
 		*out_b = q
-		break
 	}
 }

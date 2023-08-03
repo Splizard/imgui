@@ -176,9 +176,9 @@ func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string)
 			var triangle [3]ImVec2
 			for n := range triangle {
 				if idx_buffer != nil {
-					triangle[n] = vtx_buffer[idx_buffer[idx_n]].pos
+					triangle[n] = vtx_buffer[idx_buffer[idx_n]].Pos
 				} else {
-					triangle[n] = vtx_buffer[idx_n].pos
+					triangle[n] = vtx_buffer[idx_n].Pos
 				}
 			}
 			total_area += ImTriangleArea(&triangle[0], &triangle[1], &triangle[2])
@@ -208,9 +208,9 @@ func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string)
 					if n == 0 {
 						prefix = "Vert:"
 					}
-					triangle[n] = v.pos
+					triangle[n] = v.Pos
 					info += fmt.Sprintf("%s %04d: pos (%8.2f,%8.2f), uv (%.6f,%.6f), col %08X\n",
-						prefix, idx_i, v.pos.x, v.pos.y, v.uv.x, v.uv.y, v.col)
+						prefix, idx_i, v.Pos.x, v.Pos.y, v.Uv.x, v.Uv.y, v.Col)
 				}
 
 				Selectable(buf, false, 0, ImVec2{})
@@ -242,9 +242,9 @@ func DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list *ImDrawList, draw_list
 		var triangle [3]ImVec2
 		for n := range triangle {
 			if idx_buffer != nil {
-				triangle[n] = vtx_buffer[idx_buffer[idx_n]].pos
+				triangle[n] = vtx_buffer[idx_buffer[idx_n]].Pos
 			} else {
-				triangle[n] = vtx_buffer[idx_n].pos
+				triangle[n] = vtx_buffer[idx_n].Pos
 			}
 			vtxs_rect.AddVec(triangle[n])
 		}
@@ -407,7 +407,7 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 		if tab.NameOffset != -1 {
 			p += fmt.Sprint(tab_bar.GetTabName(tab))
 		} else {
-			p += fmt.Sprintf("???")
+			p += "???"
 		}
 	}
 	if len(tab_bar.Tabs) > 3 {
@@ -1200,8 +1200,8 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var name, rootName, underName, movingName string = "nil", "nil", "nil", "nil"
 		if g.HoveredWindow != nil {
-			//name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
-			//	g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
+			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
+				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
 		}
 
 		Text("HoveredWindow: '%s'", name)
@@ -1226,7 +1226,7 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var navWindowName, navTargetName string = "nil", "nil"
 		if g.NavWindow != nil {
-			//navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
+			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
 		}
 
 		Text("NAV,FOCUS")

@@ -12,8 +12,9 @@ import "fmt"
 //    This is sometimes leading to confusing mistakes. May rework this in the future.
 
 // Popups: begin/end functions
-//  - BeginPopup(): query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
-//  - BeginPopupModal(): block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar.
+//   - BeginPopup(): query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
+//   - BeginPopupModal(): block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar.
+//
 // return true if the popup is open, and you can start outputting to it.
 func BeginPopup(str_id string, flags ImGuiWindowFlags) bool {
 	var g = GImGui
@@ -71,7 +72,7 @@ func EndPopup() {
 	}
 
 	// Child-popups don't need to be laid out
-	IM_ASSERT(g.WithinEndChild == false)
+	IM_ASSERT(!g.WithinEndChild)
 	if window.Flags&ImGuiWindowFlags_ChildWindow != 0 {
 		g.WithinEndChild = true
 	}
@@ -80,12 +81,13 @@ func EndPopup() {
 }
 
 // Popups: open/close functions
-//  - OpenPopup(): set popup state to open. are ImGuiPopupFlags available for opening options.
-//  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
-//  - CloseCurrentPopup(): use inside the BeginPopup()/EndPopup() scope to close manually.
-//  - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
-//  - Use ImGuiPopupFlags_NoOpenOverExistingPopup to a opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
-//  - Use IsWindowAppearing() after BeginPopup() to tell if a window just opened.
+//   - OpenPopup(): set popup state to open. are ImGuiPopupFlags available for opening options.
+//   - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
+//   - CloseCurrentPopup(): use inside the BeginPopup()/EndPopup() scope to close manually.
+//   - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
+//   - Use ImGuiPopupFlags_NoOpenOverExistingPopup to a opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
+//   - Use IsWindowAppearing() after BeginPopup() to tell if a window just opened.
+//
 // call to mark popup as open (don't call every frame!).
 func OpenPopup(str_id string, popup_flags ImGuiPopupFlags) {
 	var g = GImGui
@@ -157,19 +159,20 @@ func CloseCurrentPopup() {
 // This is a helper to handle the simplest case of associating one named popup to one given widget.
 // - To create a popup associated to the last item, you generally want to pass a nil value to str_id.
 // - To create a popup with a specific identifier, pass it in str_id.
-//    - This is useful when using using BeginPopupContextItem() on an item which doesn't have an identifier, e.g. a Text() call.
-//    - This is useful when multiple code locations may want to manipulate/open the same popup, given an explicit id.
-// - You may want to handle the whole on user side if you have specific needs (e.g. tweaking IsItemHovered() parameters).
-//   This is essentially the same as:
-//       id = str_id ? GetID(str_id) : GetItemID();
-//       OpenPopupOnItemClick(str_id);
-//       return BeginPopup(id);
-//   Which is essentially the same as:
-//       id = str_id ? GetID(str_id) : GetItemID();
-//       if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
-//           OpenPopup(id);
-//       return BeginPopup(id);
-//   The main difference being that this is tweaked to avoid computing the ID twice.
+//   - This is useful when using using BeginPopupContextItem() on an item which doesn't have an identifier, e.g. a Text() call.
+//   - This is useful when multiple code locations may want to manipulate/open the same popup, given an explicit id.
+//   - You may want to handle the whole on user side if you have specific needs (e.g. tweaking IsItemHovered() parameters).
+//     This is essentially the same as:
+//     id = str_id ? GetID(str_id) : GetItemID();
+//     OpenPopupOnItemClick(str_id);
+//     return BeginPopup(id);
+//     Which is essentially the same as:
+//     id = str_id ? GetID(str_id) : GetItemID();
+//     if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
+//     OpenPopup(id);
+//     return BeginPopup(id);
+//     The main difference being that this is tweaked to avoid computing the ID twice.
+//
 // open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
 func BeginPopupContextItem(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*/) bool {
 	var g = GImGui
@@ -216,9 +219,10 @@ func BeginPopupContext(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*
 }
 
 // Popups: query functions
-//  - IsPopupOpen(): return true if the popup is open at the current BeginPopup() level of the popup stack.
-//  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
-//  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId + ImGuiPopupFlags_AnyPopupLevel: return true if any popup is open.
+//   - IsPopupOpen(): return true if the popup is open at the current BeginPopup() level of the popup stack.
+//   - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
+//   - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId + ImGuiPopupFlags_AnyPopupLevel: return true if any popup is open.
+//
 // return true if the popup is open.
 func IsPopupOpen(str_id string, flags ImGuiPopupFlags) bool {
 	var g = GImGui
@@ -229,7 +233,7 @@ func IsPopupOpen(str_id string, flags ImGuiPopupFlags) bool {
 	if (flags&ImGuiPopupFlags_AnyPopupLevel != 0) && id != 0 {
 		IM_ASSERT_USER_ERROR(false, "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel.") // But non-string version is legal and used internally
 	}
-	return IsPopupOpen(str_id, flags)
+	return IsPopupOpenID(id, flags)
 }
 
 func GetTopMostPopupModal() *ImGuiWindow {
@@ -289,7 +293,7 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 		var sc float = g.Style.MouseCursorScale
 		var ref_pos ImVec2 = NavCalcPreferredRefPos()
 		var r_avoid ImRect
-		if !g.NavDisableHighlight && g.NavDisableMouseHover && 0 == (g.IO.ConfigFlags&ImGuiConfigFlags_NavEnableSetMousePos) {
+		if !g.NavDisableHighlight && g.NavDisableMouseHover && g.IO.ConfigFlags&ImGuiConfigFlags_NavEnableSetMousePos == 0 {
 			r_avoid = ImRect{ImVec2{ref_pos.x - 16, ref_pos.y - 8}, ImVec2{ref_pos.x + 16, ref_pos.y + 8}}
 		} else {
 			r_avoid = ImRect{ImVec2{ref_pos.x - 16, ref_pos.y - 8}, ImVec2{ref_pos.x + 24*sc, ref_pos.y + 24*sc}} // FIXME: Hard-coded based on mouse cursor shape expectation. Exact dimension not very important.
@@ -303,8 +307,9 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 // r_avoid = the rectangle to avoid (e.g. for tooltip it is a rectangle around the mouse cursor which we want to avoid. for popups it's a small point around the cursor.)
 // r_outer = the visible area rectangle, minus safe area padding. If our popup size won't fit because of safe area padding we ignore it.
 // (r_outer is usually equivalent to the viewport rectangle minus padding, but when multi-viewports are enabled and monitor
-//  information are available, it may represent the entire platform monitor from the frame of reference of the current viewport.
-//  this allows us to have tooltips/popups displayed out of the parent viewport.)
+//
+//	information are available, it may represent the entire platform monitor from the frame of reference of the current viewport.
+//	this allows us to have tooltips/popups displayed out of the parent viewport.)
 func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiDir, r_outer *ImRect, r_avoid *ImRect, policy ImGuiPopupPositionPolicy) ImVec2 {
 	var base_pos_clamped ImVec2 = ImClampVec2(ref_pos, &r_outer.Min, r_outer.Max.Sub(*size))
 	//GetForegroundDrawList().AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
@@ -595,7 +600,7 @@ func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) 
 }
 
 func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
-	var g = *GImGui
+	var g = GImGui
 	if (popup_flags & ImGuiPopupFlags_AnyPopupId) != 0 {
 		// Return true if any popup is open at the current BeginPopup() level of the popup stack
 		// This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.

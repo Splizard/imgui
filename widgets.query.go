@@ -56,21 +56,14 @@ func IsItemHovered(flags ImGuiHoveredFlags) bool {
 
 	// Special handling for calling after Begin() which represent the title bar or tab.
 	// When the window is collapsed (SkipItems==true) that last item will never be overwritten so we need to detect the case.
-	if g.LastItemData.ID == window.MoveId && window.WriteAccessed {
-		return false
-	}
-
-	return true
+	return g.LastItemData.ID == window.MoveId && window.WriteAccessed
 }
 
 // is the last item focused for keyboard/gamepad navigation?
 // == GetItemID() == GetFocusID()
 func IsItemFocused() bool {
 	var g = GImGui
-	if g.NavId != g.LastItemData.ID || g.NavId == 0 {
-		return false
-	}
-	return true
+	return !(g.NavId != g.LastItemData.ID || g.NavId == 0)
 }
 
 // is the last item hovered and mouse clicked on? (**)  == IsMouseClicked(mouse_button) && IsItemHovered()Important. (**) this it NOT equivalent to the behavior of e.g. Button(). Read comments in function definition.
@@ -96,9 +89,7 @@ func IsItemEdited() bool {
 func IsItemActivated() bool {
 	var g = GImGui
 	if g.ActiveId != 0 {
-		if g.ActiveId == g.LastItemData.ID && g.ActiveIdPreviousFrame != g.LastItemData.ID {
-			return true
-		}
+		return g.ActiveId == g.LastItemData.ID && g.ActiveIdPreviousFrame != g.LastItemData.ID
 	}
 	return false
 }

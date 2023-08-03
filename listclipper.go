@@ -6,11 +6,15 @@ package imgui
 // The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
 // (Dear ImGui already clip items based on their bounds but it needs to measure text size to do so, whereas manual coarse clipping before submission makes this cost and your own data fetching/submission cost almost null)
 // Usage:
-//   clipper ImGuiListClipper
-//clipper.Begin(1000) //         // We have 1000 elements, evenly spaced.
-//   while (clipper.Step())
-//       for (int i clipper.DisplayStart = i clipper.DisplayEnd < i++)
-//           ImGui::Text("line number i) %d",
+//
+//	clipper ImGuiListClipper
+//
+// clipper.Begin(1000) //         // We have 1000 elements, evenly spaced.
+//
+//	while (clipper.Step())
+//	    for (int i clipper.DisplayStart = i clipper.DisplayEnd < i++)
+//	        ImGui::Text("line number i) %d",
+//
 // Generally what happens is:
 // - Clipper lets you process the first element (DisplayStart  DisplayEnd = 1) regardless of it being visible or not.
 // - User code submit one element.

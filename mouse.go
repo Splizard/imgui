@@ -201,10 +201,7 @@ func IsMouseHoveringRect(r_min, r_max ImVec2, clip bool /*= true*/) bool {
 
 	// Expand for touch input
 	var rect_for_touch = ImRect{rect_clipped.Min.Sub(g.Style.TouchExtraPadding), rect_clipped.Max.Add(g.Style.TouchExtraPadding)}
-	if !rect_for_touch.ContainsVec(g.IO.MousePos) {
-		return false
-	}
-	return true
+	return rect_for_touch.ContainsVec(g.IO.MousePos)
 }
 
 func IsWindowContentHoverable(window *ImGuiWindow, flags ImGuiHoveredFlags) bool {
@@ -219,7 +216,7 @@ func IsWindowContentHoverable(window *ImGuiWindow, flags ImGuiHoveredFlags) bool
 				if focused_root_window.Flags&ImGuiWindowFlags_Modal != 0 {
 					return false
 				}
-				if (focused_root_window.Flags&ImGuiWindowFlags_Popup != 0) && 0 == (flags&ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
+				if (focused_root_window.Flags&ImGuiWindowFlags_Popup != 0) && flags&ImGuiHoveredFlags_AllowWhenBlockedByPopup == 0 {
 					return false
 				}
 			}
@@ -254,7 +251,7 @@ func UpdateMouseMovingWindowEndFrame() {
 			StartMouseMovingWindow(g.HoveredWindow) //-V595
 
 			// Cancel moving if clicked outside of title bar
-			if g.IO.ConfigWindowsMoveFromTitleBarOnly && 0 == (root_window.Flags&ImGuiWindowFlags_NoTitleBar) {
+			if g.IO.ConfigWindowsMoveFromTitleBarOnly && root_window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 				rect := root_window.TitleBarRect()
 				if !rect.ContainsVec(g.IO.MouseClickedPos[0]) {
 					g.MovingWindow = nil

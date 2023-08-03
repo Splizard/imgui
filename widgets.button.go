@@ -79,54 +79,66 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 // this code is a little complex.
 // By far the most common path is interacting with the Mouse using the default ImGuiButtonFlags_PressedOnClickRelease button behavior.
 // See the series of events below and the corresponding state reported by dear imgui:
-//------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // with PressedOnClickRelease:             return-value  IsItemHovered()  IsItemActive()  IsItemActivated()  IsItemDeactivated()  IsItemClicked()
-//   Frame N+0 (mouse is outside bb)        -             -                -               -                  -                    -
-//   Frame N+1 (mouse moves inside bb)      -             true             -               -                  -                    -
-//   Frame N+2 (mouse button is down)       -             true             true            true               -                    true
-//   Frame N+3 (mouse button is down)       -             true             true            -                  -                    -
-//   Frame N+4 (mouse moves outside bb)     -             -                true            -                  -                    -
-//   Frame N+5 (mouse moves inside bb)      -             true             true            -                  -                    -
-//   Frame N+6 (mouse button is released)   true          true             -               -                  true                 -
-//   Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
-//   Frame N+8 (mouse moves outside bb)     -             -                -               -                  -                    -
-//------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//	Frame N+0 (mouse is outside bb)        -             -                -               -                  -                    -
+//	Frame N+1 (mouse moves inside bb)      -             true             -               -                  -                    -
+//	Frame N+2 (mouse button is down)       -             true             true            true               -                    true
+//	Frame N+3 (mouse button is down)       -             true             true            -                  -                    -
+//	Frame N+4 (mouse moves outside bb)     -             -                true            -                  -                    -
+//	Frame N+5 (mouse moves inside bb)      -             true             true            -                  -                    -
+//	Frame N+6 (mouse button is released)   true          true             -               -                  true                 -
+//	Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
+//	Frame N+8 (mouse moves outside bb)     -             -                -               -                  -                    -
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // with PressedOnClick:                    return-value  IsItemHovered()  IsItemActive()  IsItemActivated()  IsItemDeactivated()  IsItemClicked()
-//   Frame N+2 (mouse button is down)       true          true             true            true               -                    true
-//   Frame N+3 (mouse button is down)       -             true             true            -                  -                    -
-//   Frame N+6 (mouse button is released)   -             true             -               -                  true                 -
-//   Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
-//------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//	Frame N+2 (mouse button is down)       true          true             true            true               -                    true
+//	Frame N+3 (mouse button is down)       -             true             true            -                  -                    -
+//	Frame N+6 (mouse button is released)   -             true             -               -                  true                 -
+//	Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // with PressedOnRelease:                  return-value  IsItemHovered()  IsItemActive()  IsItemActivated()  IsItemDeactivated()  IsItemClicked()
-//   Frame N+2 (mouse button is down)       -             true             -               -                  -                    true
-//   Frame N+3 (mouse button is down)       -             true             -               -                  -                    -
-//   Frame N+6 (mouse button is released)   true          true             -               -                  -                    -
-//   Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
-//------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//	Frame N+2 (mouse button is down)       -             true             -               -                  -                    true
+//	Frame N+3 (mouse button is down)       -             true             -               -                  -                    -
+//	Frame N+6 (mouse button is released)   true          true             -               -                  -                    -
+//	Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // with PressedOnDoubleClick:              return-value  IsItemHovered()  IsItemActive()  IsItemActivated()  IsItemDeactivated()  IsItemClicked()
-//   Frame N+0 (mouse button is down)       -             true             -               -                  -                    true
-//   Frame N+1 (mouse button is down)       -             true             -               -                  -                    -
-//   Frame N+2 (mouse button is released)   -             true             -               -                  -                    -
-//   Frame N+3 (mouse button is released)   -             true             -               -                  -                    -
-//   Frame N+4 (mouse button is down)       true          true             true            true               -                    true
-//   Frame N+5 (mouse button is down)       -             true             true            -                  -                    -
-//   Frame N+6 (mouse button is released)   -             true             -               -                  true                 -
-//   Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
-//------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//	Frame N+0 (mouse button is down)       -             true             -               -                  -                    true
+//	Frame N+1 (mouse button is down)       -             true             -               -                  -                    -
+//	Frame N+2 (mouse button is released)   -             true             -               -                  -                    -
+//	Frame N+3 (mouse button is released)   -             true             -               -                  -                    -
+//	Frame N+4 (mouse button is down)       true          true             true            true               -                    true
+//	Frame N+5 (mouse button is down)       -             true             true            -                  -                    -
+//	Frame N+6 (mouse button is released)   -             true             -               -                  true                 -
+//	Frame N+7 (mouse button is released)   -             true             -               -                  -                    -
+//
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // Note that some combinations are supported,
 // - PressedOnDragDropHold can generally be associated with any flag.
 // - PressedOnDoubleClick can be associated by PressedOnClickRelease/PressedOnRelease, in which case the second release event won't be reported.
-//------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------------------------
 // The behavior of the return-value changes when ImGuiButtonFlags_Repeat is set:
-//                                         Repeat+                  Repeat+           Repeat+             Repeat+
-//                                         PressedOnClickRelease    PressedOnClick    PressedOnRelease    PressedOnDoubleClick
-//-------------------------------------------------------------------------------------------------------------------------------------------------
-//   Frame N+0 (mouse button is down)       -                        true              -                   true
-//   ...                                    -                        -                 -                   -
-//   Frame N + RepeatDelay                  true                     true              -                   true
-//   ...                                    -                        -                 -                   -
-//   Frame N + RepeatDelay + RepeatRate*N   true                     true              -                   true
-//-------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//	Repeat+                  Repeat+           Repeat+             Repeat+
+//	PressedOnClickRelease    PressedOnClick    PressedOnRelease    PressedOnDoubleClick
+//
+// -------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//	Frame N+0 (mouse button is down)       -                        true              -                   true
+//	...                                    -                        -                 -                   -
+//	Frame N + RepeatDelay                  true                     true              -                   true
+//	...                                    -                        -                 -                   -
+//	Frame N + RepeatDelay + RepeatRate*N   true                     true              -                   true
+//
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, flags ImGuiButtonFlags) bool {
 	var g = GImGui
 	var window = GetCurrentWindow()
@@ -151,12 +163,12 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 	var hovered bool = ItemHoverable(bb, id)
 
 	// Drag source doesn't report as hovered
-	if hovered && g.DragDropActive && g.DragDropPayload.SourceId == id && 0 == (g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoDisableHover) {
+	if hovered && g.DragDropActive && g.DragDropPayload.SourceId == id && g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoDisableHover == 0 {
 		hovered = false
 	}
 
 	// Special mode for Drag and Drop where holding button pressed for a long time while dragging another item triggers the button
-	if g.DragDropActive && (flags&ImGuiButtonFlags_PressedOnDragDropHold != 0) && 0 == (g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoHoldToOpenOthers) {
+	if g.DragDropActive && (flags&ImGuiButtonFlags_PressedOnDragDropHold != 0) && g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoHoldToOpenOthers == 0 {
 		if IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) {
 			hovered = true
 			SetHoveredID(id)
@@ -179,7 +191,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 
 	// Mouse handling
 	if hovered {
-		if 0 == (flags&ImGuiButtonFlags_NoKeyModifiers) || (!g.IO.KeyCtrl && !g.IO.KeyShift && !g.IO.KeyAlt) {
+		if flags&ImGuiButtonFlags_NoKeyModifiers == 0 || (!g.IO.KeyCtrl && !g.IO.KeyShift && !g.IO.KeyAlt) {
 			// Poll buttons
 			var mouse_button_clicked ImGuiMouseButton = -1
 			var mouse_button_released ImGuiMouseButton = -1
@@ -202,7 +214,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 				if flags&(ImGuiButtonFlags_PressedOnClickRelease|ImGuiButtonFlags_PressedOnClickReleaseAnywhere) != 0 {
 					SetActiveID(id, window)
 					g.ActiveIdMouseButton = mouse_button_clicked
-					if 0 == (flags & ImGuiButtonFlags_NoNavFocus) {
+					if flags&ImGuiButtonFlags_NoNavFocus == 0 {
 						SetFocusID(id, window)
 					}
 					FocusWindow(window)
@@ -244,7 +256,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 	// Gamepad/Keyboard navigation
 	// We report navigated item as hovered but we don't set g.HoveredId to not interfere with mouse.
 	if g.NavId == id && !g.NavDisableHighlight && g.NavDisableMouseHover && (g.ActiveId == 0 || g.ActiveId == id || g.ActiveId == window.MoveId) {
-		if 0 == (flags & ImGuiButtonFlags_NoHoveredOnFocus) {
+		if flags&ImGuiButtonFlags_NoHoveredOnFocus == 0 {
 			hovered = true
 		}
 	}
@@ -265,7 +277,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 			// Set active id so it can be queried by user via IsItemActive(), equivalent of holding the mouse button.
 			g.NavActivateId = id // This is so SetActiveId assign a Nav source
 			SetActiveID(id, window)
-			if (nav_activated_by_code || nav_activated_by_inputs) && 0 == (flags&ImGuiButtonFlags_NoNavFocus) {
+			if (nav_activated_by_code || nav_activated_by_inputs) && flags&ImGuiButtonFlags_NoNavFocus == 0 {
 				SetFocusID(id, window)
 			}
 		}
@@ -296,7 +308,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 				}
 				ClearActiveID()
 			}
-			if 0 == (flags & ImGuiButtonFlags_NoNavFocus) {
+			if flags&ImGuiButtonFlags_NoNavFocus == 0 {
 				g.NavDisableHighlight = true
 			}
 		} else if g.ActiveIdSource == ImGuiInputSource_Nav {
