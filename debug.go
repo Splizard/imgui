@@ -1198,7 +1198,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Text("WINDOWING")
 		Indent(0)
 
-		var name, rootName, underName, movingName = "nil", "nil", "nil", "nil"
+		name, rootName, underName, movingName := "nil", "nil", "nil", "nil"
 		if g.HoveredWindow != nil {
 			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
 				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
