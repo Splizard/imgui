@@ -12,7 +12,7 @@ const FLT_MIN = math.SmallestNonzeroFloat32
 const FLT_MAX = math.MaxFloat32
 const INT_MAX = math.MaxInt32
 
-// Use your programming IDE "Go to definition" facility on the names of the center columns to find the actual flags/enum lists.
+// ImGuiLayoutType Use your programming IDE "Go to definition" facility on the names of the center columns to find the actual flags/enum lists.
 type ImGuiLayoutType int          // -> enum ImGuiLayoutType_         // Enum: Horizontal or vertical
 type ImGuiItemFlags int           // -> enum ImGuiItemFlags_          // Flags: for PushItemFlag()
 type ImGuiItemStatusFlags int     // -> enum ImGuiItemStatusFlags_    // Flags: for DC.LastItemStatusFlags
@@ -28,7 +28,7 @@ type ImGuiTooltipFlags int        // -> enum ImGuiTooltipFlags_       // Flags: 
 
 type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 
-// Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
+// GImGui Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
 //   - ImGui::CreateContext() will automatically set this pointer if it is nil.
 //     Change to a different context by calling ImGui::SetCurrentContext().
 //   - Important: Dear ImGui functions are not thread-safe because of this pointer.
@@ -57,7 +57,7 @@ const IM_PI = 3.14159265358979323846
 const IM_NEWLINE = "\n"
 const IM_TABSIZE = 4
 
-// Unsaturated, for display purpose
+// IM_F32_TO_INT8_UNBOUND Unsaturated, for display purpose
 func IM_F32_TO_INT8_UNBOUND(val float32) int {
 	var x float
 	if val >= 0 {
@@ -68,18 +68,13 @@ func IM_F32_TO_INT8_UNBOUND(val float32) int {
 	return (int)(val*255 + x)
 }
 
-// Saturated, always output 0..255
+// IM_F32_TO_INT8_SAT Saturated, always output 0..255
 func IM_F32_TO_INT8_SAT(val float32) int {
 	return (int)(ImSaturate(val)*255.0 + 0.5)
 }
 
-func IM_FLOOR(val float32) float {
-	return (float)((int)(val))
-}
-
-func IM_ROUND(val float32) float {
-	return (float)((int)(val + 0.5))
-}
+func IM_FLOOR(val float32) float { return (float)((int)(val)) }
+func IM_ROUND(val float32) float { return (float)((int)(val + 0.5)) }
 
 func ImHashData(ptr unsafe.Pointer, data_size uintptr, seed ImU32) ImGuiID {
 	var crc = ^seed
@@ -92,13 +87,8 @@ func ImHashData(ptr unsafe.Pointer, data_size uintptr, seed ImU32) ImGuiID {
 	return ^crc
 }
 
-func ImIsPowerOfTwoInt(v int) bool {
-	return v != 0 && (v&(v-1)) == 0
-}
-
-func ImIsPowerOfTwoLong(v int64) bool {
-	return v != 0 && (v&(v-1)) == 0
-}
+func ImIsPowerOfTwoInt(v int) bool    { return v != 0 && (v&(v-1)) == 0 }
+func ImIsPowerOfTwoLong(v int64) bool { return v != 0 && (v&(v-1)) == 0 }
 
 func ImUpperPowerOfTwo(v int) int {
 	v--
@@ -114,7 +104,7 @@ func ImUpperPowerOfTwo(v int) int {
 func ImCharIsBlankA(c char) bool { return c == ' ' || c == '\t' }
 func ImCharIsBlankW(c rune) bool { return c == ' ' || c == '\t' || c == 0x3000 }
 
-// Based on stb_to_utf8() from github.com/nothings/stb/
+// ImTextCharToUtf8_inline Based on stb_to_utf8() from github.com/nothings/stb/
 func ImTextCharToUtf8_inline(buf []char, buf_size int, c uint) int {
 	if c < 0x80 {
 		buf[0] = char(c)
@@ -151,7 +141,7 @@ func ImTextCharToUtf8_inline(buf []char, buf_size int, c uint) int {
 	return 0
 }
 
-// Helpers: UTF-8 <> wchar conversions
+// ImTextCharToUtf8 Helpers: UTF-8 <> wchar conversions
 func ImTextCharToUtf8(out_buf [5]char, c uint) []char {
 	count := ImTextCharToUtf8_inline(out_buf[:], 5, c)
 	out_buf[count] = 0
@@ -205,7 +195,7 @@ func ImTextCountCharsFromUtf8(in_text string) int {
 	return count
 }
 
-// Not optimal but we very rarely use this function.
+// ImTextCountUtf8BytesFromChar Not optimal but we very rarely use this function.
 func ImTextCountUtf8BytesFromChar(in_text, in_text_end []char) int {
 	var unused rune = 0
 	return ImTextCharFromUtf8(&unused, string(in_text))
@@ -237,7 +227,7 @@ func ImFileWrite(data []byte, size, count ImU64, file ImFileHandle) ImU64 {
 	panic("not implemented")
 }
 
-// Helper: Load file content into memory
+// ImFileLoadToMemory Helper: Load file content into memory
 // Memory allocated with IM_ALLOC(), must be freed by user using IM_FREE() == ImGui::MemFree()
 // This can't really be used with "rt" because fseek size won't match read size.
 func ImFileLoadToMemory(filename, mode string, out_file_size *size_t, padding_bytes int) []byte {
@@ -318,18 +308,18 @@ type ImSpan struct {
 	Data any
 }
 
-func (this *ImSpan) Set(data any) {
+func (s *ImSpan) Set(data any) {
 	if reflect.TypeOf(data).Kind() != reflect.Slice {
 		panic("not implemented")
 	}
-	this.Data = data
+	s.Data = data
 }
 
-func (this ImSpan) Size() int {
-	return int32(reflect.ValueOf(this.Data).Len())
+func (s *ImSpan) Size() int {
+	return int32(reflect.ValueOf(s.Data).Len())
 }
 
-func (this ImSpan) IndexFromPointer(ptr any) int {
+func (s *ImSpan) IndexFromPointer(ptr any) int {
 	panic("not implemented")
 }
 
@@ -374,40 +364,40 @@ func (this *ImDrawListSharedData) SetCircleTessellationMaxError(max_error float)
 
 type ImDrawDataBuilder [2][]*ImDrawList
 
-func (this *ImDrawDataBuilder) Clear() {
-	for i := range this {
-		this[i] = this[i][:0]
+func (b *ImDrawDataBuilder) Clear() {
+	for i := range b {
+		b[i] = b[i][:0]
 	}
 }
 
-func (this *ImDrawDataBuilder) GetDrawListCount() int {
+func (b *ImDrawDataBuilder) GetDrawListCount() int {
 	var count int
-	for i := range this {
-		count += int(len(this[i]))
+	for i := range b {
+		count += int(len(b[i]))
 	}
 	return count
 }
 
-func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
-	var n = len(Layers[0])
+func (b *ImDrawDataBuilder) FlattenIntoSingleLayer() {
+	var n = len(b[0])
 	var size = int(n)
-	for i := 1; i < len(*Layers); i++ {
-		size += int(len(Layers[i]))
+	for i := 1; i < len(*b); i++ {
+		size += int(len(b[i]))
 	}
 
-	//TODO/FIXME this could be wrong
-	if size < int(len(Layers[0])) {
-		Layers[0] = Layers[0][0:size]
+	//TODO/FIXME b could be wrong
+	if size < int(len(b[0])) {
+		b[0] = b[0][0:size]
 	} else {
-		Layers[0] = append(Layers[0], make([]*ImDrawList, 0, size-int(len(Layers[0])))...)
+		b[0] = append(b[0], make([]*ImDrawList, 0, size-int(len(b[0])))...)
 	}
 
-	for layer_n := 1; layer_n < len(*Layers); layer_n++ {
-		var layer = &Layers[layer_n]
+	for layer_n := 1; layer_n < len(*b); layer_n++ {
+		var layer = &b[layer_n]
 		if len(*layer) == 0 {
 			continue
 		}
-		copy(Layers[0][n:], *layer)
+		copy(b[0][n:], *layer)
 		n += len(*layer)
 		*layer = (*layer)[:0]
 	}
@@ -415,7 +405,7 @@ func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
 
 type ImGuiDataTypeTempStorage any
 
-// Type information associated to one ImGuiDataType. Retrieve with DataTypeGetInfo().
+// ImGuiDataTypeInfo Type information associated to one ImGuiDataType. Retrieve with DataTypeGetInfo().
 type ImGuiDataTypeInfo struct {
 	Size     size_t // Size in bytes
 	Name     string // Short descriptive name for the type, for debugging
@@ -423,13 +413,13 @@ type ImGuiDataTypeInfo struct {
 	ScanFmt  string // Default scanf format for the type
 }
 
-// Stacked color modifier, backup of modified data so we can restore it
+// ImGuiColorMod Stacked color modifier, backup of modified data so we can restore it
 type ImGuiColorMod struct {
 	Col         ImGuiCol
 	BackupValue ImVec4
 }
 
-// Storage data for BeginComboPreview()/EndComboPreview()
+// ImGuiComboPreviewData Storage data for BeginComboPreview()/EndComboPreview()
 type ImGuiComboPreviewData struct {
 	PreviewRect                  ImRect
 	BackupCursorPos              ImVec2
@@ -439,7 +429,7 @@ type ImGuiComboPreviewData struct {
 	BackupLayout                 ImGuiLayoutType
 }
 
-// Stacked storage data for BeginGroup()/EndGroup()
+// ImGuiGroupData Stacked storage data for BeginGroup()/EndGroup()
 type ImGuiGroupData struct {
 	WindowID                           ImGuiID
 	BackupCursorPos                    ImVec2
@@ -465,57 +455,55 @@ type ImGuiMenuColumns struct {
 	Widths         [4]ImU16 // Width of:   Icon, Label, Shortcut, Mark  (accumulators for current frame)
 }
 
-func NewImGuiMenuColumns() ImGuiMenuColumns {
-	return ImGuiMenuColumns{}
-}
+func NewImGuiMenuColumns() ImGuiMenuColumns { return ImGuiMenuColumns{} }
 
-// Helpers for internal use
-func (this *ImGuiMenuColumns) Update(spacing float, window_reappearing bool) {
+// Update Helpers for internal use
+func (c *ImGuiMenuColumns) Update(spacing float, window_reappearing bool) {
 	if window_reappearing {
-		this.Widths = [4]ImU16{}
+		c.Widths = [4]ImU16{}
 	}
-	this.Spacing = (ImU16)(spacing)
-	this.CalcNextTotalWidth(true)
-	this.Widths = [4]ImU16{}
-	this.TotalWidth = this.NextTotalWidth
-	this.NextTotalWidth = 0
+	c.Spacing = (ImU16)(spacing)
+	c.CalcNextTotalWidth(true)
+	c.Widths = [4]ImU16{}
+	c.TotalWidth = c.NextTotalWidth
+	c.NextTotalWidth = 0
 }
 
-func (this *ImGuiMenuColumns) DeclColumns(w_icon float, w_label float, w_shortcut float, w_mark float) float {
-	this.Widths[0] = uint16(ImMaxInt(int(this.Widths[0]), ((int)(w_icon))))
-	this.Widths[1] = uint16(ImMaxInt(int(this.Widths[1]), (int)(w_label)))
-	this.Widths[2] = uint16(ImMaxInt(int(this.Widths[2]), (int)(w_shortcut)))
-	this.Widths[3] = uint16(ImMaxInt(int(this.Widths[3]), (int)(w_mark)))
-	this.CalcNextTotalWidth(false)
-	return (float)(ImMaxInt(int(this.TotalWidth), int(this.NextTotalWidth)))
+func (c *ImGuiMenuColumns) DeclColumns(w_icon float, w_label float, w_shortcut float, w_mark float) float {
+	c.Widths[0] = uint16(ImMaxInt(int(c.Widths[0]), ((int)(w_icon))))
+	c.Widths[1] = uint16(ImMaxInt(int(c.Widths[1]), (int)(w_label)))
+	c.Widths[2] = uint16(ImMaxInt(int(c.Widths[2]), (int)(w_shortcut)))
+	c.Widths[3] = uint16(ImMaxInt(int(c.Widths[3]), (int)(w_mark)))
+	c.CalcNextTotalWidth(false)
+	return (float)(ImMaxInt(int(c.TotalWidth), int(c.NextTotalWidth)))
 }
 
-func (this *ImGuiMenuColumns) CalcNextTotalWidth(update_offsets bool) {
+func (c *ImGuiMenuColumns) CalcNextTotalWidth(update_offsets bool) {
 	var offset ImU16 = 0
 	var want_spacing = false
-	for i := 0; i < len(this.Widths); i++ {
-		var width = this.Widths[i]
+	for i := 0; i < len(c.Widths); i++ {
+		var width = c.Widths[i]
 		if want_spacing && width > 0 {
-			offset += this.Spacing
+			offset += c.Spacing
 		}
 		want_spacing = want_spacing || (width > 0)
 		if update_offsets {
 			if i == 1 {
-				this.OffsetLabel = offset
+				c.OffsetLabel = offset
 			}
 			if i == 2 {
-				this.OffsetShortcut = offset
+				c.OffsetShortcut = offset
 			}
 			if i == 3 {
-				this.OffsetMark = offset
+				c.OffsetMark = offset
 			}
 		}
 		offset += width
 	}
-	this.NextTotalWidth = uint(offset)
+	c.NextTotalWidth = uint(offset)
 }
 
-// Internal state of the currently focused/edited text input box
+// ImGuiInputTextState Internal state of the currently focused/edited text input box
 // For a given item ID, access with ImGui::GetInputTextState()
 type ImGuiInputTextState struct {
 	ID                   ImGuiID   // widget id owning the text state
@@ -536,64 +524,64 @@ type ImGuiInputTextState struct {
 	UserCallbackData     any
 }
 
-func (this *ImGuiInputTextState) ClearText() {
-	this.CurLenW = 0
-	this.CurLenA = 0
-	this.TextW[0] = 0
-	this.TextA[0] = 0
-	this.CursorClamp()
+func (s *ImGuiInputTextState) ClearText() {
+	s.CurLenW = 0
+	s.CurLenA = 0
+	s.TextW[0] = 0
+	s.TextA[0] = 0
+	s.CursorClamp()
 }
 
-func (this *ImGuiInputTextState) GetUndoAvailCount() int {
-	return int(this.Stb.undostate.undo_point)
+func (s *ImGuiInputTextState) GetUndoAvailCount() int {
+	return int(s.Stb.undostate.undo_point)
 }
 
-func (this *ImGuiInputTextState) GetRedoAvailCount() int {
-	return int(STB_TEXTEDIT_UNDOSTATECOUNT - this.Stb.undostate.redo_point)
+func (s *ImGuiInputTextState) GetRedoAvailCount() int {
+	return int(STB_TEXTEDIT_UNDOSTATECOUNT - s.Stb.undostate.redo_point)
 }
 
-func (this *ImGuiInputTextState) OnKeyPressed(key int) {
-	stb_textedit_key(this, &this.Stb, STB_TEXTEDIT_KEYTYPE(key))
-	this.CursorFollow = true
-	this.CursorAnimReset()
+func (s *ImGuiInputTextState) OnKeyPressed(key int) {
+	stb_textedit_key(s, &s.Stb, STB_TEXTEDIT_KEYTYPE(key))
+	s.CursorFollow = true
+	s.CursorAnimReset()
 }
 
-func (this *ImGuiInputTextState) CursorAnimReset() {
-	this.CursorAnim = -0.30
+func (s *ImGuiInputTextState) CursorAnimReset() {
+	s.CursorAnim = -0.30
 }
 
-func (this *ImGuiInputTextState) CursorClamp() {
-	this.Stb.cursor = ImMinInt(this.Stb.cursor, this.CurLenW)
-	this.Stb.select_start = ImMinInt(this.Stb.select_start, this.CurLenW)
-	this.Stb.select_end = ImMinInt(this.Stb.select_end, this.CurLenW)
+func (s *ImGuiInputTextState) CursorClamp() {
+	s.Stb.cursor = ImMinInt(s.Stb.cursor, s.CurLenW)
+	s.Stb.select_start = ImMinInt(s.Stb.select_start, s.CurLenW)
+	s.Stb.select_end = ImMinInt(s.Stb.select_end, s.CurLenW)
 }
 
-func (this *ImGuiInputTextState) HasSelection() bool {
-	return this.Stb.select_start != this.Stb.select_end
+func (s *ImGuiInputTextState) HasSelection() bool {
+	return s.Stb.select_start != s.Stb.select_end
 }
 
-func (this *ImGuiInputTextState) ClearSelection() {
-	this.Stb.select_start = this.Stb.cursor
-	this.Stb.select_end = this.Stb.cursor
+func (s *ImGuiInputTextState) ClearSelection() {
+	s.Stb.select_start = s.Stb.cursor
+	s.Stb.select_end = s.Stb.cursor
 }
 
-func (this *ImGuiInputTextState) GetCursorPos() int {
-	return this.Stb.cursor
+func (s *ImGuiInputTextState) GetCursorPos() int {
+	return s.Stb.cursor
 }
 
-func (this *ImGuiInputTextState) GetSelectionStart() int {
-	return this.Stb.select_start
+func (s *ImGuiInputTextState) GetSelectionStart() int {
+	return s.Stb.select_start
 }
 
-func (this *ImGuiInputTextState) GetSelectionEnd() int {
-	return this.Stb.select_end
+func (s *ImGuiInputTextState) GetSelectionEnd() int {
+	return s.Stb.select_end
 }
 
-func (this *ImGuiInputTextState) SelectAll() {
-	this.Stb.select_start = 0
-	this.Stb.cursor = this.CurLenW
-	this.Stb.select_end = this.CurLenW
-	this.Stb.has_preferred_x = 0
+func (s *ImGuiInputTextState) SelectAll() {
+	s.Stb.select_start = 0
+	s.Stb.cursor = s.CurLenW
+	s.Stb.select_end = s.CurLenW
+	s.Stb.has_preferred_x = 0
 }
 
 type ImGuiPopupData struct {
@@ -649,7 +637,7 @@ type ImGuiLastItemData struct {
 	DisplayRect ImRect               // Display rectangle (only if ImGuiItemStatusFlags_HasDisplayRect is set)
 }
 
-// Data saved for each window pushed into the stack
+// ImGuiWindowStackData Data saved for each window pushed into the stack
 type ImGuiWindowStackData struct {
 	Window                   *ImGuiWindow
 	ParentLastItemDataBackup ImGuiLastItemData
@@ -697,7 +685,7 @@ func (this *ImGuiNavItemData) Clear() {
 	this.DistAxial = FLT_MAX
 }
 
-// Storage data for a single column for legacy Columns() api
+// ImGuiOldColumnData Storage data for a single column for legacy Columns() api
 type ImGuiOldColumnData struct {
 	OffsetNorm             float // Column start offset, normalized 0.0 (far left) -> 1.0 (far right)
 	OffsetNormBeforeResize float
@@ -723,7 +711,7 @@ type ImGuiOldColumns struct {
 	Splitter                 ImDrawListSplitter
 }
 
-// ImGuiViewport Private/Internals fields (cardinal sin: we are using inheritance!)
+// ImGuiViewportP ImGuiViewport Private/Internals fields (cardinal sin: we are using inheritance!)
 // Every instance of ImGuiViewport is in fact a ImGuiViewportP.
 type ImGuiViewportP = ImGuiViewport
 
@@ -760,7 +748,7 @@ func (this *ImGuiViewportP) GetBuildWorkRect() ImRect {
 	return ImRect{ImVec2{pos.x, pos.y}, ImVec2{pos.x + size.x, pos.y + size.y}}
 }
 
-// Windows data saved in imgui.ini file
+// ImGuiWindowSettings Windows data saved in imgui.ini file
 // Because we never destroy or rename ImGuiWindowSettings, we can store the names in a separate buffer easily.
 // (this is designed to be stored in a ImChunkStream buffer, with the variable-length Name following our structure)
 type ImGuiWindowSettings struct {
@@ -857,7 +845,7 @@ type ImGuiContextHook struct {
 	UserData any
 }
 
-// Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the DC variable name in ImGuiWindow.
+// ImGuiWindowTempData Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the DC variable name in ImGuiWindow.
 // (That's theory, in practice the delimitation between ImGuiWindow and ImGuiWindowTempData is quite tenuous and could be reconsidered..)
 // (This doesn't need a constructor because we zero-clear it as part of ImGuiWindow and all frame-temporary data are setup on Begin)
 type ImGuiWindowTempData struct {
@@ -1076,7 +1064,7 @@ func (this *ImGuiWindow) GetIDNoKeepAliveInt(n int) ImGuiID {
 	return id
 }
 
-// This is only used in rare/specific situations to manufacture an ID out of nowhere.
+// GetIDFromRectangle This is only used in rare/specific situations to manufacture an ID out of nowhere.
 func (this *ImGuiWindow) GetIDFromRectangle(r_abs ImRect) ImGuiID {
 	var seed = this.IDStack[len(this.IDStack)-1]
 	var r_rel = [4]int{(int)(r_abs.Min.x - this.Pos.x), (int)(r_abs.Min.y - this.Pos.y), (int)(r_abs.Max.x - this.Pos.x), (int)(r_abs.Max.y - this.Pos.y)}
@@ -1129,11 +1117,11 @@ var IM_COL32_DISABLE = IM_COL32(0, 0, 0, 1) // Special sentinel code which canno
 const IMGUI_TABLE_MAX_COLUMNS = 64               // sizeof(ImU64) * 8. This is solely because we frequently encode columns set in a ImU64.
 const IMGUI_TABLE_MAX_DRAW_CHANNELS = (4 + 64*2) // See TableSetupDrawChannels()
 
-// Our current column maximum is 64 but we may raise that in the future.
+// ImGuiTableColumnIdx Our current column maximum is 64 but we may raise that in the future.
 type ImGuiTableColumnIdx = ImS8
 type ImGuiTableDrawChannelIdx = ImU8
 
-// [Internal] sizeof() ~ 104
+// ImGuiTableColumn [Internal] sizeof() ~ 104
 // We use the terminology "Enabled" to refer to a column that is not Hidden by user/api.
 // We use the terminology "Clipped" to refer to a column that is out of sight because of scrolling/clipping.
 // This is in contrast with some user-facing api such as IsItemVisible() / IsRectVisible() which use "Visible" to mean "not clipped".
@@ -1197,14 +1185,14 @@ func NewImGuiTableColumn() ImGuiTableColumn {
 	}
 }
 
-// Transient cell data stored per row.
+// ImGuiTableCellData Transient cell data stored per row.
 // sizeof() ~ 6
 type ImGuiTableCellData struct {
 	BgColor ImU32               // Actual color
 	Column  ImGuiTableColumnIdx // Column number
 }
 
-// FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
+// ImGuiTable FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
 type ImGuiTable struct {
 	ID                         ImGuiID
 	Flags                      ImGuiTableFlags
@@ -1317,7 +1305,7 @@ func NewImGuiTable() ImGuiTable {
 	}
 }
 
-// Transient data that are only needed between BeginTable() and EndTable(), those buffers are shared (1 per level of stacked table).
+// ImGuiTableTempData Transient data that are only needed between BeginTable() and EndTable(), those buffers are shared (1 per level of stacked table).
 // - Accessing those requires chasing an extra pointer so for very frequently used data we leave them in the main table structure.
 // - We also leave out of this structure data that tend to be particularly useful for debugging/metrics.
 type ImGuiTableTempData struct {
@@ -1341,7 +1329,7 @@ func NewImGuiTableTempData() ImGuiTableTempData {
 	}
 }
 
-// sizeof() ~ 12
+// ImGuiTableColumnSettings sizeof() ~ 12
 type ImGuiTableColumnSettings struct {
 	WidthOrWeight float
 	UserID        ImGuiID
@@ -1359,7 +1347,7 @@ func NewImGuiTableColumnSettings() ImGuiTableColumnSettings {
 	}
 }
 
-// This is designed to be stored in a single ImChunkStream (1 header followed by N ImGuiTableColumnSettings, etc.)
+// ImGuiTableSettings This is designed to be stored in a single ImChunkStream (1 header followed by N ImGuiTableColumnSettings, etc.)
 type ImGuiTableSettings struct {
 	ID              ImGuiID         // Set to 0 to invalidate/delete the setting
 	SaveFlags       ImGuiTableFlags // Indicate data we want to save using the Resizable/Reorderable/Sortable/Hideable flags (could be using its own flags..)
@@ -1371,7 +1359,7 @@ type ImGuiTableSettings struct {
 	Columns []ImGuiTableColumnSettings
 }
 
-// This structure is likely to evolve as we add support for incremental atlas updates
+// ImFontBuilderIO This structure is likely to evolve as we add support for incremental atlas updates
 type ImFontBuilderIO struct {
 	FontBuilder_Build func(atlas *ImFontAtlas) bool
 }
