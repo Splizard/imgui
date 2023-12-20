@@ -319,7 +319,7 @@ func CalcItemWidth() float {
 
 // GetContentRegionAvail == GetContentRegionMax() - GetCursorPos()
 func GetContentRegionAvail() ImVec2 {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return GetContentRegionMaxAbs().Sub(window.DC.CursorPos)
 }
 
@@ -348,12 +348,12 @@ func GetContentRegionMaxAbs() ImVec2 {
 
 // GetWindowContentRegionMin content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
 func GetWindowContentRegionMin() ImVec2 {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.ContentRegionRect.Min.Sub(window.Pos)
 }
 
 // GetWindowContentRegionMax content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
 func GetWindowContentRegionMax() ImVec2 {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.ContentRegionRect.Max.Sub(window.Pos)
 }

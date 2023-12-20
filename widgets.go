@@ -92,7 +92,7 @@ func ItemHoverable(bb *ImRect, id ImGuiID) bool {
 // Note that only CalcItemWidth() is publicly exposed.
 // The 4.0f here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
 func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 
 	var region_max ImVec2
 	if size.x < 0.0 || size.y < 0.0 {

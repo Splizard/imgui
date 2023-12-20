@@ -964,7 +964,7 @@ func TabBarCalcTabID(tab_bar *ImGuiTabBar, label string) ImU32 {
 		KeepAliveID(id)
 		return id
 	} else {
-		var window = GImGui.CurrentWindow
+		window := GImGui.CurrentWindow
 		return window.GetIDs(label)
 	}
 }

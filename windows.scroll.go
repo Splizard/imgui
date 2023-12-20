@@ -5,13 +5,13 @@ package imgui
 
 // GetScrollX get scrolling amount [0 .. GetScrollMaxX()]
 func GetScrollX() float {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.Scroll.x
 }
 
 // GetScrollY get scrolling amount [0 .. GetScrollMaxY()]
 func GetScrollY() float {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.Scroll.y
 }
 
@@ -29,13 +29,13 @@ func SetScrollY(scroll_y float) {
 
 // GetScrollMaxX get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
 func GetScrollMaxX() float {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.ScrollMax.x
 }
 
 // GetScrollMaxY get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
 func GetScrollMaxY() float {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.ScrollMax.y
 }
 

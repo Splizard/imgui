@@ -26,13 +26,13 @@ func GetViewportDrawList(viewport *ImGuiViewportP, drawlist_no size_t, drawlist_
 
 // test if rectangle (of given size, starting from cursor position) is visible / not clipped.
 func IsRectVisible(size ImVec2) bool {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.ClipRect.Overlaps(ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)})
 }
 
 // test if rectangle (in screen space) is visible / not clipped. to perform coarse clipping on user's side.
 func IsRectVisibleMinMax(rect_min, rect_max ImVec2) bool {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.ClipRect.Overlaps(ImRect{rect_min, rect_max})
 }
 
@@ -64,7 +64,7 @@ func GetDrawListSharedData() *ImDrawListSharedData {
 
 // replace current window storage with our own (if you want to manipulate it yourself, typically clear subsection of it)
 func SetStateStorage(storage *ImGuiStorage) {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	if storage != nil {
 		window.DC.StateStorage = *storage
 	} else {
@@ -73,6 +73,6 @@ func SetStateStorage(storage *ImGuiStorage) {
 }
 
 func GetStateStorage() ImGuiStorage {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.DC.StateStorage
 }

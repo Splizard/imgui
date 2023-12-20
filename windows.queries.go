@@ -103,12 +103,12 @@ func GetWindowSize() ImVec2 {
 
 // get current window width (shortcut for GetWindowSize().x)
 func GetWindowWidth() float {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.Size.x
 }
 
 // get current window height (shortcut for GetWindowSize().y)
 func GetWindowHeight() float {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.Size.y
 }

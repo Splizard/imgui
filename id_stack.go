@@ -53,7 +53,7 @@ func PushID(int_id int) {
 }
 
 func PopID() {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	IM_ASSERT(len(window.IDStack) > 1) // Too many PopID(), or could be popping in a wrong/different window?
 	window.IDStack = window.IDStack[:len(window.IDStack)-1]
 } // pop from the ID stack.
@@ -68,6 +68,6 @@ func GetIDs(str_id_begin string) ImGuiID {
 }
 
 func GetIDFromInterface(ptr_id any) ImGuiID {
-	var window = GImGui.CurrentWindow
+	window := GImGui.CurrentWindow
 	return window.GetIDInterface(ptr_id)
 }
