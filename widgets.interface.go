@@ -19,7 +19,7 @@ var GDataTypeInfo = []ImGuiDataTypeInfo{
 	{unsafe.Sizeof(double(0)), "double", "%f", "%lf"}, // ImGuiDataType_Double
 }
 
-// FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "%.0f".
+// PatchFormatStringFloatToInt FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "%.0f".
 // Even though we changed the compile-time default, we expect users to have carried %f around, which would break the display of DragInt() calls.
 // To honor backward compatibility we are rewriting the format string, unless IMGUI_DISABLE_OBSOLETE_FUNCTIONS is enabled. What could possibly go wrong?!
 func PatchFormatStringFloatToInt(format string) string {
@@ -123,7 +123,7 @@ func DataTypeApplyOp(data_type ImGuiDataType, op int, output any, arg_1 any, arg
 	IM_ASSERT(false)
 }
 
-// User can input math operators (e.g. +100) to edit a numerical values.
+// DataTypeApplyOpFromText User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
 func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImGuiDataType, p_data any, format string) bool {
 	for buf[0] == ' ' || buf[0] == '\t' {
@@ -165,17 +165,17 @@ func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImG
 		// Store operand in a float so we can use fractional value for multipliers (*1.1), but constant always parsed as integer so we can fit big integers (e.g. 2000000003) past float precision
 		if op == '+' {
 			if n, _ := fmt.Sscanf(buf, "%d", &arg1i); n != 0 {
-				*v = (int)(arg0i + arg1i)
+				*v = arg0i + arg1i
 			}
 			// Add (use "+-" to subtract)
 		} else if op == '*' {
 			if n, _ := fmt.Sscanf(buf, "%f", &arg1f); n != 0 {
-				*v = (int)(arg0i * int(arg1f))
+				*v = arg0i * int(arg1f)
 			}
 			// Multiply
 		} else if op == '/' {
 			if n, _ := fmt.Sscanf(buf, "%f", &arg1f); n != 0 && arg1f != 0.0 {
-				*v = (int)(arg0i / int(arg1f))
+				*v = arg0i / int(arg1f)
 			}
 			// Divide
 		} else {
@@ -277,25 +277,25 @@ func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImG
 func DataTypeCompare(data_type ImGuiDataType, arg_1 any, arg_2 any) int {
 	switch data_type {
 	case ImGuiDataType_S8:
-		return int(int8(arg_1.(int8)) - int8(arg_2.(int8)))
+		return int(arg_1.(int8) - arg_2.(int8))
 	case ImGuiDataType_U8:
-		return int(uint8(arg_1.(uint8)) - uint8(arg_2.(uint8)))
+		return int(arg_1.(uint8) - arg_2.(uint8))
 	case ImGuiDataType_S16:
-		return int(int16(arg_1.(int16)) - int16(arg_2.(int16)))
+		return int(arg_1.(int16) - arg_2.(int16))
 	case ImGuiDataType_U16:
-		return int(uint16(arg_1.(uint16)) - uint16(arg_2.(uint16)))
+		return int(arg_1.(uint16) - arg_2.(uint16))
 	case ImGuiDataType_S32:
-		return int(int32(arg_1.(int32)) - int32(arg_2.(int32)))
+		return arg_1.(int32) - arg_2.(int32)
 	case ImGuiDataType_U32:
-		return int(uint32(arg_1.(uint32)) - uint32(arg_2.(uint32)))
+		return int(arg_1.(uint32) - arg_2.(uint32))
 	case ImGuiDataType_S64:
-		return int(int64(arg_1.(int64)) - int64(arg_2.(int64)))
+		return int(arg_1.(int64) - arg_2.(int64))
 	case ImGuiDataType_U64:
-		return int(uint64(arg_1.(uint64)) - uint64(arg_2.(uint64)))
+		return int(arg_1.(uint64) - arg_2.(uint64))
 	case ImGuiDataType_Float:
-		return int(float32(arg_1.(float32)) - float32(arg_2.(float32)))
+		return int(arg_1.(float32) - arg_2.(float32))
 	case ImGuiDataType_Double:
-		return int(float64(arg_1.(float64)) - float64(arg_2.(float64)))
+		return int(arg_1.(float64) - arg_2.(float64))
 	}
 	IM_ASSERT(false)
 	return 0
@@ -304,25 +304,25 @@ func DataTypeCompare(data_type ImGuiDataType, arg_1 any, arg_2 any) int {
 func DataTypeClamp(data_type ImGuiDataType, a any, n any, x any) bool {
 	switch data_type {
 	case ImGuiDataType_S8:
-		*a.(*int8) = int8(ImClampInt(int(int8(a.(int8))), int(int8(n.(int8))), int(int8(x.(int8)))))
+		*a.(*int8) = int8(ImClampInt(int(a.(int8)), int(n.(int8)), int(x.(int8))))
 	case ImGuiDataType_U8:
-		*a.(*uint8) = uint8(ImClampInt(int(uint8(a.(uint8))), int(uint8(n.(uint8))), int(uint8(x.(uint8)))))
+		*a.(*uint8) = uint8(ImClampInt(int(a.(uint8)), int(n.(uint8)), int(x.(uint8))))
 	case ImGuiDataType_S16:
-		*a.(*int16) = int16(ImClampInt(int(int16(a.(int16))), int(int16(n.(int16))), int(int16(x.(int16)))))
+		*a.(*int16) = int16(ImClampInt(int(a.(int16)), int(n.(int16)), int(x.(int16))))
 	case ImGuiDataType_U16:
-		*a.(*uint16) = uint16(ImClampInt(int(uint16(a.(uint16))), int(uint16(n.(uint16))), int(uint16(x.(uint16)))))
+		*a.(*uint16) = uint16(ImClampInt(int(a.(uint16)), int(n.(uint16)), int(x.(uint16))))
 	case ImGuiDataType_S32:
-		*a.(*int32) = int32(ImClampInt(int(int32(a.(int32))), int(int32(n.(int32))), int(int32(x.(int32)))))
+		*a.(*int32) = ImClampInt(a.(int32), n.(int32), x.(int32))
 	case ImGuiDataType_U32:
-		*a.(*uint32) = uint32(ImClampInt(int(uint32(a.(uint32))), int(uint32(n.(uint32))), int(uint32(x.(uint32)))))
+		*a.(*uint32) = uint32(ImClampInt(int(a.(uint32)), int(n.(uint32)), int(x.(uint32))))
 	case ImGuiDataType_S64:
-		*a.(*int64) = int64(ImClampInt64(a.(int64), n.(int64), x.(int64)))
+		*a.(*int64) = ImClampInt64(a.(int64), n.(int64), x.(int64))
 	case ImGuiDataType_U64:
-		*a.(*uint64) = uint64(ImClampUint64(a.(uint64), n.(uint64), x.(uint64)))
+		*a.(*uint64) = ImClampUint64(a.(uint64), n.(uint64), x.(uint64))
 	case ImGuiDataType_Float:
-		*a.(*float32) = float32(ImClamp(float32(a.(float32)), float32(n.(float32)), float32(x.(float32))))
+		*a.(*float32) = ImClamp(a.(float32), n.(float32), x.(float32))
 	case ImGuiDataType_Double:
-		*a.(*float64) = float64(ImClamp64(float64(a.(float64)), float64(n.(float64)), float64(x.(float64))))
+		*a.(*float64) = ImClamp64(a.(float64), n.(float64), x.(float64))
 	}
 	IM_ASSERT(false)
 	return false
