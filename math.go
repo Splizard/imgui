@@ -165,13 +165,8 @@ func ImSaturate(f float) float {
 	return f
 }
 
-func ImLengthSqrVec2(a ImVec2) float {
-	return a.x*a.x + a.y*a.y
-}
-
-func ImLengthSqrVec4(a ImVec4) float {
-	return a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w
-}
+func ImLengthSqrVec2(a ImVec2) float { return a.x*a.x + a.y*a.y }
+func ImLengthSqrVec4(a ImVec4) float { return a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w }
 
 func ImInvLength(lhs ImVec2, fail_value float) float {
 	var d = (lhs.x * lhs.x) + (lhs.y * lhs.y)
@@ -181,9 +176,7 @@ func ImInvLength(lhs ImVec2, fail_value float) float {
 	return fail_value
 }
 
-func ImFloor(f float) float {
-	return (float)((int)(f))
-}
+func ImFloor(f float) float { return (float)((int)(f)) }
 
 func ImFloorSigned(f float) float {
 	if f >= 0 || float((int)(f)) == f {
@@ -192,18 +185,9 @@ func ImFloorSigned(f float) float {
 	return (float)((int)(f)) - 1
 }
 
-func ImFloorVec(v *ImVec2) *ImVec2 {
-	return &ImVec2{(float)((int)(v.x)), (float)((int)(v.y))}
-}
-
-func ImModPositive(a, b int) int {
-	return (a + b) % b
-}
-
-func ImDot(a, b *ImVec2) float {
-	return a.x*b.x + a.y*b.y
-}
-
+func ImFloorVec(v *ImVec2) *ImVec2 { return &ImVec2{(float)((int)(v.x)), (float)((int)(v.y))} }
+func ImModPositive(a, b int) int   { return (a + b) % b }
+func ImDot(a, b *ImVec2) float     { return a.x*b.x + a.y*b.y }
 func ImRotate(v *ImVec2, cos_a, sin_a float) *ImVec2 {
 	return &ImVec2{v.x*cos_a - v.y*sin_a, v.x*sin_a + v.y*cos_a}
 }
@@ -218,9 +202,7 @@ func ImLinearSweep(current, target, speed float) float {
 	return current
 }
 
-func ImMul(lhs, rhs *ImVec2) *ImVec2 {
-	return &ImVec2{lhs.x * rhs.x, lhs.y * rhs.y}
-}
+func ImMul(lhs, rhs *ImVec2) *ImVec2 { return &ImVec2{lhs.x * rhs.x, lhs.y * rhs.y} }
 
 func ImMin(a, b float) float {
 	if a < b {
@@ -300,13 +282,8 @@ func ImClampUint64(v, mn, mx uint64) uint64 {
 	return v
 }
 
-func ImLerp(a, b, t float) float {
-	return a + (b-a)*t
-}
-
-func ImSwap(a, b float) {
-	a, b = b, a
-}
+func ImLerp(a, b, t float) float { return a + (b-a)*t }
+func ImSwap(a, b float)          { a, b = b, a }
 
 func ImAddClampOverflow(a, b, mn, mx float) float {
 	if b < 0 && (a < mn-b) {
@@ -356,7 +333,7 @@ func ImBezierCubicClosestPoint(p1, p2, p3, p4 *ImVec2, p *ImVec2, num_segments i
 	return p_closest
 }
 
-// tess_tol is generally the same value you would find in ImGui::GetStyle().CurveTessellationTol
+// ImBezierCubicClosestPointCasteljau tess_tol is generally the same value you would find in ImGui::GetStyle().CurveTessellationTol
 // Because those ImXXX functions are lower-level than ImGui:: we cannot access this value automatically.
 func ImBezierCubicClosestPointCasteljau(p1, p2, p3, p4 *ImVec2, p *ImVec2, tess_tol float32) ImVec2 {
 	IM_ASSERT(tess_tol > 0.0)
@@ -367,7 +344,7 @@ func ImBezierCubicClosestPointCasteljau(p1, p2, p3, p4 *ImVec2, p *ImVec2, tess_
 	return p_closest
 }
 
-// Closely mimics PathBezierToCasteljau
+// ImBezierCubicClosestPointCasteljauStep Closely mimics PathBezierToCasteljau
 func ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last *ImVec2, p_closest_dist2, x1, y1, x2, y2, x3, y3, x4, y4, tess_tol float, level int) {
 	var dx = x4 - x1
 	var dy = y4 - y1
@@ -479,9 +456,7 @@ func ImGetDirQuadrantFromDelta(dx, dy float32) ImGuiDir {
 	return ImGuiDir_Up
 }
 
-type ImVec1 struct {
-	x float
-}
+type ImVec1 struct{ x float }
 
 type ImVec2ih struct {
 	x int16
@@ -493,58 +468,27 @@ type ImRect struct {
 	Max ImVec2
 }
 
-func ImRectFromVec4(v *ImVec4) ImRect {
-	return ImRect{ImVec2{v.x, v.y}, ImVec2{v.z, v.w}}
-}
-
+func ImRectFromVec4(v *ImVec4) ImRect { return ImRect{ImVec2{v.x, v.y}, ImVec2{v.z, v.w}} }
 func (this *ImRect) GetCenter() ImVec2 {
 	return ImVec2{(this.Min.x + this.Max.x) * 0.5, (this.Min.y + this.Max.y) * 0.5}
 }
-
-func (this *ImRect) GetSize() ImVec2 {
-	return ImVec2{this.Max.x - this.Min.x, this.Max.y - this.Min.y}
-}
-
-func (this *ImRect) GetWidth() float {
-	return this.Max.x - this.Min.x
-}
-
-func (this *ImRect) GetHeight() float {
-	return this.Max.y - this.Min.y
-}
-
-func (this *ImRect) GetArea() float {
-	return (this.Max.x - this.Min.x) * (this.Max.y - this.Min.y)
-}
-
-func (this *ImRect) GetTL() ImVec2 {
-	return this.Min
-}
-
-func (this *ImRect) GetTR() ImVec2 {
-	return ImVec2{this.Max.x, this.Min.y}
-}
-
-func (this *ImRect) GetBL() ImVec2 {
-	return ImVec2{this.Min.x, this.Max.y}
-}
-
-func (this *ImRect) GetBR() ImVec2 {
-	return this.Max
-}
-
+func (this *ImRect) GetSize() ImVec2  { return ImVec2{this.Max.x - this.Min.x, this.Max.y - this.Min.y} }
+func (this *ImRect) GetWidth() float  { return this.Max.x - this.Min.x }
+func (this *ImRect) GetHeight() float { return this.Max.y - this.Min.y }
+func (this *ImRect) GetArea() float   { return (this.Max.x - this.Min.x) * (this.Max.y - this.Min.y) }
+func (this *ImRect) GetTL() ImVec2    { return this.Min }
+func (this *ImRect) GetTR() ImVec2    { return ImVec2{this.Max.x, this.Min.y} }
+func (this *ImRect) GetBL() ImVec2    { return ImVec2{this.Min.x, this.Max.y} }
+func (this *ImRect) GetBR() ImVec2    { return this.Max }
 func (this *ImRect) ContainsVec(p ImVec2) bool {
 	return p.x >= this.Min.x && p.y >= this.Min.y && p.x < this.Max.x && p.y < this.Max.y
 }
-
 func (this *ImRect) ContainsRect(r ImRect) bool {
 	return r.Min.x >= this.Min.x && r.Min.y >= this.Min.y && r.Max.x <= this.Max.x && r.Max.y <= this.Max.y
 }
-
 func (this *ImRect) Overlaps(r ImRect) bool {
 	return r.Min.y < this.Max.y && r.Max.y > this.Min.y && r.Min.x < this.Max.x && r.Max.x > this.Min.x
 }
-
 func (this *ImRect) AddVec(p ImVec2) {
 	if this.Min.x > p.x {
 		this.Min.x = p.x
@@ -631,7 +575,7 @@ func (this *ImRect) ToVec4() ImVec4 {
 	return ImVec4{this.Min.x, this.Min.y, this.Max.x, this.Max.y}
 }
 
-// ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
+// IM_ROUNDUP_TO_EVEN ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
 // Estimation of number of circle segment based on error is derived using method described in https://stackoverflow.com/a/2244088/15194693
 // Number of segments (N) is calculated using equation:
 //
@@ -643,9 +587,7 @@ func (this *ImRect) ToVec4() ImVec4 {
 //
 // Rendering circles with an odd number of segments, while mathematically correct will produce
 // asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
-func IM_ROUNDUP_TO_EVEN(V float) float {
-	return (((V) + 1) / 2) * 2
-}
+func IM_ROUNDUP_TO_EVEN(V float) float { return (((V) + 1) / 2) * 2 }
 
 const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN = 4
 const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX = 512
@@ -697,7 +639,7 @@ func ImAcos01(x float) float {
 	return ImAcos(x)
 }
 
-// Closely mimics ImBezierCubicClosestPointCasteljau() in imgui.cpp
+// PathBezierCubicCurveToCasteljau Closely mimics ImBezierCubicClosestPointCasteljau() in imgui.cpp
 func PathBezierCubicCurveToCasteljau(path *[]ImVec2, x1, y1, x2, y2, x3, y3, x4, y4, tess_tol float, level int) {
 	var dx = x4 - x1
 	var dy = y4 - y1
