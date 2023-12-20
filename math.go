@@ -48,76 +48,28 @@ func (v ImVec2) Scale(f float) ImVec2 {
 	return ImVec2{v.x * f, v.y * f}
 }
 
-// ImVec4: 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
-type ImVec4 struct {
-	x, y, z, w float
-}
+// ImVec4 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
+type ImVec4 struct{ x, y, z, w float }
 
-func NewImVec4(x, y, z, w float) *ImVec4 {
-	return &ImVec4{x, y, z, w}
-}
-
-func (v *ImVec4) X() float {
-	return v.x
-}
-
-func (v *ImVec4) Y() float {
-	return v.y
-}
-
-func (v *ImVec4) Z() float {
-	return v.z
-}
-
-func (v *ImVec4) W() float {
-	return v.w
-}
-
-func ImFabs(X float) float {
-	return float(math.Abs(float64(X)))
-}
-
-func ImSqrt(X float) float {
-	return float(math.Sqrt(float64(X)))
-}
-
-func ImFmod(X, Y float) float {
-	return float(math.Mod(float64(X), float64(Y)))
-}
-
-func ImCos(X float) float {
-	return float(math.Cos(float64(X)))
-}
-
-func ImSin(X float) float {
-	return float(math.Sin(float64(X)))
-}
-
-func ImAcos(X float) float {
-	return float(math.Acos(float64(X)))
-}
-
-func ImAtan2(Y, X float) float {
-	return float(math.Atan2(float64(Y), float64(X)))
-}
-
+func NewImVec4(x, y, z, w float) *ImVec4 { return &ImVec4{x, y, z, w} }
+func (v *ImVec4) X() float               { return v.x }
+func (v *ImVec4) Y() float               { return v.y }
+func (v *ImVec4) Z() float               { return v.z }
+func (v *ImVec4) W() float               { return v.w }
+func ImFabs(X float) float               { return float(math.Abs(float64(X))) }
+func ImSqrt(X float) float               { return float(math.Sqrt(float64(X))) }
+func ImFmod(X, Y float) float            { return float(math.Mod(float64(X), float64(Y))) }
+func ImCos(X float) float                { return float(math.Cos(float64(X))) }
+func ImSin(X float) float                { return float(math.Sin(float64(X))) }
+func ImAcos(X float) float               { return float(math.Acos(float64(X))) }
+func ImAtan2(Y, X float) float           { return float(math.Atan2(float64(Y), float64(X))) }
 func ImAtof(str string) float {
 	f, _ := strconv.ParseFloat(str, 64)
 	return float(f)
 }
-
-func ImCeil(X float) float {
-	return float(math.Ceil(float64(X)))
-}
-
-func ImPow(X, Y float) float {
-	return float(math.Pow(float64(X), float64(Y)))
-}
-
-func ImLog(X float) float {
-	return float(math.Log(float64(X)))
-}
-
+func ImCeil(X float) float   { return float(math.Ceil(float64(X))) }
+func ImPow(X, Y float) float { return float(math.Pow(float64(X), float64(Y))) }
+func ImLog(X float) float    { return float(math.Log(float64(X))) }
 func ImAbs(X float) float {
 	if X < 0 {
 		return -X
@@ -142,9 +94,7 @@ func ImSign(X float) float {
 	return 0
 }
 
-func ImRsqrt(X float) float {
-	return 1.0 / float(math.Sqrt(float64(X)))
-}
+func ImRsqrt(X float) float { return 1.0 / float(math.Sqrt(float64(X))) }
 
 func ImMinVec2(lhs, rhs *ImVec2) (res ImVec2) {
 	if lhs.x < rhs.x {
@@ -159,6 +109,7 @@ func ImMinVec2(lhs, rhs *ImVec2) (res ImVec2) {
 	}
 	return
 }
+
 func ImMaxVec2(lhs, rhs *ImVec2) (res ImVec2) {
 	if lhs.x > rhs.x {
 		res.x = lhs.x
