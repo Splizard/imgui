@@ -1,6 +1,6 @@
 package imgui
 
-// Garbage collection
+// GcCompactTransientMiscBuffers Garbage collection
 func GcCompactTransientMiscBuffers() {
 	var g = GImGui
 	g.ItemFlagsStack = nil
@@ -8,7 +8,7 @@ func GcCompactTransientMiscBuffers() {
 	TableGcCompactSettings()
 }
 
-// Free up/compact internal window buffers, we can use this when a window becomes unused.
+// GcCompactTransientWindowBuffers Free up/compact internal window buffers, we can use this when a window becomes unused.
 // Not freed:
 // - ImGuiWindow, ImGuiWindowSettings, Name, StateStorage, ColumnsStorage (may hold useful data)
 // This should have no noticeable visual effect. When the window reappear however, expect new allocation/buffer growth/copy cost.

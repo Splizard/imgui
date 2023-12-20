@@ -42,7 +42,7 @@ type Coord uint16
 
 const STBRP__MAXVAL = 0xffff
 
-// Assign packed locations to rectangles. The rectangles are of type
+// PackRects Assign packed locations to rectangles. The rectangles are of type
 // 'stbrp_rect' defined below, stored in the array 'rects', and there
 // are 'num_rects' many of them.
 //
@@ -80,7 +80,7 @@ func PackRects(context *Context, rects []Rect, num_rects int) int {
 		if rects[i].W == 0 || rects[i].H == 0 {
 			rects[i].X, rects[i].Y = 0, 0 // empty rect needs no space
 		} else {
-			var fr stbrp__findresult = stbrp__skyline_pack_rectangle(context, int(rects[i].W), int(rects[i].H))
+			var fr = stbrp__skyline_pack_rectangle(context, int(rects[i].W), int(rects[i].H))
 			if fr.prev_link != nil {
 				rects[i].X = Coord(fr.x)
 				rects[i].Y = Coord(fr.y)
@@ -118,7 +118,7 @@ type Rect struct {
 	WasPacked int
 }
 
-// Initialize a rectangle packer to:
+// InitTarget Initialize a rectangle packer to:
 //
 //	pack a rectangle that is 'width' by 'height' in dimensions
 //	using temporary storage provided by the array 'nodes', which is 'num_nodes' long
@@ -235,7 +235,7 @@ func STBRP_ASSERT(cond bool) {
 	}
 }
 
-func STBRP_SORT(slice interface{}, _ int, _ uintptr, compare func(a, b interface{}) int) {
+func STBRP_SORT(slice any, _ int, _ uintptr, compare func(a, b any) int) {
 	sort.Slice(slice, func(i, j golang.Int) bool {
 		return compare(reflect.ValueOf(slice).Index(i).Addr().Interface(), reflect.ValueOf(slice).Index(j).Addr().Interface()) < 0
 	})
@@ -247,8 +247,8 @@ const (
 
 // find minimum y position if it starts at x1
 func stbrp__skyline_find_min_y(c *Context, first *Node, x0, width int, pwaste *int) int {
-	var node *Node = first
-	var x1 int = x0 + width
+	var node = first
+	var x1 = x0 + width
 	var min_y, visited_width, waste_area int
 
 	STBRP_ASSERT(int(first.x) <= x0)
@@ -273,7 +273,7 @@ func stbrp__skyline_find_min_y(c *Context, first *Node, x0, width int, pwaste *i
 			}
 		} else {
 			// add waste area
-			var under_width int = int(node.next.x) - int(node.x)
+			var under_width = int(node.next.x) - int(node.x)
 			if under_width+visited_width > width {
 				under_width = width - visited_width
 			}
@@ -293,13 +293,13 @@ type stbrp__findresult struct {
 }
 
 func stbrp__skyline_find_best_pos(c *Context, width, height int) stbrp__findresult {
-	var best_waste, best_x, best_y int = (1 << 30), 0, (1 << 30)
+	var best_waste, best_x, best_y int = 1 << 30, 0, 1 << 30
 	var fr stbrp__findresult
 	var prev, best **Node
 	var node, tail *Node
 
 	// align to multiple of c.align
-	width = (width + c.align - 1)
+	width = width + c.align - 1
 	width -= width % c.align
 	STBRP_ASSERT(width%c.align == 0)
 
@@ -368,7 +368,7 @@ func stbrp__skyline_find_best_pos(c *Context, width, height int) stbrp__findresu
 			tail = tail.next
 		}
 		for tail != nil {
-			var xpos int = int(tail.x) - width
+			var xpos = int(tail.x) - width
 			var y, waste int
 			STBRP_ASSERT(xpos >= 0)
 			// find the left position that matches this
@@ -401,7 +401,7 @@ func stbrp__skyline_find_best_pos(c *Context, width, height int) stbrp__findresu
 
 func stbrp__skyline_pack_rectangle(context *Context, width, height int) stbrp__findresult {
 	// find best position according to heuristic
-	var res stbrp__findresult = stbrp__skyline_find_best_pos(context, width, height)
+	var res = stbrp__skyline_find_best_pos(context, width, height)
 	var node, cur *Node
 
 	// bail if:
@@ -427,7 +427,7 @@ func stbrp__skyline_pack_rectangle(context *Context, width, height int) stbrp__f
 	cur = *res.prev_link
 	if int(cur.x) < res.x {
 		// preserve the existing one, so start testing with the next one
-		var next *Node = cur.next
+		var next = cur.next
 		cur.next = node
 		cur = next
 	} else {
@@ -437,7 +437,7 @@ func stbrp__skyline_pack_rectangle(context *Context, width, height int) stbrp__f
 	// from here, traverse cur and free the nodes, until we get to one
 	// that shouldn't be freed
 	for cur.next != nil && int(cur.next.x) <= res.x+width {
-		var next *Node = cur.next
+		var next = cur.next
 		// move the current node to the free list
 		cur.next = context.free_head
 		context.free_head = cur
@@ -478,9 +478,9 @@ func stbrp__skyline_pack_rectangle(context *Context, width, height int) stbrp__f
 	return res
 }
 
-func rect_height_compare(a, b interface{}) int {
-	var p *Rect = a.(*Rect)
-	var q *Rect = b.(*Rect)
+func rect_height_compare(a, b any) int {
+	var p = a.(*Rect)
+	var q = b.(*Rect)
 	if p.H > q.H {
 		return -1
 	}
@@ -498,9 +498,9 @@ func rect_height_compare(a, b interface{}) int {
 	return -1
 }
 
-func rect_original_order(a, b interface{}) int {
-	var p *Rect = a.(*Rect)
-	var q *Rect = b.(*Rect)
+func rect_original_order(a, b any) int {
+	var p = a.(*Rect)
+	var q = b.(*Rect)
 
 	if p.WasPacked < q.WasPacked {
 		return -1

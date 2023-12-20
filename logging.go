@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// Logging/Capture
+// LogBegin Logging/Capture
 // . BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
 func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
 	var g = GImGui
@@ -26,7 +26,7 @@ func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
 	g.LogLineFirstItem = true
 }
 
-// Start logging/capturing to internal buffer
+// LogToBuffer Start logging/capturing to internal buffer
 func LogToBuffer(auto_open_depth int /*= -1*/) {
 	var g = GImGui
 	if g.LogEnabled {
@@ -35,14 +35,14 @@ func LogToBuffer(auto_open_depth int /*= -1*/) {
 	LogBegin(ImGuiLogType_Buffer, auto_open_depth)
 }
 
-// Internal version that takes a position to decide on newline placement and pad items according to their depth.
+// LogRenderedText Internal version that takes a position to decide on newline placement and pad items according to their depth.
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
 func LogRenderedText(ref_pos *ImVec2, text string) {
 	LogText(text)
 }
 
-// Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
+// LogSetNextTextDecoration Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
 func LogSetNextTextDecoration(prefix string, suffix string) {
 	var g = GImGui
 	g.LogNextPrefix = prefix
@@ -52,7 +52,7 @@ func LogSetNextTextDecoration(prefix string, suffix string) {
 // Logging/Capture
 // - All text output from the interface can be captured into tty/file/clipboard. By default, tree nodes are automatically opened during logging.
 
-// start logging to tty (stdout)
+// LogToTTY start logging to tty (stdout)
 func LogToTTY(auto_open_depth int /*= -1*/) {
 	var g = GImGui
 	if g.LogEnabled {
@@ -62,7 +62,7 @@ func LogToTTY(auto_open_depth int /*= -1*/) {
 	g.LogFile = os.Stdout
 }
 
-// Start logging/capturing text output to given file
+// LogToFile Start logging/capturing text output to given file
 func LogToFile(auto_open_depth int /*= 1*/, filename string) {
 	var g = GImGui
 	if g.LogEnabled {
@@ -78,7 +78,7 @@ func LogToFile(auto_open_depth int /*= 1*/, filename string) {
 	if filename == "" || filename[0] == 0 {
 		return
 	}
-	var f ImFileHandle = ImFileOpen(filename, "ab")
+	var f = ImFileOpen(filename, "ab")
 	if f == nil {
 		IM_ASSERT(false)
 		return
@@ -88,7 +88,7 @@ func LogToFile(auto_open_depth int /*= 1*/, filename string) {
 	g.LogFile = f
 }
 
-// start logging to OS clipboard
+// LogToClipboard start logging to OS clipboard
 func LogToClipboard(auto_open_depth int /*= -1*/) {
 	var g = GImGui
 	if g.LogEnabled {
@@ -124,7 +124,7 @@ func LogFinish() {
 	g.LogBuffer.Reset()
 } // stop logging (close file, etc.)
 
-// helper to display buttons for logging to tty/file/clipboard
+// LogButtons helper to display buttons for logging to tty/file/clipboard
 func LogButtons() {
 	var g = GImGui
 
@@ -153,8 +153,8 @@ func LogButtons() {
 	}
 }
 
-// pass text data straight to log (without being displayed)
-func LogText(format string, args ...interface{}) {
+// LogText pass text data straight to log (without being displayed)
+func LogText(format string, args ...any) {
 	var g = GImGui
 	if !g.LogEnabled {
 		return

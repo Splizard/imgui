@@ -13,7 +13,7 @@ func ImTextCharFromUtf8(out_char *rune, text string) int {
 }
 
 // TextColored shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
-func TextColored(col *ImVec4, format string, args ...interface{}) {
+func TextColored(col *ImVec4, format string, args ...any) {
 	PushStyleColorVec(ImGuiCol_Text, col)
 	Text(format, args...)
 	PopStyleColor(1)
@@ -139,7 +139,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 }
 
 // Text formatted text
-func Text(format string, args ...interface{}) {
+func Text(format string, args ...any) {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return
@@ -157,7 +157,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 
 	var text_pos = ImVec2{window.DC.CursorPos.x, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset}
 	var wrap_pos_x = window.DC.TextWrapPos
-	var wrap_enabled = (wrap_pos_x >= 0.0)
+	var wrap_enabled = wrap_pos_x >= 0.0
 	if len(text) > 2000 && !wrap_enabled {
 		// Long text!
 		// Perform manual coarse clipping to optimize for long multi-line text
@@ -244,10 +244,10 @@ func TextEx(text string, flags ImGuiTextFlags) {
 	}
 }
 
-func (this *ImDrawList) AddText(pos ImVec2, col ImU32, text string) {
-	this.AddTextV(nil, 0.0, pos, col, text, 0, nil)
+func (l *ImDrawList) AddText(pos ImVec2, col ImU32, text string) {
+	l.AddTextV(nil, 0.0, pos, col, text, 0, nil)
 }
-func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col ImU32, text string, wrap_width float, cpu_fine_clip_rect *ImVec4) {
+func (l *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col ImU32, text string, wrap_width float, cpu_fine_clip_rect *ImVec4) {
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
 	}
@@ -257,22 +257,22 @@ func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col 
 
 	// Pull default font/size from the shared ImDrawListSharedData instance
 	if font == nil {
-		font = this._Data.Font
+		font = l._Data.Font
 	}
 	if font_size == 0.0 {
-		font_size = this._Data.FontSize
+		font_size = l._Data.FontSize
 	}
 
-	IM_ASSERT(font.ContainerAtlas.TexID == this._CmdHeader.TextureId) // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+	IM_ASSERT(font.ContainerAtlas.TexID == l._CmdHeader.TextureId) // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
-	var clip_rect = this._CmdHeader.ClipRect
+	var clip_rect = l._CmdHeader.ClipRect
 	if cpu_fine_clip_rect != nil {
 		clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect.x)
 		clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect.y)
 		clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect.z)
 		clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect.w)
 	}
-	font.RenderText(this, font_size, pos, col, &clip_rect, text, wrap_width, cpu_fine_clip_rect != nil)
+	font.RenderText(l, font_size, pos, col, &clip_rect, text, wrap_width, cpu_fine_clip_rect != nil)
 }
 
 // FindRenderedTextEnd Find the optional ## from which we stop displaying text.
@@ -374,7 +374,7 @@ func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_size_
 	}
 }
 
-func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, clip_rect *ImVec4, text string, wrap_width float, cpu_fine_clip bool) {
+func (f *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, clip_rect *ImVec4, text string, wrap_width float, cpu_fine_clip bool) {
 
 	// Align to be pixel perfect
 	pos.x = IM_FLOOR(pos.x)
@@ -385,9 +385,9 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		return
 	}
 
-	var scale = size / this.FontSize
-	var line_height = this.FontSize * scale
-	var word_wrap_enabled = (wrap_width > 0.0)
+	var scale = size / f.FontSize
+	var line_height = f.FontSize * scale
+	var word_wrap_enabled = wrap_width > 0.0
 	var word_wrap_eol int = -1
 
 	// Fast-forward to first visible line
@@ -440,7 +440,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		if word_wrap_enabled {
 			// Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
 			if word_wrap_eol == -1 {
-				word_wrap_eol = i + this.CalcWordWrapPositionA(scale, text[i:], wrap_width-(x-pos.x))
+				word_wrap_eol = i + f.CalcWordWrapPositionA(scale, text[i:], wrap_width-(x-pos.x))
 				if word_wrap_eol == i { // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
 					word_wrap_eol++ // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
 				}
@@ -492,7 +492,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 			}
 		}
 
-		var glyph = this.FindGlyph((ImWchar)(c))
+		var glyph = f.FindGlyph((ImWchar)(c))
 		if glyph == nil {
 			continue
 		}
@@ -577,7 +577,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		x += char_width
 	}
 
-	// Give back unused vertices (clipped ones, blanks) ~ this is essentially a PrimUnreserve() action.
+	// Give back unused vertices (clipped ones, blanks) ~ f is essentially a PrimUnreserve() action.
 	//fmt.Println(int(len(draw_list.VtxBuffer)) - vtx_write)
 	draw_list.VtxBuffer = draw_list.VtxBuffer[:vtx_write]
 	draw_list.IdxBuffer = draw_list.IdxBuffer[:idx_write]

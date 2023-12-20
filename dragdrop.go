@@ -1,6 +1,6 @@
 package imgui
 
-// Drag and Drop
+// BeginDragDropTargetCustom Drag and Drop
 func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool {
 	var g = GImGui
 	if !g.DragDropActive {
@@ -52,7 +52,7 @@ func IsDragDropPayloadBeingAccepted() bool {
 // - If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip, see #1725)
 // - An item can be both drag source and drop target.
 
-// When this returns true you need to: a) call SetDragDropPayload() exactly once, b) you may render the payload visual/description, c) call EndDragDropSource()
+// BeginDragDropSource When this returns true you need to: a) call SetDragDropPayload() exactly once, b) you may render the payload visual/description, c) call EndDragDropSource()
 // If the item has an identifier:
 // - This assume/require the item to be activated (typically via ButtonBehavior).
 // - Therefore if you want to use this with a mouse button other than left mouse button, it is up to the item itself to activate with another button.
@@ -171,9 +171,9 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 	return false
 }
 
-// Use 'cond' to choose to submit payload on drag start or every frame
+// SetDragDropPayload Use 'cond' to choose to submit payload on drag start or every frame
 // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
-func SetDragDropPayload(ptype string, data interface{}, data_size uintptr, cond ImGuiCond) bool {
+func SetDragDropPayload(ptype string, data any, data_size uintptr, cond ImGuiCond) bool {
 	var g = GImGui
 	var payload = &g.DragDropPayload
 	if cond == 0 {
@@ -198,7 +198,7 @@ func SetDragDropPayload(ptype string, data interface{}, data_size uintptr, cond 
 	return (g.DragDropAcceptFrameCount == g.FrameCount) || (g.DragDropAcceptFrameCount == g.FrameCount-1)
 }
 
-// only call EndDragDropSource() if BeginDragDropSource() returns true!
+// EndDragDropSource only call EndDragDropSource() if BeginDragDropSource() returns true!
 func EndDragDropSource() {
 	var g = GImGui
 	IM_ASSERT(g.DragDropActive)
@@ -215,7 +215,7 @@ func EndDragDropSource() {
 	g.DragDropWithinSource = false
 }
 
-// call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()\
+// BeginDragDropTarget call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()\
 // We don't use BeginDragDropTargetCustom() and duplicate its code because:
 // 1) we use LastItemRectHoveredRect which handles items that pushes a temporarily clip rectangle in their code. Calling BeginDragDropTargetCustom(LastItemRect) would not handle them.
 // 2) and it's faster. as this code may be very frequently called, we want to early out as fast as we can.
@@ -254,7 +254,7 @@ func BeginDragDropTarget() bool {
 	return true
 }
 
-// accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+// AcceptDragDropPayload accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 func AcceptDragDropPayload(ptype string, flags ImGuiDragDropFlags) *ImGuiPayload {
 	var g = GImGui
 	var window = g.CurrentWindow
@@ -293,7 +293,7 @@ func AcceptDragDropPayload(ptype string, flags ImGuiDragDropFlags) *ImGuiPayload
 	return &payload
 }
 
-// We don't really use/need this now, but added it for the sake of consistency and because we might need it later.
+// EndDragDropTarget We don't really use/need this now, but added it for the sake of consistency and because we might need it later.
 // only call EndDragDropTarget() if BeginDragDropTarget() returns true!
 func EndDragDropTarget() {
 	var g = GImGui
@@ -302,7 +302,7 @@ func EndDragDropTarget() {
 	g.DragDropWithinTarget = false
 }
 
-// peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.
+// GetDragDropPayload peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.
 func GetDragDropPayload() *ImGuiPayload {
 	var g = GImGui
 	if g.DragDropActive {

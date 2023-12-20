@@ -3,10 +3,9 @@ package imgui
 import (
 	_ "embed"
 	"fmt"
-	"unsafe"
-
 	"github.com/Splizard/imgui/stb/stbrp"
 	"github.com/Splizard/imgui/stb/stbtt"
+	"unsafe"
 )
 
 // -----------------------------------------------------------------------------
@@ -25,7 +24,7 @@ import (
 //go:embed proggy.ttf
 var proggy_clean_ttf_decompressed_data_base85 []byte
 
-// A work of art lies ahead! (. = white layer, X = black layer, others are blank)
+// FONT_ATLAS_DEFAULT_TEX_DATA_W A work of art lies ahead! (. = white layer, X = black layer, others are blank)
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
 const FONT_ATLAS_DEFAULT_TEX_DATA_W int = 108 // Actual texture will be 2 times that + 1 spacing.
 const FONT_ATLAS_DEFAULT_TEX_DATA_H int = 27
@@ -58,7 +57,7 @@ const FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS = "" +
 	"                                                      -   X.X           X.X   -                             " +
 	"                                                      -    XX           XX    -                             "
 
-// Temporary data for one source font           u tiple source fonts can be merged into one destination ImFont)
+// ImFontBuildSrcData Temporary data for one source font           u tiple source fonts can be merged into one destination ImFont)
 // (C doesn't allow instancing ImVectr>wth function-local types so we declare the type here.)
 type ImFontBuildSrcData struct {
 	FontInfo      stbtt.FontInfo
@@ -73,7 +72,7 @@ type ImFontBuildSrcData struct {
 	GlyphsList    []int              // Glyph codepoints list (flattened version of GlyphsMap)
 }
 
-// Temporary data for one destination ImFont* (multiple source fonts can be merged into one destination ImFont)
+// ImFontBuildDstData Temporary data for one destination ImFont* (multiple source fonts can be merged into one destination ImFont)
 type ImFontBuildDstData struct {
 	SrcCount      int // Number of source fonts targeting this destination font.
 	GlyphsHighest int
@@ -87,7 +86,7 @@ func UnpackBitVectorToFlatIndexList(in *ImBitVector, out *[]int) {
 		if entries_32 := it; entries_32 != 0 {
 			for bit_n := 0; bit_n < 32; bit_n++ {
 				if entries_32&((ImU32)(1<<bit_n)) != 0 {
-					*out = append(*out, ((int)(((i) << 5) + bit_n)))
+					*out = append(*out, (int)(((i)<<5)+bit_n))
 				}
 			}
 		}
@@ -100,7 +99,7 @@ func IM_ASSERT(x bool) {
 	}
 }
 
-// 1 byte per-pixel
+// GetTexDataAsAlpha8 1 byte per-pixel
 func (atlas *ImFontAtlas) GetTexDataAsAlpha8(out_pixels *[]byte, out_width, out_height, out_bytes_per_pixel *int) {
 	// Build atlas on demand
 	if atlas.TexPixelsAlpha8 == nil {
@@ -119,7 +118,7 @@ func (atlas *ImFontAtlas) GetTexDataAsAlpha8(out_pixels *[]byte, out_width, out_
 	}
 }
 
-// Load embedded ProggyClean.ttf at size 13, disable oversampling
+// AddFontDefault Load embedded ProggyClean.ttf at size 13, disable oversampling
 func (atlas *ImFontAtlas) AddFontDefault(font_cfg_template *ImFontConfig) *ImFont {
 	var font_cfg ImFontConfig
 	if font_cfg_template != nil {
@@ -182,7 +181,7 @@ func (atlas *ImFontAtlas) Build() bool {
 	return builder_io.FontBuilder_Build(atlas)
 }
 
-// Retrieve list of range (2 int per range, values are inclusive)
+// GetGlyphRangesDefault Retrieve list of range (2 int per range, values are inclusive)
 func (atlas *ImFontAtlas) GetGlyphRangesDefault() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin + Latin Supplement
@@ -199,11 +198,11 @@ func Decode85Byte(c char) uint {
 
 func Decode85(src string, dst []byte) {
 	for len(src) >= 0 {
-		var tmp uint = Decode85Byte(src[0]) + 85*(Decode85Byte(src[1])+85*(Decode85Byte(src[2])+85*(Decode85Byte(src[3])+85*Decode85Byte(src[4]))))
-		dst[0] = (char(tmp>>0) & 0xFF)
-		dst[1] = (char(tmp>>8) & 0xFF)
-		dst[2] = (char(tmp>>16) & 0xFF)
-		dst[3] = (char(tmp>>24) & 0xFF) // We can't assume little-endianness.
+		var tmp = Decode85Byte(src[0]) + 85*(Decode85Byte(src[1])+85*(Decode85Byte(src[2])+85*(Decode85Byte(src[3])+85*Decode85Byte(src[4]))))
+		dst[0] = char(tmp>>0) & 0xFF
+		dst[1] = char(tmp>>8) & 0xFF
+		dst[2] = char(tmp>>16) & 0xFF
+		dst[3] = char(tmp>>24) & 0xFF // We can't assume little-endianness.
 		src = src[5:]
 		dst = dst[4:]
 	}
@@ -215,7 +214,7 @@ func ImFontAtlasGetBuilderForStbTruetype() *ImFontBuilderIO {
 	return &io
 }
 
-// Note: this is called / shared by both the stb_truetype and the FreeType builder
+// ImFontAtlasBuildInit Note: this is called / shared by both the stb_truetype and the FreeType builder
 func ImFontAtlasBuildInit(atlas *ImFontAtlas) {
 	// Register texture region for mouse cursors or standard white pixels
 	if atlas.PackIdMouseCursors < 0 {
@@ -235,14 +234,14 @@ func ImFontAtlasBuildInit(atlas *ImFontAtlas) {
 	}
 }
 
-func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque interface{}) {
-	var pack_context *stbrp.Context = stbrp_context_opaque.(*stbrp.Context)
+func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque any) {
+	var pack_context = stbrp_context_opaque.(*stbrp.Context)
 	IM_ASSERT(pack_context != nil)
 
-	var user_rects []ImFontAtlasCustomRect = atlas.CustomRects
+	var user_rects = atlas.CustomRects
 	IM_ASSERT(len(user_rects) >= 1) // We expect at least the default custom rects to be registered, else something went wrong.
 
-	var pack_rects []stbrp.Rect = make([]stbrp.Rect, len(user_rects))
+	var pack_rects = make([]stbrp.Rect, len(user_rects))
 
 	for i := range user_rects {
 		pack_rects[i].W = stbrp.Coord(user_rects[i].Width)
@@ -275,7 +274,7 @@ func ImFontAtlasBuildSetupFont(atlas *ImFontAtlas, font *ImFont, font_config *Im
 func ImFontAtlasBuildRender8bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value byte) {
 	IM_ASSERT(x >= 0 && x+w <= atlas.TexWidth)
 	IM_ASSERT(y >= 0 && y+h <= atlas.TexHeight)
-	var out_pixel []byte = atlas.TexPixelsAlpha8[x+(y*atlas.TexWidth):]
+	var out_pixel = atlas.TexPixelsAlpha8[x+(y*atlas.TexWidth):]
 	for off_y := int(0); off_y < h; off_y, out_pixel, in_str = off_y+1, out_pixel[atlas.TexWidth:], in_str[w:] {
 		for off_x := int(0); off_x < w; off_x++ {
 			if in_str[off_x] == in_marker_char {
@@ -290,7 +289,7 @@ func ImFontAtlasBuildRender8bppRectFromString(atlas *ImFontAtlas, x, y, w, h int
 func ImFontAtlasBuildRender32bppRectFromString(atlas *ImFontAtlas, x, y, w, h int, in_str string, in_marker_char byte, in_marker_pixel_value uint32) {
 	IM_ASSERT(x >= 0 && x+w <= atlas.TexWidth)
 	IM_ASSERT(y >= 0 && y+h <= atlas.TexHeight)
-	var out_pixel []uint = atlas.TexPixelsRGBA32[x+(y*atlas.TexWidth):]
+	var out_pixel = atlas.TexPixelsRGBA32[x+(y*atlas.TexWidth):]
 	for off_y := int(0); off_y < h; off_y, out_pixel, in_str = off_y+1, out_pixel[atlas.TexWidth:], in_str[w:] {
 		for off_x := int(0); off_x < w; off_x++ {
 			if in_str[off_x] == in_marker_char {
@@ -303,15 +302,15 @@ func ImFontAtlasBuildRender32bppRectFromString(atlas *ImFontAtlas, x, y, w, h in
 }
 
 func ImFontAtlasBuildRenderDefaultTexData(atlas *ImFontAtlas) {
-	var r *ImFontAtlasCustomRect = atlas.GetCustomRectByIndex(atlas.PackIdMouseCursors)
+	var r = atlas.GetCustomRectByIndex(atlas.PackIdMouseCursors)
 	IM_ASSERT(r.IsPacked())
 
-	var w int = atlas.TexWidth
+	var w = atlas.TexWidth
 	if atlas.Flags&ImFontAtlasFlags_NoMouseCursors == 0 {
 		// Render/copy pixels
 		IM_ASSERT(int(r.Width) == FONT_ATLAS_DEFAULT_TEX_DATA_W*2+1 && int(r.Height) == FONT_ATLAS_DEFAULT_TEX_DATA_H)
-		var x_for_white int = int(r.X)
-		var x_for_black int = int(r.X) + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1
+		var x_for_white = int(r.X)
+		var x_for_black = int(r.X) + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1
 		if atlas.TexPixelsAlpha8 != nil {
 			ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_white, int(r.Y), FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, '.', 0xFF)
 			ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_black, int(r.Y), FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, 'X', 0xFF)
@@ -322,7 +321,7 @@ func ImFontAtlasBuildRenderDefaultTexData(atlas *ImFontAtlas) {
 	} else {
 		// Render 4 white pixels
 		IM_ASSERT(r.Width == 2 && r.Height == 2)
-		var offset int = (int)(r.X) + (int)(r.Y)*w
+		var offset = (int)(r.X) + (int)(r.Y)*w
 		if atlas.TexPixelsAlpha8 != nil {
 			atlas.TexPixelsAlpha8[offset] = 0xFF
 			atlas.TexPixelsAlpha8[offset+1] = 0xFF
@@ -344,19 +343,19 @@ func ImFontAtlasBuildRenderLinesTexData(atlas *ImFontAtlas) {
 	}
 
 	// This generates a triangular shape in the texture, with the various line widths stacked on top of each other to allow interpolation between them
-	var r *ImFontAtlasCustomRect = atlas.GetCustomRectByIndex(atlas.PackIdLines)
+	var r = atlas.GetCustomRectByIndex(atlas.PackIdLines)
 	IM_ASSERT(r.IsPacked())
 	for n := 0; n < IM_DRAWLIST_TEX_LINES_WIDTH_MAX+1; n++ { // +1 because of the zero-width row
 		// Each line consists of at least two empty pixels at the ends, with a line of solid pixels in the middle
-		var y uint = uint(n)
-		var line_width uint = uint(n)
-		var pad_left uint = (uint(r.Width) - uint(line_width)) / 2
-		var pad_right uint = uint(r.Width) - (uint(pad_left) + uint(line_width))
+		var y = uint(n)
+		var line_width = uint(n)
+		var pad_left = (uint(r.Width) - uint(line_width)) / 2
+		var pad_right = uint(r.Width) - (uint(pad_left) + uint(line_width))
 
 		// Write each slice
 		IM_ASSERT(pad_left+line_width+pad_right == uint(r.Width) && y < uint(r.Height)) // Make sure we're inside the texture bounds before we start writing pixels
 		if atlas.TexPixelsAlpha8 != nil {
-			var write_ptr []byte = atlas.TexPixelsAlpha8[uint(r.X)+((uint(r.Y)+uint(y))*uint(atlas.TexWidth)):]
+			var write_ptr = atlas.TexPixelsAlpha8[uint(r.X)+((uint(r.Y)+uint(y))*uint(atlas.TexWidth)):]
 			for i := uint(0); i < pad_left; i++ {
 				write_ptr[i] = 0x00
 			}
@@ -369,7 +368,7 @@ func ImFontAtlasBuildRenderLinesTexData(atlas *ImFontAtlas) {
 				write_ptr[pad_left+line_width+i] = 0x00
 			}
 		} else {
-			var write_ptr []uint = atlas.TexPixelsRGBA32[uint(r.X)+((uint(r.Y)+uint(y))*uint(atlas.TexWidth)):]
+			var write_ptr = atlas.TexPixelsRGBA32[uint(r.X)+((uint(r.Y)+uint(y))*uint(atlas.TexWidth)):]
 			for i := uint(0); i < pad_left; i++ {
 				write_ptr[i] = IM_COL32_BLACK_TRANS
 			}
@@ -384,14 +383,14 @@ func ImFontAtlasBuildRenderLinesTexData(atlas *ImFontAtlas) {
 		}
 
 		// Calculate UVs for this line
-		var uv0 ImVec2 = ImVec2{(float)(uint(r.X) + pad_left - 1), (float)(uint(r.Y) + y)}.Mul(atlas.TexUvScale)
-		var uv1 ImVec2 = ImVec2{(float)(uint(r.X) + pad_left + line_width + 1), (float)(uint(r.Y) + y + 1)}.Mul(atlas.TexUvScale)
-		var half_v float = (uv0.y + uv1.y) * 0.5 // Calculate a constant V in the middle of the row to avoid sampling artifacts
+		var uv0 = ImVec2{(float)(uint(r.X) + pad_left - 1), (float)(uint(r.Y) + y)}.Mul(atlas.TexUvScale)
+		var uv1 = ImVec2{(float)(uint(r.X) + pad_left + line_width + 1), (float)(uint(r.Y) + y + 1)}.Mul(atlas.TexUvScale)
+		var half_v = (uv0.y + uv1.y) * 0.5 // Calculate a constant V in the middle of the row to avoid sampling artifacts
 		atlas.TexUvLines[n] = ImVec4{uv0.x, half_v, uv1.x, half_v}
 	}
 }
 
-// This is called/shared by both the stb_truetype and the FreeType builder.
+// ImFontAtlasBuildFinish This is called/shared by both the stb_truetype and the FreeType builder.
 func ImFontAtlasBuildFinish(atlas *ImFontAtlas) {
 	// Render into our custom data blocks
 	IM_ASSERT(atlas.TexPixelsAlpha8 != nil || atlas.TexPixelsRGBA32 != nil)
@@ -400,7 +399,7 @@ func ImFontAtlasBuildFinish(atlas *ImFontAtlas) {
 
 	// Register custom rectangle glyphs
 	for i := range atlas.CustomRects {
-		var r *ImFontAtlasCustomRect = &atlas.CustomRects[i]
+		var r = &atlas.CustomRects[i]
 		if r.Font == nil || r.GlyphID == 0 {
 			continue
 		}
@@ -441,8 +440,8 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// 1. Initialize font loading structure, check font data validity
 	for src_i := range atlas.ConfigData {
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
-		var cfg *ImFontConfig = &atlas.ConfigData[src_i]
+		var src_tmp = &src_tmp_array[src_i]
+		var cfg = &atlas.ConfigData[src_i]
 		IM_ASSERT(cfg.DstFont != nil && (!cfg.DstFont.IsLoaded() || cfg.DstFont.ContainerAtlas == atlas))
 
 		// Find index from cfg.DstFont (we allow the user to set cfg.DstFont. Also it makes casual debugging nicer than when storing indices)
@@ -457,14 +456,14 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 			return false
 		}
 		// Initialize helper structure for font loading and verify that the TTF/OTF data is correct
-		var font_offset int = stbtt.GetFontOffsetForIndex(cfg.FontData, cfg.FontNo)
+		var font_offset = stbtt.GetFontOffsetForIndex(cfg.FontData, cfg.FontNo)
 		IM_ASSERT_USER_ERROR(font_offset >= 0, "FontData is incorrect, or FontNo cannot be found.")
 		if stbtt.InitFont(&src_tmp.FontInfo, cfg.FontData, font_offset) == 0 {
 			return false
 		}
 
 		// Measure highest codepoints
-		var dst_tmp *ImFontBuildDstData = &dst_tmp_array[src_tmp.DstIndex]
+		var dst_tmp = &dst_tmp_array[src_tmp.DstIndex]
 		if cfg.GlyphRanges != nil {
 			src_tmp.SrcRanges = cfg.GlyphRanges
 		} else {
@@ -481,8 +480,8 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 	// 2. For every requested codepoint, check for their presence in the font data, and handle redundancy or overlaps between source fonts to avoid unused glyphs.
 	var total_glyphs_count int = 0
 	for src_i := range src_tmp_array {
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
-		var dst_tmp *ImFontBuildDstData = &dst_tmp_array[src_tmp.DstIndex]
+		var src_tmp = &src_tmp_array[src_i]
+		var dst_tmp = &dst_tmp_array[src_tmp.DstIndex]
 		src_tmp.GlyphsSet.Create(src_tmp.GlyphsHighest + 1)
 		if len(dst_tmp.GlyphsSet) == 0 {
 			dst_tmp.GlyphsSet.Create(dst_tmp.GlyphsHighest + 1)
@@ -509,7 +508,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// 3. Unpack our bit map into a flat list (we now have all the Unicode points that we know are requested _and_ available _and_ not overlapping another)
 	for src_i := range src_tmp_array {
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
+		var src_tmp = &src_tmp_array[src_i]
 		src_tmp.GlyphsList = make([]int, 0, src_tmp.GlyphsCount)
 		UnpackBitVectorToFlatIndexList(&src_tmp.GlyphsSet, &src_tmp.GlyphsList)
 		src_tmp.GlyphsSet.Clear()
@@ -523,15 +522,15 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// Allocate packing character data and flag packed characters buffer as non-packed (x0=y0=x1=y1=0)
 	// (We technically don't need to zero-clear buf_rects, but let's do it for the sake of sanity)
-	var buf_rects []stbrp.Rect = make([]stbrp.Rect, total_glyphs_count)
-	var buf_packedchars []stbtt.PackedChar = make([]stbtt.PackedChar, total_glyphs_count)
+	var buf_rects = make([]stbrp.Rect, total_glyphs_count)
+	var buf_packedchars = make([]stbtt.PackedChar, total_glyphs_count)
 
 	// 4. Gather glyphs sizes so we can pack them in our virtual canvas.
 	var total_surface int = 0
 	var buf_rects_out_n int = 0
 	var buf_packedchars_out_n int = 0
 	for src_i := range src_tmp_array {
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
+		var src_tmp = &src_tmp_array[src_i]
 		if src_tmp.GlyphsCount == 0 {
 			continue
 		}
@@ -542,7 +541,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 		buf_packedchars_out_n += src_tmp.GlyphsCount
 
 		// Convert our ranges in the format stb_truetype wants
-		var cfg *ImFontConfig = &atlas.ConfigData[src_i]
+		var cfg = &atlas.ConfigData[src_i]
 		src_tmp.PackRange[0].FontSize = cfg.SizePixels
 		src_tmp.PackRange[0].FirstUnicodeCodepointInRange = 0
 		src_tmp.PackRange[0].ArrayOfUnicodeCodepoints = src_tmp.GlyphsList
@@ -558,10 +557,10 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 		} else {
 			scale = stbtt.ScaleForMappingEmToPixels(&src_tmp.FontInfo, -cfg.SizePixels)
 		}
-		var padding int = atlas.TexGlyphPadding
+		var padding = atlas.TexGlyphPadding
 		for glyph_i := range src_tmp.GlyphsList {
 			var x0, y0, x1, y1 int
-			var glyph_index_in_font int = stbtt.FindGlyphIndex(&src_tmp.FontInfo, src_tmp.GlyphsList[glyph_i])
+			var glyph_index_in_font = stbtt.FindGlyphIndex(&src_tmp.FontInfo, src_tmp.GlyphsList[glyph_i])
 			IM_ASSERT(glyph_index_in_font != 0)
 			stbtt.GetGlyphBitmapBoxSubpixel(&src_tmp.FontInfo, glyph_index_in_font, scale*float(cfg.OversampleH), scale*float(cfg.OversampleV), 0, 0, &x0, &y0, &x1, &y1)
 			src_tmp.Rects[glyph_i].W = (stbrp.Coord)(x1 - x0 + padding + cfg.OversampleH - 1)
@@ -573,7 +572,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 	// We need a width for the skyline algorithm, any width!
 	// The exact width doesn't really matter much, but some API/GPU have texture size limitations and increasing width can decrease height.
 	// User can override TexDesiredWidth and TexGlyphPadding if they wish, otherwise we use a simple heuristic to select the width based on expected surface.
-	var surface_sqrt int = (int)(ImSqrt((float)(total_surface)) + 1)
+	var surface_sqrt = (int)(ImSqrt((float)(total_surface)) + 1)
 	atlas.TexHeight = 0
 	if atlas.TexDesiredWidth > 0 {
 		atlas.TexWidth = atlas.TexDesiredWidth
@@ -602,7 +601,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// 6. Pack each source font. No rendering yet, we are working with rectangles in an infinitely tall texture at this point.
 	for src_i := range src_tmp_array {
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
+		var src_tmp = &src_tmp_array[src_i]
 		if src_tmp.GlyphsCount == 0 {
 			continue
 		}
@@ -620,7 +619,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// 7. Allocate texture
 	if atlas.Flags&ImFontAtlasFlags_NoPowerOfTwoHeight != 0 {
-		atlas.TexHeight = (atlas.TexHeight + 1)
+		atlas.TexHeight = atlas.TexHeight + 1
 	} else {
 		atlas.TexHeight = ImUpperPowerOfTwo(atlas.TexHeight)
 	}
@@ -631,8 +630,8 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// 8. Render/rasterize font characters into the texture
 	for src_i := range src_tmp_array {
-		var cfg *ImFontConfig = &atlas.ConfigData[src_i]
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
+		var cfg = &atlas.ConfigData[src_i]
+		var src_tmp = &src_tmp_array[src_i]
 		if src_tmp.GlyphsCount == 0 {
 			continue
 		}
@@ -643,7 +642,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 		if cfg.RasterizerMultiply != 1.0 {
 			var multiply_table [256]byte
 			ImFontAtlasBuildMultiplyCalcLookupTable(multiply_table[:], cfg.RasterizerMultiply)
-			var r []stbrp.Rect = src_tmp.Rects
+			var r = src_tmp.Rects
 			for glyph_i := int(0); glyph_i < src_tmp.GlyphsCount; glyph_i, r = glyph_i+1, r[1:] {
 				if r[0].WasPacked != 0 {
 					ImFontAtlasBuildMultiplyRectAlpha8(multiply_table[:], atlas.TexPixelsAlpha8, int(r[0].X), int(r[0].Y), int(r[0].W), int(r[0].H), atlas.TexWidth*1)
@@ -658,7 +657,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 	// 9. Setup ImFont and glyphs for runtime
 	for src_i := range src_tmp_array {
-		var src_tmp *ImFontBuildSrcData = &src_tmp_array[src_i]
+		var src_tmp = &src_tmp_array[src_i]
 		if src_tmp.GlyphsCount == 0 {
 			continue
 		}
@@ -666,10 +665,10 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 		// When merging fonts with MergeMode=true:
 		// - We can have multiple input fonts writing into a same destination font.
 		// - dst_font.ConfigData is != from cfg which is our source configuration.
-		var cfg *ImFontConfig = &atlas.ConfigData[src_i]
-		var dst_font *ImFont = cfg.DstFont
+		var cfg = &atlas.ConfigData[src_i]
+		var dst_font = cfg.DstFont
 
-		var font_scale float = stbtt.ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels)
+		var font_scale = stbtt.ScaleForPixelHeight(&src_tmp.FontInfo, cfg.SizePixels)
 		var unscaled_ascent, unscaled_descent, unscaled_line_gap int
 		stbtt.GetFontVMetrics(&src_tmp.FontInfo, &unscaled_ascent, &unscaled_descent, &unscaled_line_gap)
 
@@ -680,16 +679,16 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 			dir = -1
 		}
 
-		var ascent float = ImFloor(float(unscaled_ascent)*font_scale + dir)
-		var descent float = ImFloor(float(unscaled_descent)*font_scale + dir)
+		var ascent = ImFloor(float(unscaled_ascent)*font_scale + dir)
+		var descent = ImFloor(float(unscaled_descent)*font_scale + dir)
 		ImFontAtlasBuildSetupFont(atlas, dst_font, cfg, ascent, descent)
-		var font_off_x float = cfg.GlyphOffset.x
-		var font_off_y float = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent)
+		var font_off_x = cfg.GlyphOffset.x
+		var font_off_y = cfg.GlyphOffset.y + IM_ROUND(dst_font.Ascent)
 
 		for glyph_i := int(0); glyph_i < src_tmp.GlyphsCount; glyph_i++ {
 			// Register glyph
-			var codepoint int = src_tmp.GlyphsList[glyph_i]
-			var pc *stbtt.PackedChar = &src_tmp.PackedChars[glyph_i]
+			var codepoint = src_tmp.GlyphsList[glyph_i]
+			var pc = &src_tmp.PackedChars[glyph_i]
 			var q stbtt.AlignedQuad
 			var unused_x float = 0.0
 			var unused_y float = 0.0

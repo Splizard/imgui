@@ -67,7 +67,7 @@ func EndListBox() {
 }
 
 func ListBox(label string, current_item *int, items []string, items_count int, height_in_items int /*= -1*/) bool {
-	var value_changed = ListBoxFunc(label, current_item, func(data interface{}, idx int, out_text *string) bool {
+	var value_changed = ListBoxFunc(label, current_item, func(data any, idx int, out_text *string) bool {
 		var items = data.([]string)
 		if out_text != nil {
 			*out_text = items[idx]
@@ -79,14 +79,14 @@ func ListBox(label string, current_item *int, items []string, items_count int, h
 
 // This is merely a helper around BeginListBox(), EndListBox().
 // Considering using those directly to submit custom data or store selection differently.
-func ListBoxFunc(label string, current_item *int, items_getter func(data interface{}, idx int, out_text *string) bool, data interface{}, items_count int, height_in_items int /*= -1*/) bool {
+func ListBoxFunc(label string, current_item *int, items_getter func(data any, idx int, out_text *string) bool, data any, items_count int, height_in_items int /*= -1*/) bool {
 	var g = GImGui
 
 	// Calculate size from "height_in_items"
 	if height_in_items < 0 {
 		height_in_items = ImMinInt(items_count, 7)
 	}
-	var height_in_items_f float = float(height_in_items) + 0.25
+	var height_in_items_f = float(height_in_items) + 0.25
 	var size = ImVec2{0.0, ImFloor(GetTextLineHeightWithSpacing()*height_in_items_f + g.Style.FramePadding.y*2.0)}
 
 	if !BeginListBox(label, size) {

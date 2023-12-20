@@ -5,14 +5,14 @@ import "fmt"
 // Popups, Modals, Tooltips
 func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags ImGuiWindowFlags) bool {
 	var g = GImGui
-	var parent_window *ImGuiWindow = g.CurrentWindow
+	var parent_window = g.CurrentWindow
 
 	flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ChildWindow
 	flags |= (parent_window.Flags & ImGuiWindowFlags_NoMove) // Inherit the NoMove flag
 
 	// Size
-	var content_avail ImVec2 = GetContentRegionAvail()
-	var size ImVec2 = *ImFloorVec(size_arg)
+	var content_avail = GetContentRegionAvail()
+	var size = *ImFloorVec(size_arg)
 
 	var auto_fit_axises int
 	if size.x == 0.0 {
@@ -37,14 +37,14 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 		g.TempBuffer = fmt.Sprintf("%s/%08X", parent_window.Name, id)
 	}
 
-	var backup_border_size float = g.Style.ChildBorderSize
+	var backup_border_size = g.Style.ChildBorderSize
 	if !border {
 		g.Style.ChildBorderSize = 0.0
 	}
-	var ret bool = Begin(string(g.TempBuffer[:]), nil, flags)
+	var ret = Begin(string(g.TempBuffer[:]), nil, flags)
 	g.Style.ChildBorderSize = backup_border_size
 
-	var child_window *ImGuiWindow = g.CurrentWindow
+	var child_window = g.CurrentWindow
 	child_window.ChildId = id
 	child_window.AutoFitChildAxises = (ImS8)(auto_fit_axises)
 
@@ -93,7 +93,7 @@ func EndChild() {
 	if window.BeginCount > 1 {
 		End()
 	} else {
-		var sz ImVec2 = window.Size
+		var sz = window.Size
 		if window.AutoFitChildAxises&(1<<ImGuiAxis_X) != 0 { // Arbitrary minimum zero-ish child size of 4.0f causes less trouble than a 0.0f
 			sz.x = ImMax(4.0, sz.x)
 		}
@@ -102,7 +102,7 @@ func EndChild() {
 		}
 		End()
 
-		var parent_window *ImGuiWindow = g.CurrentWindow
+		var parent_window = g.CurrentWindow
 		var bb = ImRect{parent_window.DC.CursorPos, parent_window.DC.CursorPos.Add(sz)}
 		ItemSizeVec(&sz, 0)
 		if (window.DC.NavLayersActiveMask != 0 || window.DC.NavHasScroll) && (window.Flags&ImGuiWindowFlags_NavFlattened == 0) {
@@ -134,7 +134,7 @@ func BeginChildFrame(id ImGuiID, size ImVec2, flags ImGuiWindowFlags) bool {
 	PushStyleFloat(ImGuiStyleVar_ChildRounding, style.FrameRounding)
 	PushStyleFloat(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize)
 	PushStyleVec(ImGuiStyleVar_WindowPadding, style.FramePadding)
-	var ret bool = BeginChildID(id, size, true, ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysUseWindowPadding|flags)
+	var ret = BeginChildID(id, size, true, ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysUseWindowPadding|flags)
 	PopStyleVar(3)
 	PopStyleColor(1)
 	return ret

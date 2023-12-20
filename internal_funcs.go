@@ -27,12 +27,12 @@ func getForegroundDrawListViewport(viewport *ImGuiViewport, drawlist_no int, dra
 	return draw_list
 }
 
-// get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
+// GetForegroundDrawListViewport get foreground draw list for the given viewport. this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 func GetForegroundDrawListViewport(viewport *ImGuiViewport) *ImDrawList {
 	return getForegroundDrawListViewport(viewport, 1, "###Foreground")
 }
 
-// Call context hooks (used by e.g. test engine)
+// CallContextHooks Call context hooks (used by e.g. test engine)
 // We assume a small number of hooks so all stored in same array
 func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 	var g = ctx
@@ -43,19 +43,19 @@ func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 	}
 }
 
-// Basic Accessors
-func GetItemID() ImGuiID { var g *ImGuiContext = GImGui; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
+// GetItemID Basic Accessors
+func GetItemID() ImGuiID { var g = GImGui; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
 func GetItemStatusFlags() ImGuiItemStatusFlags {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return g.LastItemData.StatusFlags
 }
-func GetItemFlags() ImGuiItemFlags { var g *ImGuiContext = GImGui; return g.LastItemData.InFlags }
-func GetActiveID() ImGuiID         { var g *ImGuiContext = GImGui; return g.ActiveId }
-func GetFocusID() ImGuiID          { var g *ImGuiContext = GImGui; return g.NavId }
+func GetItemFlags() ImGuiItemFlags { var g = GImGui; return g.LastItemData.InFlags }
+func GetActiveID() ImGuiID         { var g = GImGui; return g.ActiveId }
+func GetFocusID() ImGuiID          { var g = GImGui; return g.NavId }
 
 func SetActiveID(id ImGuiID, window *ImGuiWindow) {
 	var g = GImGui
-	g.ActiveIdIsJustActivated = (g.ActiveId != id)
+	g.ActiveIdIsJustActivated = g.ActiveId != id
 	if g.ActiveIdIsJustActivated {
 		g.ActiveIdTimer = 0.0
 		g.ActiveIdHasBeenPressedBefore = false
@@ -94,7 +94,7 @@ func SetFocusID(id ImGuiID, window *ImGuiWindow) {
 
 	// Assume that SetFocusID() is called in the context where its window.DC.NavLayerCurrent and window.DC.NavFocusScopeIdCurrent are valid.
 	// Note that window may be != g.CurrentWindow (e.g. SetFocusID call in InputTextEx for multi-line text)
-	var nav_layer ImGuiNavLayer = window.DC.NavLayerCurrent
+	var nav_layer = window.DC.NavLayerCurrent
 	if g.NavWindow != window {
 		g.NavInitRequest = false
 	}
@@ -147,7 +147,7 @@ func KeepAliveID(id ImGuiID) {
 	}
 }
 
-// Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
+// MarkItemEdited Mark data associated to given item as "edited", used by IsItemDeactivatedAfterEdit() function.
 func MarkItemEdited(id ImGuiID) {
 	// This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
 	// ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
@@ -160,10 +160,10 @@ func MarkItemEdited(id ImGuiID) {
 	g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited
 }
 
-// Parameter stacks
+// PushItemFlag Parameter stacks
 func PushItemFlag(option ImGuiItemFlags, enabled bool) {
 	var g = GImGui
-	var item_flags ImGuiItemFlags = g.CurrentItemFlags
+	var item_flags = g.CurrentItemFlags
 	IM_ASSERT(item_flags == g.ItemFlagsStack[len(g.ItemFlagsStack)-1])
 	if enabled {
 		item_flags |= option
@@ -181,7 +181,7 @@ func PopItemFlag() {
 	g.CurrentItemFlags = g.ItemFlagsStack[len(g.ItemFlagsStack)-1]
 }
 
-// t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
+// CalcTypematicRepeatAmount t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
 // t1 = current time (e.g.: g.Time)
 // An event is triggered at:
 //
@@ -204,7 +204,7 @@ func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
 	if t1 >= repeat_delay {
 		count_t1 = (int)((t1 - repeat_delay) / repeat_rate)
 	}
-	var count int = count_t1 - count_t0
+	var count = count_t1 - count_t0
 	return count
 }
 
@@ -218,36 +218,36 @@ func SetActiveIdUsingNavAndKeys() {
 }
 
 func IsActiveIdUsingNavDir(dir ImGuiDir) bool {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return (g.ActiveIdUsingNavDirMask & (1 << dir)) != 0
 }
 func IsActiveIdUsingNavInput(input ImGuiNavInput) bool {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return (g.ActiveIdUsingNavInputMask & (1 << input)) != 0
 }
 func IsActiveIdUsingKey(key ImGuiKey) bool {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	IM_ASSERT(key < 64)
 	return (g.ActiveIdUsingKeyInputMask & ((ImU64)(1) << key)) != 0
 }
 
 func IsKeyPressedMap(key ImGuiKey, repeat bool /*= true*/) bool {
-	var g *ImGuiContext = GImGui
-	var key_index int = g.IO.KeyMap[key]
+	var g = GImGui
+	var key_index = g.IO.KeyMap[key]
 	if key_index >= 0 {
 		return IsKeyPressed(key_index, repeat)
 	}
 	return false
 }
 func IsNavInputDown(n ImGuiNavInput) bool {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return g.IO.NavInputs[n] > 0.0
 }
 func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
-	return (GetNavInputAmount(n, rm) > 0.0)
+	return GetNavInputAmount(n, rm) > 0.0
 }
 
-// Helper for ColorPicker4()
+// RenderColorRectWithAlphaCheckerboard Helper for ColorPicker4()
 // NB: This is rather brittle and will show artifact when rounding this enabled if rounded corners overlap multiple cells. Caller currently responsible for avoiding that.
 // Spent a non reasonable amount of time trying to getting this right for ColorButton with rounding+anti-aliasing+ImGuiColorEditFlags_HalfAlphaPreview flag + various grid sizes and offsets, and eventually gave up... probably more reasonable to disable rounding altogether.
 // FIXME: uses ImGui::GetColorU32
@@ -256,8 +256,8 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 		flags = ImDrawFlags_RoundCornersDefault_
 	}
 	if ((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xFF {
-		var col_bg1 ImU32 = GetColorU32FromInt(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col))
-		var col_bg2 ImU32 = GetColorU32FromInt(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col))
+		var col_bg1 = GetColorU32FromInt(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col))
+		var col_bg2 = GetColorU32FromInt(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col))
 		draw_list.AddRectFilled(p_min, p_max, col_bg1, rounding, flags)
 
 		var yi int = 0
@@ -271,7 +271,7 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 				if x2 <= x1 {
 					continue
 				}
-				var cell_flags ImDrawFlags = ImDrawFlags_RoundCornersNone
+				var cell_flags = ImDrawFlags_RoundCornersNone
 				if y1 <= p_min.y {
 					if x1 <= p_min.x {
 						cell_flags |= ImDrawFlags_RoundCornersTopLeft
@@ -294,7 +294,7 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 				if flags == ImDrawFlags_RoundCornersNone || cell_flags == ImDrawFlags_RoundCornersNone {
 					cell_flags = ImDrawFlags_RoundCornersNone
 				} else {
-					cell_flags = (cell_flags & flags)
+					cell_flags = cell_flags & flags
 				}
 
 				draw_list.AddRectFilled(ImVec2{x1, y1}, ImVec2{x2, y2}, col_bg2, rounding, cell_flags)
@@ -305,7 +305,7 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 	}
 }
 
-// Navigation highlight
+// RenderNavHighlight Navigation highlight
 func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	var g = GImGui
 	if id != g.NavId {
@@ -324,13 +324,13 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 		rounding = g.Style.FrameRounding
 	}
 
-	var display_rect ImRect = *bb
+	var display_rect = *bb
 	display_rect.ClipWith(window.ClipRect)
 	if flags&ImGuiNavHighlightFlags_TypeDefault != 0 {
 		var THICKNESS float = 2.0
-		var DISTANCE float = 3.0 + THICKNESS*0.5
+		var DISTANCE = 3.0 + THICKNESS*0.5
 		display_rect.ExpandVec(ImVec2{DISTANCE, DISTANCE})
-		var fully_visible bool = window.ClipRect.ContainsRect(display_rect)
+		var fully_visible = window.ClipRect.ContainsRect(display_rect)
 		if !fully_visible {
 			window.DrawList.PushClipRect(display_rect.Min, display_rect.Max, false)
 		}
@@ -350,12 +350,12 @@ func RenderMouseCursor(draw_list *ImDrawList, pos ImVec2, scale float, mouse_cur
 	}
 	IM_ASSERT(mouse_cursor > ImGuiMouseCursor_None && mouse_cursor < ImGuiMouseCursor_COUNT)
 
-	var font_atlas *ImFontAtlas = draw_list._Data.Font.ContainerAtlas
+	var font_atlas = draw_list._Data.Font.ContainerAtlas
 	var offset, size ImVec2
 	var uv1, uv2 [2]ImVec2
 	if font_atlas.GetMouseCursorTexData(mouse_cursor, &offset, &size, &uv1, &uv2) {
 		pos = pos.Sub(offset)
-		var tex_id ImTextureID = font_atlas.TexID
+		var tex_id = font_atlas.TexID
 		draw_list.PushTextureID(tex_id)
 		draw_list.AddImage(tex_id, pos.Add(ImVec2{1, 0}.Scale(scale)), pos.Add((ImVec2{1, 0}.Add(size)).Scale(scale)), &uv2[0], &uv2[1], col_shadow)
 		draw_list.AddImage(tex_id, pos.Add(ImVec2{2, 0}.Scale(scale)), pos.Add((ImVec2{2, 0}.Add(size)).Scale(scale)), &uv2[0], &uv2[1], col_shadow)
@@ -365,7 +365,7 @@ func RenderMouseCursor(draw_list *ImDrawList, pos ImVec2, scale float, mouse_cur
 	}
 }
 
-// Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
+// RenderArrowPointingAt Render an arrow. 'pos' is position of the arrow tip. half_sz.x is length from base to tip. half_sz.y is length on each side.
 func RenderArrowPointingAt(draw_list *ImDrawList, pos ImVec2, half_sz ImVec2, direction ImGuiDir, col ImU32) {
 	switch direction {
 	case ImGuiDir_Left:
@@ -386,7 +386,7 @@ func RenderArrowPointingAt(draw_list *ImDrawList, pos ImVec2, half_sz ImVec2, di
 	}
 }
 
-// FIXME: Cleanup and move code to ImDrawList.
+// RenderRectFilledRangeH FIXME: Cleanup and move code to ImDrawList.
 func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_start_norm float, x_end_norm float, rounding float) {
 	if x_end_norm == x_start_norm {
 		return
@@ -395,8 +395,8 @@ func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_st
 		ImSwap(x_start_norm, x_end_norm)
 	}
 
-	var p0 ImVec2 = ImVec2{ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y}
-	var p1 ImVec2 = ImVec2{ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y}
+	var p0 = ImVec2{ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y}
+	var p1 = ImVec2{ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y}
 	if rounding == 0.0 {
 		draw_list.AddRectFilled(p0, p1, col, 0.0, 0)
 		return
@@ -404,8 +404,8 @@ func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_st
 
 	rounding = ImClamp(ImMin((rect.Max.x-rect.Min.x)*0.5, (rect.Max.y-rect.Min.y)*0.5)-1.0, 0.0, rounding)
 	var inv_rounding = 1.0 / rounding
-	var arc0_b float = ImAcos01(1.0 - (p0.x-rect.Min.x)*inv_rounding)
-	var arc0_e float = ImAcos01(1.0 - (p1.x-rect.Min.x)*inv_rounding)
+	var arc0_b = ImAcos01(1.0 - (p0.x-rect.Min.x)*inv_rounding)
+	var arc0_e = ImAcos01(1.0 - (p1.x-rect.Min.x)*inv_rounding)
 	var half_pi float = IM_PI * 0.5 // We will == compare to this because we know this is the exact value ImAcos01 can return.
 	var x0 = ImMax(p0.x, rect.Min.x+rounding)
 	if arc0_b == arc0_e {
@@ -419,9 +419,9 @@ func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_st
 		draw_list.PathArcTo(ImVec2{x0, p0.y + rounding}, rounding, IM_PI+arc0_b, IM_PI+arc0_e, 3) // TR
 	}
 	if p1.x > rect.Min.x+rounding {
-		var arc1_b float = ImAcos01(1.0 - (rect.Max.x-p1.x)*inv_rounding)
-		var arc1_e float = ImAcos01(1.0 - (rect.Max.x-p0.x)*inv_rounding)
-		var x1 float = ImMin(p1.x, rect.Max.x-rounding)
+		var arc1_b = ImAcos01(1.0 - (rect.Max.x-p1.x)*inv_rounding)
+		var arc1_e = ImAcos01(1.0 - (rect.Max.x-p0.x)*inv_rounding)
+		var x1 = ImMin(p1.x, rect.Max.x-rounding)
 		if arc1_b == arc1_e {
 			draw_list.PathLineTo(ImVec2{x1, p0.y})
 			draw_list.PathLineTo(ImVec2{x1, p1.y})
@@ -437,10 +437,10 @@ func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_st
 }
 
 func RenderRectFilledWithHole(draw_list *ImDrawList, outer ImRect, inner ImRect, col ImU32, rounding float) {
-	var fill_L = (inner.Min.x > outer.Min.x)
-	var fill_R = (inner.Max.x < outer.Max.x)
-	var fill_U = (inner.Min.y > outer.Min.y)
-	var fill_D = (inner.Max.y < outer.Max.y)
+	var fill_L = inner.Min.x > outer.Min.x
+	var fill_R = inner.Max.x < outer.Max.x
+	var fill_U = inner.Min.y > outer.Min.y
+	var fill_D = inner.Max.y < outer.Max.y
 	if fill_L {
 		var flags ImDrawFlags
 		if !fill_U {

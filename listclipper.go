@@ -121,8 +121,8 @@ func (this ImGuiListClipper) Step() bool {
 	if this.StepNo == 1 {
 		IM_ASSERT(this.ItemsHeight <= 0.0)
 		if table != nil {
-			var pos_y1 float = table.RowPosY1 // Using this instead of StartPosY to handle clipper straddling the frozen row
-			var pos_y2 float = table.RowPosY2 // Using this instead of CursorPos.y to take account of tallest cell.
+			var pos_y1 = table.RowPosY1 // Using this instead of StartPosY to handle clipper straddling the frozen row
+			var pos_y2 = table.RowPosY2 // Using this instead of CursorPos.y to take account of tallest cell.
 			this.ItemsHeight = pos_y2 - pos_y1
 			window.DC.CursorPos.y = pos_y2
 		} else {
@@ -142,7 +142,7 @@ func (this ImGuiListClipper) Step() bool {
 	if this.StepNo == 2 {
 		IM_ASSERT(this.ItemsHeight > 0.0)
 
-		var already_submitted int = this.DisplayEnd
+		var already_submitted = this.DisplayEnd
 		CalcListClipping(this.ItemsCount-already_submitted, this.ItemsHeight, &this.DisplayStart, &this.DisplayEnd)
 		this.DisplayStart += already_submitted
 		this.DisplayEnd += already_submitted
@@ -200,7 +200,7 @@ func CalcListClipping(items_count int, items_height float, out_items_display_sta
 	}
 
 	// We create the union of the ClipRect and the scoring rect which at worst should be 1 page away from ClipRect
-	var unclipped_rect ImRect = window.ClipRect
+	var unclipped_rect = window.ClipRect
 	if g.NavMoveScoringItems {
 		unclipped_rect.AddRect(g.NavScoringRect)
 	}
@@ -209,9 +209,9 @@ func CalcListClipping(items_count int, items_height float, out_items_display_sta
 		unclipped_rect.AddRect(ImRect{window.Pos.Add(window.NavRectRel[0].Min), window.Pos.Add(window.NavRectRel[0].Max)})
 	}
 
-	var pos ImVec2 = window.DC.CursorPos
-	var start int = (int)((unclipped_rect.Min.y - pos.y) / items_height)
-	var end int = (int)((unclipped_rect.Max.y - pos.y) / items_height)
+	var pos = window.DC.CursorPos
+	var start = (int)((unclipped_rect.Min.y - pos.y) / items_height)
+	var end = (int)((unclipped_rect.Max.y - pos.y) / items_height)
 
 	// When performing a navigation request, ensure we have one item extra in the direction we are moving to
 	if g.NavMoveScoringItems && g.NavMoveClipDir == ImGuiDir_Up {
@@ -232,8 +232,8 @@ func SetCursorPosYAndSetupForPrevLine(pos_y, line_height float) {
 	// FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
 	// The clipper should probably have a 4th step to display the last item in a regular manner.
 	var g = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
-	var off_y float = pos_y - window.DC.CursorPos.y
+	var window = g.CurrentWindow
+	var off_y = pos_y - window.DC.CursorPos.y
 	window.DC.CursorPos.y = pos_y
 	window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, pos_y)
 	window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
@@ -246,7 +246,7 @@ func SetCursorPosYAndSetupForPrevLine(pos_y, line_height float) {
 			TableEndRow(table)
 		}
 		table.RowPosY2 = window.DC.CursorPos.y
-		var row_increase int = (int)((off_y / line_height) + 0.5)
+		var row_increase = (int)((off_y / line_height) + 0.5)
 		//table.CurrentRow += row_increase; // Can't do without fixing TableEndRow()
 		table.RowBgColorCounter += row_increase
 	}

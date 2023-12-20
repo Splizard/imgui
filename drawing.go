@@ -4,7 +4,7 @@ import (
 	"unsafe"
 )
 
-// Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
+// GetDrawData Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
 func GetDrawData() *ImDrawData {
 	var g = GImGui
 	var viewport = g.Viewports[0]
@@ -16,7 +16,7 @@ func GetDrawData() *ImDrawData {
 	}
 } // valid after Render() and until the next call to NewFrame(). this is what you have to render.
 
-// All draw data to render a Dear ImGui frame
+// ImDrawData All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
 // as this is one of the oldest structure exposed by the library! Basically, ImDrawList == CmdList)
 type ImDrawData struct {
@@ -34,7 +34,7 @@ func (this *ImDrawData) Clear() {
 	*this = ImDrawData{}
 }
 
-// Functions
+// DeIndexAllBuffers Functions
 // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
 func (this *ImDrawData) DeIndexAllBuffers() {
 	var new_vtx_buffer []ImDrawVert
@@ -59,7 +59,7 @@ func (this *ImDrawData) DeIndexAllBuffers() {
 	}
 }
 
-// Helper to scale the ClipRect field of each ImDrawCmd.
+// ScaleClipRects Helper to scale the ClipRect field of each ImDrawCmd.
 // Use if your final output buffer is at a different scale than draw_data.DisplaySize,
 // or if there is a difference between your window resolution and framebuffer resolution.
 func (this *ImDrawData) ScaleClipRects(fb_scale *ImVec2) {
@@ -73,47 +73,47 @@ func (this *ImDrawData) ScaleClipRects(fb_scale *ImVec2) {
 } // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
 
 // [Internal helpers]
-func (this *ImDrawList) _ResetForNewFrame() {
+func (l *ImDrawList) _ResetForNewFrame() {
 	// Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
 	// (those should be IM_STATIC_ASSERT() in theory but with our pre C++11 setup the whole check doesn't compile with GCC)
 	IM_ASSERT(unsafe.Offsetof(ImDrawCmd{}.ClipRect) == 0)
 	IM_ASSERT(unsafe.Offsetof(ImDrawCmd{}.TextureId) == unsafe.Sizeof(ImVec4{}))
 	IM_ASSERT(unsafe.Offsetof(ImDrawCmd{}.VtxOffset) == unsafe.Sizeof(ImVec4{})+unsafe.Sizeof(ImTextureID(0)))
 
-	this.CmdBuffer = this.CmdBuffer[:0]
-	this.IdxBuffer = this.IdxBuffer[:0]
-	this.VtxBuffer = this.VtxBuffer[:0]
-	this.Flags = this._Data.InitialFlags
-	this._CmdHeader = ImDrawCmdHeader{}
+	l.CmdBuffer = l.CmdBuffer[:0]
+	l.IdxBuffer = l.IdxBuffer[:0]
+	l.VtxBuffer = l.VtxBuffer[:0]
+	l.Flags = l._Data.InitialFlags
+	l._CmdHeader = ImDrawCmdHeader{}
 
-	this._VtxCurrentIdx = 0
-	this._VtxWritePtr = 0
-	this._IdxWritePtr = 0
-	this._ClipRectStack = this._ClipRectStack[:0]
-	this._TextureIdStack = this._TextureIdStack[:0]
-	this._Path = this._Path[:0]
-	this._Splitter.Clear()
-	this.CmdBuffer = append(this.CmdBuffer, ImDrawCmd{})
-	this._FringeScale = 1.0
+	l._VtxCurrentIdx = 0
+	l._VtxWritePtr = 0
+	l._IdxWritePtr = 0
+	l._ClipRectStack = l._ClipRectStack[:0]
+	l._TextureIdStack = l._TextureIdStack[:0]
+	l._Path = l._Path[:0]
+	l._Splitter.Clear()
+	l.CmdBuffer = append(l.CmdBuffer, ImDrawCmd{})
+	l._FringeScale = 1.0
 }
 
-func (this *ImDrawList) PushTextureID(texture_id ImTextureID) {
-	this._TextureIdStack = append(this._TextureIdStack, texture_id)
-	this._CmdHeader.TextureId = texture_id
-	this._OnChangedTextureID()
+func (l *ImDrawList) PushTextureID(texture_id ImTextureID) {
+	l._TextureIdStack = append(l._TextureIdStack, texture_id)
+	l._CmdHeader.TextureId = texture_id
+	l._OnChangedTextureID()
 }
 
-func (this *ImDrawList) _OnChangedTextureID() {
+func (l *ImDrawList) _OnChangedTextureID() {
 	// If current command is used with different settings we need to add a new command
-	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
-	if curr_cmd.ElemCount != 0 && curr_cmd.TextureId != this._CmdHeader.TextureId {
-		this.AddDrawCmd()
+	var curr_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
+	if curr_cmd.ElemCount != 0 && curr_cmd.TextureId != l._CmdHeader.TextureId {
+		l.AddDrawCmd()
 		return
 	}
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 
 	// Try to merge with previous command if it matches, else use current command
-	var prev_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var prev_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
 
 	prevHeader := ImDrawCmdHeader{
 		ClipRect:  prev_cmd.ClipRect,
@@ -121,28 +121,28 @@ func (this *ImDrawList) _OnChangedTextureID() {
 		VtxOffset: prev_cmd.ElemCount,
 	}
 
-	if curr_cmd.ElemCount == 0 && len(this.CmdBuffer) > 1 && this._CmdHeader == prevHeader && prev_cmd.UserCallback == nil {
-		this.CmdBuffer = this.CmdBuffer[len(this.CmdBuffer)-1:]
+	if curr_cmd.ElemCount == 0 && len(l.CmdBuffer) > 1 && l._CmdHeader == prevHeader && prev_cmd.UserCallback == nil {
+		l.CmdBuffer = l.CmdBuffer[len(l.CmdBuffer)-1:]
 		return
 	}
 
-	curr_cmd.TextureId = this._CmdHeader.TextureId
+	curr_cmd.TextureId = l._CmdHeader.TextureId
 
 }
 
 // Our scheme may appears a bit unusual, basically we want the most-common calls AddLine AddRect etc. to not have to perform any check so we always have a command ready in the stack.
 // The cost of figuring out if a new command has to be added or if we can merge is paid in those Update** functions only.
-func (this *ImDrawList) _OnChangedClipRect() {
+func (l *ImDrawList) _OnChangedClipRect() {
 	// If current command is used with different settings we need to add a new command
-	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
-	if curr_cmd.ElemCount != 0 && curr_cmd.ClipRect != this._CmdHeader.ClipRect {
-		this.AddDrawCmd()
+	var curr_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
+	if curr_cmd.ElemCount != 0 && curr_cmd.ClipRect != l._CmdHeader.ClipRect {
+		l.AddDrawCmd()
 		return
 	}
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 
 	// Try to merge with previous command if it matches, else use current command
-	var prev_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var prev_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
 
 	prevHeader := ImDrawCmdHeader{
 		ClipRect:  prev_cmd.ClipRect,
@@ -150,64 +150,64 @@ func (this *ImDrawList) _OnChangedClipRect() {
 		VtxOffset: prev_cmd.ElemCount,
 	}
 
-	if curr_cmd.ElemCount == 0 && len(this.CmdBuffer) > 1 && this._CmdHeader == prevHeader && prev_cmd.UserCallback == nil {
-		this.CmdBuffer = this.CmdBuffer[len(this.CmdBuffer)-1:]
+	if curr_cmd.ElemCount == 0 && len(l.CmdBuffer) > 1 && l._CmdHeader == prevHeader && prev_cmd.UserCallback == nil {
+		l.CmdBuffer = l.CmdBuffer[len(l.CmdBuffer)-1:]
 		return
 	}
 
-	curr_cmd.ClipRect = this._CmdHeader.ClipRect
+	curr_cmd.ClipRect = l._CmdHeader.ClipRect
 }
 
-func (this *ImDrawList) AddRectFilled(p_min, p_max ImVec2, col ImU32, rounding float, flags ImDrawFlags) {
+func (l *ImDrawList) AddRectFilled(p_min, p_max ImVec2, col ImU32, rounding float, flags ImDrawFlags) {
 
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
 	}
 
 	if rounding <= 0.0 || (flags&ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
-		this.PrimReserve(6, 4)
-		this.PrimRect(&p_min, &p_max, col)
+		l.PrimReserve(6, 4)
+		l.PrimRect(&p_min, &p_max, col)
 	} else {
-		this.PathRect(&p_min, &p_max, rounding, flags)
+		l.PathRect(&p_min, &p_max, rounding, flags)
 
-		this.PathFillConvex(col)
+		l.PathFillConvex(col)
 	}
 
 } // a: upper-left, b: lower-right (== upper-left + size)
 
-func (this *ImDrawList) PathArcToFast(center ImVec2, radius float, a_min_sample, a_max_sample int) {
+func (l *ImDrawList) PathArcToFast(center ImVec2, radius float, a_min_sample, a_max_sample int) {
 	if radius <= 0.0 {
-		this._Path = append(this._Path, center)
+		l._Path = append(l._Path, center)
 		return
 	}
-	this.PathArcToFastEx(center, radius, a_min_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, a_max_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, 0)
+	l.PathArcToFastEx(center, radius, a_min_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, a_max_sample*IM_DRAWLIST_ARCFAST_SAMPLE_MAX/12, 0)
 }
 
-// We intentionally avoid using ImVec2 and its math operators here to reduce cost to a minimum for debug/non-inlined builds.
-func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, col ImU32) {
+// AddConvexPolyFilled We intentionally avoid using ImVec2 and its math operators here to reduce cost to a minimum for debug/non-inlined builds.
+func (l *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, col ImU32) {
 	if points_count < 3 {
 		return
 	}
 
-	var uv = this._Data.TexUvWhitePixel
+	var uv = l._Data.TexUvWhitePixel
 
-	if this.Flags&ImDrawListFlags_AntiAliasedFill != 0 {
+	if l.Flags&ImDrawListFlags_AntiAliasedFill != 0 {
 
 		// Anti-aliased Fill
-		var AA_SIZE = this._FringeScale
+		var AA_SIZE = l._FringeScale
 		var col_trans = col &^ IM_COL32_A_MASK
 		var idx_count = (points_count-2)*3 + points_count*6
 		var vtx_count = (points_count * 2)
-		this.PrimReserve(idx_count, vtx_count)
+		l.PrimReserve(idx_count, vtx_count)
 
 		// Add indexes for fill
-		var vtx_inner_idx = this._VtxCurrentIdx
-		var vtx_outer_idx = this._VtxCurrentIdx + 1
+		var vtx_inner_idx = l._VtxCurrentIdx
+		var vtx_outer_idx = l._VtxCurrentIdx + 1
 		for i := int(2); i < points_count; i++ {
-			this.IdxBuffer[this._IdxWritePtr] = (ImDrawIdx)(vtx_inner_idx)
-			this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(vtx_inner_idx + ((uint(i) - 1) << 1))
-			this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(vtx_inner_idx + (uint(i) << 1))
-			this._IdxWritePtr += 3
+			l.IdxBuffer[l._IdxWritePtr] = (ImDrawIdx)(vtx_inner_idx)
+			l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(vtx_inner_idx + ((uint(i) - 1) << 1))
+			l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(vtx_inner_idx + (uint(i) << 1))
+			l._IdxWritePtr += 3
 		}
 
 		// Compute normals
@@ -234,59 +234,59 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 			dm_y *= AA_SIZE * 0.5
 
 			// Add vertices
-			this.VtxBuffer[this._VtxWritePtr+0].Pos.x = (points[i1].x - dm_x)
-			this.VtxBuffer[this._VtxWritePtr+0].Pos.y = (points[i1].y - dm_y)
-			this.VtxBuffer[this._VtxWritePtr+0].Uv = uv
-			this.VtxBuffer[this._VtxWritePtr+0].Col = col // Inner
-			this.VtxBuffer[this._VtxWritePtr+1].Pos.x = (points[i1].x + dm_x)
-			this.VtxBuffer[this._VtxWritePtr+1].Pos.y = (points[i1].y + dm_y)
-			this.VtxBuffer[this._VtxWritePtr+1].Uv = uv
-			this.VtxBuffer[this._VtxWritePtr+1].Col = col_trans // Outer
+			l.VtxBuffer[l._VtxWritePtr+0].Pos.x = (points[i1].x - dm_x)
+			l.VtxBuffer[l._VtxWritePtr+0].Pos.y = (points[i1].y - dm_y)
+			l.VtxBuffer[l._VtxWritePtr+0].Uv = uv
+			l.VtxBuffer[l._VtxWritePtr+0].Col = col // Inner
+			l.VtxBuffer[l._VtxWritePtr+1].Pos.x = (points[i1].x + dm_x)
+			l.VtxBuffer[l._VtxWritePtr+1].Pos.y = (points[i1].y + dm_y)
+			l.VtxBuffer[l._VtxWritePtr+1].Uv = uv
+			l.VtxBuffer[l._VtxWritePtr+1].Col = col_trans // Outer
 
-			this._VtxWritePtr += 2
+			l._VtxWritePtr += 2
 
 			// Add indexes for fringes
-			this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(vtx_inner_idx + uint(i1<<1))
-			this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(vtx_inner_idx + uint(i0<<1))
-			this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(vtx_outer_idx + uint(i0<<1))
-			this.IdxBuffer[this._IdxWritePtr+3] = (ImDrawIdx)(vtx_outer_idx + uint(i0<<1))
-			this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(vtx_outer_idx + uint(i1<<1))
-			this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(vtx_inner_idx + uint(i1<<1))
-			this._IdxWritePtr += 6
+			l.IdxBuffer[l._IdxWritePtr+0] = (ImDrawIdx)(vtx_inner_idx + uint(i1<<1))
+			l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(vtx_inner_idx + uint(i0<<1))
+			l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(vtx_outer_idx + uint(i0<<1))
+			l.IdxBuffer[l._IdxWritePtr+3] = (ImDrawIdx)(vtx_outer_idx + uint(i0<<1))
+			l.IdxBuffer[l._IdxWritePtr+4] = (ImDrawIdx)(vtx_outer_idx + uint(i1<<1))
+			l.IdxBuffer[l._IdxWritePtr+5] = (ImDrawIdx)(vtx_inner_idx + uint(i1<<1))
+			l._IdxWritePtr += 6
 		}
 		//printf("vtx_count %d\n", vtx_count)
-		this._VtxCurrentIdx += uint(vtx_count)
+		l._VtxCurrentIdx += uint(vtx_count)
 	} else {
 
 		// Non Anti-aliased Fill
 		var idx_count = (points_count - 2) * 3
 		var vtx_count = points_count
-		this.PrimReserve(idx_count, vtx_count)
+		l.PrimReserve(idx_count, vtx_count)
 		for i := int(0); i < vtx_count; i++ {
-			this.VtxBuffer[this._VtxWritePtr+0].Pos = points[i]
-			this.VtxBuffer[this._VtxWritePtr+0].Uv = uv
-			this.VtxBuffer[this._VtxWritePtr+0].Col = col
-			this._VtxWritePtr += 1
+			l.VtxBuffer[l._VtxWritePtr+0].Pos = points[i]
+			l.VtxBuffer[l._VtxWritePtr+0].Uv = uv
+			l.VtxBuffer[l._VtxWritePtr+0].Col = col
+			l._VtxWritePtr += 1
 		}
 		for i := uint(2); i < uint(points_count); i++ {
-			this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(this._VtxCurrentIdx)
-			this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(this._VtxCurrentIdx + i - 1)
-			this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(this._VtxCurrentIdx + i)
-			this._IdxWritePtr += 3
+			l.IdxBuffer[l._IdxWritePtr+0] = (ImDrawIdx)(l._VtxCurrentIdx)
+			l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(l._VtxCurrentIdx + i - 1)
+			l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(l._VtxCurrentIdx + i)
+			l._IdxWritePtr += 3
 		}
-		this._VtxCurrentIdx += uint(vtx_count)
+		l._VtxCurrentIdx += uint(vtx_count)
 	}
 } // Note: Anti-aliased filling requires points to be in clockwise order.
 
-func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sample, a_max_sample, a_step int) {
+func (l *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sample, a_max_sample, a_step int) {
 	if radius <= 0.0 {
-		this._Path = append(this._Path, center)
+		l._Path = append(l._Path, center)
 		return
 	}
 
 	// Calculate arc auto segment step size
 	if a_step <= 0 {
-		a_step = IM_DRAWLIST_ARCFAST_SAMPLE_MAX / this._CalcCircleAutoSegmentCount(radius)
+		a_step = IM_DRAWLIST_ARCFAST_SAMPLE_MAX / l._CalcCircleAutoSegmentCount(radius)
 	}
 
 	// Make sure we never do steps larger than one quarter of the circle
@@ -313,8 +313,8 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 		}
 	}
 
-	this._Path = append(this._Path, make([]ImVec2, samples)...)
-	var out_ptr = this._Path[(int(len(this._Path)) - samples):]
+	l._Path = append(l._Path, make([]ImVec2, samples)...)
+	var out_ptr = l._Path[(int(len(l._Path)) - samples):]
 
 	var sample_index = a_min_sample
 	if sample_index < 0 || sample_index >= IM_DRAWLIST_ARCFAST_SAMPLE_MAX {
@@ -331,7 +331,7 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 				sample_index -= IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 			}
 
-			var s = this._Data.ArcFastVtx[sample_index]
+			var s = l._Data.ArcFastVtx[sample_index]
 			out_ptr[0].x = center.x + s.x*radius
 			out_ptr[0].y = center.y + s.y*radius
 			out_ptr = out_ptr[1:]
@@ -343,7 +343,7 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 				sample_index += IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 			}
 
-			var s = this._Data.ArcFastVtx[sample_index]
+			var s = l._Data.ArcFastVtx[sample_index]
 			out_ptr[0].x = center.x + s.x*radius
 			out_ptr[0].y = center.y + s.y*radius
 			out_ptr = out_ptr[1:]
@@ -356,7 +356,7 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 			normalized_max_sample += IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 		}
 
-		var s = this._Data.ArcFastVtx[normalized_max_sample]
+		var s = l._Data.ArcFastVtx[normalized_max_sample]
 		out_ptr[0].x = center.x + s.x*radius
 		out_ptr[0].y = center.y + s.y*radius
 		out_ptr = out_ptr[1:]
@@ -365,51 +365,51 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 	IM_ASSERT(len(out_ptr) == 0)
 } // Use precomputed angles for a 12 steps circle
 
-// Advanced: Primitives allocations
+// PrimReserve Advanced: Primitives allocations
 // - We render triangles (three vertices)
 // - All primitives needs to be reserved via PrimReserve() beforehand.
 // Reserve space for a number of vertices and indices.
 // You must finish filling your reserved data before calling PrimReserve() again, as it may reallocate or
 // submit the intermediate results. PrimUnreserve() can be used to release unused allocations.
-func (this *ImDrawList) PrimReserve(idx_count, vtx_count int) {
+func (l *ImDrawList) PrimReserve(idx_count, vtx_count int) {
 
 	// Large mesh support (when enabled)
 	IM_ASSERT(idx_count >= 0 && vtx_count >= 0)
-	if unsafe.Sizeof(ImDrawIdx(0)) == 2 && (this._VtxCurrentIdx+uint(vtx_count) >= (1 << 16)) && (this.Flags&ImDrawListFlags_AllowVtxOffset != 0) {
+	if unsafe.Sizeof(ImDrawIdx(0)) == 2 && (l._VtxCurrentIdx+uint(vtx_count) >= (1 << 16)) && (l.Flags&ImDrawListFlags_AllowVtxOffset != 0) {
 		// FIXME: In theory we should be testing that vtx_count <64k here.
 		// In practice, RenderText() relies on reserving ahead for a worst case scenario so it is currently useful for us
 		// to not make that check until we rework the text functions to handle clipping and large horizontal lines better.
-		this._CmdHeader.VtxOffset = uint(len(this.VtxBuffer))
-		this._OnChangedVtxOffset()
+		l._CmdHeader.VtxOffset = uint(len(l.VtxBuffer))
+		l._OnChangedVtxOffset()
 	}
 
-	var draw_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var draw_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
 	draw_cmd.ElemCount += uint(idx_count)
 
-	var vtx_buffer_old_size = int(len(this.VtxBuffer))
-	this.VtxBuffer = append(this.VtxBuffer, make([]ImDrawVert, vtx_count)...)
-	this._VtxWritePtr = vtx_buffer_old_size
+	var vtx_buffer_old_size = int(len(l.VtxBuffer))
+	l.VtxBuffer = append(l.VtxBuffer, make([]ImDrawVert, vtx_count)...)
+	l._VtxWritePtr = vtx_buffer_old_size
 
-	var idx_buffer_old_size = int(len(this.IdxBuffer))
-	this.IdxBuffer = append(this.IdxBuffer, make([]ImDrawIdx, idx_count)...)
-	this._IdxWritePtr = idx_buffer_old_size
+	var idx_buffer_old_size = int(len(l.IdxBuffer))
+	l.IdxBuffer = append(l.IdxBuffer, make([]ImDrawIdx, idx_count)...)
+	l._IdxWritePtr = idx_buffer_old_size
 }
 
-// p_min = upper-left, p_max = lower-right
+// AddRect p_min = upper-left, p_max = lower-right
 // Note we don't render 1 pixels sized rectangles properly.
-func (this *ImDrawList) AddRect(p_min ImVec2, p_max ImVec2, col ImU32, rounding float, flags ImDrawFlags, thickness float /*= 1.0f*/) {
+func (l *ImDrawList) AddRect(p_min ImVec2, p_max ImVec2, col ImU32, rounding float, flags ImDrawFlags, thickness float /*= 1.0f*/) {
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
 	}
 	min := p_min.Add(ImVec2{0.50, 0.50})
-	if this.Flags&ImDrawListFlags_AntiAliasedLines != 0 {
+	if l.Flags&ImDrawListFlags_AntiAliasedLines != 0 {
 		max := p_max.Sub(ImVec2{0.50, 0.50})
-		this.PathRect(&min, &max, rounding, flags)
+		l.PathRect(&min, &max, rounding, flags)
 	} else {
 		max := p_max.Sub(ImVec2{0.49, 0.49})
-		this.PathRect(&min, &max, rounding, flags)
+		l.PathRect(&min, &max, rounding, flags)
 	} // Better looking lower-right corner and rounded non-AA shapes.
-	this.PathStroke(col, ImDrawFlags_Closed, thickness)
+	l.PathStroke(col, ImDrawFlags_Closed, thickness)
 } // a: upper-left, b: lower-right (== upper-left + size)
 
 func AddDrawListToDrawData(out_list *[]*ImDrawList, draw_list *ImDrawList) {
@@ -450,54 +450,54 @@ func AddDrawListToDrawData(out_list *[]*ImDrawList, draw_list *ImDrawList) {
 	*out_list = append(*out_list, draw_list)
 }
 
-// Fully unrolled with inline call to keep our debug builds decently fast.
-func (this *ImDrawList) PrimRect(a, c *ImVec2, col ImU32) {
+// PrimRect Fully unrolled with inline call to keep our debug builds decently fast.
+func (l *ImDrawList) PrimRect(a, c *ImVec2, col ImU32) {
 
-	var b, d, uv = ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, this._Data.TexUvWhitePixel
-	var idx = (ImDrawIdx)(this._VtxCurrentIdx)
-	this.IdxBuffer[this._IdxWritePtr+0] = idx
-	this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(idx + 1)
-	this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(idx + 2)
-	this.IdxBuffer[this._IdxWritePtr+3] = idx
-	this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx + 2)
-	this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx + 3)
-	this.VtxBuffer[this._VtxWritePtr+0].Pos = *a
-	this.VtxBuffer[this._VtxWritePtr+0].Uv = uv
-	this.VtxBuffer[this._VtxWritePtr+0].Col = col
-	this.VtxBuffer[this._VtxWritePtr+1].Pos = b
-	this.VtxBuffer[this._VtxWritePtr+1].Uv = uv
-	this.VtxBuffer[this._VtxWritePtr+1].Col = col
-	this.VtxBuffer[this._VtxWritePtr+2].Pos = *c
-	this.VtxBuffer[this._VtxWritePtr+2].Uv = uv
-	this.VtxBuffer[this._VtxWritePtr+2].Col = col
-	this.VtxBuffer[this._VtxWritePtr+3].Pos = d
-	this.VtxBuffer[this._VtxWritePtr+3].Uv = uv
-	this.VtxBuffer[this._VtxWritePtr+3].Col = col
-	this._VtxWritePtr += 4
-	this._VtxCurrentIdx += 4
-	this._IdxWritePtr += 6
+	var b, d, uv = ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, l._Data.TexUvWhitePixel
+	var idx = (ImDrawIdx)(l._VtxCurrentIdx)
+	l.IdxBuffer[l._IdxWritePtr+0] = idx
+	l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(idx + 1)
+	l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(idx + 2)
+	l.IdxBuffer[l._IdxWritePtr+3] = idx
+	l.IdxBuffer[l._IdxWritePtr+4] = (ImDrawIdx)(idx + 2)
+	l.IdxBuffer[l._IdxWritePtr+5] = (ImDrawIdx)(idx + 3)
+	l.VtxBuffer[l._VtxWritePtr+0].Pos = *a
+	l.VtxBuffer[l._VtxWritePtr+0].Uv = uv
+	l.VtxBuffer[l._VtxWritePtr+0].Col = col
+	l.VtxBuffer[l._VtxWritePtr+1].Pos = b
+	l.VtxBuffer[l._VtxWritePtr+1].Uv = uv
+	l.VtxBuffer[l._VtxWritePtr+1].Col = col
+	l.VtxBuffer[l._VtxWritePtr+2].Pos = *c
+	l.VtxBuffer[l._VtxWritePtr+2].Uv = uv
+	l.VtxBuffer[l._VtxWritePtr+2].Col = col
+	l.VtxBuffer[l._VtxWritePtr+3].Pos = d
+	l.VtxBuffer[l._VtxWritePtr+3].Uv = uv
+	l.VtxBuffer[l._VtxWritePtr+3].Col = col
+	l._VtxWritePtr += 4
+	l._VtxCurrentIdx += 4
+	l._IdxWritePtr += 6
 }
 
-// TODO: Thickness anti-aliased lines cap are missing their AA fringe.
+// AddPolyline TODO: Thickness anti-aliased lines cap are missing their AA fringe.
 // We avoid using the ImVec2 math operators here to reduce cost to a minimum for debug/non-inlined builds.
-func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32, flags ImDrawFlags, thickness float) {
+func (l *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32, flags ImDrawFlags, thickness float) {
 	if points_count < 2 {
 		return
 	}
 
 	var closed = (flags & ImDrawFlags_Closed) != 0
-	var opaque_uv = this._Data.TexUvWhitePixel
+	var opaque_uv = l._Data.TexUvWhitePixel
 	var count int // The number of line segments we need to draw
 	if closed {
 		count = points_count
 	} else {
 		count = points_count - 1
 	}
-	var thick_line = (thickness > this._FringeScale)
+	var thick_line = (thickness > l._FringeScale)
 
-	if this.Flags&ImDrawListFlags_AntiAliasedLines != 0 {
+	if l.Flags&ImDrawListFlags_AntiAliasedLines != 0 {
 		// Anti-aliased stroke
-		var AA_SIZE = this._FringeScale
+		var AA_SIZE = l._FringeScale
 		var col_trans = col &^ IM_COL32_A_MASK
 
 		// Thicknesses <1.0 should behave like thickness 1.0
@@ -505,13 +505,13 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 		var integer_thickness = (int)(thickness)
 		var fractional_thickness = thickness - float(integer_thickness)
 
-		// Do we want to draw this line using a texture?
+		// Do we want to draw l line using a texture?
 		// - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
 		// - If AA_SIZE is not 1.0f we cannot use the texture path.
-		var use_texture = (this.Flags&ImDrawListFlags_AntiAliasedLinesUseTex != 0) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0)
+		var use_texture = (l.Flags&ImDrawListFlags_AntiAliasedLinesUseTex != 0) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0)
 
-		// We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
-		IM_ASSERT(!use_texture || this._Data.Font.ContainerAtlas.Flags&ImFontAtlasFlags_NoBakedLines == 0)
+		// We should never hit l, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
+		IM_ASSERT(!use_texture || l._Data.Font.ContainerAtlas.Flags&ImFontAtlasFlags_NoBakedLines == 0)
 
 		var idx_count int
 		var vtx_count int
@@ -531,7 +531,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			}
 		}
 
-		this.PrimReserve(idx_count, vtx_count)
+		l.PrimReserve(idx_count, vtx_count)
 
 		var num_normals int = 5
 		if use_texture || !thick_line {
@@ -565,7 +565,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// [PATH 1] Texture-based lines (thick or non-thick)
 			// [PATH 2] Non texture-based lines (non-thick)
 
-			// The width of the geometry we need to draw - this is essentially <thickness> pixels for the line itself, plus "one pixel" for AA.
+			// The width of the geometry we need to draw - l is essentially <thickness> pixels for the line itself, plus "one pixel" for AA.
 			// - In the texture-based path, we don't use AA_SIZE here because the +1 is tied to the generated texture
 			//   (see ImFontAtlasBuildRenderLinesTexData() function), and so alternate values won't work without changes to that code.
 			// - In the non texture-based paths, we would allow AA_SIZE to potentially be != 1.0f with a patch (e.g. fringe_scale patch to
@@ -586,7 +586,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
 			// This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
 			// FIXME-OPT: Merge the different loops, possibly remove the temporary buffer.
-			var idx1 = this._VtxCurrentIdx       // Vertex index for start of line segment
+			var idx1 = l._VtxCurrentIdx          // Vertex index for start of line segment
 			for i1 := int(0); i1 < count; i1++ { // i1 is the first point of the line segment
 
 				var i2 int // i2 is the second point of the line segment
@@ -596,14 +596,14 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 
 				var idx2 uint // Vertex index for end of segment
 				if (i1 + 1) == points_count {
-					idx2 = this._VtxCurrentIdx
+					idx2 = l._VtxCurrentIdx
 				} else if use_texture {
 					idx2 = idx1 + 2
 				} else {
 					idx2 = idx1 + 3
 				}
 
-				//printf("i1, i2, idx2 %v %v %v, this._VtxCurrentIdx %v\n ", i1, i2, idx2, this._VtxCurrentIdx)
+				//printf("i1, i2, idx2 %v %v %v, l._VtxCurrentIdx %v\n ", i1, i2, idx2, l._VtxCurrentIdx)
 
 				// Average normals
 				var dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5
@@ -621,28 +621,28 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 
 				if use_texture {
 					// Add indices for two triangles
-					this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(idx2 + 0)
-					this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(idx1 + 0)
-					this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(idx1 + 1) // Right tri
-					this.IdxBuffer[this._IdxWritePtr+3] = (ImDrawIdx)(idx2 + 1)
-					this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx1 + 1)
-					this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx2 + 0) // Left tri
-					this._IdxWritePtr += 6
+					l.IdxBuffer[l._IdxWritePtr+0] = (ImDrawIdx)(idx2 + 0)
+					l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(idx1 + 0)
+					l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(idx1 + 1) // Right tri
+					l.IdxBuffer[l._IdxWritePtr+3] = (ImDrawIdx)(idx2 + 1)
+					l.IdxBuffer[l._IdxWritePtr+4] = (ImDrawIdx)(idx1 + 1)
+					l.IdxBuffer[l._IdxWritePtr+5] = (ImDrawIdx)(idx2 + 0) // Left tri
+					l._IdxWritePtr += 6
 				} else {
 					// Add indexes for four triangles
-					this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(idx2 + 0)
-					this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(idx1 + 0)
-					this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(idx1 + 2) // Right tri 1
-					this.IdxBuffer[this._IdxWritePtr+3] = (ImDrawIdx)(idx1 + 2)
-					this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx2 + 2)
-					this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx2 + 0) // Right tri 2
-					this.IdxBuffer[this._IdxWritePtr+6] = (ImDrawIdx)(idx2 + 1)
-					this.IdxBuffer[this._IdxWritePtr+7] = (ImDrawIdx)(idx1 + 1)
-					this.IdxBuffer[this._IdxWritePtr+8] = (ImDrawIdx)(idx1 + 0) // Left tri 1
-					this.IdxBuffer[this._IdxWritePtr+9] = (ImDrawIdx)(idx1 + 0)
-					this.IdxBuffer[this._IdxWritePtr+10] = (ImDrawIdx)(idx2 + 0)
-					this.IdxBuffer[this._IdxWritePtr+11] = (ImDrawIdx)(idx2 + 1) // Left tri 2
-					this._IdxWritePtr += 12
+					l.IdxBuffer[l._IdxWritePtr+0] = (ImDrawIdx)(idx2 + 0)
+					l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(idx1 + 0)
+					l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(idx1 + 2) // Right tri 1
+					l.IdxBuffer[l._IdxWritePtr+3] = (ImDrawIdx)(idx1 + 2)
+					l.IdxBuffer[l._IdxWritePtr+4] = (ImDrawIdx)(idx2 + 2)
+					l.IdxBuffer[l._IdxWritePtr+5] = (ImDrawIdx)(idx2 + 0) // Right tri 2
+					l.IdxBuffer[l._IdxWritePtr+6] = (ImDrawIdx)(idx2 + 1)
+					l.IdxBuffer[l._IdxWritePtr+7] = (ImDrawIdx)(idx1 + 1)
+					l.IdxBuffer[l._IdxWritePtr+8] = (ImDrawIdx)(idx1 + 0) // Left tri 1
+					l.IdxBuffer[l._IdxWritePtr+9] = (ImDrawIdx)(idx1 + 0)
+					l.IdxBuffer[l._IdxWritePtr+10] = (ImDrawIdx)(idx2 + 0)
+					l.IdxBuffer[l._IdxWritePtr+11] = (ImDrawIdx)(idx2 + 1) // Left tri 2
+					l._IdxWritePtr += 12
 				}
 
 				idx1 = idx2
@@ -651,7 +651,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// Add vertexes for each point on the line
 			if use_texture {
 				// If we're using textures we only need to emit the left/right edge vertices
-				var tex_uvs = this._Data.TexUvLines[integer_thickness]
+				var tex_uvs = l._Data.TexUvLines[integer_thickness]
 				/*if (fractional_thickness != 0.0f) // Currently always zero when use_texture==false!
 				  {
 				      const ImVec4 tex_uvs_1 = _Data.TexUvLines[integer_thickness + 1];
@@ -663,27 +663,27 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				var tex_uv0 = ImVec2{tex_uvs.x, tex_uvs.y}
 				var tex_uv1 = ImVec2{tex_uvs.z, tex_uvs.w}
 				for i := int(0); i < points_count; i++ {
-					this.VtxBuffer[this._VtxWritePtr+0].Pos = temp_points[i*2+0]
-					this.VtxBuffer[this._VtxWritePtr+0].Uv = tex_uv0
-					this.VtxBuffer[this._VtxWritePtr+0].Col = col // Left-side outer edge
-					this.VtxBuffer[this._VtxWritePtr+1].Pos = temp_points[i*2+1]
-					this.VtxBuffer[this._VtxWritePtr+1].Uv = tex_uv1
-					this.VtxBuffer[this._VtxWritePtr+1].Col = col // Right-side outer edge
-					this._VtxWritePtr += 2
+					l.VtxBuffer[l._VtxWritePtr+0].Pos = temp_points[i*2+0]
+					l.VtxBuffer[l._VtxWritePtr+0].Uv = tex_uv0
+					l.VtxBuffer[l._VtxWritePtr+0].Col = col // Left-side outer edge
+					l.VtxBuffer[l._VtxWritePtr+1].Pos = temp_points[i*2+1]
+					l.VtxBuffer[l._VtxWritePtr+1].Uv = tex_uv1
+					l.VtxBuffer[l._VtxWritePtr+1].Col = col // Right-side outer edge
+					l._VtxWritePtr += 2
 				}
 			} else {
 				// If we're not using a texture, we need the center vertex as well
 				for i := int(0); i < points_count; i++ {
-					this.VtxBuffer[this._VtxWritePtr+0].Pos = points[i]
-					this.VtxBuffer[this._VtxWritePtr+0].Uv = opaque_uv
-					this.VtxBuffer[this._VtxWritePtr+0].Col = col // Center of line
-					this.VtxBuffer[this._VtxWritePtr+1].Pos = temp_points[i*2+0]
-					this.VtxBuffer[this._VtxWritePtr+1].Uv = opaque_uv
-					this.VtxBuffer[this._VtxWritePtr+1].Col = col_trans // Left-side outer edge
-					this.VtxBuffer[this._VtxWritePtr+2].Pos = temp_points[i*2+1]
-					this.VtxBuffer[this._VtxWritePtr+2].Uv = opaque_uv
-					this.VtxBuffer[this._VtxWritePtr+2].Col = col_trans // Right-side outer edge
-					this._VtxWritePtr += 3
+					l.VtxBuffer[l._VtxWritePtr+0].Pos = points[i]
+					l.VtxBuffer[l._VtxWritePtr+0].Uv = opaque_uv
+					l.VtxBuffer[l._VtxWritePtr+0].Col = col // Center of line
+					l.VtxBuffer[l._VtxWritePtr+1].Pos = temp_points[i*2+0]
+					l.VtxBuffer[l._VtxWritePtr+1].Uv = opaque_uv
+					l.VtxBuffer[l._VtxWritePtr+1].Col = col_trans // Left-side outer edge
+					l.VtxBuffer[l._VtxWritePtr+2].Pos = temp_points[i*2+1]
+					l.VtxBuffer[l._VtxWritePtr+2].Uv = opaque_uv
+					l.VtxBuffer[l._VtxWritePtr+2].Col = col_trans // Right-side outer edge
+					l._VtxWritePtr += 3
 				}
 			}
 		} else {
@@ -706,7 +706,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
 			// This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
 			// FIXME-OPT: Merge the different loops, possibly remove the temporary buffer.
-			var idx1 = this._VtxCurrentIdx       // Vertex index for start of line segment
+			var idx1 = l._VtxCurrentIdx          // Vertex index for start of line segment
 			for i1 := int(0); i1 < count; i1++ { // i1 is the first point of the line segment
 
 				var i2 int // i2 is the second point of the line segment
@@ -716,7 +716,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 
 				var idx2 uint // Vertex index for end of segment
 				if (i1 + 1) == points_count {
-					idx2 = this._VtxCurrentIdx
+					idx2 = l._VtxCurrentIdx
 				} else {
 					idx2 = (idx1 + 4)
 				}
@@ -742,53 +742,53 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				out_vtx[3].y = points[i2].y - dm_out_y
 
 				// Add indexes
-				this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(idx2 + 1)
-				this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(idx1 + 1)
-				this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(idx1 + 2)
-				this.IdxBuffer[this._IdxWritePtr+3] = (ImDrawIdx)(idx1 + 2)
-				this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(idx2 + 2)
-				this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(idx2 + 1)
-				this.IdxBuffer[this._IdxWritePtr+6] = (ImDrawIdx)(idx2 + 1)
-				this.IdxBuffer[this._IdxWritePtr+7] = (ImDrawIdx)(idx1 + 1)
-				this.IdxBuffer[this._IdxWritePtr+8] = (ImDrawIdx)(idx1 + 0)
-				this.IdxBuffer[this._IdxWritePtr+9] = (ImDrawIdx)(idx1 + 0)
-				this.IdxBuffer[this._IdxWritePtr+10] = (ImDrawIdx)(idx2 + 0)
-				this.IdxBuffer[this._IdxWritePtr+11] = (ImDrawIdx)(idx2 + 1)
-				this.IdxBuffer[this._IdxWritePtr+12] = (ImDrawIdx)(idx2 + 2)
-				this.IdxBuffer[this._IdxWritePtr+13] = (ImDrawIdx)(idx1 + 2)
-				this.IdxBuffer[this._IdxWritePtr+14] = (ImDrawIdx)(idx1 + 3)
-				this.IdxBuffer[this._IdxWritePtr+15] = (ImDrawIdx)(idx1 + 3)
-				this.IdxBuffer[this._IdxWritePtr+16] = (ImDrawIdx)(idx2 + 3)
-				this.IdxBuffer[this._IdxWritePtr+17] = (ImDrawIdx)(idx2 + 2)
-				this._IdxWritePtr += 18
+				l.IdxBuffer[l._IdxWritePtr+0] = (ImDrawIdx)(idx2 + 1)
+				l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(idx1 + 1)
+				l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(idx1 + 2)
+				l.IdxBuffer[l._IdxWritePtr+3] = (ImDrawIdx)(idx1 + 2)
+				l.IdxBuffer[l._IdxWritePtr+4] = (ImDrawIdx)(idx2 + 2)
+				l.IdxBuffer[l._IdxWritePtr+5] = (ImDrawIdx)(idx2 + 1)
+				l.IdxBuffer[l._IdxWritePtr+6] = (ImDrawIdx)(idx2 + 1)
+				l.IdxBuffer[l._IdxWritePtr+7] = (ImDrawIdx)(idx1 + 1)
+				l.IdxBuffer[l._IdxWritePtr+8] = (ImDrawIdx)(idx1 + 0)
+				l.IdxBuffer[l._IdxWritePtr+9] = (ImDrawIdx)(idx1 + 0)
+				l.IdxBuffer[l._IdxWritePtr+10] = (ImDrawIdx)(idx2 + 0)
+				l.IdxBuffer[l._IdxWritePtr+11] = (ImDrawIdx)(idx2 + 1)
+				l.IdxBuffer[l._IdxWritePtr+12] = (ImDrawIdx)(idx2 + 2)
+				l.IdxBuffer[l._IdxWritePtr+13] = (ImDrawIdx)(idx1 + 2)
+				l.IdxBuffer[l._IdxWritePtr+14] = (ImDrawIdx)(idx1 + 3)
+				l.IdxBuffer[l._IdxWritePtr+15] = (ImDrawIdx)(idx1 + 3)
+				l.IdxBuffer[l._IdxWritePtr+16] = (ImDrawIdx)(idx2 + 3)
+				l.IdxBuffer[l._IdxWritePtr+17] = (ImDrawIdx)(idx2 + 2)
+				l._IdxWritePtr += 18
 
 				idx1 = idx2
 			}
 
 			// Add vertices
 			for i := int(0); i < points_count; i++ {
-				this.VtxBuffer[this._VtxWritePtr+0].Pos = temp_points[i*4+0]
-				this.VtxBuffer[this._VtxWritePtr+0].Uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+0].Col = col_trans
-				this.VtxBuffer[this._VtxWritePtr+1].Pos = temp_points[i*4+1]
-				this.VtxBuffer[this._VtxWritePtr+1].Uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+1].Col = col
-				this.VtxBuffer[this._VtxWritePtr+2].Pos = temp_points[i*4+2]
-				this.VtxBuffer[this._VtxWritePtr+2].Uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+2].Col = col
-				this.VtxBuffer[this._VtxWritePtr+3].Pos = temp_points[i*4+3]
-				this.VtxBuffer[this._VtxWritePtr+3].Uv = opaque_uv
-				this.VtxBuffer[this._VtxWritePtr+3].Col = col_trans
-				this._VtxWritePtr += 4
+				l.VtxBuffer[l._VtxWritePtr+0].Pos = temp_points[i*4+0]
+				l.VtxBuffer[l._VtxWritePtr+0].Uv = opaque_uv
+				l.VtxBuffer[l._VtxWritePtr+0].Col = col_trans
+				l.VtxBuffer[l._VtxWritePtr+1].Pos = temp_points[i*4+1]
+				l.VtxBuffer[l._VtxWritePtr+1].Uv = opaque_uv
+				l.VtxBuffer[l._VtxWritePtr+1].Col = col
+				l.VtxBuffer[l._VtxWritePtr+2].Pos = temp_points[i*4+2]
+				l.VtxBuffer[l._VtxWritePtr+2].Uv = opaque_uv
+				l.VtxBuffer[l._VtxWritePtr+2].Col = col
+				l.VtxBuffer[l._VtxWritePtr+3].Pos = temp_points[i*4+3]
+				l.VtxBuffer[l._VtxWritePtr+3].Uv = opaque_uv
+				l.VtxBuffer[l._VtxWritePtr+3].Col = col_trans
+				l._VtxWritePtr += 4
 			}
 		}
-		this._VtxCurrentIdx += uint((ImDrawIdx)(vtx_count))
+		l._VtxCurrentIdx += uint((ImDrawIdx)(vtx_count))
 	} else {
 
 		// [PATH 4] Non texture-based, Non anti-aliased lines
 		var idx_count = count * 6
 		var vtx_count = count * 4 // FIXME-OPT: Not sharing edges
-		this.PrimReserve(idx_count, vtx_count)
+		l.PrimReserve(idx_count, vtx_count)
 
 		for i1 := int(0); i1 < count; i1++ {
 			var i2 int
@@ -805,70 +805,70 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			dx *= (thickness * 0.5)
 			dy *= (thickness * 0.5)
 
-			this.VtxBuffer[this._VtxWritePtr+0].Pos.x = p1.x + dy
-			this.VtxBuffer[this._VtxWritePtr+0].Pos.y = p1.y - dx
-			this.VtxBuffer[this._VtxWritePtr+0].Uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+0].Col = col
-			this.VtxBuffer[this._VtxWritePtr+1].Pos.x = p2.x + dy
-			this.VtxBuffer[this._VtxWritePtr+1].Pos.y = p2.y - dx
-			this.VtxBuffer[this._VtxWritePtr+1].Uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+1].Col = col
-			this.VtxBuffer[this._VtxWritePtr+2].Pos.x = p2.x - dy
-			this.VtxBuffer[this._VtxWritePtr+2].Pos.y = p2.y + dx
-			this.VtxBuffer[this._VtxWritePtr+2].Uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+2].Col = col
-			this.VtxBuffer[this._VtxWritePtr+3].Pos.x = p1.x - dy
-			this.VtxBuffer[this._VtxWritePtr+3].Pos.y = p1.y + dx
-			this.VtxBuffer[this._VtxWritePtr+3].Uv = opaque_uv
-			this.VtxBuffer[this._VtxWritePtr+3].Col = col
-			this._VtxWritePtr += 4
+			l.VtxBuffer[l._VtxWritePtr+0].Pos.x = p1.x + dy
+			l.VtxBuffer[l._VtxWritePtr+0].Pos.y = p1.y - dx
+			l.VtxBuffer[l._VtxWritePtr+0].Uv = opaque_uv
+			l.VtxBuffer[l._VtxWritePtr+0].Col = col
+			l.VtxBuffer[l._VtxWritePtr+1].Pos.x = p2.x + dy
+			l.VtxBuffer[l._VtxWritePtr+1].Pos.y = p2.y - dx
+			l.VtxBuffer[l._VtxWritePtr+1].Uv = opaque_uv
+			l.VtxBuffer[l._VtxWritePtr+1].Col = col
+			l.VtxBuffer[l._VtxWritePtr+2].Pos.x = p2.x - dy
+			l.VtxBuffer[l._VtxWritePtr+2].Pos.y = p2.y + dx
+			l.VtxBuffer[l._VtxWritePtr+2].Uv = opaque_uv
+			l.VtxBuffer[l._VtxWritePtr+2].Col = col
+			l.VtxBuffer[l._VtxWritePtr+3].Pos.x = p1.x - dy
+			l.VtxBuffer[l._VtxWritePtr+3].Pos.y = p1.y + dx
+			l.VtxBuffer[l._VtxWritePtr+3].Uv = opaque_uv
+			l.VtxBuffer[l._VtxWritePtr+3].Col = col
+			l._VtxWritePtr += 4
 
-			this.IdxBuffer[this._IdxWritePtr+0] = (ImDrawIdx)(this._VtxCurrentIdx)
-			this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(this._VtxCurrentIdx + 1)
-			this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(this._VtxCurrentIdx + 2)
-			this.IdxBuffer[this._IdxWritePtr+3] = (ImDrawIdx)(this._VtxCurrentIdx)
-			this.IdxBuffer[this._IdxWritePtr+4] = (ImDrawIdx)(this._VtxCurrentIdx + 2)
-			this.IdxBuffer[this._IdxWritePtr+5] = (ImDrawIdx)(this._VtxCurrentIdx + 3)
-			this._IdxWritePtr += 6
-			this._VtxCurrentIdx += 4
+			l.IdxBuffer[l._IdxWritePtr+0] = (ImDrawIdx)(l._VtxCurrentIdx)
+			l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(l._VtxCurrentIdx + 1)
+			l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(l._VtxCurrentIdx + 2)
+			l.IdxBuffer[l._IdxWritePtr+3] = (ImDrawIdx)(l._VtxCurrentIdx)
+			l.IdxBuffer[l._IdxWritePtr+4] = (ImDrawIdx)(l._VtxCurrentIdx + 2)
+			l.IdxBuffer[l._IdxWritePtr+5] = (ImDrawIdx)(l._VtxCurrentIdx + 3)
+			l._IdxWritePtr += 6
+			l._VtxCurrentIdx += 4
 		}
 	}
 }
 
-func (this *ImDrawList) AddCircleFilled(center ImVec2, radius float, col ImU32, num_segments int) {
+func (l *ImDrawList) AddCircleFilled(center ImVec2, radius float, col ImU32, num_segments int) {
 	if (col&IM_COL32_A_MASK) == 0 || radius <= 0.0 {
 		return
 	}
 
 	if num_segments <= 0 {
 		// Use arc with automatic segment count
-		this.PathArcToFastEx(center, radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0)
-		this._Path = this._Path[:len(this._Path)-1]
+		l.PathArcToFastEx(center, radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0)
+		l._Path = l._Path[:len(l._Path)-1]
 	} else {
 		// Explicit segment count (still clamp to avoid drawing insanely tessellated shapes)
 		num_segments = int(ImClamp(float(num_segments), 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX))
 
 		// Because we are filling a closed shape we remove 1 from the count of segments/points
 		var a_max = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
-		this.PathArcTo(center, radius, 0.0, a_max, num_segments-1)
+		l.PathArcTo(center, radius, 0.0, a_max, num_segments-1)
 	}
 
-	this.PathFillConvex(col)
+	l.PathFillConvex(col)
 }
 
-func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_segments int) {
+func (l *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_segments int) {
 	if radius <= 0.0 {
-		this._Path = append(this._Path, center)
+		l._Path = append(l._Path, center)
 		return
 	}
 
 	if num_segments > 0 {
-		this._PathArcToN(center, radius, a_min, a_max, num_segments)
+		l._PathArcToN(center, radius, a_min, a_max, num_segments)
 		return
 	}
 
 	// Automatic segment count
-	if radius <= this._Data.ArcFastRadiusCutoff {
+	if radius <= l._Data.ArcFastRadiusCutoff {
 		var a_is_reverse = a_max < a_min
 
 		// We are going to use precomputed values for mid samples.
@@ -910,22 +910,22 @@ func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num
 			emit += 1
 		}
 
-		//grow slice if necessary (this._Path.reserve(_Path.Size + (a_mid_samples + 1 + emit)))
-		this._Path = reserveVec2Slice(this._Path, int(len(this._Path))+(a_mid_samples+1+emit))
+		//grow slice if necessary (l._Path.reserve(_Path.Size + (a_mid_samples + 1 + emit)))
+		l._Path = reserveVec2Slice(l._Path, int(len(l._Path))+(a_mid_samples+1+emit))
 
 		if a_emit_start {
-			this._Path = append(this._Path, ImVec2{center.x + ImCos(a_min)*radius, center.y + ImSin(a_min)*radius})
+			l._Path = append(l._Path, ImVec2{center.x + ImCos(a_min)*radius, center.y + ImSin(a_min)*radius})
 		}
 		if a_mid_samples > 0 {
-			this.PathArcToFastEx(center, radius, a_min_sample, a_max_sample, 0)
+			l.PathArcToFastEx(center, radius, a_min_sample, a_max_sample, 0)
 		}
 		if a_emit_end {
-			this._Path = append(this._Path, ImVec2{center.x + ImCos(a_max)*radius, center.y + ImSin(a_max)*radius})
+			l._Path = append(l._Path, ImVec2{center.x + ImCos(a_max)*radius, center.y + ImSin(a_max)*radius})
 		}
 	} else {
 		var arc_length = ImAbs(a_max - a_min)
-		var circle_segment_count = this._CalcCircleAutoSegmentCount(radius)
+		var circle_segment_count = l._CalcCircleAutoSegmentCount(radius)
 		var arc_segment_count = ImMaxInt((int)(ImCeil(float(circle_segment_count)*arc_length/(IM_PI*2.0))), (int)(2.0*IM_PI/arc_length))
-		this._PathArcToN(center, radius, a_min, a_max, arc_segment_count)
+		l._PathArcToN(center, radius, a_min, a_max, arc_segment_count)
 	}
 }

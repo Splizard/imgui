@@ -27,9 +27,9 @@ const (
 	ImGuiWindowFlags_NoNavInputs               ImGuiWindowFlags = 1 << 18 // No gamepad/keyboard navigation within the window
 	ImGuiWindowFlags_NoNavFocus                ImGuiWindowFlags = 1 << 19 // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
 	ImGuiWindowFlags_UnsavedDocument           ImGuiWindowFlags = 1 << 20 // Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
-	ImGuiWindowFlags_NoNav                     ImGuiWindowFlags = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus
-	ImGuiWindowFlags_NoDecoration              ImGuiWindowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse
-	ImGuiWindowFlags_NoInputs                  ImGuiWindowFlags = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus
+	ImGuiWindowFlags_NoNav                                      = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus
+	ImGuiWindowFlags_NoDecoration                               = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse
+	ImGuiWindowFlags_NoInputs                                   = ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus
 
 	// [Internal]
 	ImGuiWindowFlags_NavFlattened ImGuiWindowFlags = 1 << 23 // [BETA] Allow gamepad/keyboard navigation to cross over parent border to this child (only use on child that have no scrolling!)
@@ -86,7 +86,7 @@ const (
 	ImGuiTreeNodeFlags_SpanFullWidth        ImGuiTreeNodeFlags = 1 << 12 // Extend hit box to the left-most and right-most edges (bypass the indented area).
 	ImGuiTreeNodeFlags_NavLeftJumpsBackHere ImGuiTreeNodeFlags = 1 << 13 // (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
 	//ImGuiTreeNodeFlags_NoScrollOnOpen     = 1 << 14// FIXME: TODO: Disable automatic scroll on TreePop() if node got just open and contents is not visible
-	ImGuiTreeNodeFlags_CollapsingHeader ImGuiTreeNodeFlags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_NoAutoOpenOnLog
+	ImGuiTreeNodeFlags_CollapsingHeader = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_NoAutoOpenOnLog
 )
 
 // Flags for OpenPopup*(), BeginPopupContext*(), IsPopupOpen() functions.
@@ -108,7 +108,7 @@ const (
 	ImGuiPopupFlags_NoOpenOverItems         ImGuiPopupFlags = 1 << 6 // For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space
 	ImGuiPopupFlags_AnyPopupId              ImGuiPopupFlags = 1 << 7 // For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
 	ImGuiPopupFlags_AnyPopupLevel           ImGuiPopupFlags = 1 << 8 // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
-	ImGuiPopupFlags_AnyPopup                ImGuiPopupFlags = ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel
+	ImGuiPopupFlags_AnyPopup                                = ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel
 )
 
 // Flags for ImGui::Selectable()
@@ -131,7 +131,7 @@ const (
 	ImGuiComboFlags_HeightLargest  ImGuiComboFlags = 1 << 4 // As many fitting items as possible
 	ImGuiComboFlags_NoArrowButton  ImGuiComboFlags = 1 << 5 // Display on the preview box without the square arrow button
 	ImGuiComboFlags_NoPreview      ImGuiComboFlags = 1 << 6 // Display only a square arrow button
-	ImGuiComboFlags_HeightMask_    ImGuiComboFlags = ImGuiComboFlags_HeightSmall | ImGuiComboFlags_HeightRegular | ImGuiComboFlags_HeightLarge | ImGuiComboFlags_HeightLargest
+	ImGuiComboFlags_HeightMask_                    = ImGuiComboFlags_HeightSmall | ImGuiComboFlags_HeightRegular | ImGuiComboFlags_HeightLarge | ImGuiComboFlags_HeightLargest
 )
 
 // Flags for ImGui::BeginTabBar()
@@ -145,8 +145,8 @@ const (
 	ImGuiTabBarFlags_NoTooltip                    ImGuiTabBarFlags = 1 << 5 // Disable tooltips when hovering a tab
 	ImGuiTabBarFlags_FittingPolicyResizeDown      ImGuiTabBarFlags = 1 << 6 // Resize tabs when they don't fit
 	ImGuiTabBarFlags_FittingPolicyScroll          ImGuiTabBarFlags = 1 << 7 // Add scroll buttons when tabs don't fit
-	ImGuiTabBarFlags_FittingPolicyMask_           ImGuiTabBarFlags = ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_FittingPolicyScroll
-	ImGuiTabBarFlags_FittingPolicyDefault_        ImGuiTabBarFlags = ImGuiTabBarFlags_FittingPolicyResizeDown
+	ImGuiTabBarFlags_FittingPolicyMask_                            = ImGuiTabBarFlags_FittingPolicyResizeDown | ImGuiTabBarFlags_FittingPolicyScroll
+	ImGuiTabBarFlags_FittingPolicyDefault_                         = ImGuiTabBarFlags_FittingPolicyResizeDown
 )
 
 // Flags for ImGui::BeginTabItem()
@@ -201,11 +201,11 @@ const (
 	ImGuiTableFlags_BordersOuterH              ImGuiTableFlags = 1 << 8                                                        // Draw horizontal borders at the top and bottom.
 	ImGuiTableFlags_BordersInnerV              ImGuiTableFlags = 1 << 9                                                        // Draw vertical borders between columns.
 	ImGuiTableFlags_BordersOuterV              ImGuiTableFlags = 1 << 10                                                       // Draw vertical borders on the left and right sides.
-	ImGuiTableFlags_BordersH                   ImGuiTableFlags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH // Draw horizontal borders.
-	ImGuiTableFlags_BordersV                   ImGuiTableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuterV // Draw vertical borders.
-	ImGuiTableFlags_BordersInner               ImGuiTableFlags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH // Draw inner borders.
-	ImGuiTableFlags_BordersOuter               ImGuiTableFlags = ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersOuterH // Draw outer borders.
-	ImGuiTableFlags_Borders                    ImGuiTableFlags = ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter   // Draw all borders.
+	ImGuiTableFlags_BordersH                                   = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH // Draw horizontal borders.
+	ImGuiTableFlags_BordersV                                   = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersOuterV // Draw vertical borders.
+	ImGuiTableFlags_BordersInner                               = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH // Draw inner borders.
+	ImGuiTableFlags_BordersOuter                               = ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_BordersOuterH // Draw outer borders.
+	ImGuiTableFlags_Borders                                    = ImGuiTableFlags_BordersInner | ImGuiTableFlags_BordersOuter   // Draw all borders.
 	ImGuiTableFlags_NoBordersInBody            ImGuiTableFlags = 1 << 11                                                       // [ALPHA] Disable vertical borders in columns Body (borders will always appears in Headers). -> May move to style
 	ImGuiTableFlags_NoBordersInBodyUntilResize ImGuiTableFlags = 1 << 12                                                       // [ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers). -> May move to style
 	// Sizing Policy (read above for defaults)
@@ -232,7 +232,7 @@ const (
 	ImGuiTableFlags_SortTristate ImGuiTableFlags = 1 << 27 // Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
 
 	// [Internal] Combinations and masks
-	ImGuiTableFlags_SizingMask_ ImGuiTableFlags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_SizingStretchSame
+	ImGuiTableFlags_SizingMask_ = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_SizingStretchSame
 )
 
 // Flags for ImGui::TableSetupColumn()
@@ -266,9 +266,9 @@ const (
 	ImGuiTableColumnFlags_IsHovered ImGuiTableColumnFlags = 1 << 27 // Status: is hovered by mouse
 
 	// [Internal] Combinations and masks
-	ImGuiTableColumnFlags_WidthMask_      ImGuiTableColumnFlags = ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_WidthFixed
-	ImGuiTableColumnFlags_IndentMask_     ImGuiTableColumnFlags = ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_IndentDisable
-	ImGuiTableColumnFlags_StatusMask_     ImGuiTableColumnFlags = ImGuiTableColumnFlags_IsEnabled | ImGuiTableColumnFlags_IsVisible | ImGuiTableColumnFlags_IsSorted | ImGuiTableColumnFlags_IsHovered
+	ImGuiTableColumnFlags_WidthMask_                            = ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_WidthFixed
+	ImGuiTableColumnFlags_IndentMask_                           = ImGuiTableColumnFlags_IndentEnable | ImGuiTableColumnFlags_IndentDisable
+	ImGuiTableColumnFlags_StatusMask_                           = ImGuiTableColumnFlags_IsEnabled | ImGuiTableColumnFlags_IsVisible | ImGuiTableColumnFlags_IsSorted | ImGuiTableColumnFlags_IsHovered
 	ImGuiTableColumnFlags_NoDirectResize_ ImGuiTableColumnFlags = 1 << 30 // [Internal] Disable user resizing this column directly (it may however we resized indirectly from its left edge)
 )
 
@@ -301,7 +301,7 @@ const (
 	ImGuiFocusedFlags_ChildWindows        ImGuiFocusedFlags = 1 << 0 // IsWindowFocused(): Return true if any children of the window is focused
 	ImGuiFocusedFlags_RootWindow          ImGuiFocusedFlags = 1 << 1 // IsWindowFocused(): Test from root window (top most parent of the current hierarchy)
 	ImGuiFocusedFlags_AnyWindow           ImGuiFocusedFlags = 1 << 2 // IsWindowFocused(): Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.WantCaptureMouse' instead! Please read the FAQ!
-	ImGuiFocusedFlags_RootAndChildWindows ImGuiFocusedFlags = ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows
+	ImGuiFocusedFlags_RootAndChildWindows                   = ImGuiFocusedFlags_RootWindow | ImGuiFocusedFlags_ChildWindows
 )
 
 // Flags for ImGui::IsItemHovered(), ImGui::IsWindowHovered()
@@ -317,8 +317,8 @@ const (
 	ImGuiHoveredFlags_AllowWhenBlockedByActiveItem ImGuiHoveredFlags = 1 << 5 // Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.
 	ImGuiHoveredFlags_AllowWhenOverlapped          ImGuiHoveredFlags = 1 << 6 // Return true even if the position is obstructed or overlapped by another window
 	ImGuiHoveredFlags_AllowWhenDisabled            ImGuiHoveredFlags = 1 << 7 // Return true even if the item is disabled
-	ImGuiHoveredFlags_RectOnly                     ImGuiHoveredFlags = ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped
-	ImGuiHoveredFlags_RootAndChildWindows          ImGuiHoveredFlags = ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows
+	ImGuiHoveredFlags_RectOnly                                       = ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped
+	ImGuiHoveredFlags_RootAndChildWindows                            = ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows
 )
 
 // Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
@@ -335,7 +335,7 @@ const (
 	ImGuiDragDropFlags_AcceptBeforeDelivery    ImGuiDragDropFlags = 1 << 10                                                                              // AcceptDragDropPayload() will returns true even before the mouse button is released. You can then call IsDelivery() to test if the payload needs to be delivered.
 	ImGuiDragDropFlags_AcceptNoDrawDefaultRect ImGuiDragDropFlags = 1 << 11                                                                              // Do not draw the default highlight rectangle when hovering over target.
 	ImGuiDragDropFlags_AcceptNoPreviewTooltip  ImGuiDragDropFlags = 1 << 12                                                                              // Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.
-	ImGuiDragDropFlags_AcceptPeekOnly          ImGuiDragDropFlags = ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect // For peeking ahead and inspecting the payload before delivery.
+	ImGuiDragDropFlags_AcceptPeekOnly                             = ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect // For peeking ahead and inspecting the payload before delivery.
 )
 
 // Standard Drag and Drop payload types. You can define you own payload types using short strings. Types starting with '_' are defined by Dear ImGui.
@@ -534,8 +534,8 @@ const (
 	ImGuiButtonFlags_MouseButtonMiddle ImGuiButtonFlags = 1 << 2 // React on center mouse button
 
 	// [Internal]
-	ImGuiButtonFlags_MouseButtonMask_    ImGuiButtonFlags = ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle
-	ImGuiButtonFlags_MouseButtonDefault_ ImGuiButtonFlags = ImGuiButtonFlags_MouseButtonLeft
+	ImGuiButtonFlags_MouseButtonMask_    = ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle
+	ImGuiButtonFlags_MouseButtonDefault_ = ImGuiButtonFlags_MouseButtonLeft
 )
 
 // Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
@@ -569,13 +569,13 @@ const (
 
 	// Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to
 	// override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.
-	ImGuiColorEditFlags_DefaultOptions_ ImGuiColorEditFlags = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_PickerHueBar
+	ImGuiColorEditFlags_DefaultOptions_ = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_PickerHueBar
 
 	// [Internal] Masks
-	ImGuiColorEditFlags_DisplayMask_  ImGuiColorEditFlags = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex
-	ImGuiColorEditFlags_DataTypeMask_ ImGuiColorEditFlags = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_Float
-	ImGuiColorEditFlags_PickerMask_   ImGuiColorEditFlags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_PickerHueBar
-	ImGuiColorEditFlags_InputMask_    ImGuiColorEditFlags = ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_InputHSV
+	ImGuiColorEditFlags_DisplayMask_  = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex
+	ImGuiColorEditFlags_DataTypeMask_ = ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_Float
+	ImGuiColorEditFlags_PickerMask_   = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_PickerHueBar
+	ImGuiColorEditFlags_InputMask_    = ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_InputHSV
 )
 
 // Flags for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.
@@ -635,13 +635,13 @@ const (
 	ImDrawFlags_RoundCornersBottomLeft  ImDrawFlags = 1 << 6 // AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners). Was 0x04.
 	ImDrawFlags_RoundCornersBottomRight ImDrawFlags = 1 << 7 // AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners). Wax 0x08.
 	ImDrawFlags_RoundCornersNone        ImDrawFlags = 1 << 8 // AddRect(), AddRectFilled(), PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!
-	ImDrawFlags_RoundCornersTop         ImDrawFlags = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight
-	ImDrawFlags_RoundCornersBottom      ImDrawFlags = ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight
-	ImDrawFlags_RoundCornersLeft        ImDrawFlags = ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersTopLeft
-	ImDrawFlags_RoundCornersRight       ImDrawFlags = ImDrawFlags_RoundCornersBottomRight | ImDrawFlags_RoundCornersTopRight
-	ImDrawFlags_RoundCornersAll         ImDrawFlags = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight
-	ImDrawFlags_RoundCornersDefault_    ImDrawFlags = ImDrawFlags_RoundCornersAll // Default to ALL corners if none of the _RoundCornersXX flags are specified.
-	ImDrawFlags_RoundCornersMask_       ImDrawFlags = ImDrawFlags_RoundCornersAll | ImDrawFlags_RoundCornersNone
+	ImDrawFlags_RoundCornersTop                     = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight
+	ImDrawFlags_RoundCornersBottom                  = ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight
+	ImDrawFlags_RoundCornersLeft                    = ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersTopLeft
+	ImDrawFlags_RoundCornersRight                   = ImDrawFlags_RoundCornersBottomRight | ImDrawFlags_RoundCornersTopRight
+	ImDrawFlags_RoundCornersAll                     = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight
+	ImDrawFlags_RoundCornersDefault_                = ImDrawFlags_RoundCornersAll // Default to ALL corners if none of the _RoundCornersXX flags are specified.
+	ImDrawFlags_RoundCornersMask_                   = ImDrawFlags_RoundCornersAll | ImDrawFlags_RoundCornersNone
 )
 
 // Flags for ImDrawList instance. Those are set automatically by ImGui:: functions from ImGuiIO settings, and generally not manipulated directly.
@@ -701,7 +701,7 @@ const (
 	ImGuiItemStatusFlags_HoveredWindow    ImGuiItemStatusFlags = 1 << 7 // Override the HoveredWindow test to allow cross-window hover testing.
 	ImGuiItemStatusFlags_FocusedByCode    ImGuiItemStatusFlags = 1 << 8 // Set when the Focusable item just got focused from code.
 	ImGuiItemStatusFlags_FocusedByTabbing ImGuiItemStatusFlags = 1 << 9 // Set when the Focusable item just got focused by Tabbing.
-	ImGuiItemStatusFlags_Focused          ImGuiItemStatusFlags = ImGuiItemStatusFlags_FocusedByCode | ImGuiItemStatusFlags_FocusedByTabbing
+	ImGuiItemStatusFlags_Focused                               = ImGuiItemStatusFlags_FocusedByCode | ImGuiItemStatusFlags_FocusedByTabbing
 )
 
 // Extend ImGuiInputTextFlags_
@@ -730,8 +730,8 @@ const (
 	ImGuiButtonFlags_NoHoldingActiveId ImGuiButtonFlags = 1 << 17 // don't set ActiveId while holding the mouse (ImGuiButtonFlags_PressedOnClick only)
 	ImGuiButtonFlags_NoNavFocus        ImGuiButtonFlags = 1 << 18 // don't override navigation focus when activated
 	ImGuiButtonFlags_NoHoveredOnFocus  ImGuiButtonFlags = 1 << 19 // don't report as hovered when nav focus is on this item
-	ImGuiButtonFlags_PressedOnMask_    ImGuiButtonFlags = ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnClickRelease | ImGuiButtonFlags_PressedOnClickReleaseAnywhere | ImGuiButtonFlags_PressedOnRelease | ImGuiButtonFlags_PressedOnDoubleClick | ImGuiButtonFlags_PressedOnDragDropHold
-	ImGuiButtonFlags_PressedOnDefault_ ImGuiButtonFlags = ImGuiButtonFlags_PressedOnClickRelease
+	ImGuiButtonFlags_PressedOnMask_                     = ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnClickRelease | ImGuiButtonFlags_PressedOnClickReleaseAnywhere | ImGuiButtonFlags_PressedOnRelease | ImGuiButtonFlags_PressedOnDoubleClick | ImGuiButtonFlags_PressedOnDragDropHold
+	ImGuiButtonFlags_PressedOnDefault_                  = ImGuiButtonFlags_PressedOnClickRelease
 )
 
 // Extend ImGuiComboFlags_
@@ -847,7 +847,7 @@ const (
 
 // Extend ImGuiDataType_
 const (
-	ImGuiDataType_String ImGuiDataType = iota + ImGuiDataType_COUNT + 1
+	ImGuiDataType_String = iota + ImGuiDataType_COUNT + 1
 	ImGuiDataType_Pointer
 	ImGuiDataType_ID
 )
@@ -946,7 +946,7 @@ const (
 
 // Extend ImGuiTabItemFlags_
 const (
-	ImGuiTabItemFlags_SectionMask_  ImGuiTabItemFlags = ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_Trailing
+	ImGuiTabItemFlags_SectionMask_                    = ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_Trailing
 	ImGuiTabItemFlags_NoCloseButton ImGuiTabItemFlags = 1 << 20 // Track whether p_open was set or not (we'll need this info on the next frame to recompute ContentWidth during layout)
 	ImGuiTabItemFlags_Button        ImGuiTabItemFlags = 1 << 21 // Used by TabItemButton, change the tab item behavior to mimic a button
 )

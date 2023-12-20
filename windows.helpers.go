@@ -8,11 +8,11 @@ import "unsafe"
 // - ImGui::NewFrame() has never been called, which is illegal.
 // - You are calling ImGui functions after ImGui::EndFrame()/ImGui::Render() and before the next ImGui::NewFrame(), which is also illegal.
 func GetCurrentWindowRead() *ImGuiWindow {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return g.CurrentWindow
 }
 func GetCurrentWindow() *ImGuiWindow {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	g.CurrentWindow.WriteAccessed = true
 	return g.CurrentWindow
 }
@@ -38,8 +38,8 @@ func CalcWindowNextAutoFitSize(window *ImGuiWindow) ImVec2 {
 	var size_contents_current ImVec2
 	var size_contents_ideal ImVec2
 	CalcWindowContentSizes(window, &size_contents_current, &size_contents_ideal)
-	var size_auto_fit ImVec2 = CalcWindowAutoFitSize(window, &size_contents_ideal)
-	var size_final ImVec2 = CalcWindowSizeAfterConstraint(window, &size_auto_fit)
+	var size_auto_fit = CalcWindowAutoFitSize(window, &size_contents_ideal)
+	var size_final = CalcWindowSizeAfterConstraint(window, &size_auto_fit)
 	return size_final
 }
 
@@ -59,7 +59,7 @@ func IsWindowChildOf(window *ImGuiWindow, potential_parent *ImGuiWindow) bool {
 func IsWindowAbove(potential_above *ImGuiWindow, potential_below *ImGuiWindow) bool {
 	var g = GImGui
 	for i := len(g.Windows) - 1; i >= 0; i-- {
-		var candidate_window *ImGuiWindow = g.Windows[i]
+		var candidate_window = g.Windows[i]
 		if candidate_window == potential_above {
 			return true
 		}
@@ -94,7 +94,7 @@ func BringWindowToDisplayBack(window *ImGuiWindow) {
 // 0..3: corners (Lower-right, Lower-left, Unused, Unused)
 func GetWindowResizeCornerID(window *ImGuiWindow, n int) ImGuiID {
 	IM_ASSERT(n >= 0 && n < 4)
-	var id ImGuiID = window.ID
+	var id = window.ID
 	id = ImHashStr("#RESIZE", 0, id)
 	id = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), id)
 	return id
@@ -103,8 +103,8 @@ func GetWindowResizeCornerID(window *ImGuiWindow, n int) ImGuiID {
 // Borders (Left, Right, Up, Down)
 func GetWindowResizeBorderID(window *ImGuiWindow, dir ImGuiDir) ImGuiID {
 	IM_ASSERT(dir >= 0 && dir < 4)
-	var n int = (int)(dir) + 4
-	var id ImGuiID = window.ID
+	var n = (int)(dir) + 4
+	var id = window.ID
 	id = ImHashStr("#RESIZE", 0, id)
 	id = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), id)
 	return id

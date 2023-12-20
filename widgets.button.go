@@ -16,9 +16,9 @@ func Button(label string) bool {
 // button with FramePadding=(0,0) to easily embed within text
 func SmallButton(label string) bool {
 	var g = GImGui
-	var backup_padding_y float = g.Style.FramePadding.y
+	var backup_padding_y = g.Style.FramePadding.y
 	g.Style.FramePadding.y = 0.0
-	var pressed bool = ButtonEx(label, &ImVec2{}, ImGuiButtonFlags_AlignTextBaseLine)
+	var pressed = ButtonEx(label, &ImVec2{}, ImGuiButtonFlags_AlignTextBaseLine)
 	g.Style.FramePadding.y = backup_padding_y
 	return pressed
 }
@@ -34,11 +34,11 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, 0)
 
-	var pos ImVec2 = window.DC.CursorPos
+	var pos = window.DC.CursorPos
 	if (flags&ImGuiButtonFlags_AlignTextBaseLine) != 0 && style.FramePadding.y < window.DC.CurrLineTextBaseOffset { // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
 		pos.y += window.DC.CurrLineTextBaseOffset - style.FramePadding.y
 	}
-	var size ImVec2 = CalcItemSize(*size_arg, label_size.x+style.FramePadding.x*2.0, label_size.y+style.FramePadding.y*2.0)
+	var size = CalcItemSize(*size_arg, label_size.x+style.FramePadding.x*2.0, label_size.y+style.FramePadding.y*2.0)
 
 	var bb = ImRect{pos, pos.Add(size)}
 	ItemSizeVec(&size, style.FramePadding.y)
@@ -51,7 +51,7 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 	}
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, flags)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, flags)
 
 	// Render
 	var col ImU32
@@ -153,14 +153,14 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 		flags |= ImGuiButtonFlags_PressedOnDefault_
 	}
 
-	var backup_hovered_window *ImGuiWindow = g.HoveredWindow
-	var flatten_hovered_children bool = (flags&ImGuiButtonFlags_FlattenChildren != 0) && g.HoveredWindow != nil && g.HoveredWindow.RootWindow == window
+	var backup_hovered_window = g.HoveredWindow
+	var flatten_hovered_children = (flags&ImGuiButtonFlags_FlattenChildren != 0) && g.HoveredWindow != nil && g.HoveredWindow.RootWindow == window
 	if flatten_hovered_children {
 		g.HoveredWindow = window
 	}
 
-	var pressed bool = false
-	var hovered bool = ItemHoverable(bb, id)
+	var pressed = false
+	var hovered = ItemHoverable(bb, id)
 
 	// Drag source doesn't report as hovered
 	if hovered && g.DragDropActive && g.DragDropPayload.SourceId == id && g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoDisableHover == 0 {
@@ -232,7 +232,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 			}
 			if (flags&ImGuiButtonFlags_PressedOnRelease != 0) && mouse_button_released != -1 {
 				// Repeat mode trumps on release behavior
-				var has_repeated_at_least_once bool = (flags&ImGuiButtonFlags_Repeat != 0) && g.IO.MouseDownDurationPrev[mouse_button_released] >= g.IO.KeyRepeatDelay
+				var has_repeated_at_least_once = (flags&ImGuiButtonFlags_Repeat != 0) && g.IO.MouseDownDurationPrev[mouse_button_released] >= g.IO.KeyRepeatDelay
 				if !has_repeated_at_least_once {
 					pressed = true
 				}
@@ -261,7 +261,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 		}
 	}
 	if g.NavActivateDownId == id {
-		var nav_activated_by_code bool = (g.NavActivateId == id)
+		var nav_activated_by_code = (g.NavActivateId == id)
 		var nav_activated_by_inputs bool
 
 		if (flags & ImGuiButtonFlags_Repeat) != 0 {
@@ -284,7 +284,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 	}
 
 	// Process while held
-	var held bool = false
+	var held = false
 	if g.ActiveId == id {
 		if g.ActiveIdSource == ImGuiInputSource_Mouse {
 			if g.ActiveIdIsJustActivated {
@@ -296,12 +296,12 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 			if g.IO.MouseDown[mouse_button] {
 				held = true
 			} else {
-				var release_in bool = hovered && (flags&ImGuiButtonFlags_PressedOnClickRelease) != 0
-				var release_anywhere bool = (flags & ImGuiButtonFlags_PressedOnClickReleaseAnywhere) != 0
+				var release_in = hovered && (flags&ImGuiButtonFlags_PressedOnClickRelease) != 0
+				var release_anywhere = (flags & ImGuiButtonFlags_PressedOnClickReleaseAnywhere) != 0
 				if (release_in || release_anywhere) && !g.DragDropActive {
 					// Report as pressed when releasing the mouse (this is the most common path)
-					var is_double_click_release bool = (flags&ImGuiButtonFlags_PressedOnDoubleClick != 0) && g.IO.MouseDownWasDoubleClick[mouse_button]
-					var is_repeating_already bool = (flags&ImGuiButtonFlags_Repeat != 0) && g.IO.MouseDownDurationPrev[mouse_button] >= g.IO.KeyRepeatDelay // Repeat mode trumps <on release>
+					var is_double_click_release = (flags&ImGuiButtonFlags_PressedOnDoubleClick != 0) && g.IO.MouseDownWasDoubleClick[mouse_button]
+					var is_repeating_already = (flags&ImGuiButtonFlags_Repeat != 0) && g.IO.MouseDownDurationPrev[mouse_button] >= g.IO.KeyRepeatDelay // Repeat mode trumps <on release>
 					if !is_double_click_release && !is_repeating_already {
 						pressed = true
 					}
@@ -339,18 +339,18 @@ func CollapseButton(id ImGuiID, pos *ImVec2) bool {
 	var bb = ImRect{*pos, pos.Add(ImVec2{g.FontSize, g.FontSize}).Add(g.Style.FramePadding.Scale(2.0))}
 	ItemAdd(&bb, id, nil, 0)
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_None)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_None)
 
 	// Render
-	var bg_col ImU32 = GetColorU32FromID(ImGuiCol_Button, 1)
+	var bg_col = GetColorU32FromID(ImGuiCol_Button, 1)
 	if held && hovered {
 		bg_col = GetColorU32FromID(ImGuiCol_ButtonActive, 1)
 	} else if hovered {
 		bg_col = GetColorU32FromID(ImGuiCol_ButtonHovered, 1)
 	}
 
-	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
-	var center ImVec2 = bb.GetCenter()
+	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
+	var center = bb.GetCenter()
 	if hovered || held {
 		window.DrawList.AddCircleFilled(center /*+ ImVec2(0.0f, -0.5f)*/, g.FontSize*0.5+1.0, bg_col, 12)
 	}
@@ -382,8 +382,8 @@ func InvisibleButton(str_id string, size_arg ImVec2, flags ImGuiButtonFlags) boo
 	// Cannot use zero-size for InvisibleButton(). Unlike Button() there is not way to fallback using the label size.
 	IM_ASSERT(size_arg.x != 0.0 && size_arg.y != 0.0)
 
-	var id ImGuiID = window.GetIDs(str_id)
-	var size ImVec2 = CalcItemSize(size_arg, 0.0, 0.0)
+	var id = window.GetIDs(str_id)
+	var size = CalcItemSize(size_arg, 0.0, 0.0)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)}
 	ItemSizeVec(&size, 0)
 	if !ItemAdd(&bb, id, nil, 0) {
@@ -391,14 +391,14 @@ func InvisibleButton(str_id string, size_arg ImVec2, flags ImGuiButtonFlags) boo
 	}
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, flags)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, flags)
 
 	return pressed
 }
 
 // square button with an arrow shape
 func ArrowButton(str_id string, dir ImGuiDir) bool {
-	var sz float = GetFrameHeight()
+	var sz = GetFrameHeight()
 	return ArrowButtonEx(str_id, dir, ImVec2{sz, sz}, ImGuiButtonFlags_None)
 }
 
@@ -411,11 +411,11 @@ func RadioButtonBool(label string, active bool) bool {
 
 	var g = GImGui
 	var style = g.Style
-	var id ImGuiID = window.GetIDs(label)
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var id = window.GetIDs(label)
+	var label_size = CalcTextSize(label, true, -1)
 
-	var square_sz float = GetFrameHeight()
-	var pos ImVec2 = window.DC.CursorPos
+	var square_sz = GetFrameHeight()
+	var pos = window.DC.CursorPos
 	var check_bb = ImRect{pos, pos.Add(ImVec2{square_sz, square_sz})}
 
 	var padding float
@@ -429,13 +429,13 @@ func RadioButtonBool(label string, active bool) bool {
 		return false
 	}
 
-	var center ImVec2 = check_bb.GetCenter()
+	var center = check_bb.GetCenter()
 	center.x = IM_ROUND(center.x)
 	center.y = IM_ROUND(center.y)
-	var radius float = (square_sz - 1.0) * 0.5
+	var radius = (square_sz - 1.0) * 0.5
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&total_bb, id, &hovered, &held, 0)
+	var pressed = ButtonBehavior(&total_bb, id, &hovered, &held, 0)
 	if pressed {
 		MarkItemEdited(id)
 	}
@@ -451,7 +451,7 @@ func RadioButtonBool(label string, active bool) bool {
 
 	window.DrawList.AddCircleFilled(center, radius, GetColorU32FromID(c, 1), 16)
 	if active {
-		var pad float = ImMax(1.0, IM_FLOOR(square_sz/6.0))
+		var pad = ImMax(1.0, IM_FLOOR(square_sz/6.0))
 		window.DrawList.AddCircleFilled(center, radius-pad, GetColorU32FromID(ImGuiCol_CheckMark, 1), 16)
 	}
 
@@ -460,7 +460,7 @@ func RadioButtonBool(label string, active bool) bool {
 		window.DrawList.AddCircle(center, radius, GetColorU32FromID(ImGuiCol_Border, 1), 16, style.FrameBorderSize)
 	}
 
-	var label_pos ImVec2 = ImVec2{check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y}
+	var label_pos = ImVec2{check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y}
 	if g.LogEnabled {
 		s := "( )"
 		if active {
@@ -493,8 +493,8 @@ func CloseButton(id ImGuiID, pos *ImVec2) bool {
 	// Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
 	// This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
 	var bb = ImRect{*pos, pos.Add(ImVec2{g.FontSize, g.FontSize}).Add(g.Style.FramePadding.Scale(2.0))}
-	var bb_interact ImRect = bb
-	var area_to_visible_ratio float = window.OuterRectClipped.GetArea() / bb.GetArea()
+	var bb_interact = bb
+	var area_to_visible_ratio = window.OuterRectClipped.GetArea() / bb.GetArea()
 	if area_to_visible_ratio < 1.5 {
 		expansion := bb_interact.GetSize().Scale(-0.25)
 		bb_interact.ExpandVec(*ImFloorVec(&expansion))
@@ -502,10 +502,10 @@ func CloseButton(id ImGuiID, pos *ImVec2) bool {
 
 	// Tweak 2: We intentionally allow interaction when clipped so that a mechanical Alt,Right,Activate sequence can always close a window.
 	// (this isn't the regular behavior of buttons, but it doesn't affect the user much because navigation tends to keep items visible).
-	var is_clipped bool = !ItemAdd(&bb_interact, id, nil, 0)
+	var is_clipped = !ItemAdd(&bb_interact, id, nil, 0)
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb_interact, id, &hovered, &held, 0)
+	var pressed = ButtonBehavior(&bb_interact, id, &hovered, &held, 0)
 	if is_clipped {
 		return pressed
 	}
@@ -517,14 +517,14 @@ func CloseButton(id ImGuiID, pos *ImVec2) bool {
 		c = ImGuiCol_ButtonActive
 	}
 
-	var col ImU32 = GetColorU32FromID(c, 1)
+	var col = GetColorU32FromID(c, 1)
 	var center = bb.GetCenter()
 	if hovered {
 		window.DrawList.AddCircleFilled(center, ImMax(2.0, g.FontSize*0.5+1.0), col, 12)
 	}
 
-	var cross_extent float = g.FontSize*0.5*0.7071 - 1.0
-	var cross_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
+	var cross_extent = g.FontSize*0.5*0.7071 - 1.0
+	var cross_col = GetColorU32FromID(ImGuiCol_Text, 1)
 	center = center.Sub(ImVec2{0.5, 0.5})
 	a, b := center.Add(ImVec2{+cross_extent, +cross_extent}), center.Add(ImVec2{-cross_extent, -cross_extent})
 	window.DrawList.AddLine(&a, &b, cross_col, 1.0)
@@ -541,9 +541,9 @@ func ArrowButtonEx(str_id string, dir ImGuiDir, size ImVec2, flags ImGuiButtonFl
 	}
 
 	var g = GImGui
-	var id ImGuiID = window.GetIDs(str_id)
+	var id = window.GetIDs(str_id)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)}
-	var default_size float = GetFrameHeight()
+	var default_size = GetFrameHeight()
 
 	var baseline float = -1
 	if size.y >= default_size {
@@ -560,7 +560,7 @@ func ArrowButtonEx(str_id string, dir ImGuiDir, size ImVec2, flags ImGuiButtonFl
 	}
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, flags)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, flags)
 
 	var c = ImGuiCol_Button
 	if held && hovered {
@@ -570,8 +570,8 @@ func ArrowButtonEx(str_id string, dir ImGuiDir, size ImVec2, flags ImGuiButtonFl
 	}
 
 	// Render
-	var bg_col ImU32 = GetColorU32FromID(c, 1.0)
-	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
+	var bg_col = GetColorU32FromID(c, 1.0)
+	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
 	RenderNavHighlight(&bb, id, 0)
 	RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding)
 	RenderArrow(window.DrawList, bb.Min.Add(ImVec2{ImMax(0.0, (size.x-g.FontSize)*0.5), ImMax(0.0, (size.y-g.FontSize)*0.5)}), text_col, dir, 1)

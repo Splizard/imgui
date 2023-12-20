@@ -50,10 +50,10 @@ func EndTable() {
 		TableUpdateLayout(table)
 	}
 
-	var flags ImGuiTableFlags = table.Flags
-	var inner_window *ImGuiWindow = table.InnerWindow
-	var outer_window *ImGuiWindow = table.OuterWindow
-	var temp_data *ImGuiTableTempData = table.TempData
+	var flags = table.Flags
+	var inner_window = table.InnerWindow
+	var outer_window = table.OuterWindow
+	var temp_data = table.TempData
 	IM_ASSERT(inner_window == g.CurrentWindow)
 	IM_ASSERT(outer_window == inner_window || outer_window == inner_window.ParentWindow)
 
@@ -72,7 +72,7 @@ func EndTable() {
 	inner_window.DC.PrevLineSize = temp_data.HostBackupPrevLineSize
 	inner_window.DC.CurrLineSize = temp_data.HostBackupCurrLineSize
 	inner_window.DC.CursorMaxPos = temp_data.HostBackupCursorMaxPos
-	var inner_content_max_y float = table.RowPosY2
+	var inner_content_max_y = table.RowPosY2
 	IM_ASSERT(table.RowPosY2 == inner_window.DC.CursorPos.y)
 	if inner_window != outer_window {
 		inner_window.DC.CursorMaxPos.y = inner_content_max_y
@@ -91,7 +91,7 @@ func EndTable() {
 		if table.Flags&ImGuiTableFlags_BordersOuterV != 0 {
 			outer_padding_for_border = TABLE_BORDER_SIZE
 		}
-		var max_pos_x float = table.InnerWindow.DC.CursorMaxPos.x
+		var max_pos_x = table.InnerWindow.DC.CursorMaxPos.x
 		if table.RightMostEnabledColumn != -1 {
 			max_pos_x = ImMax(max_pos_x, table.Columns[table.RightMostEnabledColumn].WorkMaxX+table.CellPaddingX+table.OuterPaddingX-outer_padding_for_border)
 		}
@@ -125,7 +125,7 @@ func EndTable() {
 	}
 
 	// Flatten channels and merge draw calls
-	var splitter *ImDrawListSplitter = table.DrawSplitter
+	var splitter = table.DrawSplitter
 	splitter.SetCurrentChannel(inner_window.DrawList, 0)
 	if (table.Flags & ImGuiTableFlags_NoClip) == 0 {
 		TableMergeDrawChannels(table)
@@ -133,7 +133,7 @@ func EndTable() {
 	splitter.Merge(inner_window.DrawList)
 
 	// Update ColumnsAutoFitWidth to get us ahead for host using our size to auto-resize without waiting for next BeginTable()
-	var width_spacings float = (table.OuterPaddingX * 2.0) + (table.CellSpacingX1+table.CellSpacingX2)*float(table.ColumnsEnabledCount-1)
+	var width_spacings = (table.OuterPaddingX * 2.0) + (table.CellSpacingX1+table.CellSpacingX2)*float(table.ColumnsEnabledCount-1)
 	table.ColumnsAutoFitWidth = width_spacings + (table.CellPaddingX*2.0)*float(table.ColumnsEnabledCount)
 	for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
 		if table.EnabledMaskByIndex&((ImU64)(1<<column_n)) != 0 {
@@ -151,8 +151,8 @@ func EndTable() {
 		inner_window.Scroll.x = 0.0
 	} else if table.LastResizedColumn != -1 && table.ResizedColumn == -1 && inner_window.ScrollbarX && table.InstanceInteracted == table.InstanceCurrent {
 		// When releasing a column being resized, scroll to keep the resulting column in sight
-		var neighbor_width_to_keep_visible float = table.MinColumnWidth + table.CellPaddingX*2.0
-		var column *ImGuiTableColumn = &table.Columns[table.LastResizedColumn]
+		var neighbor_width_to_keep_visible = table.MinColumnWidth + table.CellPaddingX*2.0
+		var column = &table.Columns[table.LastResizedColumn]
 		if column.MaxX < table.InnerClipRect.Min.x {
 			setScrollFromPosX(inner_window, column.MaxX-inner_window.Pos.x-neighbor_width_to_keep_visible, 1.0)
 		} else if column.MaxX > table.InnerClipRect.Max.x {
@@ -162,9 +162,9 @@ func EndTable() {
 
 	// Apply resizing/dragging at the end of the frame
 	if table.ResizedColumn != -1 && table.InstanceCurrent == table.InstanceInteracted {
-		var column *ImGuiTableColumn = &table.Columns[table.ResizedColumn]
-		var new_x2 float = (g.IO.MousePos.x - g.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS)
-		var new_width float = ImFloor(new_x2 - column.MinX - table.CellSpacingX1 - table.CellPaddingX*2.0)
+		var column = &table.Columns[table.ResizedColumn]
+		var new_x2 = (g.IO.MousePos.x - g.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS)
+		var new_width = ImFloor(new_x2 - column.MinX - table.CellSpacingX1 - table.CellPaddingX*2.0)
 		table.ResizedColumnNextWidth = new_width
 	}
 
@@ -174,7 +174,7 @@ func EndTable() {
 	PopID()
 
 	// Restore window data that we modified
-	var backup_outer_max_pos ImVec2 = outer_window.DC.CursorMaxPos
+	var backup_outer_max_pos = outer_window.DC.CursorMaxPos
 	inner_window.WorkRect = temp_data.HostBackupWorkRect
 	inner_window.ParentWorkRect = temp_data.HostBackupParentWorkRect
 	inner_window.SkipItems = table.HostSkipItems
@@ -305,7 +305,7 @@ func TableNextColumn() bool {
 
 	// Return whether the column is visible. User may choose to skip submitting items based on this return value,
 	// however they shouldn't skip submitting for columns that may have the tallest contribution to row height.
-	var column_n int = table.CurrentColumn
+	var column_n = table.CurrentColumn
 	return (table.RequestOutputMaskByIndex & ((ImU64)(1 << column_n))) != 0
 }
 
@@ -455,7 +455,7 @@ func TableSetupScrollFreeze(columns int, rows int) {
 
 	// Ensure frozen columns are ordered in their section. We still allow multiple frozen columns to be reordered.
 	for column_n := int8(0); column_n < table.FreezeColumnsRequest; column_n++ {
-		var order_n int = int(table.DisplayOrderToIndex[column_n])
+		var order_n = int(table.DisplayOrderToIndex[column_n])
 		if order_n != int(column_n) && order_n >= int(table.FreezeColumnsRequest) {
 			//swap
 			table.Columns[table.DisplayOrderToIndex[order_n]].DisplayOrder, table.Columns[table.DisplayOrderToIndex[column_n]].DisplayOrder = table.Columns[table.DisplayOrderToIndex[column_n]].DisplayOrder, table.Columns[table.DisplayOrderToIndex[order_n]].DisplayOrder
@@ -482,14 +482,14 @@ func TableHeadersRow() {
 	}
 
 	// Open row
-	var row_y1 float = GetCursorScreenPos().y
-	var row_height float = TableGetHeaderRowHeight()
+	var row_y1 = GetCursorScreenPos().y
+	var row_height = TableGetHeaderRowHeight()
 	TableNextRow(ImGuiTableRowFlags_Headers, row_height)
 	if table.HostSkipItems { // Merely an optimization, you may skip in your own code.
 		return
 	}
 
-	var columns_count int = TableGetColumnCount()
+	var columns_count = TableGetColumnCount()
 	for column_n := int(0); column_n < columns_count; column_n++ {
 		if !TableSetColumnIndex(column_n) {
 			continue
@@ -508,7 +508,7 @@ func TableHeadersRow() {
 	}
 
 	// Allow opening popup from the right-most section after the last column.
-	var mouse_pos ImVec2 = GetMousePos()
+	var mouse_pos = GetMousePos()
 	if IsMouseReleased(1) && TableGetHoveredColumn() == columns_count {
 		if mouse_pos.y >= row_y1 && mouse_pos.y < row_y1+row_height {
 			TableOpenContextMenu(-1) // Will open a non-column-specific popup.
@@ -534,13 +534,13 @@ func TableHeader(label string) {
 	var column = &table.Columns[column_n]
 
 	// Label
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
-	var label_pos ImVec2 = window.DC.CursorPos
+	var label_size = CalcTextSize(label, true, -1)
+	var label_pos = window.DC.CursorPos
 
 	// If we already got a row height, there's use that.
 	// FIXME-TABLE: Padding problem if the correct outer-padding CellBgRect strays off our ClipRect?
-	var cell_r ImRect = TableGetCellBgRect(table, column_n)
-	var label_height float = ImMax(label_size.y, table.RowMinHeight-table.CellPaddingY*2.0)
+	var cell_r = TableGetCellBgRect(table, column_n)
+	var label_height = ImMax(label_size.y, table.RowMinHeight-table.CellPaddingY*2.0)
 
 	// Calculate ideal size for sort order arrow
 	var w_arrow float = 0.0
@@ -556,13 +556,13 @@ func TableHeader(label string) {
 	}
 
 	// We feed our unclipped width to the column without writing on CursorMaxPos, so that column is still considering for merging.
-	var max_pos_x float = label_pos.x + label_size.x + w_sort_text + w_arrow
+	var max_pos_x = label_pos.x + label_size.x + w_sort_text + w_arrow
 	column.ContentMaxXHeadersUsed = ImMax(column.ContentMaxXHeadersUsed, column.WorkMaxX)
 	column.ContentMaxXHeadersIdeal = ImMax(column.ContentMaxXHeadersIdeal, max_pos_x)
 
 	// Keep header highlighted when context menu is open.
 	var selected = (table.IsContextPopupOpen && int(table.ContextPopupColumn) == column_n && table.InstanceInteracted == table.InstanceCurrent)
-	var id ImGuiID = window.GetIDs(label)
+	var id = window.GetIDs(label)
 	var bb = ImRect{ImVec2{cell_r.Min.x, cell_r.Min.y}, ImVec2{cell_r.Max.x, ImMax(cell_r.Max.y, cell_r.Min.y+label_height+g.Style.CellPadding.y*2.0)}}
 	ItemSizeVec(&ImVec2{0.0, label_height}, 0) // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
 	if !ItemAdd(&bb, id, nil, 0) {
@@ -574,7 +574,7 @@ func TableHeader(label string) {
 
 	// Using AllowItemOverlap mode because we cover the whole cell, and we want user to be able to submit subsequent items.
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_AllowItemOverlap)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_AllowItemOverlap)
 	if g.ActiveId != id {
 		SetItemAllowOverlap()
 	}
@@ -642,11 +642,11 @@ func TableHeader(label string) {
 	}
 
 	// Sort order arrow
-	var ellipsis_max float = cell_r.Max.x - w_arrow - w_sort_text
+	var ellipsis_max = cell_r.Max.x - w_arrow - w_sort_text
 	if (table.Flags&ImGuiTableFlags_Sortable) != 0 && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
 		if column.SortOrder != -1 {
-			var x float = ImMax(cell_r.Min.x, cell_r.Max.x-w_arrow-w_sort_text)
-			var y float = label_pos.y
+			var x = ImMax(cell_r.Min.x, cell_r.Max.x-w_arrow-w_sort_text)
+			var y = label_pos.y
 			if column.SortOrder > 0 {
 				PushStyleColorInt(ImGuiCol_Text, GetColorU32FromID(ImGuiCol_Text, 0.70))
 				RenderText(ImVec2{x + g.Style.ItemInnerSpacing.x, y}, sort_order_suf, true)
@@ -831,7 +831,7 @@ func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1
 		if table.RowCellDataCurrent < 0 || int(table.RowCellData[table.RowCellDataCurrent].Column) != column_n {
 			table.RowCellDataCurrent++
 		}
-		var cell_data *ImGuiTableCellData = &table.RowCellData[table.RowCellDataCurrent]
+		var cell_data = &table.RowCellData[table.RowCellDataCurrent]
 		cell_data.BgColor = color
 		cell_data.Column = (ImGuiTableColumnIdx)(column_n)
 	case ImGuiTableBgTarget_RowBg0:

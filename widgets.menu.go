@@ -68,7 +68,7 @@ func EndMenuBar() {
 		if nav_earliest_child.ParentWindow == window && nav_earliest_child.DC.ParentLayoutType == ImGuiLayoutType_Horizontal && (g.NavMoveFlags&ImGuiNavMoveFlags_Forwarded) == 0 {
 			// To do so we claim focus back, restore NavId and then process the movement request for yet another frame.
 			// This involve a one-frame delay which isn't very problematic in this situation. We could remove it by scoring in advance for multiple window (probably not worth bothering)
-			var layer ImGuiNavLayer = ImGuiNavLayer_Menu
+			var layer = ImGuiNavLayer_Menu
 			IM_ASSERT(window.DC.NavLayersActiveMaskNext&(1<<layer) != 0) // Sanity check
 			FocusWindow(window)
 			SetNavID(window.NavLastIds[layer], layer, 0, &window.NavRectRel[layer])
@@ -100,8 +100,8 @@ func BeginMainMenuBar() bool {
 	// FIXME: This could be generalized as an opt-in way to clamp window.DC.CursorStartPos to avoid SafeArea?
 	// FIXME: Consider removing support for safe area down the line... it's messy. Nowadays consoles have support for TV calibration in OS settings.
 	g.NextWindowData.MenuBarOffsetMinVal = ImVec2{g.Style.DisplaySafeAreaPadding.x, ImMax(g.Style.DisplaySafeAreaPadding.y-g.Style.FramePadding.y, 0.0)}
-	var window_flags ImGuiWindowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar
-	var height float = GetFrameHeight()
+	var window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar
+	var height = GetFrameHeight()
 	var is_open = BeginViewportSideBar("##MainMenuBar", viewport, ImGuiDir_Up, height, window_flags)
 	g.NextWindowData.MenuBarOffsetMinVal = ImVec2{}
 
@@ -177,7 +177,7 @@ func BeginViewportSideBar(name string, viewport_p *ImGuiViewport, dir ImGuiDir, 
 	var bar_window = FindWindowByName(name)
 	if bar_window == nil || bar_window.BeginCount == 0 {
 		// Calculate and set window size/position
-		var viewport *ImGuiViewportP = viewport_p
+		var viewport = viewport_p
 		if viewport_p == nil {
 			viewport = GetMainViewport()
 		}
@@ -187,7 +187,7 @@ func BeginViewportSideBar(name string, viewport_p *ImGuiViewport, dir ImGuiDir, 
 		if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
 			axis = ImGuiAxis_Y
 		}
-		var pos ImVec2 = avail_rect.Min
+		var pos = avail_rect.Min
 		if dir == ImGuiDir_Right || dir == ImGuiDir_Down {
 			switch axis {
 			case ImGuiAxis_X:
@@ -196,7 +196,7 @@ func BeginViewportSideBar(name string, viewport_p *ImGuiViewport, dir ImGuiDir, 
 				pos.y = avail_rect.Max.y - axis_size
 			}
 		}
-		var size ImVec2 = avail_rect.GetSize()
+		var size = avail_rect.GetSize()
 		switch axis {
 		case ImGuiAxis_X:
 			size.x = axis_size
@@ -273,7 +273,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 	// Tag menu as used. Next time BeginMenu() with same ID is called it will append to existing menu
 	g.MenusIdSubmittedThisFrame = append(g.MenusIdSubmittedThisFrame, id)
 
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var label_size = CalcTextSize(label, true, -1)
 	var pressed bool
 	var menuset_is_open = (window.Flags&ImGuiWindowFlags_Popup) == 0 && (len(g.OpenPopupStack) > len(g.BeginPopupStack) && g.OpenPopupStack[len(g.BeginPopupStack)].OpenParentId == window.IDStack[len(window.IDStack)-1])
 	var backed_nav_window = g.NavWindow
@@ -347,8 +347,8 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		}
 		if g.HoveredWindow == window && child_menu_window != nil && window.Flags&ImGuiWindowFlags_MenuBar == 0 {
 			// FIXME-DPI: Values should be derived from a master "scale" factor.
-			var next_window_rect ImRect = child_menu_window.Rect()
-			var ta ImVec2 = g.IO.MousePos.Sub(g.IO.MouseDelta)
+			var next_window_rect = child_menu_window.Rect()
+			var ta = g.IO.MousePos.Sub(g.IO.MouseDelta)
 			var tb ImVec2
 			var tc ImVec2
 			if window.Pos.x < child_menu_window.Pos.x {
@@ -438,8 +438,8 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 
 	var g = GImGui
 	var style = g.Style
-	var pos ImVec2 = window.DC.CursorPos
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var pos = window.DC.CursorPos
+	var label_size = CalcTextSize(label, true, -1)
 
 	// We've been using the equivalent of ImGuiSelectableFlags_SetNavIdOnHover on all Selectable() since early Nav system days (commit 43ee5d73),
 	// but I am unsure whether this should be kept at all. For now moved it to be an opt-in feature used by menus only.
@@ -453,7 +453,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 	if window.DC.LayoutType == ImGuiLayoutType_Horizontal {
 		// Mimic the exact layout spacing of BeginMenu() to allow MenuItem() inside a menu bar, which is a little misleading but may be useful
 		// Note that in this situation: we don't render the shortcut, we render a highlight instead of the selected tick mark.
-		var w float = label_size.x
+		var w = label_size.x
 		window.DC.CursorPos.x += IM_FLOOR(style.ItemSpacing.x * 0.5)
 		PushStyleVec(ImGuiStyleVar_ItemSpacing, ImVec2{style.ItemSpacing.x * 2.0, style.ItemSpacing.y})
 		pressed = SelectablePointer("", selected, flags, ImVec2{w, 0.0})

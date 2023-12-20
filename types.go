@@ -14,7 +14,7 @@ func IMGUI_CHECKVERSION() {
 
 const IMGUI_HAS_TABLE = true
 
-// Enums/Flags (declared as for int compatibility with old C++, to allow using as flags without overhead, and to not pollute the top of this file)
+// ImGuiCol Enums/Flags (declared as for int compatibility with old C++, to allow using as flags without overhead, and to not pollute the top of this file)
 //   - Tip: Use your programming IDE navigation facilities on the names in the _central column_ below to find the actual flags/enum lists!
 //     In Visual Studio IDE: CTRL+comma ("Edit.NavigateTo") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
 //     With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
@@ -58,7 +58,7 @@ type ImTextureID uintptr // Default: store a pointer or an integer fitting in a 
 
 type ImDrawIdx uint16 // Default: 16-bit (for maximum compatibility with renderer backends)
 
-// Scalar data types
+// ImGuiID Scalar data types
 type ImGuiID = uint // A unique ID used by widgets (typically the result of hashing a stack of string)
 type ImS8 = int8    // 8-bit signed integer
 type ImU8 = uint8   // 8-bit uinteger
@@ -69,13 +69,13 @@ type ImU32 = uint   // 32-bit uinteger (often used to store packed colors)
 type ImS64 = int64  // 64-bit signed integer (pre and post C++11 with Visual Studio)
 type ImU64 = uint64 // 64-bit uinteger (pre and post C++11 with Visual Studio)
 
-// Character types
+// ImWchar16 Character types
 // (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
 type ImWchar16 = uint16 // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 type ImWchar32 = int    // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
 type ImWchar = rune     // ImWchar [configurable type: override in imconfig.h with '#define IMGUI_USE_WCHAR32' to support Unicode planes 1-16]
 
-// Callback and functions types
+// ImGuiInputTextCallback Callback and functions types
 type ImGuiInputTextCallback func(data *ImGuiInputTextCallbackData) int // Callback function for ImGui::InputText()
 type ImGuiSizeCallback func(data *ImGuiSizeCallbackData)               // Callback function for ImGui::SetNextWindowSizeConstraints()
 
@@ -104,7 +104,7 @@ type ImGuiIO struct {
 	KeyMap                  [ImGuiKey_COUNT]int // <unset>          // Map of indices into the KeysDown[512] entries array which represent your "native" keyboard state.
 	KeyRepeatDelay          float               // = 0.250f         // When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).
 	KeyRepeatRate           float               // = 0.050f         // When holding a key/button, rate at which it repeats, in seconds.
-	UserData                interface{}         // = NULL           // Store your own data for retrieval by callbacks.
+	UserData                any                 // = NULL           // Store your own data for retrieval by callbacks.
 
 	Fonts                   *ImFontAtlas // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
 	FontGlobalScale         float        // /*= 1.0f*/           // Global scale all fonts
@@ -127,22 +127,22 @@ type ImGuiIO struct {
 	//------------------------------------------------------------------
 
 	// Optional: Platform/Renderer backend name (informational only! will be displayed in About Window) + User data for backend/wrappers to store their own stuff.
-	BackendPlatformName     string      // = NULL
-	BackendRendererName     string      // = NULL
-	BackendPlatformUserData interface{} // = NULL           // User data for platform backend
-	BackendRendererUserData interface{} // = NULL           // User data for renderer backend
-	BackendLanguageUserData interface{} // = NULL           // User data for non C++ programming language backend
+	BackendPlatformName     string // = NULL
+	BackendRendererName     string // = NULL
+	BackendPlatformUserData any    // = NULL           // User data for platform backend
+	BackendRendererUserData any    // = NULL           // User data for renderer backend
+	BackendLanguageUserData any    // = NULL           // User data for non C++ programming language backend
 
 	// Optional: Access OS clipboard
 	// (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
-	GetClipboardTextFn func(user_data interface{}) string
-	SetClipboardTextFn func(user_data interface{}, text string)
-	ClipboardUserData  interface{}
+	GetClipboardTextFn func(user_data any) string
+	SetClipboardTextFn func(user_data any, text string)
+	ClipboardUserData  any
 
 	// Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
 	// (default to use native imm32 api on Windows)
 	ImeSetInputScreenPosFn func(x, y int)
-	ImeWindowHandle        interface{} // = NULL           // (Windows) Set this to your HWND to get automatic IME cursor positioning.
+	ImeWindowHandle        any // = NULL           // (Windows) Set this to your HWND to get automatic IME cursor positioning.
 
 	//------------------------------------------------------------------
 	// Input - Fill before calling NewFrame()
@@ -269,7 +269,7 @@ func NewImGuiIO() ImGuiIO {
 	return io
 }
 
-// Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
+// ImGuiInputTextCallbackData Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
 // Callbacks (follow a flag name and see comments in ImGuiInputTextFlags_ declarations for more details)
 // - ImGuiInputTextFlags_CallbackEdit:        Callback on buffer edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
@@ -281,7 +281,7 @@ func NewImGuiIO() ImGuiIO {
 type ImGuiInputTextCallbackData struct {
 	EventFlag ImGuiInputTextFlags // One ImGuiInputTextFlags_Callback*    // Read-only
 	Flags     ImGuiInputTextFlags // What user passed to InputText()      // Read-only
-	UserData  interface{}         // What user passed to InputText()      // Read-only
+	UserData  any                 // What user passed to InputText()      // Read-only
 
 	// Arguments for the different callback events
 	// - To modify the text buffer in a callback, prefer using the InsertChars() / DeleteChars() function. InsertChars() will take care of calling the resize callback if necessary.
@@ -301,7 +301,7 @@ func NewImGuiInputTextCallbackData() *ImGuiInputTextCallbackData {
 	return new(ImGuiInputTextCallbackData)
 }
 
-// Public API to manipulate UTF-8 text
+// DeleteChars Public API to manipulate UTF-8 text
 // We expose UTF-8 to the user (unlike the STB_TEXTEDIT_* functions which are manipulating wchar)
 // FIXME: The existence of this rarely exercised code path is a bit of a nuisance.
 func (this *ImGuiInputTextCallbackData) DeleteChars(pos, bytes_count int) {
@@ -332,7 +332,7 @@ func (this *ImGuiInputTextCallbackData) InsertChars(pos int, new_text string) {
 
 		// Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
 		var g = GImGui
-		var edit_state *ImGuiInputTextState = &g.InputTextState
+		var edit_state = &g.InputTextState
 		IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID)
 		//IM_ASSERT(this.Buf == edit_state.TextA)
 		var new_buf_size = this.BufTextLen + ImClampInt(new_text_len*4, 32, ImMaxInt(256, new_text_len)) + 1
@@ -369,20 +369,20 @@ func (this *ImGuiInputTextCallbackData) HasSelection() bool {
 	return this.SelectionStart != this.SelectionEnd
 }
 
-// Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
+// ImGuiSizeCallbackData Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
 // NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough.
 type ImGuiSizeCallbackData struct {
-	UserData    interface{} // Read-only.   What user passed to SetNextWindowSizeConstraints()
-	Pos         ImVec2      // Read-only.   Window position, for reference.
-	CurrentSize ImVec2      // Read-only.   Current window size.
-	DesiredSize ImVec2      // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
+	UserData    any    // Read-only.   What user passed to SetNextWindowSizeConstraints()
+	Pos         ImVec2 // Read-only.   Window position, for reference.
+	CurrentSize ImVec2 // Read-only.   Current window size.
+	DesiredSize ImVec2 // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
 }
 
-// Data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
+// ImGuiPayload Data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 type ImGuiPayload struct {
 	// Members
-	Data     interface{} // Data (copied and owned by dear imgui)
-	DataSize int         // Data size
+	Data     any // Data (copied and owned by dear imgui)
+	DataSize int // Data size
 
 	// [Internal]
 	SourceId       ImGuiID      // Source item id
@@ -405,7 +405,7 @@ func (this ImGuiPayload) IsDataType(dtype string) bool {
 func (this ImGuiPayload) IsPreview() bool  { return this.Preview }
 func (this ImGuiPayload) IsDelivery() bool { return this.Delivery }
 
-// Sorting specification for one column of a table (sizeof == 12 bytes)
+// ImGuiTableColumnSortSpecs Sorting specification for one column of a table (sizeof == 12 bytes)
 type ImGuiTableColumnSortSpecs struct {
 	ColumnUserID  ImGuiID            // User id of the column (if specified by a TableSetupColumn() call)
 	ColumnIndex   ImS16              // Index of the column
@@ -417,7 +417,7 @@ func NewImGuiTableColumnSortSpecs() ImGuiTableColumnSortSpecs {
 	return ImGuiTableColumnSortSpecs{}
 }
 
-// Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
+// ImGuiTableSortSpecs Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
 // Obtained by calling TableGetSortSpecs().
 // When 'SpecsDirty == true' you can sort your data. It will be true with sorting specs have changed since last call, or the first time.
 // Make sure to set 'SpecsDirty = false' after sorting, else you may wastefully sort your data every frame!
@@ -429,14 +429,10 @@ type ImGuiTableSortSpecs struct {
 
 const IM_UNICODE_CODEPOINT_INVALID = unicode.ReplacementChar
 
-/*
-#ifdef IMGUI_USE_WCHAR32
-#define IM_UNICODE_CODEPOINT_MAX     0x10FFFF   // Maximum Unicode code point supported by this build.
-#else
-*/
+// IM_UNICODE_CODEPOINT_MAX /*
 const IM_UNICODE_CODEPOINT_MAX = 0xFFFF
 
-// Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
+// ImGuiOnceUponAFrame Helper: Execute a block of code at maximum once a frame. Convenient if you want to quickly create an UI within deep-nested code that runs multiple times every frame.
 // Usage: static oaf ImGuiOnceUponAFrame if (oaf) ImGui::Text("This will be called only once frame") per
 type ImGuiOnceUponAFrame struct {
 	RefFrame int
@@ -449,7 +445,7 @@ func NewImGuiOnceUponAFrame() ImGuiOnceUponAFrame {
 }
 
 func (this ImGuiOnceUponAFrame) Bool() bool {
-	var current_frame int = GetFrameCount()
+	var current_frame = GetFrameCount()
 	if this.RefFrame == current_frame {
 		return false
 	}
@@ -464,17 +460,17 @@ const IM_COL32_A_SHIFT = 24
 const IM_COL32_A_MASK = 0xFF000000
 
 func IM_COL32(R, G, B, A byte) ImU32 {
-	return (((ImU32)(A) << IM_COL32_A_SHIFT) | ((ImU32)(B) << IM_COL32_B_SHIFT) | ((ImU32)(G) << IM_COL32_G_SHIFT) | ((ImU32)(R) << IM_COL32_R_SHIFT))
+	return ((ImU32)(A) << IM_COL32_A_SHIFT) | ((ImU32)(B) << IM_COL32_B_SHIFT) | ((ImU32)(G) << IM_COL32_G_SHIFT) | ((ImU32)(R) << IM_COL32_R_SHIFT)
 }
 
 const IM_COL32_WHITE = 0xFFFFFFF
 const IM_COL32_BLACK = 0xFF00000
 const IM_COL32_BLACK_TRANS = 0x0000000
 
-// The maximum line width to bake anti-aliased textures for. Build atlas with ImFontAtlasFlags_NoBakedLines to disable baking.
+// IM_DRAWLIST_TEX_LINES_WIDTH_MAX The maximum line width to bake anti-aliased textures for. Build atlas with ImFontAtlasFlags_NoBakedLines to disable baking.
 const IM_DRAWLIST_TEX_LINES_WIDTH_MAX = 63
 
-// ImDrawCallback: Draw callbacks for advanced uses [configurable type: override in imconfig.h]
+// ImDrawCallback ImDrawCallback: Draw callbacks for advanced uses [configurable type: override in imconfig.h]
 // NB: You most likely do NOT need to use draw callbacks just to create your own widget or customized UI rendering,
 // you can poke into the draw list for that! Draw callback may be useful for example to:
 //
@@ -485,7 +481,7 @@ const IM_DRAWLIST_TEX_LINES_WIDTH_MAX = 63
 // If you want to override the signature of ImDrawCallback, you can simply use e.g. '#define ImDrawCallback MyDrawCallback' (in imconfig.h) + update rendering backend accordingly.
 type ImDrawCallback func(parent_list *ImDrawList, cmd *ImDrawCmd)
 
-// Typically, 1 command = 1 GPU draw call (unless command is a callback)
+// ImDrawCmd Typically, 1 command = 1 GPU draw call (unless command is a callback)
 //   - VtxOffset/IdxOffset: When 'io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset' is enabled,
 //     those fields allow us to render meshes larger than 64K vertices while keeping 16-bit indices.
 //     Pre-1.71 backends will typically ignore the VtxOffset/IdxOffset fields.
@@ -497,7 +493,7 @@ type ImDrawCmd struct {
 	IdxOffset        uint           // 4    // Start offset in index buffer. Always equal to sum of ElemCount drawn so far.
 	ElemCount        uint           // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
 	UserCallback     ImDrawCallback // 4-8  // If != NULL, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
-	UserCallbackData interface{}    // 4-8  // The draw callback code can access this.
+	UserCallbackData any            // 4-8  // The draw callback code can access this.
 }
 
 func (this *ImDrawCmd) HeaderEquals(other *ImDrawCmd) bool {
@@ -531,14 +527,14 @@ func ImDrawVertSizeAndOffset() (size, o1, o2, o3 uintptr) {
 		unsafe.Offsetof(ImDrawVert{}.Col)
 }
 
-// [Internal] For use by ImDrawList
+// ImDrawCmdHeader [Internal] For use by ImDrawList
 type ImDrawCmdHeader struct {
 	ClipRect  ImVec4
 	TextureId ImTextureID
 	VtxOffset uint
 }
 
-// [Internal] For use by ImDrawListSplitter
+// ImDrawChannel [Internal] For use by ImDrawListSplitter
 type ImDrawChannel struct {
 	_CmdBuffer []ImDrawCmd
 	_IdxBuffer []ImDrawIdx
@@ -583,7 +579,7 @@ func NewImFontConfig() ImFontConfig {
 	}
 }
 
-// Font runtime data and rendering
+// ImFont Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
 type ImFont struct {
 	// Members: Hot ~20/24 bytes (for CalcTextSize)
@@ -610,7 +606,7 @@ type ImFont struct {
 	Used4kPagesMap      [(IM_UNICODE_CODEPOINT_MAX + 1) / 4096 / 8]ImU8 // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
 }
 
-// Methods
+// NewImFont Methods
 func NewImFont() ImFont {
 	return ImFont{
 		FallbackChar: (ImWchar)(-1),
@@ -620,23 +616,23 @@ func NewImFont() ImFont {
 	}
 }
 
-func (this *ImFont) GetCharAdvance(c ImWchar) float {
-	if (int)(c) < int(len(this.IndexAdvanceX)) {
-		return this.IndexAdvanceX[(int)(c)]
+func (f *ImFont) GetCharAdvance(c ImWchar) float {
+	if (int)(c) < int(len(f.IndexAdvanceX)) {
+		return f.IndexAdvanceX[(int)(c)]
 	}
-	return this.FallbackAdvanceX
+	return f.FallbackAdvanceX
 }
 
-func (this *ImFont) IsLoaded() bool { return this.ContainerAtlas != nil }
-func (this *ImFont) GetDebugName() string {
-	if this.ConfigData != nil {
-		return string(this.ConfigData[0].Name[:])
+func (f *ImFont) IsLoaded() bool { return f.ContainerAtlas != nil }
+func (f *ImFont) GetDebugName() string {
+	if f.ConfigData != nil {
+		return string(f.ConfigData[0].Name[:])
 	}
 	return "<unknown>"
 }
 
-func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, c ImWchar) {
-	var glyph *ImFontGlyph = this.FindGlyph(c)
+func (f *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, c ImWchar) {
+	var glyph = f.FindGlyph(c)
 	if glyph == nil || glyph.Visible == 0 {
 		return
 	}
@@ -645,7 +641,7 @@ func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, co
 	}
 	var scale float = 1.0
 	if size >= 0.0 {
-		scale = (size / this.FontSize)
+		scale = size / f.FontSize
 	}
 	pos.x = IM_FLOOR(pos.x)
 	pos.y = IM_FLOOR(pos.y)
@@ -656,36 +652,36 @@ func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, co
 
 // [Internal] Don't use!
 
-// Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
-func (this *ImFont) AddRemapChar(dst, src ImWchar, overwrite_dst bool /*= true*/) {
-	IM_ASSERT(len(this.IndexLookup) > 0) // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
-	var index_size = ImWchar(len(this.IndexLookup))
+// AddRemapChar Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
+func (f *ImFont) AddRemapChar(dst, src ImWchar, overwrite_dst bool /*= true*/) {
+	IM_ASSERT(len(f.IndexLookup) > 0) // Currently f can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
+	var index_size = ImWchar(len(f.IndexLookup))
 
-	if dst < index_size && this.IndexLookup[dst] == (ImWchar)(-1) && !overwrite_dst { // 'dst' already exists
+	if dst < index_size && f.IndexLookup[dst] == (ImWchar)(-1) && !overwrite_dst { // 'dst' already exists
 		return
 	}
 	if src >= index_size && dst >= index_size { // both 'dst' and 'src' don't exist . no-op
 		return
 	}
 
-	this.GrowIndex(dst + 1)
+	f.GrowIndex(dst + 1)
 	if src < index_size {
-		this.IndexLookup[dst] = this.IndexLookup[src]
-		this.IndexAdvanceX[dst] = this.IndexAdvanceX[src]
+		f.IndexLookup[dst] = f.IndexLookup[src]
+		f.IndexAdvanceX[dst] = f.IndexAdvanceX[src]
 	} else {
-		this.IndexLookup[dst] = (ImWchar)(-1)
-		this.IndexAdvanceX[dst] = 1
+		f.IndexLookup[dst] = (ImWchar)(-1)
+		f.IndexAdvanceX[dst] = 1
 	}
 }
 
-// API is designed this way to avoid exposing the 4K page size
+// IsGlyphRangeUnused API is designed this way to avoid exposing the 4K page size
 // e.g. use with IsGlyphRangeUnused(0, 255)
-func (this *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
-	var page_begin uint = (c_begin / 4096)
-	var page_last uint = (c_last / 4096)
+func (f *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
+	var page_begin = c_begin / 4096
+	var page_last = c_last / 4096
 	for page_n := page_begin; page_n <= page_last; page_n++ {
-		if uintptr(page_n>>3) < unsafe.Sizeof(this.Used4kPagesMap) {
-			if this.Used4kPagesMap[page_n>>3]&(1<<(page_n&7)) != 0 {
+		if uintptr(page_n>>3) < unsafe.Sizeof(f.Used4kPagesMap) {
+			if f.Used4kPagesMap[page_n>>3]&(1<<(page_n&7)) != 0 {
 				return false
 			}
 		}
@@ -693,7 +689,7 @@ func (this *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
 	return true
 }
 
-// - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
+// ImGuiViewport - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
 // - In 'docking' branch with multi-viewport enabled, we extend this concept to have multiple active viewports.
 // - In the future we will extend this concept further to also represent Platform Monitor and support a "no main platform window" operation mode.
 // - About Main Area vs Work Area:
@@ -718,10 +714,10 @@ type ImGuiViewport struct {
 	BuildWorkOffsetMax ImVec2 // Work Area: Offset being built during current frame. Generally <= 0.0f.
 }
 
-// Helpers
-func (this *ImGuiViewport) GetCenter() ImVec2 {
-	return ImVec2{this.Pos.x + this.Size.x*0.5, this.Pos.y + this.Size.y*0.5}
+// GetCenter Helpers
+func (p *ImGuiViewport) GetCenter() ImVec2 {
+	return ImVec2{p.Pos.x + p.Size.x*0.5, p.Pos.y + p.Size.y*0.5}
 }
-func (this *ImGuiViewport) GetWorkCenter() ImVec2 {
-	return ImVec2{this.WorkPos.x + this.WorkSize.x*0.5, this.WorkPos.y + this.WorkSize.y*0.5}
+func (p *ImGuiViewport) GetWorkCenter() ImVec2 {
+	return ImVec2{p.WorkPos.x + p.WorkSize.x*0.5, p.WorkPos.y + p.WorkSize.y*0.5}
 }

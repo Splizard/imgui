@@ -39,9 +39,9 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		}
 
 		// Step buttons
-		var backup_frame_padding ImVec2 = style.FramePadding
+		var backup_frame_padding = style.FramePadding
 		style.FramePadding.x = style.FramePadding.y
-		var button_flags ImGuiButtonFlags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
+		var button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
 		if flags&ImGuiInputTextFlags_ReadOnly != 0 {
 			BeginDisabled(true)
 		}
@@ -156,9 +156,9 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		}
 
 		// Step buttons
-		var backup_frame_padding ImVec2 = style.FramePadding
+		var backup_frame_padding = style.FramePadding
 		style.FramePadding.x = style.FramePadding.y
-		var button_flags ImGuiButtonFlags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
+		var button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
 		if flags&ImGuiInputTextFlags_ReadOnly != 0 {
 			BeginDisabled(true)
 		}
@@ -273,9 +273,9 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		}
 
 		// Step buttons
-		var backup_frame_padding ImVec2 = style.FramePadding
+		var backup_frame_padding = style.FramePadding
 		style.FramePadding.x = style.FramePadding.y
-		var button_flags ImGuiButtonFlags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
+		var button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
 		if flags&ImGuiInputTextFlags_ReadOnly != 0 {
 			BeginDisabled(true)
 		}
@@ -390,9 +390,9 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		}
 
 		// Step buttons
-		var backup_frame_padding ImVec2 = style.FramePadding
+		var backup_frame_padding = style.FramePadding
 		style.FramePadding.x = style.FramePadding.y
-		var button_flags ImGuiButtonFlags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
+		var button_flags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups
 		if flags&ImGuiInputTextFlags_ReadOnly != 0 {
 			BeginDisabled(true)
 		}

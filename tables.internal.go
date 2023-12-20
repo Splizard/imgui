@@ -530,7 +530,7 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 
 	// Setup memory buffer (clear data if columns count changed)
 	var old_columns_to_preserve []ImGuiTableColumn = nil
-	var old_columns_raw_data interface{} = nil
+	var old_columns_raw_data any = nil
 	var old_columns_count = int(len(table.Columns))
 	if old_columns_count != 0 && old_columns_count != columns_count {
 		// Attempt to preserve width on column count change (#4046)
@@ -2722,7 +2722,7 @@ func TableSettingsHandler_ApplyAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) {
 	}
 }
 
-func TableSettingsHandler_ReadOpen(ctx *ImGuiContext, _ *ImGuiSettingsHandler, name string) interface{} {
+func TableSettingsHandler_ReadOpen(ctx *ImGuiContext, _ *ImGuiSettingsHandler, name string) any {
 	var id ImGuiID = 0
 	var columns_count int = 0
 	if n, _ := fmt.Scanf(name, "0x%08X,%d", &id, &columns_count); n < 2 {
@@ -2739,7 +2739,7 @@ func TableSettingsHandler_ReadOpen(ctx *ImGuiContext, _ *ImGuiSettingsHandler, n
 	return TableSettingsCreate(id, columns_count)
 }
 
-func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, entry interface{}, line string) {
+func TableSettingsHandler_ReadLine(ctx *ImGuiContext, _ *ImGuiSettingsHandler, entry any, line string) {
 	// "Column 0  UserID=0x42AD2D21 Width=100 Visible=1 Order=0 Sort=0v"
 	var settings = entry.(*ImGuiTableSettings)
 	var f float = 0.0

@@ -9,7 +9,7 @@ import (
 	this is probably inefficient, but convinient for now - Quentin.
 */
 
-// [Internal]
+// ImGuiStoragePair [Internal]
 type ImGuiStoragePair struct {
 	key ImGuiID
 	val int
@@ -25,7 +25,7 @@ func (this *ImGuiStoragePair) SetFloat(key ImGuiID, val float) {
 	*(*float)(unsafe.Pointer(&this.val)) = val
 }
 
-// Helper: Key->Value storage
+// ImGuiStorage Helper: Key->Value storage
 // Typically you don't have to worry about this since a storage is held within each Window.
 // We use it to e.g. store collapse state for a tree (Int 0/1)
 // This is optimized for efficient lookup (dichotomy into a contiguous buffer) and rare insertion (typically tied to user interactions aka max once a frame)
@@ -35,12 +35,12 @@ func (this *ImGuiStoragePair) SetFloat(key ImGuiID, val float) {
 // Types are NOT stored, so it is up to you to make sure your Key don't collide with different types.
 type ImGuiStorage struct {
 	Data     map[ImGuiID]int
-	Pointers map[ImGuiID]interface{}
+	Pointers map[ImGuiID]any
 }
 
 func (this *ImGuiStorage) Clear() {
 	this.Data = map[ImGuiID]int{}
-	this.Pointers = map[ImGuiID]interface{}{}
+	this.Pointers = map[ImGuiID]any{}
 }
 
 func (this *ImGuiStorage) GetInt(key ImGuiID, default_val int) int {
@@ -83,18 +83,18 @@ func (this *ImGuiStorage) SetFloat(key ImGuiID, val float) {
 	this.SetInt(key, *(*int)(unsafe.Pointer(&val)))
 }
 
-func (this *ImGuiStorage) GetInterface(key ImGuiID) interface{} {
+func (this *ImGuiStorage) GetInterface(key ImGuiID) any {
 	return this.Pointers[key]
 }
 
-func (this *ImGuiStorage) SetInterface(key ImGuiID, val interface{}) {
+func (this *ImGuiStorage) SetInterface(key ImGuiID, val any) {
 	if this.Pointers == nil {
-		this.Pointers = make(map[ImGuiID]interface{})
+		this.Pointers = make(map[ImGuiID]any)
 	}
 	this.Pointers[key] = val
 }
 
-// Use on your own storage if you know only integer are being stored (open/close all tree nodes)
+// SetAllInt Use on your own storage if you know only integer are being stored (open/close all tree nodes)
 func (this *ImGuiStorage) SetAllInt(val int) {
 	for key := range this.Data {
 		this.Data[key] = val

@@ -27,8 +27,8 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	var style = g.Style
 
 	// Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
-	var id ImGuiID = window.GetIDs(label)
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var id = window.GetIDs(label)
+	var label_size = CalcTextSize(label, true, -1)
 	var size = ImVec2{label_size.x, label_size.y}
 	if size_arg.x != 0.0 {
 		size.x = size_arg.x
@@ -36,15 +36,15 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	if size_arg.y != 0.0 {
 		size.y = size_arg.y
 	}
-	var pos ImVec2 = window.DC.CursorPos
+	var pos = window.DC.CursorPos
 	pos.y += window.DC.CurrLineTextBaseOffset
 	ItemSizeVec(&size, 0.0)
 
 	// Fill horizontal space
 	// We don't support (size < 0.0f) in Selectable() because the ItemSpacing extension would make explicitly right-aligned sizes not visibly match other widgets.
-	var span_all_columns bool = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0
-	var min_x float = pos.x
-	var max_x float = window.WorkRect.Max.x
+	var span_all_columns = (flags & ImGuiSelectableFlags_SpanAllColumns) != 0
+	var min_x = pos.x
+	var max_x = window.WorkRect.Max.x
 	if span_all_columns {
 		min_x = window.ParentWorkRect.Min.x
 		max_x = window.ParentWorkRect.Max.x
@@ -54,7 +54,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	}
 
 	// Text stays at the submission position, but bounding box may be extended on both sides
-	var text_min ImVec2 = pos
+	var text_min = pos
 	var text_max = ImVec2{min_x + size.x, pos.y + size.y}
 
 	// Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
@@ -64,9 +64,9 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		if !span_all_columns {
 			spacing_x = style.ItemSpacing.x
 		}
-		var spacing_y float = style.ItemSpacing.y
-		var spacing_L float = IM_FLOOR(spacing_x * 0.50)
-		var spacing_U float = IM_FLOOR(spacing_y * 0.50)
+		var spacing_y = style.ItemSpacing.y
+		var spacing_L = IM_FLOOR(spacing_x * 0.50)
+		var spacing_U = IM_FLOOR(spacing_y * 0.50)
 		bb.Min.x -= spacing_L
 		bb.Min.y -= spacing_U
 		bb.Max.x += (spacing_x - spacing_L)
@@ -75,21 +75,21 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	//if (g.IO.KeyCtrl) { GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
 
 	// Modify ClipRect for the ItemAdd(), faster than doing a PushColumnsBackground/PushTableBackground for every Selectable..
-	var backup_clip_rect_min_x float = window.ClipRect.Min.x
-	var backup_clip_rect_max_x float = window.ClipRect.Max.x
+	var backup_clip_rect_min_x = window.ClipRect.Min.x
+	var backup_clip_rect_max_x = window.ClipRect.Max.x
 	if span_all_columns {
 		window.ClipRect.Min.x = window.ParentWorkRect.Min.x
 		window.ClipRect.Max.x = window.ParentWorkRect.Max.x
 	}
 
-	var disabled_item bool = (flags & ImGuiSelectableFlags_Disabled) != 0
+	var disabled_item = (flags & ImGuiSelectableFlags_Disabled) != 0
 
 	var disabled_flags = ImGuiItemFlags_None
 	if disabled_item {
 		disabled_flags |= ImGuiItemFlags_Disabled
 	}
 
-	var item_add bool = ItemAdd(&bb, id, nil, disabled_flags)
+	var item_add = ItemAdd(&bb, id, nil, disabled_flags)
 	if span_all_columns {
 		window.ClipRect.Min.x = backup_clip_rect_min_x
 		window.ClipRect.Max.x = backup_clip_rect_max_x
@@ -99,7 +99,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		return false
 	}
 
-	var disabled_global bool = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
+	var disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
 	if disabled_item && !disabled_global { // Only testing this as an optimization
 		BeginDisabled(true)
 	}
@@ -130,9 +130,9 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		button_flags |= ImGuiButtonFlags_AllowItemOverlap
 	}
 
-	var was_selected bool = selected
+	var was_selected = selected
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, button_flags)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, button_flags)
 
 	// Auto-select when moved into
 	// - This will be more fully fleshed in the range-select branch
@@ -230,7 +230,7 @@ func SetItemDefaultFocus() {
 func SetKeyboardFocusHere(offset int) {
 	IM_ASSERT(offset >= -1) // -1 is allowed but not below
 	var g = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
+	var window = g.CurrentWindow
 	g.TabFocusRequestNextWindow = window
 	g.TabFocusRequestNextCounterRegular = window.DC.FocusCounterRegular + 1 + offset
 	g.TabFocusRequestNextCounterTabStop = INT_MAX
@@ -254,9 +254,9 @@ func PopFocusScope() {
 	g.FocusScopeStack = g.FocusScopeStack[:len(g.FocusScopeStack)-1]
 }
 
-func GetFocusedFocusScope() ImGuiID { var g *ImGuiContext = GImGui; return g.NavFocusScopeId } // Focus scope which is actually active
+func GetFocusedFocusScope() ImGuiID { var g = GImGui; return g.NavFocusScopeId } // Focus scope which is actually active
 func GetFocusScope() ImGuiID {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return g.CurrentWindow.DC.NavFocusScopeIdCurrent
 } // Focus scope we are outputting into, set by PushFocusScope()
 
@@ -353,7 +353,7 @@ func BringWindowToFocusFront(window *ImGuiWindow) {
 		return
 	}
 
-	var new_order int = int(len(g.WindowsFocusOrder)) - 1
+	var new_order = int(len(g.WindowsFocusOrder)) - 1
 	for n := int(cur_order); n < new_order; n++ {
 		g.WindowsFocusOrder[n] = g.WindowsFocusOrder[n+1]
 		g.WindowsFocusOrder[n].FocusOrder--
@@ -365,7 +365,7 @@ func BringWindowToFocusFront(window *ImGuiWindow) {
 
 func BringWindowToDisplayFront(window *ImGuiWindow) {
 	var g = GImGui
-	var current_front_window *ImGuiWindow = g.Windows[len(g.Windows)-1]
+	var current_front_window = g.Windows[len(g.Windows)-1]
 	if current_front_window == window || current_front_window.RootWindow == window { // Cheap early out (could be better)
 		return
 	}
@@ -391,11 +391,11 @@ func FocusTopMostWindowUnderOne(under_this_window *ImGuiWindow, ignore_window *I
 
 	for i := start_idx; i >= 0; i-- {
 		// We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
-		var window *ImGuiWindow = g.WindowsFocusOrder[i]
+		var window = g.WindowsFocusOrder[i]
 		IM_ASSERT(window == window.RootWindow)
 		if window != ignore_window && window.WasActive {
 			if (window.Flags & (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs)) != (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs) {
-				var focus_window *ImGuiWindow = NavRestoreLastChildNavWindow(window)
+				var focus_window = NavRestoreLastChildNavWindow(window)
 				FocusWindow(focus_window)
 				return
 			}

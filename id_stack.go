@@ -12,14 +12,14 @@ package imgui
 // - In this header file we use the "label"/"name" terminology to denote a string that will be displayed + used as an ID,
 //   whereas "str_id" denote a string that is only used as an ID and not normally displayed.
 
-// Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
+// PushOverrideID Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
 func PushOverrideID(id ImGuiID) {
 	var g = GImGui
 	var window = g.CurrentWindow
 	window.IDStack = append(window.IDStack, id)
 }
 
-// Helper to avoid a common series of PushOverrideID . GetID() . PopID() call
+// GetIDWithSeed Helper to avoid a common series of PushOverrideID . GetID() . PopID() call
 // (note that when using this pattern, TestEngine's "Stack Tool" will tend to not display the intermediate stack level.
 //
 //	for that to work we would need to do PushOverrideID() . ItemAdd() . PopID() which would alter widget code a little more)
@@ -36,15 +36,15 @@ func PushString(str_id string) {
 	window.IDStack = append(window.IDStack, id)
 }
 
-// push pointer into the ID stack (will hash pointer).
-func PushInterface(ptr_id interface{}) {
+// PushInterface push pointer into the ID stack (will hash pointer).
+func PushInterface(ptr_id any) {
 	var g = GImGui
 	var window = g.CurrentWindow
 	var id = window.GetIDNoKeepAliveInterface(ptr_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
-// push integer into the ID stack (will hash integer).
+// PushID push integer into the ID stack (will hash integer).
 func PushID(int_id int) {
 	var g = GImGui
 	var window = g.CurrentWindow
@@ -67,7 +67,7 @@ func GetIDs(str_id_begin string) ImGuiID {
 	return GImGui.CurrentWindow.GetIDs(str_id_begin)
 }
 
-func GetIDFromInterface(ptr_id interface{}) ImGuiID {
+func GetIDFromInterface(ptr_id any) ImGuiID {
 	var window = GImGui.CurrentWindow
 	return window.GetIDInterface(ptr_id)
 }

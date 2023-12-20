@@ -6,7 +6,7 @@ import "fmt"
 // - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
 
 // helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
-func TreeNodeF(str_id string, format string, args ...interface{}) bool {
+func TreeNodeF(str_id string, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -15,7 +15,7 @@ func TreeNodeF(str_id string, format string, args ...interface{}) bool {
 	return TreeNodeBehavior(window.GetIDs(str_id), 0, fmt.Sprintf(format, args...))
 }
 
-func TreeNodeInterface(ptr_id interface{}, format string, args ...interface{}) bool {
+func TreeNodeInterface(ptr_id any, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -24,7 +24,7 @@ func TreeNodeInterface(ptr_id interface{}, format string, args ...interface{}) b
 	return TreeNodeBehavior(window.GetIDInterface(ptr_id), 0, fmt.Sprintf(format, args...))
 }
 
-func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...interface{}) bool {
+func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -33,7 +33,7 @@ func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...
 	return TreeNodeBehavior(window.GetIDs(str_id), flags, fmt.Sprintf(format, args...))
 }
 
-func TreeNodeInterfaceEx(ptr_id interface{}, flags ImGuiTreeNodeFlags, format string, args ...interface{}) bool {
+func TreeNodeInterfaceEx(ptr_id any, flags ImGuiTreeNodeFlags, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -54,7 +54,7 @@ func TreePush(str_id string) {
 	}
 }
 
-func TreePushInterface(ptr_id interface{}) {
+func TreePushInterface(ptr_id any) {
 	var window = GetCurrentWindow()
 	Indent(0)
 	window.DC.TreeDepth++
@@ -98,7 +98,7 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 		return false
 	}
 
-	var id ImGuiID = window.GetIDs(label)
+	var id = window.GetIDs(label)
 	flags |= ImGuiTreeNodeFlags_CollapsingHeader
 	if p_visible != nil {
 		flags |= ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_ClipLabelForTrailingButton
@@ -109,11 +109,11 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 		// FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
 		// FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
 		var g = GImGui
-		var last_item_backup ImGuiLastItemData = g.LastItemData
+		var last_item_backup = g.LastItemData
 		var button_size = g.FontSize
 		var button_x = ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x-g.Style.FramePadding.x*2.0-button_size)
 		var button_y = g.LastItemData.Rect.Min.y
-		var close_button_id ImGuiID = GetIDWithSeed("#CLOSE", id)
+		var close_button_id = GetIDWithSeed("#CLOSE", id)
 		if CloseButton(close_button_id, &ImVec2{button_x, button_y}) {
 			*p_visible = false
 		}
@@ -194,7 +194,7 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 			storage.SetInt(id, bool2int(is_open))
 		} else {
 			// We treat ImGuiCond_Once and ImGuiCond_FirstUseEver the same because tree node state are not saved persistently.
-			var stored_value int = storage.GetInt(id, -1)
+			var stored_value = storage.GetInt(id, -1)
 			if stored_value == -1 {
 				is_open = g.NextItemData.OpenVal
 				storage.SetInt(id, bool2int(is_open))
@@ -226,8 +226,8 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	var g = GImGui
-	var style *ImGuiStyle = &g.Style
-	var display_frame bool = (flags & ImGuiTreeNodeFlags_Framed) != 0
+	var style = &g.Style
+	var display_frame = (flags & ImGuiTreeNodeFlags_Framed) != 0
 	var padding ImVec2
 	if display_frame || (flags&ImGuiTreeNodeFlags_FramePadding) != 0 {
 		padding = style.FramePadding
@@ -236,10 +236,10 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	label = FindRenderedTextEnd(label)
-	var label_size ImVec2 = CalcTextSize(label, false, 0)
+	var label_size = CalcTextSize(label, false, 0)
 
 	// We vertically grow up to current line height up the typical widget height.
-	var frame_height float = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+style.FramePadding.y*2), label_size.y+padding.y*2)
+	var frame_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+style.FramePadding.y*2), label_size.y+padding.y*2)
 	var frame_bb ImRect
 	if (flags & ImGuiTreeNodeFlags_SpanFullWidth) != 0 {
 		frame_bb.Min.x = window.WorkRect.Min.x
@@ -257,15 +257,15 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	// Collapser arrow width + Spacing
-	var text_offset_x float = g.FontSize
+	var text_offset_x = g.FontSize
 	if display_frame {
 		text_offset_x += padding.x * 3
 	} else {
 		text_offset_x += padding.x * 2
 	}
 
-	var text_offset_y float = ImMax(padding.y, window.DC.CurrLineTextBaseOffset) // Latch before ItemSize changes it
-	var text_width float = g.FontSize
+	var text_offset_y = ImMax(padding.y, window.DC.CurrLineTextBaseOffset) // Latch before ItemSize changes it
+	var text_width = g.FontSize
 	if label_size.x > 0.0 { // Include collapser
 		text_width += padding.x * 2
 	}
@@ -273,7 +273,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	ItemSizeVec(&ImVec2{text_width, frame_height}, padding.y)
 
 	// For regular tree nodes, we arbitrary allow to click past 2 worth of ItemSpacing
-	var interact_bb ImRect = frame_bb
+	var interact_bb = frame_bb
 	if !display_frame && (flags&(ImGuiTreeNodeFlags_SpanAvailWidth|ImGuiTreeNodeFlags_SpanFullWidth)) == 0 {
 		interact_bb.Max.x = frame_bb.Min.x + text_width + label_size.x + style.ItemSpacing.x*2.0
 	}
@@ -281,13 +281,13 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	// Store a flag for the current depth to tell if we will allow closing this node when navigating one of its child.
 	// For this purpose we essentially compare if g.NavIdIsAlive went from 0 to 1 between TreeNode() and TreePop().
 	// This is currently only support 32 level deep and we are fine with (1 << Depth) overflowing into a zero.
-	var is_leaf bool = (flags & ImGuiTreeNodeFlags_Leaf) != 0
-	var is_open bool = TreeNodeBehaviorIsOpen(id, flags)
+	var is_leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0
+	var is_open = TreeNodeBehaviorIsOpen(id, flags)
 	if is_open && !g.NavIdIsAlive && (flags&ImGuiTreeNodeFlags_NavLeftJumpsBackHere) != 0 && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
 		window.DC.TreeJumpToParentOnPopMask |= (1 << window.DC.TreeDepth)
 	}
 
-	var item_add bool = ItemAdd(&interact_bb, id, nil, 0)
+	var item_add = ItemAdd(&interact_bb, id, nil, 0)
 	g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDisplayRect
 	g.LastItemData.DisplayRect = frame_bb
 
@@ -298,7 +298,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		return is_open
 	}
 
-	var button_flags ImGuiButtonFlags = ImGuiButtonFlags_None
+	var button_flags = ImGuiButtonFlags_None
 	if flags&ImGuiTreeNodeFlags_AllowItemOverlap != 0 {
 		button_flags |= ImGuiButtonFlags_AllowItemOverlap
 	}
@@ -309,9 +309,9 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	// We allow clicking on the arrow section with keyboard modifiers held, in order to easily
 	// allow browsing a tree while preserving selection with code implementing multi-selection patterns.
 	// When clicking on the rest of the tree node we always disallow keyboard modifiers.
-	var arrow_hit_x1 float = (text_pos.x - text_offset_x) - style.TouchExtraPadding.x
-	var arrow_hit_x2 float = (text_pos.x - text_offset_x) + (g.FontSize + padding.x*2.0) + style.TouchExtraPadding.x
-	var is_mouse_x_over_arrow bool = (g.IO.MousePos.x >= arrow_hit_x1 && g.IO.MousePos.x < arrow_hit_x2)
+	var arrow_hit_x1 = (text_pos.x - text_offset_x) - style.TouchExtraPadding.x
+	var arrow_hit_x2 = (text_pos.x - text_offset_x) + (g.FontSize + padding.x*2.0) + style.TouchExtraPadding.x
+	var is_mouse_x_over_arrow = (g.IO.MousePos.x >= arrow_hit_x1 && g.IO.MousePos.x < arrow_hit_x2)
 	if window != g.HoveredWindow || !is_mouse_x_over_arrow {
 		button_flags |= ImGuiButtonFlags_NoKeyModifiers
 	}
@@ -333,12 +333,12 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		button_flags |= ImGuiButtonFlags_PressedOnClickRelease
 	}
 
-	var selected bool = (flags & ImGuiTreeNodeFlags_Selected) != 0
-	var was_selected bool = selected
+	var selected = (flags & ImGuiTreeNodeFlags_Selected) != 0
+	var was_selected = selected
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&interact_bb, id, &hovered, &held, button_flags)
-	var toggled bool = false
+	var pressed = ButtonBehavior(&interact_bb, id, &hovered, &held, button_flags)
+	var toggled = false
 	if !is_leaf {
 		if pressed && g.DragDropHoldJustPressedId != id {
 			if (flags&(ImGuiTreeNodeFlags_OpenOnArrow|ImGuiTreeNodeFlags_OpenOnDoubleClick)) == 0 || (g.NavActivateId == id) {
@@ -382,8 +382,8 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	// Render
-	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
-	var nav_highlight_flags ImGuiNavHighlightFlags = ImGuiNavHighlightFlags_TypeThin
+	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
+	var nav_highlight_flags = ImGuiNavHighlightFlags_TypeThin
 	if display_frame {
 		// Framed type
 		var bg_col ImU32

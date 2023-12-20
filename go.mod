@@ -1,8 +1,8 @@
 module github.com/Splizard/imgui
 
-go 1.16
+go 1.20
 
 require (
-	github.com/go-gl/gl v0.0.0-20210813123233-e4099ee2221f
-	github.com/go-gl/glfw v0.0.0-20210727001814-0db043d8d5be
+	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71
+	github.com/go-gl/glfw v0.0.0-20231124074035-2de0cf0c80af
 )

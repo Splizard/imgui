@@ -135,11 +135,11 @@ func stbtt_GetBakedQuad(chardata []stbtt_bakedchar, pw, ph, // same data as abov
 	if opengl_fillrule == 0 {
 		d3d_bias = -0.5
 	}
-	var ipw float = 1.0 / float(pw)
-	var iph float = 1.0 / float(ph)
-	var b *stbtt_bakedchar = &chardata[char_index]
-	var round_x int = STBTT_ifloor((*xpos + b.xoff) + 0.5)
-	var round_y int = STBTT_ifloor((*ypos + b.yoff) + 0.5)
+	var ipw = 1.0 / float(pw)
+	var iph = 1.0 / float(ph)
+	var b = &chardata[char_index]
+	var round_x = STBTT_ifloor((*xpos + b.xoff) + 0.5)
+	var round_y = STBTT_ifloor((*ypos + b.yoff) + 0.5)
 
 	q.X0 = float(round_x) + d3d_bias
 	q.Y0 = float(round_y) + d3d_bias
@@ -186,10 +186,10 @@ type PackedChar struct {
 // bilinear filtering).
 //
 // Returns 0 on failure, 1 on success.
-func PackBegin(spc *PackContext, pixels []byte, width, height, stride_in_bytes, padding int, alloc_context interface{}) int {
-	var context *stbrp.Context = new(stbrp.Context)
-	var num_nodes int = width - padding
-	var nodes []stbrp.Node = make([]stbrp.Node, num_nodes)
+func PackBegin(spc *PackContext, pixels []byte, width, height, stride_in_bytes, padding int, alloc_context any) int {
+	var context = new(stbrp.Context)
+	var num_nodes = width - padding
+	var nodes = make([]stbrp.Node, num_nodes)
 
 	if context == nil || nodes == nil {
 		//if (context != nil) {STBTT_free(context, alloc_context);
@@ -340,13 +340,13 @@ func GetPackedQuad(chardata []PackedChar, pw, ph, // same data as above
 	q *AlignedQuad, // output: quad to draw
 	align_to_integer int) {
 
-	var ipw float = 1.0 / float(pw)
-	var iph float = 1.0 / float(ph)
-	var b *PackedChar = &chardata[char_index]
+	var ipw = 1.0 / float(pw)
+	var iph = 1.0 / float(ph)
+	var b = &chardata[char_index]
 
 	if align_to_integer != 0 {
-		var x float = (float)(STBTT_ifloor((*xpos + b.xoff) + 0.5))
-		var y float = (float)(STBTT_ifloor((*ypos + b.yoff) + 0.5))
+		var x = (float)(STBTT_ifloor((*xpos + b.xoff) + 0.5))
+		var y = (float)(STBTT_ifloor((*ypos + b.yoff) + 0.5))
 		q.X0 = x
 		q.Y0 = y
 		q.X1 = x + b.xoff2 - b.xoff
@@ -381,7 +381,7 @@ func stbtt_PackFontRangesGatherRects(spc *PackContext, info *FontInfo, ranges []
 
 	k = 0
 	for i = 0; i < num_ranges; i++ {
-		var fh float = ranges[i].FontSize
+		var fh = ranges[i].FontSize
 		var scale float
 		if fh > 0 {
 			scale = ScaleForPixelHeight(info, fh)
@@ -398,7 +398,7 @@ func stbtt_PackFontRangesGatherRects(spc *PackContext, info *FontInfo, ranges []
 			} else {
 				codepoint = ranges[i].ArrayOfUnicodeCodepoints[j]
 			}
-			var glyph int = FindGlyphIndex(info, codepoint)
+			var glyph = FindGlyphIndex(info, codepoint)
 			if glyph == 0 && spc.skip_missing != 0 {
 				rects[k].W = 0
 				rects[k].H = 0
@@ -426,12 +426,12 @@ func PackFontRangesRenderIntoRects(spc *PackContext, info *FontInfo, ranges []Pa
 	var i, j, k, return_value int = 0, 0, 0, 1
 
 	// save current values
-	var old_h_over int = int(spc.h_oversample)
-	var old_v_over int = int(spc.v_oversample)
+	var old_h_over = int(spc.h_oversample)
+	var old_v_over = int(spc.v_oversample)
 
 	k = 0
 	for i = 0; i < num_ranges; i++ {
-		var fh float = ranges[i].FontSize
+		var fh = ranges[i].FontSize
 		var scale float
 		if fh > 0 {
 			scale = ScaleForPixelHeight(info, fh)
@@ -446,9 +446,9 @@ func PackFontRangesRenderIntoRects(spc *PackContext, info *FontInfo, ranges []Pa
 		sub_x = stbtt__oversample_shift(int(spc.h_oversample))
 		sub_y = stbtt__oversample_shift(int(spc.v_oversample))
 		for j = 0; j < ranges[i].NumChars; j++ {
-			var r *stbrp.Rect = &rects[k]
+			var r = &rects[k]
 			if r.WasPacked != 0 && r.W != 0 && r.H != 0 {
-				var bc *PackedChar = &ranges[i].ChardataForRange[j]
+				var bc = &ranges[i].ChardataForRange[j]
 				var advance, lsb, x0, y0, x1, y1 int
 				var codepoint int
 				if ranges[i].ArrayOfUnicodeCodepoints == nil {
@@ -456,8 +456,8 @@ func PackFontRangesRenderIntoRects(spc *PackContext, info *FontInfo, ranges []Pa
 				} else {
 					codepoint = ranges[i].ArrayOfUnicodeCodepoints[j]
 				}
-				var glyph int = FindGlyphIndex(info, codepoint)
-				var pad stbrp.Coord = (stbrp.Coord)(spc.padding)
+				var glyph = FindGlyphIndex(info, codepoint)
+				var pad = (stbrp.Coord)(spc.padding)
 
 				// pad on left and top
 				r.X += pad
@@ -519,8 +519,8 @@ func PackFontRangesRenderIntoRects(spc *PackContext, info *FontInfo, ranges []Pa
 // this is an opaque structure that you shouldn't mess with which holds
 // all the context needed from PackBegin to PackEnd.
 type PackContext struct {
-	user_allocator_context     interface{}
-	PackInfo                   interface{}
+	user_allocator_context     any
+	PackInfo                   any
 	width                      int
 	Height                     int
 	stride_in_bytes            int
@@ -528,7 +528,7 @@ type PackContext struct {
 	skip_missing               int
 	h_oversample, v_oversample uint
 	Pixels                     []byte
-	nodes                      interface{}
+	nodes                      any
 }
 
 // This function will determine the number of fonts in a font file.  TrueType
@@ -552,7 +552,7 @@ func GetFontOffsetForIndex(data []byte, index int) int {
 // The following structure is defined publicly so you can declare one on
 // the stack or as a global or etc, but you should treat it as opaque.
 type FontInfo struct {
-	userdata  interface{}
+	userdata  any
 	data      []byte // pointer to .ttf file
 	fontstart int    // offset of start of font
 
@@ -585,19 +585,19 @@ func InitFont(info *FontInfo, data []byte, offset int) int {
 // codepoint-based functions.
 // Returns 0 if the character codepoint is not defined in the font.
 func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
-	var data []byte = info.data
-	var index_map stbtt_uint32 = stbtt_uint32(info.index_map)
+	var data = info.data
+	var index_map = stbtt_uint32(info.index_map)
 
-	var format stbtt_uint16 = ttUSHORT(data[index_map+0:])
+	var format = ttUSHORT(data[index_map+0:])
 	if format == 0 { // apple byte encoding
-		var bytes stbtt_int32 = stbtt_int32(ttUSHORT(data[index_map+2:]))
+		var bytes = stbtt_int32(ttUSHORT(data[index_map+2:]))
 		if unicode_codepoint < bytes-6 {
 			return int(ttBYTE(data[index_map+6+uint(unicode_codepoint):]))
 		}
 		return 0
 	} else if format == 6 {
-		var first stbtt_uint32 = stbtt_uint32(ttUSHORT(data[index_map+6:]))
-		var count stbtt_uint32 = stbtt_uint32(ttUSHORT(data[index_map+8:]))
+		var first = stbtt_uint32(ttUSHORT(data[index_map+6:]))
+		var count = stbtt_uint32(ttUSHORT(data[index_map+8:]))
 		if stbtt_uint32(unicode_codepoint) >= first && (stbtt_uint32)(unicode_codepoint) < first+count {
 			return int(ttUSHORT(data[index_map+10+(uint(unicode_codepoint)-first)*2:]))
 		}
@@ -606,14 +606,14 @@ func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
 		STBTT_assert(false) // @TODO: high-byte mapping for japanese/chinese/korean
 		return 0
 	} else if format == 4 { // standard mapping for windows fonts: binary search collection of ranges
-		var segcount stbtt_uint16 = ttUSHORT(data[index_map+6:]) >> 1
-		var searchRange stbtt_uint16 = ttUSHORT(data[index_map+8:]) >> 1
-		var entrySelector stbtt_uint16 = ttUSHORT(data[index_map+10:])
-		var rangeShift stbtt_uint16 = ttUSHORT(data[index_map+12:]) >> 1
+		var segcount = ttUSHORT(data[index_map+6:]) >> 1
+		var searchRange = ttUSHORT(data[index_map+8:]) >> 1
+		var entrySelector = ttUSHORT(data[index_map+10:])
+		var rangeShift = ttUSHORT(data[index_map+12:]) >> 1
 
 		// do a binary search of the segments
-		var endCount stbtt_uint32 = index_map + 14
-		var search stbtt_uint32 = endCount
+		var endCount = index_map + 14
+		var search = endCount
 
 		if unicode_codepoint > 0xffff {
 			return 0
@@ -640,7 +640,7 @@ func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
 
 		{
 			var offset, start stbtt_uint16
-			var item stbtt_uint16 = (stbtt_uint16)((search - endCount) >> 1)
+			var item = (stbtt_uint16)((search - endCount) >> 1)
 
 			STBTT_assert(unicode_codepoint <= int(ttUSHORT(data[endCount+2*uint(item):])))
 			start = ttUSHORT(data[index_map+14+uint(segcount)*2+2+2*uint(item):])
@@ -656,20 +656,20 @@ func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
 			return int(ttUSHORT(data[uint(offset)+(uint(unicode_codepoint)-uint(start))*2+index_map+14+uint(segcount)*6+2+2*uint(item):]))
 		}
 	} else if format == 12 || format == 13 {
-		var ngroups stbtt_uint32 = ttULONG(data[index_map+12:])
+		var ngroups = ttULONG(data[index_map+12:])
 		var low, high stbtt_int32
 		low, high = 0, (stbtt_int32)(ngroups)
 		// Binary search the right group.
 		for low < high {
-			var mid stbtt_int32 = low + ((high - low) >> 1) // rounds down, so low <= mid < high
-			var start_char stbtt_uint32 = ttULONG(data[index_map+16+uint(mid)*12:])
-			var end_char stbtt_uint32 = ttULONG(data[index_map+16+uint(mid)*12+4:])
+			var mid = low + ((high - low) >> 1) // rounds down, so low <= mid < high
+			var start_char = ttULONG(data[index_map+16+uint(mid)*12:])
+			var end_char = ttULONG(data[index_map+16+uint(mid)*12+4:])
 			if (stbtt_uint32)(unicode_codepoint) < start_char {
 				high = mid
 			} else if (stbtt_uint32)(unicode_codepoint) > end_char {
 				low = mid + 1
 			} else {
-				var start_glyph stbtt_uint32 = ttULONG(data[index_map+16+uint(mid)*12+8:])
+				var start_glyph = ttULONG(data[index_map+16+uint(mid)*12+8:])
 				if format == 12 {
 					return int(start_glyph + uint(unicode_codepoint) - uint(start_char))
 				} else { // format == 13
@@ -693,7 +693,7 @@ func FindGlyphIndex(info *FontInfo, unicode_codepoint int) int {
 //
 // so if you prefer to measure height by the ascent only, use a similar calculation.
 func ScaleForPixelHeight(info *FontInfo, pixels float) float {
-	var fheight int = int(ttSHORT(info.data[info.hhea+4:])) - int(ttSHORT(info.data[info.hhea+6:]))
+	var fheight = int(ttSHORT(info.data[info.hhea+4:])) - int(ttSHORT(info.data[info.hhea+6:]))
 	return pixels / (float)(fheight)
 }
 
@@ -701,7 +701,7 @@ func ScaleForPixelHeight(info *FontInfo, pixels float) float {
 // 'pixels' tall. This is probably what traditional APIs compute, but
 // I'm not positive.
 func ScaleForMappingEmToPixels(info *FontInfo, pixels float) float {
-	var unitsPerEm int = int(ttUSHORT(info.data[info.head+18:]))
+	var unitsPerEm = int(ttUSHORT(info.data[info.head+18:]))
 	return pixels / float(unitsPerEm)
 }
 
@@ -729,7 +729,7 @@ func GetFontVMetrics(info *FontInfo, ascent, descent, lineGap *int) {
 //
 // Returns 1 on success (table present), 0 on failure.
 func stbtt_GetFontVMetricsOS2(info *FontInfo, typoAscent, typoDescent, typoLineGap *int) int {
-	var tab int = int(stbtt__find_table(info.data, uint(info.fontstart), "OS/2"))
+	var tab = int(stbtt__find_table(info.data, uint(info.fontstart), "OS/2"))
 	if tab == 0 {
 		return 0
 	}
@@ -777,7 +777,7 @@ func stbtt_GetCodepointBox(info *FontInfo, codepoint int, x0, y0, x1, y1 *int) i
 // as above, but takes one or more glyph indices for greater efficiency
 
 func stbtt_GetGlyphHMetrics(info *FontInfo, glyph_index int, advanceWidth, leftSideBearing *int) {
-	var numOfLongHorMetrics stbtt_uint16 = ttUSHORT(info.data[info.hhea+34:])
+	var numOfLongHorMetrics = ttUSHORT(info.data[info.hhea+34:])
 	if glyph_index < int(numOfLongHorMetrics) {
 		if advanceWidth != nil {
 			*advanceWidth = int(ttSHORT(info.data[info.hmtx+4*glyph_index:]))
@@ -813,7 +813,7 @@ func stbtt_GetGlyphBox(info *FontInfo, glyph_index int, x0, y0, x1, y1 *int) int
 	if info.cff.size != 0 {
 		stbtt__GetGlyphInfoT2(info, glyph_index, x0, y0, x1, y1)
 	} else {
-		var g int = stbtt__GetGlyfOffset(info, glyph_index)
+		var g = stbtt__GetGlyfOffset(info, glyph_index)
 		if g < 0 {
 			return 0
 		}
@@ -880,7 +880,7 @@ func stbtt_GetCodepointShape(info *FontInfo, unicode_codepoint int, vertices *[]
 func stbtt_FreeShape(info *FontInfo, vertices []stbtt_vertex) {}
 
 // frees the bitmap allocated below
-func stbtt_FreeBitmap(bitmap []byte, userdata interface{}) {}
+func stbtt_FreeBitmap(bitmap []byte, userdata any) {}
 
 // allocates a large-enough single-channel 8bpp bitmap and renders the
 // specified character/glyph at the specified scale into it, with
@@ -944,7 +944,7 @@ func stbtt_GetGlyphBitmapSubpixel(info *FontInfo, scale_x, scale_y, shift_x, shi
 	var ix0, iy0, ix1, iy1 int
 	var gbm stbtt__bitmap
 	var vertices []stbtt_vertex
-	var num_verts int = stbtt_GetGlyphShape(info, glyph, &vertices)
+	var num_verts = stbtt_GetGlyphShape(info, glyph, &vertices)
 
 	if scale_x == 0 {
 		scale_x = scale_y
@@ -994,7 +994,7 @@ func stbtt_MakeGlyphBitmap(info *FontInfo, output []byte, out_w, out_h, out_stri
 func stbtt_MakeGlyphBitmapSubpixel(info *FontInfo, output []byte, out_w, out_h, out_stride int, scale_x, scale_y, shift_x, shift_y float, glyph int) {
 	var ix0, iy0 int
 	var vertices []stbtt_vertex
-	var num_verts int = stbtt_GetGlyphShape(info, glyph, &vertices)
+	var num_verts = stbtt_GetGlyphShape(info, glyph, &vertices)
 	var gbm stbtt__bitmap
 
 	GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &ix0, &iy0, nil, nil)
@@ -1084,7 +1084,7 @@ func stbtt_Rasterize(result *stbtt__bitmap, // 1-channel bitmap to draw into
 	shift_x, shift_y float, // translation applied to input vertices
 	x_off, y_off int, // another translation applied to input
 	invert int, // if non-zero, vertically flip shape
-	userdata interface{}) { // context for to STBTT_MALLOC
+	userdata any) { // context for to STBTT_MALLOC
 
 	var scale float
 	if scale_x > scale_y {
@@ -1094,7 +1094,7 @@ func stbtt_Rasterize(result *stbtt__bitmap, // 1-channel bitmap to draw into
 	}
 	var winding_count int = 0
 	var winding_lengths []int = nil
-	var windings []stbtt__point = stbtt_FlattenCurves(vertices, num_verts, flatness_in_pixels/scale, &winding_lengths, &winding_count, userdata)
+	var windings = stbtt_FlattenCurves(vertices, num_verts, flatness_in_pixels/scale, &winding_lengths, &winding_count, userdata)
 	if windings != nil {
 		//fmt.Println("rasterize2")
 		stbtt__rasterize(result, windings, winding_lengths, winding_count, scale_x, scale_y, shift_x, shift_y, x_off, y_off, invert, userdata)
@@ -1102,12 +1102,12 @@ func stbtt_Rasterize(result *stbtt__bitmap, // 1-channel bitmap to draw into
 }
 
 // frees the SDF bitmap allocated below
-func stbtt_FreeSDF(bitmap []byte, userdata interface{}) {
+func stbtt_FreeSDF(bitmap []byte, userdata any) {
 	panic("not implemented")
 }
 
 func stbtt_GetGlyphSDF(info *FontInfo, scale float, glyph, padding int, onedge_value byte, pixel_dist_scale float, width, height, xoff, yoff *int) []byte {
-	var scale_x, scale_y float = scale, scale
+	var scale_x, scale_y = scale, scale
 	var ix0, iy0, ix1, iy1 int
 	var w, h int
 	var data []byte
@@ -1159,32 +1159,32 @@ func stbtt_GetGlyphSDF(info *FontInfo, scale float, glyph, padding int, onedge_v
 		var x, y, i, j int
 		var precompute []float
 		var verts []stbtt_vertex
-		var num_verts int = stbtt_GetGlyphShape(info, glyph, &verts)
+		var num_verts = stbtt_GetGlyphShape(info, glyph, &verts)
 		data = make([]byte, w*h)
 		precompute = make([]float, num_verts)
 
 		for j = num_verts - 1; i < num_verts; j, i = i, i+1 {
 			if verts[i].vtype == STBTT_vline {
-				var x0 float = float(verts[i].x) * scale_x
-				var y0 float = float(verts[i].y) * scale_y
-				var x1 float = float(verts[j].x) * scale_x
-				var y1 float = float(verts[j].y) * scale_y
-				var dist float = (float)(STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0)))
+				var x0 = float(verts[i].x) * scale_x
+				var y0 = float(verts[i].y) * scale_y
+				var x1 = float(verts[j].x) * scale_x
+				var y1 = float(verts[j].y) * scale_y
+				var dist = (float)(STBTT_sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0)))
 				if dist == 0 {
 					precompute[i] = 0
 				} else {
 					precompute[i] = 1.0 / dist
 				}
 			} else if verts[i].vtype == STBTT_vcurve {
-				var x2 float = float(verts[j].x) * scale_x
-				var y2 float = float(verts[j].y) * scale_y
-				var x1 float = float(verts[i].cx) * scale_x
-				var y1 float = float(verts[i].cy) * scale_y
-				var x0 float = float(verts[i].x) * scale_x
-				var y0 float = float(verts[i].y) * scale_y
-				var bx float = x0 - 2*x1 + x2
-				var by float = y0 - 2*y1 + y2
-				var len2 float = bx*bx + by*by
+				var x2 = float(verts[j].x) * scale_x
+				var y2 = float(verts[j].y) * scale_y
+				var x1 = float(verts[i].cx) * scale_x
+				var y1 = float(verts[i].cy) * scale_y
+				var x0 = float(verts[i].x) * scale_x
+				var y0 = float(verts[i].y) * scale_y
+				var bx = x0 - 2*x1 + x2
+				var by = y0 - 2*y1 + y2
+				var len2 = bx*bx + by*by
 				if len2 != 0.0 {
 					precompute[i] = 1.0 / (bx*bx + by*by)
 				} else {
@@ -1199,92 +1199,92 @@ func stbtt_GetGlyphSDF(info *FontInfo, scale float, glyph, padding int, onedge_v
 			for x = ix0; x < ix1; x++ {
 				var val float
 				var min_dist float = 999999.0
-				var sx float = (float)(x) + 0.5
-				var sy float = (float)(y) + 0.5
-				var x_gspace float = (sx / scale_x)
-				var y_gspace float = (sy / scale_y)
+				var sx = (float)(x) + 0.5
+				var sy = (float)(y) + 0.5
+				var x_gspace = (sx / scale_x)
+				var y_gspace = (sy / scale_y)
 
-				var winding int = stbtt__compute_crossings_x(x_gspace, y_gspace, num_verts, verts) // @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tesselated curves so a new path
+				var winding = stbtt__compute_crossings_x(x_gspace, y_gspace, num_verts, verts) // @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tesselated curves so a new path
 
 				for i = 0; i < num_verts; i++ {
-					var x0 float = float(verts[i].x) * scale_x
-					var y0 float = float(verts[i].y) * scale_y
+					var x0 = float(verts[i].x) * scale_x
+					var y0 = float(verts[i].y) * scale_y
 
 					// check against every point here rather than inside line/curve primitives -- @TODO: wrong if multiple 'moves' in a row produce a garbage point, and given culling, probably more efficient to do within line/curve
-					var dist2 float = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy)
+					var dist2 = (x0-sx)*(x0-sx) + (y0-sy)*(y0-sy)
 					if dist2 < min_dist*min_dist {
 						min_dist = (float)(STBTT_sqrt(dist2))
 					}
 
 					if verts[i].vtype == STBTT_vline {
-						var x1 float = float(verts[i-1].x) * scale_x
-						var y1 float = float(verts[i-1].y) * scale_y
+						var x1 = float(verts[i-1].x) * scale_x
+						var y1 = float(verts[i-1].y) * scale_y
 
 						// coarse culling against bbox
 						//if (sx > STBTT_min(x0,x1)-min_dist && sx < STBTT_max(x0,x1)+min_dist &&
 						//    sy > STBTT_min(y0,y1)-min_dist && sy < STBTT_max(y0,y1)+min_dist)
-						var dist float = (float)(STBTT_fabs((x1-x0)*(y0-sy)-(y1-y0)*(x0-sx)) * precompute[i])
+						var dist = (float)(STBTT_fabs((x1-x0)*(y0-sy)-(y1-y0)*(x0-sx)) * precompute[i])
 						STBTT_assert(i != 0)
 						if dist < min_dist {
 							// check position along line
 							// x' = x0 + t*(x1-x0), y' = y0 + t*(y1-y0)
 							// minimize (x'-sx)*(x'-sx)+(y'-sy)*(y'-sy)
-							var dx float = x1 - x0
-							var dy float = y1 - y0
-							var px float = x0 - sx
-							var py float = y0 - sy
+							var dx = x1 - x0
+							var dy = y1 - y0
+							var px = x0 - sx
+							var py = y0 - sy
 							// minimize (px+t*dx)^2 + (py+t*dy)^2 = px*px + 2*px*dx*t + t^2*dx*dx + py*py + 2*py*dy*t + t^2*dy*dy
 							// derivative: 2*px*dx + 2*py*dy + (2*dx*dx+2*dy*dy)*t, set to 0 and solve
-							var t float = -(px*dx + py*dy) / (dx*dx + dy*dy)
+							var t = -(px*dx + py*dy) / (dx*dx + dy*dy)
 							if t >= 0.0 && t <= 1.0 {
 								min_dist = dist
 							}
 						}
 					} else if verts[i].vtype == STBTT_vcurve {
-						var x2 float = float(verts[i-1].x) * scale_x
-						var y2 float = float(verts[i-1].y) * scale_y
-						var x1 float = float(verts[i].cx) * scale_x
-						var y1 float = float(verts[i].cy) * scale_y
-						var box_x0 float = STBTT_minf(STBTT_minf(x0, x1), x2)
-						var box_y0 float = STBTT_minf(STBTT_minf(y0, y1), y2)
-						var box_x1 float = STBTT_maxf(STBTT_maxf(x0, x1), x2)
-						var box_y1 float = STBTT_maxf(STBTT_maxf(y0, y1), y2)
+						var x2 = float(verts[i-1].x) * scale_x
+						var y2 = float(verts[i-1].y) * scale_y
+						var x1 = float(verts[i].cx) * scale_x
+						var y1 = float(verts[i].cy) * scale_y
+						var box_x0 = STBTT_minf(STBTT_minf(x0, x1), x2)
+						var box_y0 = STBTT_minf(STBTT_minf(y0, y1), y2)
+						var box_x1 = STBTT_maxf(STBTT_maxf(x0, x1), x2)
+						var box_y1 = STBTT_maxf(STBTT_maxf(y0, y1), y2)
 						// coarse culling against bbox to avoid computing cubic unnecessarily
 						if sx > box_x0-min_dist && sx < box_x1+min_dist && sy > box_y0-min_dist && sy < box_y1+min_dist {
 							var num int = 0
-							var ax float = x1 - x0
-							var ay float = y1 - y0
-							var bx float = x0 - 2*x1 + x2
-							var by float = y0 - 2*y1 + y2
-							var mx float = x0 - sx
-							var my float = y0 - sy
+							var ax = x1 - x0
+							var ay = y1 - y0
+							var bx = x0 - 2*x1 + x2
+							var by = y0 - 2*y1 + y2
+							var mx = x0 - sx
+							var my = y0 - sy
 							var res [3]float
 							var px, py, t, it float
-							var a_inv float = precompute[i]
+							var a_inv = precompute[i]
 							if a_inv == 0.0 { // if a_inv is 0, it's 2nd degree so use quadratic formula
-								var a float = 3 * (ax*bx + ay*by)
-								var b float = 2*(ax*ax+ay*ay) + (mx*bx + my*by)
-								var c float = mx*ax + my*ay
+								var a = 3 * (ax*bx + ay*by)
+								var b = 2*(ax*ax+ay*ay) + (mx*bx + my*by)
+								var c = mx*ax + my*ay
 								if a == 0.0 { // if a is 0, it's linear
 									if b != 0.0 {
 										res[num] = -c / b
 										num++
 									}
 								} else {
-									var discriminant float = b*b - 4*a*c
+									var discriminant = b*b - 4*a*c
 									if discriminant < 0 {
 										num = 0
 									} else {
-										var root float = (float)(STBTT_sqrt(discriminant))
+										var root = (float)(STBTT_sqrt(discriminant))
 										res[0] = (-b - root) / (2 * a)
 										res[1] = (-b + root) / (2 * a)
 										num = 2 // don't bother distinguishing 1-solution case, as code below will still work
 									}
 								}
 							} else {
-								var b float = 3 * (ax*bx + ay*by) * a_inv // could precompute this as it doesn't depend on sample point
-								var c float = (2*(ax*ax+ay*ay) + (mx*bx + my*by)) * a_inv
-								var d float = (mx*ax + my*ay) * a_inv
+								var b = 3 * (ax*bx + ay*by) * a_inv // could precompute this as it doesn't depend on sample point
+								var c = (2*(ax*ax+ay*ay) + (mx*bx + my*by)) * a_inv
+								var d = (mx*ax + my*ay) * a_inv
 								num = stbtt__solve_cubic(b, c, d, res[:])
 							}
 							if num >= 1 && res[0] >= 0.0 && res[0] <= 1.0 {
@@ -1441,9 +1441,9 @@ func stbtt_CompareUTF8toUTF16_bigendian(s1 string, len1 int, s2 string, len2 int
 //	http://www.microsoft.com/typography/otspec/name.htm
 func stbtt_GetFontNameString(font FontInfo, length *int, platformID, encodingID, languageID, nameID int) string {
 	var i, count, stringOffset stbtt_int32
-	var fc []byte = font.data
-	var offset stbtt_uint32 = uint(font.fontstart)
-	var nm stbtt_uint32 = stbtt__find_table(fc, offset, "name")
+	var fc = font.data
+	var offset = uint(font.fontstart)
+	var nm = stbtt__find_table(fc, offset, "name")
 	if nm == 0 {
 		return ""
 	}
@@ -1451,7 +1451,7 @@ func stbtt_GetFontNameString(font FontInfo, length *int, platformID, encodingID,
 	count = int(ttUSHORT(fc[nm+2:]))
 	stringOffset = int(nm + uint(ttUSHORT(fc[nm+4:])))
 	for i = 0; i < count; i++ {
-		var loc stbtt_uint32 = nm + 6 + uint(12*i)
+		var loc = nm + 6 + uint(12*i)
 		if platformID == int(ttUSHORT(fc[loc+0:])) &&
 			encodingID == int(ttUSHORT(fc[loc+2:])) &&
 			languageID == int(ttUSHORT(fc[loc+4:])) &&
@@ -1591,7 +1591,7 @@ func stbtt__buf_get32(b *stbtt__buf) uint {
 }
 
 func stbtt__buf_range(b *stbtt__buf, o, s int) stbtt__buf {
-	var r stbtt__buf = stbtt__new_buf(nil, 0)
+	var r = stbtt__new_buf(nil, 0)
 	if o < 0 || s < 0 || o > b.size || s > b.size-o {
 		return r
 	}
@@ -1614,7 +1614,7 @@ func stbtt__cff_get_index(b *stbtt__buf) stbtt__buf {
 }
 
 func stbtt__cff_int(b *stbtt__buf) stbtt_uint32 {
-	var b0 int = int(stbtt__buf_get8(b))
+	var b0 = int(stbtt__buf_get8(b))
 	switch {
 	case (b0 >= 32 && b0 <= 246):
 		return stbtt_uint32(b0 - 139)
@@ -1669,7 +1669,7 @@ func stbtt__dict_get(b *stbtt__buf, key int) stbtt__buf {
 
 func stbtt__dict_get_ints(b *stbtt__buf, key, outcount int, out []stbtt_uint32) {
 	var i int
-	var operands stbtt__buf = stbtt__dict_get(b, key)
+	var operands = stbtt__dict_get(b, key)
 	for i = 0; i < outcount && operands.cursor < operands.size; i++ {
 		out[i] = stbtt__cff_int(&operands)
 	}
@@ -1739,11 +1739,11 @@ func stbtt__isfont(font []byte) int {
 
 // @OPTIMIZE: binary search
 func stbtt__find_table(data []byte, fontstart stbtt_uint32, tag string) stbtt_uint32 {
-	var num_tables stbtt_int32 = stbtt_int32(ttUSHORT(data[fontstart+4:]))
-	var tabledir stbtt_uint32 = fontstart + 12
+	var num_tables = stbtt_int32(ttUSHORT(data[fontstart+4:]))
+	var tabledir = fontstart + 12
 	var i stbtt_int32
 	for i = 0; i < num_tables; i++ {
-		var loc stbtt_uint32 = tabledir + stbtt_uint32(16*i)
+		var loc = tabledir + stbtt_uint32(16*i)
 		if stbtt_tag(data[loc+0:], tag) {
 			return ttULONG(data[loc+8:])
 		}
@@ -1764,7 +1764,7 @@ func stbtt_GetFontOffsetForIndex_internal(font_collection []byte, index int) int
 	if stbtt_tag(font_collection, "ttcf") {
 		// version 1?
 		if ttULONG(font_collection[4:]) == 0x00010000 || ttULONG(font_collection[4:]) == 0x00020000 {
-			var n stbtt_int32 = ttLONG(font_collection[8:])
+			var n = ttLONG(font_collection[8:])
 			if index >= n {
 				return -1
 			}
@@ -1836,7 +1836,7 @@ func stbtt_InitFont_internal(info *FontInfo, data []byte, fontstart int) int {
 	} else {
 		// initialization for CFF / Type2 fonts (OTF)
 		var b, topdict, topdictidx stbtt__buf
-		var cstype, charstrings, fdarrayoff, fdselectoff [1]stbtt_uint32 = [1]stbtt_uint32{2},
+		var cstype, charstrings, fdarrayoff, fdselectoff = [1]stbtt_uint32{2},
 			[1]stbtt_uint32{0},
 			[1]stbtt_uint32{0},
 			[1]stbtt_uint32{0}
@@ -1908,7 +1908,7 @@ func stbtt_InitFont_internal(info *FontInfo, data []byte, fontstart int) int {
 	numTables = int(ttUSHORT(data[cmap+2:]))
 	info.index_map = 0
 	for i = 0; i < numTables; i++ {
-		var encoding_record stbtt_uint32 = cmap + 4 + uint(8*i)
+		var encoding_record = cmap + 4 + uint(8*i)
 		// find an encoding we understand:
 		switch ttUSHORT(data[encoding_record:]) {
 		case STBTT_PLATFORM_ID_MICROSOFT:
@@ -1997,11 +1997,11 @@ func stbtt__close_shape(vertices []stbtt_vertex, num_vertices, was_off, start_of
 func stbtt__GetGlyphShapeTT(info *FontInfo, glyph_index int, pvertices *[]stbtt_vertex) int {
 	var numberOfContours stbtt_int16
 	var endPtsOfContours []stbtt_uint8
-	var data []byte = info.data
+	var data = info.data
 	var vertices []stbtt_vertex
 
 	var num_vertices int = 0
-	var g int = stbtt__GetGlyfOffset(info, glyph_index)
+	var g = stbtt__GetGlyfOffset(info, glyph_index)
 
 	*pvertices = nil
 
@@ -2058,7 +2058,7 @@ func stbtt__GetGlyphShapeTT(info *FontInfo, glyph_index int, pvertices *[]stbtt_
 		for i = 0; i < n; i++ {
 			flags = vertices[off+i].vtype
 			if flags&2 != 0 {
-				var dx stbtt_int16 = stbtt_int16(points[0])
+				var dx = stbtt_int16(points[0])
 				points = points[1:]
 				if (flags & 16) != 0 {
 					x += int(dx)
@@ -2079,7 +2079,7 @@ func stbtt__GetGlyphShapeTT(info *FontInfo, glyph_index int, pvertices *[]stbtt_
 		for i = 0; i < n; i++ {
 			flags = vertices[off+i].vtype
 			if flags&4 != 0 {
-				var dy stbtt_int16 = stbtt_int16(points[0])
+				var dy = stbtt_int16(points[0])
 				points = points[1:]
 
 				if (flags & 32) != 0 {
@@ -2165,7 +2165,7 @@ func stbtt__GetGlyphShapeTT(info *FontInfo, glyph_index int, pvertices *[]stbtt_
 	} else if numberOfContours == -1 {
 		// Compound shapes.
 		var more int = 1
-		var comp []byte = data[g+10:]
+		var comp = data[g+10:]
 		num_vertices = 0
 		vertices = nil
 		for more != 0 {
@@ -2229,7 +2229,7 @@ func stbtt__GetGlyphShapeTT(info *FontInfo, glyph_index int, pvertices *[]stbtt_
 			if comp_num_verts > 0 {
 				// Transform vertices.
 				for i = 0; i < comp_num_verts; i++ {
-					var v *stbtt_vertex = &comp_verts[i]
+					var v = &comp_verts[i]
 					var x, y stbtt_vertex_type
 					x = v.x
 					y = v.y
@@ -2340,17 +2340,17 @@ func stbtt__csctx_rline_to(ctx *stbtt__csctx, dx, dy float) {
 }
 
 func stbtt__csctx_rccurve_to(ctx *stbtt__csctx, dx1, dy1, dx2, dy2, dx3, dy3 float) {
-	var cx1 float = ctx.x + dx1
-	var cy1 float = ctx.y + dy1
-	var cx2 float = cx1 + dx2
-	var cy2 float = cy1 + dy2
+	var cx1 = ctx.x + dx1
+	var cy1 = ctx.y + dy1
+	var cx2 = cx1 + dx2
+	var cy2 = cy1 + dy2
 	ctx.x = cx2 + dx3
 	ctx.y = cy2 + dy3
 	stbtt__csctx_v(ctx, STBTT_vcubic, (int)(ctx.x), (int)(ctx.y), (int)(cx1), (int)(cy1), (int)(cx2), (int)(cy2))
 }
 
 func stbtt__get_subr(idx stbtt__buf, n int) stbtt__buf {
-	var count int = stbtt__cff_index_count(&idx)
+	var count = stbtt__cff_index_count(&idx)
 	var bias int = 107
 	if count >= 33900 {
 		bias = 32768
@@ -2365,7 +2365,7 @@ func stbtt__get_subr(idx stbtt__buf, n int) stbtt__buf {
 }
 
 func stbtt__cid_get_glyph_subrs(info *FontInfo, glyph_index int) stbtt__buf {
-	var fdselect stbtt__buf = info.fdselect
+	var fdselect = info.fdselect
 	var nranges, start, end, v, fmt, fdselector, i int = 0, 0, 0, 0, 0, -1, 0
 
 	stbtt__buf_seek(&fdselect, 0)
@@ -2398,7 +2398,7 @@ func stbtt__run_charstring(info *FontInfo, glyph_index int, c *stbtt__csctx) int
 	var has_subrs, clear_stack int
 	var s [48]float
 	var subr_stack [10]stbtt__buf
-	var subrs stbtt__buf = info.subrs
+	var subrs = info.subrs
 	var b stbtt__buf
 	var f float
 
@@ -2648,7 +2648,7 @@ func stbtt__run_charstring(info *FontInfo, glyph_index int, c *stbtt__csctx) int
 			{ // two-byte escape
 				var dx1, dx2, dx3, dx4, dx5, dx6, dy1, dy2, dy3, dy4, dy5, dy6 float
 				var dx, dy float
-				var b1 int = int(stbtt__buf_get8(&b))
+				var b1 = int(stbtt__buf_get8(&b))
 				switch b1 {
 				// @TODO These "flex" implementations ignore the flex-depth and resolution,
 				// and always draw beziers.
@@ -2767,8 +2767,8 @@ func stbtt__run_charstring(info *FontInfo, glyph_index int, c *stbtt__csctx) int
 
 func stbtt__GetGlyphShapeT2(info *FontInfo, glyph_index int, pvertices *[]stbtt_vertex) int {
 	// runs the charstring twice, once to count and once to output (to avoid realloc)
-	var count_ctx stbtt__csctx = stbtt__csctx{bounds: 1}
-	var output_ctx stbtt__csctx = stbtt__csctx{bounds: 0}
+	var count_ctx = stbtt__csctx{bounds: 1}
+	var output_ctx = stbtt__csctx{bounds: 0}
 	if stbtt__run_charstring(info, glyph_index, &count_ctx) != 0 {
 		*pvertices = make([]stbtt_vertex, count_ctx.num_vertices)
 		output_ctx.pvertices = *pvertices
@@ -2790,7 +2790,7 @@ func stbtt_GetGlyphShape(info *FontInfo, glyph_index int, pvertices *[]stbtt_ver
 }
 
 func stbtt__GetGlyphKernInfoAdvance(info *FontInfo, glyph1, glyph2 int) int {
-	var data []byte = info.data[info.kern:]
+	var data = info.data[info.kern:]
 	var needle, straw stbtt_uint32
 	var l, r, m int
 
@@ -2823,17 +2823,17 @@ func stbtt__GetGlyphKernInfoAdvance(info *FontInfo, glyph1, glyph2 int) int {
 }
 
 func stbtt__GetCoverageIndex(coverageTable []byte, glyph int) stbtt_int32 {
-	var coverageFormat stbtt_uint16 = ttUSHORT(coverageTable)
+	var coverageFormat = ttUSHORT(coverageTable)
 	switch coverageFormat {
 	case 1:
 		{
-			var glyphCount stbtt_uint16 = ttUSHORT(coverageTable[2:])
+			var glyphCount = ttUSHORT(coverageTable[2:])
 
 			// Binary search.
 			var l, r, m stbtt_int32 = 0, stbtt_int32(glyphCount) - 1, 0
 			var straw, needle int = 0, glyph
 			for l <= r {
-				var glyphArray []byte = coverageTable[4:]
+				var glyphArray = coverageTable[4:]
 				var glyphID stbtt_uint16
 				m = (l + r) >> 1
 				glyphID = ttUSHORT(glyphArray[2*m:])
@@ -2851,8 +2851,8 @@ func stbtt__GetCoverageIndex(coverageTable []byte, glyph int) stbtt_int32 {
 
 	case 2:
 		{
-			var rangeCount stbtt_uint16 = ttUSHORT(coverageTable[2:])
-			var rangeArray []byte = coverageTable[4:]
+			var rangeCount = ttUSHORT(coverageTable[2:])
+			var rangeArray = coverageTable[4:]
 
 			// Binary search.
 			var l, r, m stbtt_int32 = 0, stbtt_int32(rangeCount) - 1, 0
@@ -2868,7 +2868,7 @@ func stbtt__GetCoverageIndex(coverageTable []byte, glyph int) stbtt_int32 {
 				} else if needle > strawEnd {
 					l = m + 1
 				} else {
-					var startCoverageIndex stbtt_uint16 = ttUSHORT(rangeRecord[4:])
+					var startCoverageIndex = ttUSHORT(rangeRecord[4:])
 					return int(startCoverageIndex) + glyph - strawStart
 				}
 			}
@@ -2887,13 +2887,13 @@ func stbtt__GetCoverageIndex(coverageTable []byte, glyph int) stbtt_int32 {
 }
 
 func stbtt__GetGlyphClass(classDefTable []byte, glyph int) stbtt_int32 {
-	var classDefFormat stbtt_uint16 = ttUSHORT(classDefTable)
+	var classDefFormat = ttUSHORT(classDefTable)
 	switch classDefFormat {
 	case 1:
 		{
-			var startGlyphID stbtt_uint16 = ttUSHORT(classDefTable[2:])
-			var glyphCount stbtt_uint16 = ttUSHORT(classDefTable[4:])
-			var classDef1ValueArray []byte = classDefTable[6:]
+			var startGlyphID = ttUSHORT(classDefTable[2:])
+			var glyphCount = ttUSHORT(classDefTable[4:])
+			var classDef1ValueArray = classDefTable[6:]
 
 			if glyph >= int(startGlyphID) && glyph < int(startGlyphID+glyphCount) {
 				return (stbtt_int32)(ttUSHORT(classDef1ValueArray[2*(glyph-int(startGlyphID)):]))
@@ -2906,8 +2906,8 @@ func stbtt__GetGlyphClass(classDefTable []byte, glyph int) stbtt_int32 {
 
 	case 2:
 		{
-			var classRangeCount stbtt_uint16 = ttUSHORT(classDefTable[2:])
-			var classRangeRecords []byte = classDefTable[4:]
+			var classRangeCount = ttUSHORT(classDefTable[2:])
+			var classRangeRecords = classDefTable[4:]
 
 			// Binary search.
 			var l, r, m stbtt_int32 = 0, int(classRangeCount) - 1, 0
@@ -2974,22 +2974,22 @@ func stbtt__GetGlyphGPOSInfoAdvance(info *FontInfo, glyph1, glyph2 int) stbtt_in
 	lookupCount = ttUSHORT(lookupList)
 
 	for i = 0; i < int(lookupCount); i++ {
-		var lookupOffset stbtt_uint16 = ttUSHORT(lookupList[+2+2*i:])
-		var lookupTable []byte = lookupList[lookupOffset:]
+		var lookupOffset = ttUSHORT(lookupList[+2+2*i:])
+		var lookupTable = lookupList[lookupOffset:]
 
-		var lookupType stbtt_uint16 = ttUSHORT(lookupTable)
-		var subTableCount stbtt_uint16 = ttUSHORT(lookupTable[4:])
-		var subTableOffsets []byte = lookupTable[6:]
+		var lookupType = ttUSHORT(lookupTable)
+		var subTableCount = ttUSHORT(lookupTable[4:])
+		var subTableOffsets = lookupTable[6:]
 		switch lookupType {
 		case 2:
 			{ // Pair Adjustment Positioning Subtable
 				var sti stbtt_int32
 				for sti = 0; sti < int(subTableCount); sti++ {
-					var subtableOffset stbtt_uint16 = ttUSHORT(subTableOffsets[2*sti:])
-					var table []byte = lookupTable[subtableOffset:]
-					var posFormat stbtt_uint16 = ttUSHORT(table)
-					var coverageOffset stbtt_uint16 = ttUSHORT(table[2:])
-					var coverageIndex stbtt_int32 = stbtt__GetCoverageIndex(table[coverageOffset:], glyph1)
+					var subtableOffset = ttUSHORT(subTableOffsets[2*sti:])
+					var table = lookupTable[subtableOffset:]
+					var posFormat = ttUSHORT(table)
+					var coverageOffset = ttUSHORT(table[2:])
+					var coverageIndex = stbtt__GetCoverageIndex(table[coverageOffset:], glyph1)
 					if coverageIndex == -1 {
 						continue
 					}
@@ -2999,14 +2999,14 @@ func stbtt__GetGlyphGPOSInfoAdvance(info *FontInfo, glyph1, glyph2 int) stbtt_in
 						{
 							var l, r, m stbtt_int32
 							var straw, needle int
-							var valueFormat1 stbtt_uint16 = ttUSHORT(table[4:])
-							var valueFormat2 stbtt_uint16 = ttUSHORT(table[6:])
+							var valueFormat1 = ttUSHORT(table[4:])
+							var valueFormat2 = ttUSHORT(table[6:])
 							var valueRecordPairSizeInBytes stbtt_int32 = 2
-							var pairSetCount stbtt_uint16 = ttUSHORT(table[8:])
-							var pairPosOffset stbtt_uint16 = ttUSHORT(table[10+2*coverageIndex:])
-							var pairValueTable []byte = table[pairPosOffset:]
-							var pairValueCount stbtt_uint16 = ttUSHORT(pairValueTable)
-							var pairValueArray []byte = pairValueTable[2:]
+							var pairSetCount = ttUSHORT(table[8:])
+							var pairPosOffset = ttUSHORT(table[10+2*coverageIndex:])
+							var pairValueTable = table[pairPosOffset:]
+							var pairValueCount = ttUSHORT(pairValueTable)
+							var pairValueArray = pairValueTable[2:]
 							// TODO: Support more formats.
 							STBTT_GPOS_TODO_assert(valueFormat1 == 4)
 							if valueFormat1 != 4 {
@@ -3036,7 +3036,7 @@ func stbtt__GetGlyphGPOSInfoAdvance(info *FontInfo, glyph1, glyph2 int) stbtt_in
 								} else if needle > straw {
 									l = m + 1
 								} else {
-									var xAdvance stbtt_int16 = ttSHORT(pairValue[2:])
+									var xAdvance = ttSHORT(pairValue[2:])
 									return int(xAdvance)
 								}
 							}
@@ -3045,16 +3045,16 @@ func stbtt__GetGlyphGPOSInfoAdvance(info *FontInfo, glyph1, glyph2 int) stbtt_in
 
 					case 2:
 						{
-							var valueFormat1 stbtt_uint16 = ttUSHORT(table[4:])
-							var valueFormat2 stbtt_uint16 = ttUSHORT(table[6:])
+							var valueFormat1 = ttUSHORT(table[4:])
+							var valueFormat2 = ttUSHORT(table[6:])
 
-							var classDef1Offset stbtt_uint16 = ttUSHORT(table[8:])
-							var classDef2Offset stbtt_uint16 = ttUSHORT(table[10:])
-							var glyph1class int = stbtt__GetGlyphClass(table[classDef1Offset:], glyph1)
-							var glyph2class int = stbtt__GetGlyphClass(table[classDef2Offset:], glyph2)
+							var classDef1Offset = ttUSHORT(table[8:])
+							var classDef2Offset = ttUSHORT(table[10:])
+							var glyph1class = stbtt__GetGlyphClass(table[classDef1Offset:], glyph1)
+							var glyph2class = stbtt__GetGlyphClass(table[classDef2Offset:], glyph2)
 
-							var class1Count stbtt_uint16 = ttUSHORT(table[12:])
-							var class2Count stbtt_uint16 = ttUSHORT(table[14:])
+							var class1Count = ttUSHORT(table[12:])
+							var class2Count = ttUSHORT(table[14:])
 							STBTT_assert(glyph1class < int(class1Count))
 							STBTT_assert(glyph2class < int(class2Count))
 
@@ -3069,9 +3069,9 @@ func stbtt__GetGlyphGPOSInfoAdvance(info *FontInfo, glyph1, glyph2 int) stbtt_in
 							}
 
 							if glyph1class >= 0 && glyph1class < int(class1Count) && glyph2class >= 0 && glyph2class < int(class2Count) {
-								var class1Records []byte = table[16:]
-								var class2Records []byte = class1Records[2*(glyph1class*int(class2Count)):]
-								var xAdvance stbtt_int16 = ttSHORT(class2Records[2*glyph2class:])
+								var class1Records = table[16:]
+								var class2Records = class1Records[2*(glyph1class*int(class2Count)):]
+								var xAdvance = ttSHORT(class2Records[2*glyph2class:])
 								return int(xAdvance)
 							}
 						}
@@ -3155,9 +3155,9 @@ func stbtt__handle_clipped_edge(scanline []float, x int, e *stbtt__active_edge, 
 	}
 }
 
-func stbtt__new_active(e *stbtt__edge, off_x int, start_point float, userdata interface{}) *stbtt__active_edge {
-	var z *stbtt__active_edge = new(stbtt__active_edge)
-	var dxdy float = (e.x1 - e.x0) / (e.y1 - e.y0)
+func stbtt__new_active(e *stbtt__edge, off_x int, start_point float, userdata any) *stbtt__active_edge {
+	var z = new(stbtt__active_edge)
+	var dxdy = (e.x1 - e.x0) / (e.y1 - e.y0)
 	STBTT_assert(z != nil)
 	//STBTT_assert(e.y0 <= start_point);
 	if z == nil {
@@ -3181,7 +3181,7 @@ func stbtt__new_active(e *stbtt__edge, off_x int, start_point float, userdata in
 }
 
 func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanline_fill_idx, len int, e *stbtt__active_edge, y_top float) {
-	var y_bottom float = y_top + 1
+	var y_bottom = y_top + 1
 
 	for e != nil {
 		// brute force every pixel
@@ -3190,7 +3190,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 		STBTT_assert(e.ey >= y_top)
 
 		if e.fdx == 0 {
-			var x0 float = e.fx
+			var x0 = e.fx
 			if x0 < float(len) {
 				if x0 >= 0 {
 					stbtt__handle_clipped_edge(scanline, (int)(x0), e, x0, y_top, x0, y_bottom)
@@ -3200,12 +3200,12 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 				}
 			}
 		} else {
-			var x0 float = e.fx
-			var dx float = e.fdx
-			var xb float = x0 + dx
+			var x0 = e.fx
+			var dx = e.fdx
+			var xb = x0 + dx
 			var x_top, x_bottom float
 			var sy0, sy1 float
-			var dy float = e.fdy
+			var dy = e.fdy
 			STBTT_assert(e.sy <= y_bottom && e.ey >= y_top)
 
 			// compute endpoints of line segment clipped to this scanline (if the
@@ -3232,7 +3232,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 				if (int)(x_top) == (int)(x_bottom) {
 					var height float
 					// simple case, only spans one pixel
-					var x int = (int)(x_top)
+					var x = (int)(x_top)
 					height = sy1 - sy0
 					STBTT_assert(x >= 0 && x < len)
 					scanline[x] += e.direction * (1 - ((x_top-float(x))+(x_bottom-float(x)))/2) * height
@@ -3304,17 +3304,17 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 					// that, we need to explicitly produce segments based on x positions.
 
 					// rename variables to clearly-defined pairs
-					var y0 float = y_top
-					var x1 float = (float)(x)
-					var x2 float = (float)(x + 1)
-					var x3 float = xb
-					var y3 float = y_bottom
+					var y0 = y_top
+					var x1 = (float)(x)
+					var x2 = (float)(x + 1)
+					var x3 = xb
+					var y3 = y_bottom
 
 					// x = e.x + e.dx * (y-y_top)
 					// (y-y_top) = (x - e.x) / e.dx
 					// y = (x - e.x) / e.dx + y_top
-					var y1 float = (float32(x)-x0)/dx + y_top
-					var y2 float = (float32(x)+1-x0)/dx + y_top
+					var y1 = (float32(x)-x0)/dx + y_top
+					var y2 = (float32(x)+1-x0)/dx + y_top
 
 					if x0 < x1 && x3 > x2 { // three segments descending down-right
 						stbtt__handle_clipped_edge(scanline, x, e, x0, y0, x1, y1)
@@ -3347,7 +3347,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 }
 
 // directly AA rasterize edges w/o supersampling
-func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vsubsample, off_x, off_y int, userdata interface{}) {
+func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vsubsample, off_x, off_y int, userdata any) {
 	var active *stbtt__active_edge = nil
 	var y, j, i int
 	var scanline_data [129]float
@@ -3366,9 +3366,9 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 
 	for j < result.h {
 		// find center of pixel for this scanline
-		var scan_y_top float = float(y) + 0.0
+		var scan_y_top = float(y) + 0.0
 		var scan_y_bottom = y + 1.0
-		var step **stbtt__active_edge = &active
+		var step = &active
 
 		for i := 0; int(i) < result.w; i++ {
 			scanline[i] = 0
@@ -3380,7 +3380,7 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 		// update all active edges;
 		// remove all active edges that terminate before the top of this scanline
 		for *step != nil {
-			var z *stbtt__active_edge = *step
+			var z = *step
 			if z.ey <= scan_y_top {
 				*step = z.next // delete from list
 				STBTT_assert(z.direction != 0)
@@ -3393,7 +3393,7 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 		// insert all edges that start before the bottom of this scanline
 		for e[0].y0 <= float(scan_y_bottom) {
 			if e[0].y0 != e[0].y1 {
-				var z *stbtt__active_edge = stbtt__new_active(&e[0], off_x, scan_y_top, userdata)
+				var z = stbtt__new_active(&e[0], off_x, scan_y_top, userdata)
 				if z != nil {
 					if j == 0 && off_y != 0 {
 						if z.ey < scan_y_top {
@@ -3433,7 +3433,7 @@ func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vs
 		// advance all the edges
 		step = &active
 		for *step != nil {
-			var z *stbtt__active_edge = *step
+			var z = *step
 			z.fx += z.fdx          // advance to position for current scanline
 			step = &((*step).next) // advance through list
 		}
@@ -3450,12 +3450,12 @@ func STBTT__COMPARE(a, b *stbtt__edge) int {
 func stbtt__sort_edges_ins_sort(p []stbtt__edge, n int) {
 	var i, j int
 	for i = 1; i < n; i++ {
-		var t stbtt__edge = p[i]
-		var a *stbtt__edge = &t
+		var t = p[i]
+		var a = &t
 		j = i
 		for j > 0 {
-			var b *stbtt__edge = &p[j-1]
-			var c int = STBTT__COMPARE(a, b)
+			var b = &p[j-1]
+			var c = STBTT__COMPARE(a, b)
 			if c == 0 {
 				break
 			}
@@ -3548,7 +3548,7 @@ type stbtt__point struct {
 	x, y float
 }
 
-func stbtt__rasterize(result *stbtt__bitmap, pts []stbtt__point, wcount []int, windings int, scale_x, scale_y, shift_x, shift_y float, off_x, off_y, invert int, userdata interface{}) {
+func stbtt__rasterize(result *stbtt__bitmap, pts []stbtt__point, wcount []int, windings int, scale_x, scale_y, shift_x, shift_y float, off_x, off_y, invert int, userdata any) {
 	var y_scale_inv float
 	if invert != 0 {
 		y_scale_inv = -scale_y
@@ -3575,11 +3575,11 @@ func stbtt__rasterize(result *stbtt__bitmap, pts []stbtt__point, wcount []int, w
 
 	m = 0
 	for i = 0; i < windings; i++ {
-		var p []stbtt__point = pts[m:]
+		var p = pts[m:]
 		m += wcount[i]
 		j = wcount[i] - 1
 		for k = 0; k < wcount[i]; j, k = k, k+1 {
-			var a, b int = k, j
+			var a, b = k, j
 			// skip the edge if horizontal
 			if p[j].y == p[k].y {
 				continue
@@ -3625,11 +3625,11 @@ func stbtt__add_point(points []stbtt__point, n int, x, y float) {
 // tessellate until threshold p is happy... @TODO warped to compensate for non-linear stretching
 func stbtt__tesselate_curve(points []stbtt__point, num_points *int, x0, y0, x1, y1, x2, y2, objspace_flatness_squared float, n int) int {
 	// midpoint
-	var mx float = (x0 + 2*x1 + x2) / 4
-	var my float = (y0 + 2*y1 + y2) / 4
+	var mx = (x0 + 2*x1 + x2) / 4
+	var my = (y0 + 2*y1 + y2) / 4
 	// versus directly drawn line
-	var dx float = (x0+x2)/2 - mx
-	var dy float = (y0+y2)/2 - my
+	var dx = (x0+x2)/2 - mx
+	var dy = (y0+y2)/2 - my
 	if n > 16 { // 65536 segments on one curve better be enough!
 		return 1
 	}
@@ -3645,37 +3645,37 @@ func stbtt__tesselate_curve(points []stbtt__point, num_points *int, x0, y0, x1, 
 
 func stbtt__tesselate_cubic(points []stbtt__point, num_points *int, x0, y0, x1, y1, x2, y2, x3, y3, objspace_flatness_squared float, n int) {
 	// @TODO this "flatness" calculation is just made-up nonsense that seems to work well enough
-	var dx0 float = x1 - x0
-	var dy0 float = y1 - y0
-	var dx1 float = x2 - x1
-	var dy1 float = y2 - y1
-	var dx2 float = x3 - x2
-	var dy2 float = y3 - y2
-	var dx float = x3 - x0
-	var dy float = y3 - y0
-	var longlen float = (float)(STBTT_sqrt(dx0*dx0+dy0*dy0) + STBTT_sqrt(dx1*dx1+dy1*dy1) + STBTT_sqrt(dx2*dx2+dy2*dy2))
-	var shortlen float = (float)(STBTT_sqrt(dx*dx + dy*dy))
-	var flatness_squared float = longlen*longlen - shortlen*shortlen
+	var dx0 = x1 - x0
+	var dy0 = y1 - y0
+	var dx1 = x2 - x1
+	var dy1 = y2 - y1
+	var dx2 = x3 - x2
+	var dy2 = y3 - y2
+	var dx = x3 - x0
+	var dy = y3 - y0
+	var longlen = (float)(STBTT_sqrt(dx0*dx0+dy0*dy0) + STBTT_sqrt(dx1*dx1+dy1*dy1) + STBTT_sqrt(dx2*dx2+dy2*dy2))
+	var shortlen = (float)(STBTT_sqrt(dx*dx + dy*dy))
+	var flatness_squared = longlen*longlen - shortlen*shortlen
 
 	if n > 16 { // 65536 segments on one curve better be enough!
 		return
 	}
 
 	if flatness_squared > objspace_flatness_squared {
-		var x01 float = (x0 + x1) / 2
-		var y01 float = (y0 + y1) / 2
-		var x12 float = (x1 + x2) / 2
-		var y12 float = (y1 + y2) / 2
-		var x23 float = (x2 + x3) / 2
-		var y23 float = (y2 + y3) / 2
+		var x01 = (x0 + x1) / 2
+		var y01 = (y0 + y1) / 2
+		var x12 = (x1 + x2) / 2
+		var y12 = (y1 + y2) / 2
+		var x23 = (x2 + x3) / 2
+		var y23 = (y2 + y3) / 2
 
-		var xa float = (x01 + x12) / 2
-		var ya float = (y01 + y12) / 2
-		var xb float = (x12 + x23) / 2
-		var yb float = (y12 + y23) / 2
+		var xa = (x01 + x12) / 2
+		var ya = (y01 + y12) / 2
+		var xb = (x12 + x23) / 2
+		var yb = (y12 + y23) / 2
 
-		var mx float = (xa + xb) / 2
-		var my float = (ya + yb) / 2
+		var mx = (xa + xb) / 2
+		var my = (ya + yb) / 2
 
 		stbtt__tesselate_cubic(points, num_points, x0, y0, x01, y01, xa, ya, mx, my, objspace_flatness_squared, n+1)
 		stbtt__tesselate_cubic(points, num_points, mx, my, xb, yb, x23, y23, x3, y3, objspace_flatness_squared, n+1)
@@ -3686,11 +3686,11 @@ func stbtt__tesselate_cubic(points []stbtt__point, num_points *int, x0, y0, x1, 
 }
 
 // returns number of contours
-func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatness float, contour_lengths *[]int, num_contours *int, userdata interface{}) []stbtt__point {
+func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatness float, contour_lengths *[]int, num_contours *int, userdata any) []stbtt__point {
 	var points []stbtt__point
 	var num_points int = 0
 
-	var objspace_flatness_squared float = objspace_flatness * objspace_flatness
+	var objspace_flatness_squared = objspace_flatness * objspace_flatness
 	var i, n, start, pass int
 
 	// count how many "moves" there are to get the contour count
@@ -3794,7 +3794,7 @@ func stbtt_BakeFontBitmap_internal(data []byte, offset int, // font location (us
 
 	for i = 0; i < num_chars; i++ {
 		var advance, lsb, x0, y0, x1, y1, gw, gh int
-		var g int = FindGlyphIndex(&f, first_char+i)
+		var g = FindGlyphIndex(&f, first_char+i)
 		stbtt_GetGlyphHMetrics(&f, g, &advance, &lsb)
 		stbtt_GetGlyphBitmapBox(&f, g, scale, scale, &x0, &y0, &x1, &y1)
 		gw = x1 - x0
@@ -3828,7 +3828,7 @@ const STBTT__OVER_MASK = STBTT_MAX_OVERSAMPLE - 1
 
 func stbtt__h_prefilter(pixels []byte, w, h, stride_in_bytes int, kernel_width uint) {
 	var buffer [STBTT_MAX_OVERSAMPLE]byte
-	var safe_w int = w - int(kernel_width)
+	var safe_w = w - int(kernel_width)
 	var j int
 	for j = 0; j < h; j++ {
 		var i int
@@ -3887,7 +3887,7 @@ func stbtt__h_prefilter(pixels []byte, w, h, stride_in_bytes int, kernel_width u
 
 func stbtt__v_prefilter(pixels []byte, w, h, stride_in_bytes int, kernel_width uint) {
 	var buffer [STBTT_MAX_OVERSAMPLE]byte
-	var safe_h int = h - int(kernel_width)
+	var safe_h = h - int(kernel_width)
 	var j int
 
 	for j = 0; j < w; j++ {
@@ -3986,24 +3986,24 @@ func STBTT_maxf(a, b float) float {
 }
 
 func stbtt__ray_intersect_bezier(orig, ray, q0, q1, q2 [2]float, hits [2][2]float) int {
-	var q0perp float = q0[1]*ray[0] - q0[0]*ray[1]
-	var q1perp float = q1[1]*ray[0] - q1[0]*ray[1]
-	var q2perp float = q2[1]*ray[0] - q2[0]*ray[1]
-	var roperp float = orig[1]*ray[0] - orig[0]*ray[1]
+	var q0perp = q0[1]*ray[0] - q0[0]*ray[1]
+	var q1perp = q1[1]*ray[0] - q1[0]*ray[1]
+	var q2perp = q2[1]*ray[0] - q2[0]*ray[1]
+	var roperp = orig[1]*ray[0] - orig[0]*ray[1]
 
-	var a float = q0perp - 2*q1perp + q2perp
-	var b float = q1perp - q0perp
-	var c float = q0perp - roperp
+	var a = q0perp - 2*q1perp + q2perp
+	var b = q1perp - q0perp
+	var c = q0perp - roperp
 
 	var s0 float = 0.0
 	var s1 float = 0.0
 	var num_s int = 0
 
 	if a != 0.0 {
-		var discr float = b*b - a*c
+		var discr = b*b - a*c
 		if discr > 0.0 {
-			var rcpna float = -1 / a
-			var d float = (float)(STBTT_sqrt(discr))
+			var rcpna = -1 / a
+			var d = (float)(STBTT_sqrt(discr))
 			s0 = (b + d) * rcpna
 			s1 = (b - d) * rcpna
 			if s0 >= 0.0 && s0 <= 1.0 {
@@ -4028,18 +4028,18 @@ func stbtt__ray_intersect_bezier(orig, ray, q0, q1, q2 [2]float, hits [2][2]floa
 	if num_s == 0 {
 		return 0
 	} else {
-		var rcp_len2 float = 1 / (ray[0]*ray[0] + ray[1]*ray[1])
-		var rayn_x float = ray[0] * rcp_len2
-		var rayn_y float = ray[1] * rcp_len2
+		var rcp_len2 = 1 / (ray[0]*ray[0] + ray[1]*ray[1])
+		var rayn_x = ray[0] * rcp_len2
+		var rayn_y = ray[1] * rcp_len2
 
-		var q0d float = q0[0]*rayn_x + q0[1]*rayn_y
-		var q1d float = q1[0]*rayn_x + q1[1]*rayn_y
-		var q2d float = q2[0]*rayn_x + q2[1]*rayn_y
-		var rod float = orig[0]*rayn_x + orig[1]*rayn_y
+		var q0d = q0[0]*rayn_x + q0[1]*rayn_y
+		var q1d = q1[0]*rayn_x + q1[1]*rayn_y
+		var q2d = q2[0]*rayn_x + q2[1]*rayn_y
+		var rod = orig[0]*rayn_x + orig[1]*rayn_y
 
-		var q10d float = q1d - q0d
-		var q20d float = q2d - q0d
-		var q0rd float = q0d - rod
+		var q10d = q1d - q0d
+		var q20d = q2d - q0d
+		var q0rd = q0d - rod
 
 		hits[0][0] = q0rd + s0*(2.0-2.0*s0)*q10d + s0*s0*q20d
 		hits[0][1] = a*s0 + b
@@ -4080,12 +4080,12 @@ func stbtt__compute_crossings_x(x, y float, nverts int, verts []stbtt_vertex) in
 	// test a ray from (-infinity,y) to (x,y)
 	for i = 0; i < nverts; i++ {
 		if verts[i].vtype == STBTT_vline {
-			var x0 int = (int)(verts[i-1].x)
-			var y0 int = (int)(verts[i-1].y)
-			var x1 int = (int)(verts[i].x)
-			var y1 int = (int)(verts[i].y)
+			var x0 = (int)(verts[i-1].x)
+			var y0 = (int)(verts[i-1].y)
+			var x1 = (int)(verts[i].x)
+			var y1 = (int)(verts[i].y)
 			if y > float(STBTT_min(y0, y1)) && y < float(STBTT_max(y0, y1)) && x > float(STBTT_min(x0, x1)) {
-				var x_inter float = (y-float(y0))/(float(y1)-float(y0))*(float(x1)-float(x0)) + float(x0)
+				var x_inter = (y-float(y0))/(float(y1)-float(y0))*(float(x1)-float(x0)) + float(x0)
 				if x_inter < x {
 					if y0 < y1 {
 						winding += 1
@@ -4096,15 +4096,15 @@ func stbtt__compute_crossings_x(x, y float, nverts int, verts []stbtt_vertex) in
 			}
 		}
 		if verts[i].vtype == STBTT_vcurve {
-			var x0 int = (int)(verts[i-1].x)
-			var y0 int = (int)(verts[i-1].y)
-			var x1 int = (int)(verts[i].cx)
-			var y1 int = (int)(verts[i].cy)
-			var x2 int = (int)(verts[i].x)
+			var x0 = (int)(verts[i-1].x)
+			var y0 = (int)(verts[i-1].y)
+			var x1 = (int)(verts[i].cx)
+			var y1 = (int)(verts[i].cy)
+			var x2 = (int)(verts[i].x)
 			var y2 = (int)(verts[i].y)
-			var ax int = STBTT_min(x0, STBTT_min(x1, x2))
-			var ay int = STBTT_min(y0, STBTT_min(y1, y2))
-			var by int = STBTT_max(y0, STBTT_max(y1, y2))
+			var ax = STBTT_min(x0, STBTT_min(x1, x2))
+			var ay = STBTT_min(y0, STBTT_min(y1, y2))
+			var by = STBTT_max(y0, STBTT_max(y1, y2))
 			if y > float(ay) && y < float(by) && x > float(ax) {
 				var q0, q1, q2 [2]float
 				var hits [2][2]float
@@ -4120,7 +4120,7 @@ func stbtt__compute_crossings_x(x, y float, nverts int, verts []stbtt_vertex) in
 					x1 = (int)(verts[i].x)
 					y1 = (int)(verts[i].y)
 					if y > float(STBTT_min(y0, y1)) && y < float(STBTT_max(y0, y1)) && x > float(STBTT_min(x0, x1)) {
-						var x_inter float = (y-float(y0))/(float(y1)-float(y0))*(float(x1)-float(x0)) + float(x0)
+						var x_inter = (y-float(y0))/(float(y1)-float(y0))*(float(x1)-float(x0)) + float(x0)
 						if x_inter < x {
 							if y0 < y1 {
 								winding += 1
@@ -4130,7 +4130,7 @@ func stbtt__compute_crossings_x(x, y float, nverts int, verts []stbtt_vertex) in
 						}
 					}
 				} else {
-					var num_hits int = stbtt__ray_intersect_bezier(orig, ray, q0, q1, q2, hits)
+					var num_hits = stbtt__ray_intersect_bezier(orig, ray, q0, q1, q2, hits)
 					if num_hits >= 1 {
 						if hits[0][0] < 0 {
 							if hits[0][1] < 0 {
@@ -4166,24 +4166,24 @@ func stbtt__cuberoot(x float) float {
 
 // x^3 + c*x^2 + b*x + a = 0
 func stbtt__solve_cubic(a, b, c float, r []float) int {
-	var s float = -a / 3
-	var p float = b - a*a/3
-	var q float = a*(2*a*a-9*b)/27 + c
-	var p3 float = p * p * p
-	var d float = q*q + 4*p3/27
+	var s = -a / 3
+	var p = b - a*a/3
+	var q = a*(2*a*a-9*b)/27 + c
+	var p3 = p * p * p
+	var d = q*q + 4*p3/27
 	if d >= 0 {
-		var z float = (float)(STBTT_sqrt(d))
-		var u float = (-q + z) / 2
-		var v float = (-q - z) / 2
+		var z = (float)(STBTT_sqrt(d))
+		var u = (-q + z) / 2
+		var v = (-q - z) / 2
 		u = stbtt__cuberoot(u)
 		v = stbtt__cuberoot(v)
 		r[0] = s + u + v
 		return 1
 	} else {
-		var u float = (float)(STBTT_sqrt(-p / 3))
-		var v float = (float)(STBTT_acos(-STBTT_sqrt(-27/p3)*q/2) / 3) // p3 must be negative, since d is negative
-		var m float = (float)(STBTT_cos(v))
-		var n float = (float)(STBTT_cos(v-3.141592/2) * 1.732050808)
+		var u = (float)(STBTT_sqrt(-p / 3))
+		var v = (float)(STBTT_acos(-STBTT_sqrt(-27/p3)*q/2) / 3) // p3 must be negative, since d is negative
+		var m = (float)(STBTT_cos(v))
+		var n = (float)(STBTT_cos(v-3.141592/2) * 1.732050808)
 		r[0] = s + u*2*m
 		r[1] = s - u*(m+n)
 		r[2] = s - u*(m-n)
@@ -4201,7 +4201,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 
 	// convert utf16 to utf8 and compare the results while converting
 	for len2 != 0 {
-		var ch stbtt_uint16 = stbtt_uint16(s2[0])*256 + stbtt_uint16(s2[1])
+		var ch = stbtt_uint16(s2[0])*256 + stbtt_uint16(s2[1])
 		if ch < 0x80 {
 			if i >= len1 {
 				return -1
@@ -4226,7 +4226,7 @@ func stbtt__CompareUTF8toUTF16_bigendian_prefix(s1 []stbtt_uint8, len1 stbtt_int
 			i++
 		} else if ch >= 0xd800 && ch < 0xdc00 {
 			var c stbtt_uint32
-			var ch2 stbtt_uint16 = stbtt_uint16(s2[2])*256 + stbtt_uint16(s2[3])
+			var ch2 = stbtt_uint16(s2[2])*256 + stbtt_uint16(s2[3])
 			if i+3 >= len1 {
 				return -1
 			}
@@ -4282,25 +4282,25 @@ func stbtt_CompareUTF8toUTF16_bigendian_internal(s1 []byte, len1 int, s2 []byte,
 
 func stbtt__matchpair(fc []byte, nm stbtt_uint32, name []byte, nlen stbtt_int32, target_id stbtt_int32, next_id stbtt_int32) int {
 	var i stbtt_int32
-	var count stbtt_int32 = int(ttUSHORT(fc[nm+2:]))
-	var stringOffset stbtt_int32 = int(nm + uint(ttUSHORT(fc[nm+4:])))
+	var count = int(ttUSHORT(fc[nm+2:]))
+	var stringOffset = int(nm + uint(ttUSHORT(fc[nm+4:])))
 
 	for i = 0; i < count; i++ {
-		var loc stbtt_uint32 = nm + 6 + uint(12*i)
-		var id stbtt_int32 = int(ttUSHORT(fc[loc+6:]))
+		var loc = nm + 6 + uint(12*i)
+		var id = int(ttUSHORT(fc[loc+6:]))
 		if id == target_id {
 			// find the encoding
-			var platform stbtt_int32 = int(ttUSHORT(fc[loc+0:]))
-			var encoding stbtt_int32 = int(ttUSHORT(fc[loc+2:]))
-			var language stbtt_int32 = int(ttUSHORT(fc[loc+4:]))
+			var platform = int(ttUSHORT(fc[loc+0:]))
+			var encoding = int(ttUSHORT(fc[loc+2:]))
+			var language = int(ttUSHORT(fc[loc+4:]))
 
 			// is this a Unicode encoding?
 			if platform == 0 || (platform == 3 && encoding == 1) || (platform == 3 && encoding == 10) {
-				var slen stbtt_int32 = int(ttUSHORT(fc[loc+8:]))
-				var off stbtt_int32 = int(ttUSHORT(fc[loc+10:]))
+				var slen = int(ttUSHORT(fc[loc+8:]))
+				var off = int(ttUSHORT(fc[loc+10:]))
 
 				// check if there's a prefix match
-				var matchlen stbtt_int32 = stbtt__CompareUTF8toUTF16_bigendian_prefix(name, nlen, fc[stringOffset+off:], slen)
+				var matchlen = stbtt__CompareUTF8toUTF16_bigendian_prefix(name, nlen, fc[stringOffset+off:], slen)
 				if matchlen >= 0 {
 					// check for target_id+1 immediately following, with same encoding & language
 					if i+1 < count && int(ttUSHORT(fc[loc+12+6:])) == next_id &&
@@ -4335,7 +4335,7 @@ func stbtt__matchpair(fc []byte, nm stbtt_uint32, name []byte, nlen stbtt_int32,
 }
 
 func stbtt__matches(fc []byte, offset stbtt_uint32, name []byte, flags stbtt_int32) int {
-	var nlen stbtt_int32 = int(len(name))
+	var nlen = int(len(name))
 	var nm, hd stbtt_uint32
 	if stbtt__isfont(fc[offset:]) == 0 {
 		return 0
@@ -4383,7 +4383,7 @@ func stbtt__matches(fc []byte, offset stbtt_uint32, name []byte, flags stbtt_int
 func stbtt_FindMatchingFont_internal(font_collection []byte, name_utf8 []byte, flags stbtt_int32) int {
 	var i stbtt_int32
 	for i = 0; ; i++ {
-		var off stbtt_int32 = GetFontOffsetForIndex(font_collection, i)
+		var off = GetFontOffsetForIndex(font_collection, i)
 		if off < 0 {
 			return off
 		}

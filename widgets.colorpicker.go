@@ -50,7 +50,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 	PushString(label)
 
 	// If we're not showing any slider there's no point in doing any HSV conversions
-	var flags_untouched ImGuiColorEditFlags = flags
+	var flags_untouched = flags
 	if (flags & ImGuiColorEditFlags_NoInputs) != 0 {
 		flags = (flags & (^ImGuiColorEditFlags_DisplayMask_)) | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_NoOptions
 	}
@@ -121,8 +121,8 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 
 	if (flags&(ImGuiColorEditFlags_DisplayRGB|ImGuiColorEditFlags_DisplayHSV)) != 0 && (flags&ImGuiColorEditFlags_NoInputs) == 0 {
 		// RGB/HSV 0..255 Sliders
-		var w_item_one float = ImMax(1.0, IM_FLOOR((w_inputs-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
-		var w_item_last float = ImMax(1.0, IM_FLOOR(w_inputs-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
+		var w_item_one = ImMax(1.0, IM_FLOOR((w_inputs-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
+		var w_item_last = ImMax(1.0, IM_FLOOR(w_inputs-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
 
 		var mformat = "M:000"
 		if (flags & ImGuiColorEditFlags_Float) != 0 {
@@ -245,8 +245,8 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 				TextEx(label, 0)
 				Spacing()
 			}
-			var picker_flags_to_forward ImGuiColorEditFlags = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar
-			var picker_flags ImGuiColorEditFlags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf
+			var picker_flags_to_forward = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar
+			var picker_flags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf
 			SetNextItemWidth(square_sz * 12.0) // Use 256 + bar sizes?
 			value_changed = ColorPicker4("##picker", col, picker_flags, []float{g.ColorPickerRef.x, g.ColorPickerRef.y, g.ColorPickerRef.z, g.ColorPickerRef.w}) || value_changed
 			EndPopup()
@@ -395,12 +395,12 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	if (flags & ImGuiColorEditFlags_NoAlpha) != 0 {
 		components = 3
 	}
-	var alpha_bar bool = (flags&ImGuiColorEditFlags_AlphaBar) != 0 && (flags&ImGuiColorEditFlags_NoAlpha) == 0
+	var alpha_bar = (flags&ImGuiColorEditFlags_AlphaBar) != 0 && (flags&ImGuiColorEditFlags_NoAlpha) == 0
 	var bar float = 1
 	if alpha_bar {
 		bar = 2
 	}
-	var picker_pos ImVec2 = window.DC.CursorPos
+	var picker_pos = window.DC.CursorPos
 	var square_sz = GetFrameHeight()
 	var bars_width = square_sz                                                                // Arbitrary smallish width of Hue/Alpha picking bars
 	var sv_picker_size = ImMax(bars_width*1, width-bar*(bars_width+style.ItemInnerSpacing.x)) // Saturation/Value picking box
@@ -538,7 +538,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 			Text("Current")
 		}
 
-		var sub_flags_to_forward ImGuiColorEditFlags = ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoTooltip
+		var sub_flags_to_forward = ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoTooltip
 		ColorButton("##current", col_v4, (flags & sub_flags_to_forward), ImVec2{square_sz * 3, square_sz * 2})
 		if ref_col != nil {
 			Text("Original")
@@ -594,8 +594,8 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 		}
 
 		PushItemWidth(bar + bars_width - picker_pos.x)
-		var sub_flags_to_forward ImGuiColorEditFlags = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf
-		var sub_flags ImGuiColorEditFlags = (flags & sub_flags_to_forward) | ImGuiColorEditFlags_NoPicker
+		var sub_flags_to_forward = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf
+		var sub_flags = (flags & sub_flags_to_forward) | ImGuiColorEditFlags_NoPicker
 		if flags&ImGuiColorEditFlags_DisplayRGB != 0 || (flags&ImGuiColorEditFlags_DisplayMask_) == 0 {
 			if ColorEdit4("##rgb", col, sub_flags|ImGuiColorEditFlags_DisplayRGB) {
 				// FIXME: Hackily differentiating using the DragInt (ActiveId != 0 && !ActiveIdAllowOverlap) vs. using the InputText or DropTarget.
@@ -688,8 +688,8 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 		}
 
 		// Render Cursor + preview on Hue Wheel
-		var cos_hue_angle float = ImCos(H * 2.0 * IM_PI)
-		var sin_hue_angle float = ImSin(H * 2.0 * IM_PI)
+		var cos_hue_angle = ImCos(H * 2.0 * IM_PI)
+		var sin_hue_angle = ImSin(H * 2.0 * IM_PI)
 		var hue_cursor_pos = ImVec2{wheel_center.x + cos_hue_angle*(wheel_r_inner+wheel_r_outer)*0.5, wheel_center.y + sin_hue_angle*(wheel_r_inner+wheel_r_outer)*0.5}
 		var hue_cursor_rad float
 		if value_changed_h {
@@ -749,7 +749,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 		var bar1_bb = ImRect{ImVec2{bar1_pos_x, picker_pos.y}, ImVec2{bar1_pos_x + bars_width, picker_pos.y + sv_picker_size}}
 		RenderColorRectWithAlphaCheckerboard(draw_list, bar1_bb.Min, bar1_bb.Max, 0, bar1_bb.GetWidth()/2.0, ImVec2{}, 0, 0)
 		draw_list.AddRectFilledMultiColor(bar1_bb.Min, bar1_bb.Max, user_col32_striped_of_alpha, user_col32_striped_of_alpha, user_col32_striped_of_alpha&^IM_COL32_A_MASK, user_col32_striped_of_alpha&^IM_COL32_A_MASK)
-		var bar1_line_y float = IM_ROUND(picker_pos.y + (1.0-alpha)*sv_picker_size)
+		var bar1_line_y = IM_ROUND(picker_pos.y + (1.0-alpha)*sv_picker_size)
 		RenderFrameBorder(bar1_bb.Min, bar1_bb.Max, 0.0)
 		RenderArrowsForVerticalBar(draw_list, ImVec2{bar1_pos_x - 1, bar1_line_y}, ImVec2{bars_triangles_half_sz + 1, bars_triangles_half_sz}, bars_width+2.0, style.Alpha)
 	}
@@ -780,7 +780,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 	}
 
 	var g = GImGui
-	var id ImGuiID = window.GetIDs(desc_id)
+	var id = window.GetIDs(desc_id)
 	var default_size = GetFrameHeight()
 	if size.x == 0.0 {
 		size.x = default_size
@@ -807,15 +807,15 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 		flags &= ^(ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf)
 	}
 
-	var col_rgb ImVec4 = col
+	var col_rgb = col
 	if flags&ImGuiColorEditFlags_InputHSV != 0 {
 		ColorConvertHSVtoRGB(col_rgb.x, col_rgb.y, col_rgb.z, &col_rgb.x, &col_rgb.y, &col_rgb.z)
 	}
 
 	var col_rgb_without_alpha = ImVec4{col_rgb.x, col_rgb.y, col_rgb.z, 1.0}
-	var grid_step float = ImMin(size.x, size.y) / 2.99
-	var rounding float = ImMin(g.Style.FrameRounding, grid_step*0.5)
-	var bb_inner ImRect = bb
+	var grid_step = ImMin(size.x, size.y) / 2.99
+	var rounding = ImMin(g.Style.FrameRounding, grid_step*0.5)
+	var bb_inner = bb
 	var off float
 	if (flags & ImGuiColorEditFlags_NoBorder) == 0 {
 		off = -0.75 // The border (using Col_FrameBg) tends to look off when color is near-opaque and rounding is enabled. This offset seemed like a good middle ground to reduce those artifacts.
@@ -827,7 +827,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 		window.DrawList.AddRectFilled(bb_inner.Min, ImVec2{mid_x, bb_inner.Max.y}, GetColorU32FromVec(col_rgb_without_alpha), rounding, ImDrawFlags_RoundCornersLeft)
 	} else {
 		// Because GetColorU32() multiplies by the global style Alpha and we don't want to display a checkerboard if the source code had no alpha
-		var col_source ImVec4 = col_rgb_without_alpha
+		var col_source = col_rgb_without_alpha
 		if (flags & ImGuiColorEditFlags_AlphaPreview) != 0 {
 			col_source = col_rgb
 		}
@@ -902,7 +902,7 @@ func ColorTooltip(text string, col [4]float, flags ImGuiColorEditFlags) {
 		Separator()
 	}
 
-	var a float = col[3]
+	var a = col[3]
 	if flags&ImGuiColorEditFlags_NoAlpha != 0 {
 		a = 1
 	}
@@ -938,7 +938,7 @@ func ColorEditOptionsPopup(col [4]float, flags ImGuiColorEditFlags) {
 		return
 	}
 	var g = GImGui
-	var opts ImGuiColorEditFlags = g.ColorEditOptions
+	var opts = g.ColorEditOptions
 	if allow_opt_inputs {
 		if RadioButtonBool("RGB", (opts&ImGuiColorEditFlags_DisplayRGB) != 0) {
 			opts = (opts & ^ImGuiColorEditFlags_DisplayMask_) | ImGuiColorEditFlags_DisplayRGB
@@ -1022,14 +1022,14 @@ func ColorPickerOptionsPopup(ref_col *[4]float, flags ImGuiColorEditFlags) {
 				Separator()
 			}
 			PushInterface(picker_type)
-			var picker_flags ImGuiColorEditFlags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | (flags & ImGuiColorEditFlags_NoAlpha)
+			var picker_flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | (flags & ImGuiColorEditFlags_NoAlpha)
 			if picker_type == 0 {
 				picker_flags |= ImGuiColorEditFlags_PickerHueBar
 			}
 			if picker_type == 1 {
 				picker_flags |= ImGuiColorEditFlags_PickerHueWheel
 			}
-			var backup_pos ImVec2 = GetCursorScreenPos()
+			var backup_pos = GetCursorScreenPos()
 			if Selectable("##selectable", false, 0, picker_size) { // By default, Selectable() is closing popup
 				g.ColorEditOptions = (g.ColorEditOptions & ^ImGuiColorEditFlags_PickerMask_) | (picker_flags & ImGuiColorEditFlags_PickerMask_)
 			}

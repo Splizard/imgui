@@ -1,6 +1,6 @@
 package imgui
 
-// Hold rendering data for one glyph.
+// ImFontGlyph Hold rendering data for one glyph.
 // (Note: some language parsers may fail to convert the 31+1 bitfield members, in this case maybe drop store a single u32 or we can rework this)
 type ImFontGlyph struct {
 	Colored        uint  // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
@@ -15,7 +15,7 @@ func NewImFontGlyph() ImFontGlyph {
 	return ImFontGlyph{}
 }
 
-// Helper to build glyph ranges from text/string data. Feed your application strings/characters to it then call BuildRanges().
+// ImFontGlyphRangesBuilder Helper to build glyph ranges from text/string data. Feed your application strings/characters to it then call BuildRanges().
 // This is essentially a tightly packed of vector of 64k booleans = 8KB storage.
 type ImFontGlyphRangesBuilder []ImU32
 
@@ -23,45 +23,45 @@ func NewImFontGlyphRangesBuilder() ImFontGlyphRangesBuilder {
 	return make(ImFontGlyphRangesBuilder, (IM_UNICODE_CODEPOINT_MAX+1)/8)
 }
 
-func (this ImFontGlyphRangesBuilder) GetBit(n uintptr) bool {
+func (b ImFontGlyphRangesBuilder) GetBit(n uintptr) bool {
 	var off = (int)(n >> 5)
 	var mask = uint(1) << (n & 31)
-	return (this[off] & mask) != 0
+	return (b[off] & mask) != 0
 }
 
-func (this ImFontGlyphRangesBuilder) SetBit(n uintptr) {
+func (b ImFontGlyphRangesBuilder) SetBit(n uintptr) {
 	var off = (int)(n >> 5)
 	var mask = uint(1) << (n & 31)
-	this[off] |= mask
+	b[off] |= mask
 }
 
-func (this ImFontGlyphRangesBuilder) AddChar(c ImWchar) {
-	this.SetBit(uintptr(c))
+func (b ImFontGlyphRangesBuilder) AddChar(c ImWchar) {
+	b.SetBit(uintptr(c))
 }
 
-// Add string (each character of the UTF-8 string are added)
-func (this ImFontGlyphRangesBuilder) AddText(text string) {
+// AddText Add string (each character of the UTF-8 string are added)
+func (b ImFontGlyphRangesBuilder) AddText(text string) {
 	for _, char := range text {
-		this.AddChar(char)
+		b.AddChar(char)
 	}
 }
 
-// Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
-func (this ImFontGlyphRangesBuilder) AddRanges(ranges []ImWchar) {
+// AddRanges Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
+func (b ImFontGlyphRangesBuilder) AddRanges(ranges []ImWchar) {
 	for ; len(ranges) > 0; ranges = ranges[2:] {
 		for c := ranges[0]; c <= ranges[1]; c++ {
-			this.AddChar(c)
+			b.AddChar(c)
 		}
 	}
 }
 
-// Output new ranges
-func (this ImFontGlyphRangesBuilder) BuildRanges(out_ranges *[]ImWchar) {
+// BuildRanges Output new ranges
+func (b ImFontGlyphRangesBuilder) BuildRanges(out_ranges *[]ImWchar) {
 	var max_codepoint int = IM_UNICODE_CODEPOINT_MAX
 	for n := int(0); n <= max_codepoint; n++ {
-		if this.GetBit(uintptr(n)) {
+		if b.GetBit(uintptr(n)) {
 			*out_ranges = append(*out_ranges, (ImWchar)(n))
-			for n < max_codepoint && this.GetBit(uintptr(n)+1) {
+			for n < max_codepoint && b.GetBit(uintptr(n)+1) {
 				n++
 			}
 			*out_ranges = append(*out_ranges, (ImWchar)(n))
@@ -70,7 +70,7 @@ func (this ImFontGlyphRangesBuilder) BuildRanges(out_ranges *[]ImWchar) {
 	*out_ranges = append(*out_ranges, 0)
 }
 
-// Default + Korean characters
+// GetGlyphRangesKorean Default + Korean characters
 func (atlas *ImFontAtlas) GetGlyphRangesKorean() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin + Latin Supplement
@@ -81,7 +81,7 @@ func (atlas *ImFontAtlas) GetGlyphRangesKorean() []ImWchar {
 	}
 }
 
-// Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
+// GetGlyphRangesJapanese Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
 func (atlas *ImFontAtlas) GetGlyphRangesJapanese() []ImWchar {
 	// 2999 ideograms code points for Japanese
 	// - 2136 Joyo (meaning "for regular use" or "for common use") Kanji code points
@@ -168,7 +168,7 @@ func (atlas *ImFontAtlas) GetGlyphRangesJapanese() []ImWchar {
 	return full_ranges[:]
 }
 
-// Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
+// GetGlyphRangesChineseFull Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
 func (atlas *ImFontAtlas) GetGlyphRangesChineseFull() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin + Latin Supplement
@@ -182,7 +182,7 @@ func (atlas *ImFontAtlas) GetGlyphRangesChineseFull() []ImWchar {
 	}
 }
 
-// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
+// GetGlyphRangesChineseSimplifiedCommon Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
 func (atlas *ImFontAtlas) GetGlyphRangesChineseSimplifiedCommon() []ImWchar {
 	// Store 2500 regularly used characters for Simplified Chinese.
 	// Sourced from https://zh.wiktionary.org/wiki/%E9%99%84%E5%BD%95:%E7%8E%B0%E4%BB%A3%E6%B1%89%E8%AF%AD%E5%B8%B8%E7%94%A8%E5%AD%97%E8%A1%A8
@@ -247,7 +247,7 @@ func (atlas *ImFontAtlas) GetGlyphRangesChineseSimplifiedCommon() []ImWchar {
 	return full_ranges[:]
 }
 
-// Default + about 400 Cyrillic characters
+// GetGlyphRangesCyrillic Default + about 400 Cyrillic characters
 func (atlas *ImFontAtlas) GetGlyphRangesCyrillic() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin + Latin Supplement
@@ -258,7 +258,7 @@ func (atlas *ImFontAtlas) GetGlyphRangesCyrillic() []ImWchar {
 	}
 }
 
-// Default + Thai characters
+// GetGlyphRangesThai Default + Thai characters
 func (atlas *ImFontAtlas) GetGlyphRangesThai() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin
@@ -268,7 +268,7 @@ func (atlas *ImFontAtlas) GetGlyphRangesThai() []ImWchar {
 	}
 }
 
-// Default + Vietnamese characters
+// GetGlyphRangesVietnamese Default + Vietnamese characters
 func (atlas *ImFontAtlas) GetGlyphRangesVietnamese() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin

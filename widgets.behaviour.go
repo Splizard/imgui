@@ -4,16 +4,16 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 	var g = GImGui
 	var window = g.CurrentWindow
 
-	var item_flags_backup ImGuiItemFlags = g.CurrentItemFlags
+	var item_flags_backup = g.CurrentItemFlags
 	g.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus
-	var item_add bool = ItemAdd(bb, id, nil, 0)
+	var item_add = ItemAdd(bb, id, nil, 0)
 	g.CurrentItemFlags = item_flags_backup
 	if !item_add {
 		return false
 	}
 
 	var hovered, held bool
-	var bb_interact ImRect = *bb
+	var bb_interact = *bb
 	if axis == ImGuiAxis_Y {
 		bb_interact.ExpandVec(ImVec2{0.0, hover_extend})
 	} else {
@@ -35,17 +35,17 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 		}
 	}
 
-	var bb_render ImRect = *bb
+	var bb_render = *bb
 	if held {
-		var mouse_delta_2d ImVec2 = g.IO.MousePos.Sub(g.ActiveIdClickOffset).Sub(bb_interact.Min)
-		var mouse_delta float = mouse_delta_2d.x
+		var mouse_delta_2d = g.IO.MousePos.Sub(g.ActiveIdClickOffset).Sub(bb_interact.Min)
+		var mouse_delta = mouse_delta_2d.x
 		if axis == ImGuiAxis_Y {
 			mouse_delta = mouse_delta_2d.y
 		}
 
 		// Minimum pane size
-		var size_1_maximum_delta float = ImMax(0.0, *size1-min_size1)
-		var size_2_maximum_delta float = ImMax(0.0, *size2-min_size2)
+		var size_1_maximum_delta = ImMax(0.0, *size1-min_size1)
+		var size_2_maximum_delta = ImMax(0.0, *size2-min_size2)
 		if mouse_delta < -size_1_maximum_delta {
 			mouse_delta = -size_1_maximum_delta
 		}
@@ -80,7 +80,7 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 	}
 
 	// Render
-	var col ImU32 = GetColorU32FromID(c, 1)
+	var col = GetColorU32FromID(c, 1)
 	window.DrawList.AddRectFilled(bb_render.Min, bb_render.Max, col, 0.0, 0)
 
 	return held
@@ -100,9 +100,9 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 	var is_floating_point = true
 
 	var grab_padding float = 2.0
-	var slider_sz float = (bb.Max.Axis(axis) - bb.Min.Axis(axis)) - grab_padding*2.0
-	var grab_sz float = style.GrabMinSize
-	var v_range float = v_min - v_max
+	var slider_sz = (bb.Max.Axis(axis) - bb.Min.Axis(axis)) - grab_padding*2.0
+	var grab_sz = style.GrabMinSize
+	var v_range = v_min - v_max
 	if v_min < v_max {
 		v_range = v_max - v_min
 	}
@@ -127,7 +127,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 	}
 
 	// Process interacting with the slider
-	var value_changed bool = false
+	var value_changed = false
 	if g.ActiveId == id {
 		var set_new_value = false
 		var clicked_t float = 0.0
@@ -151,8 +151,8 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 				g.SliderCurrentAccumDirty = false
 			}
 
-			var input_delta2 ImVec2 = GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 0.0, 0.0)
-			var input_delta float = -input_delta2.y
+			var input_delta2 = GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 0.0, 0.0)
+			var input_delta = -input_delta2.y
 			if axis == ImGuiAxis_X {
 				input_delta = input_delta2.x
 			}
@@ -186,7 +186,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 				g.SliderCurrentAccumDirty = true
 			}
 
-			var delta float = g.SliderCurrentAccum
+			var delta = g.SliderCurrentAccum
 			if g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated {
 				ClearActiveID()
 			} else if g.SliderCurrentAccumDirty {
@@ -205,7 +205,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 					if (flags & ImGuiSliderFlags_NoRoundToFormat) == 0 {
 						v_new = RoundScalarWithFormatT(format, v_new)
 					}
-					var new_clicked_t float = ScaleRatioFromValueT(v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
+					var new_clicked_t = ScaleRatioFromValueT(v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 
 					if delta > 0 {
 						g.SliderCurrentAccum -= ImMin(new_clicked_t-old_clicked_t, delta)
@@ -219,7 +219,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 		}
 
 		if set_new_value {
-			var v_new float = ScaleValueFromRatioT(clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
+			var v_new = ScaleValueFromRatioT(clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 
 			// Round to user desired precision based on format string
 			if (flags & ImGuiSliderFlags_NoRoundToFormat) == 0 {
@@ -238,11 +238,11 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 		*out_grab_bb = ImRect{bb.Min, bb.Min}
 	} else {
 		// Output grab position so it can be displayed by the caller
-		var grab_t float = ScaleRatioFromValueT(*v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
+		var grab_t = ScaleRatioFromValueT(*v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 		if axis == ImGuiAxis_Y {
 			grab_t = 1.0 - grab_t
 		}
-		var grab_pos float = ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t)
+		var grab_pos = ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t)
 		if axis == ImGuiAxis_X {
 			*out_grab_bb = ImRect{ImVec2{grab_pos - grab_sz*0.5, bb.Min.y + grab_padding}, ImVec2{grab_pos + grab_sz*0.5, bb.Max.y - grab_padding}}
 		} else {
@@ -256,7 +256,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v interface{}, p_min interface{}, p_max interface{}, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
+func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v any, p_min any, p_max any, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 

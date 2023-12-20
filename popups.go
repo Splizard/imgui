@@ -32,7 +32,7 @@ func BeginPopup(str_id string, flags ImGuiWindowFlags) bool {
 func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	var g = GImGui
 	var window = g.CurrentWindow
-	var id ImGuiID = window.GetIDs(name)
+	var id = window.GetIDs(name)
 	if !isPopupOpen(id, ImGuiPopupFlags_None) {
 		g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 		return false
@@ -42,7 +42,7 @@ func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	// (this won't really last as settings will kick in, and is mostly for backward compatibility. user may do the same themselves)
 	// FIXME: Should test for (PosCond & window.SetWindowPosAllowFlags) with the upcoming window.
 	if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0 {
-		var viewport *ImGuiViewport = GetMainViewport()
+		var viewport = GetMainViewport()
 		center := viewport.GetCenter()
 		SetNextWindowPos(&center, ImGuiCond_FirstUseEver, ImVec2{0.5, 0.5})
 	}
@@ -107,7 +107,7 @@ func OpenPopupOnItemClick(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*=
 	var window = g.CurrentWindow
 	var mouse_button = ImGuiMouseButton(popup_flags & ImGuiPopupFlags_MouseButtonMask_)
 	if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
-		var id ImGuiID = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
+		var id = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
 		if str_id != "" {
 			id = window.GetIDs(str_id)
 		}
@@ -180,7 +180,7 @@ func BeginPopupContextItem(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*
 	if window.SkipItems {
 		return false
 	}
-	var id ImGuiID = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
+	var id = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
 	if str_id != "" {
 		id = window.GetIDs(str_id)
 	}
@@ -198,7 +198,7 @@ func BeginPopupContextVoid(str_id string, popup_flags ImGuiPopupFlags) bool {
 	if str_id == "" {
 		str_id = "void_context"
 	}
-	var id ImGuiID = window.GetIDs(str_id)
+	var id = window.GetIDs(str_id)
 	var mouse_button = ImGuiMouseButton(popup_flags & ImGuiPopupFlags_MouseButtonMask_)
 	if IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow) {
 		if GetTopMostPopupModal() == nil {
@@ -251,8 +251,8 @@ func GetTopMostPopupModal() *ImGuiWindow {
 // GetPopupAllowedExtentRect Note that this is used for popups, which can overlap the non work-area of individual viewports.
 func GetPopupAllowedExtentRect(*ImGuiWindow) ImRect {
 	var g = GImGui
-	var r_screen ImRect = GetMainViewport().GetMainRect()
-	var padding ImVec2 = g.Style.DisplaySafeAreaPadding
+	var r_screen = GetMainViewport().GetMainRect()
+	var padding = g.Style.DisplaySafeAreaPadding
 
 	var x, y float
 	if r_screen.GetWidth() > padding.x*2 {
@@ -269,13 +269,13 @@ func GetPopupAllowedExtentRect(*ImGuiWindow) ImRect {
 func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 	var g = GImGui
 
-	var r_outer ImRect = GetPopupAllowedExtentRect(window)
+	var r_outer = GetPopupAllowedExtentRect(window)
 	if window.Flags&ImGuiWindowFlags_ChildMenu != 0 {
 		// Child menus typically request _any_ position within the parent menu item, and then we move the new menu outside the parent bounds.
 		// This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
 		IM_ASSERT(g.CurrentWindow == window)
-		var parent_window *ImGuiWindow = g.CurrentWindowStack[len(g.CurrentWindowStack)-2].Window
-		var horizontal_overlap float = g.Style.ItemInnerSpacing.x // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
+		var parent_window = g.CurrentWindowStack[len(g.CurrentWindowStack)-2].Window
+		var horizontal_overlap = g.Style.ItemInnerSpacing.x // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
 		var r_avoid ImRect
 		if parent_window.DC.MenuBarAppending {
 			r_avoid = ImRect{ImVec2{-FLT_MAX, parent_window.ClipRect.Min.y}, ImVec2{FLT_MAX, parent_window.ClipRect.Max.y}} // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a NextWindowData.PosConstraintAvoidRect field
@@ -285,13 +285,13 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 		return FindBestWindowPosForPopupEx(&window.Pos, &window.Size, &window.AutoPosLastDirection, &r_outer, &r_avoid, ImGuiPopupPositionPolicy_Default)
 	}
 	if window.Flags&ImGuiWindowFlags_Popup != 0 {
-		var r_avoid ImRect = ImRect{ImVec2{window.Pos.x - 1, window.Pos.y - 1}, ImVec2{window.Pos.x + 1, window.Pos.y + 1}}
+		var r_avoid = ImRect{ImVec2{window.Pos.x - 1, window.Pos.y - 1}, ImVec2{window.Pos.x + 1, window.Pos.y + 1}}
 		return FindBestWindowPosForPopupEx(&window.Pos, &window.Size, &window.AutoPosLastDirection, &r_outer, &r_avoid, ImGuiPopupPositionPolicy_Default)
 	}
 	if window.Flags&ImGuiWindowFlags_Tooltip != 0 {
 		// Position tooltip (always follows mouse)
-		var sc float = g.Style.MouseCursorScale
-		var ref_pos ImVec2 = NavCalcPreferredRefPos()
+		var sc = g.Style.MouseCursorScale
+		var ref_pos = NavCalcPreferredRefPos()
 		var r_avoid ImRect
 		if !g.NavDisableHighlight && g.NavDisableMouseHover && g.IO.ConfigFlags&ImGuiConfigFlags_NavEnableSetMousePos == 0 {
 			r_avoid = ImRect{ImVec2{ref_pos.x - 16, ref_pos.y - 8}, ImVec2{ref_pos.x + 16, ref_pos.y + 8}}
@@ -311,7 +311,7 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 //	information are available, it may represent the entire platform monitor from the frame of reference of the current viewport.
 //	this allows us to have tooltips/popups displayed out of the parent viewport.)
 func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiDir, r_outer *ImRect, r_avoid *ImRect, policy ImGuiPopupPositionPolicy) ImVec2 {
-	var base_pos_clamped ImVec2 = ImClampVec2(ref_pos, &r_outer.Min, r_outer.Max.Sub(*size))
+	var base_pos_clamped = ImClampVec2(ref_pos, &r_outer.Min, r_outer.Max.Sub(*size))
 	//GetForegroundDrawList().AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
 	//GetForegroundDrawList().AddRect(r_outer.Min, r_outer.Max, IM_COL32(0,255,0,255));
 
@@ -386,7 +386,7 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 				wr = r_outer.Min.x
 			}
 
-			var avail_w float = wl - wr
+			var avail_w = wl - wr
 
 			var hl, hr float
 			if dir == ImGuiDir_Up {
@@ -400,7 +400,7 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 				hr = r_outer.Min.y
 			}
 
-			var avail_h float = hl - hr
+			var avail_h = hl - hr
 
 			// If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
 			if avail_w < size.x && (dir == ImGuiDir_Left || dir == ImGuiDir_Right) {
@@ -444,7 +444,7 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 	}
 
 	// Otherwise try to keep within display
-	var pos ImVec2 = *ref_pos
+	var pos = *ref_pos
 	pos.x = ImMax(ImMin(pos.x+size.x, r_outer.Max.x)-size.x, r_outer.Min.x)
 	pos.y = ImMax(ImMin(pos.y+size.y, r_outer.Max.y)-size.y, r_outer.Min.y)
 	return pos
@@ -463,7 +463,7 @@ func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_unde
 	if ref_window != nil {
 		// Find the highest popup which is a descendant of the reference window (generally reference window = NavWindow)
 		for ; popup_count_to_keep < int(len(g.OpenPopupStack)); popup_count_to_keep++ {
-			var popup *ImGuiPopupData = &g.OpenPopupStack[popup_count_to_keep]
+			var popup = &g.OpenPopupStack[popup_count_to_keep]
 			if popup.Window == nil {
 				continue
 			}
@@ -477,7 +477,7 @@ func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_unde
 			//     Window . Popup1 . Popup2 . Popup3
 			// - Each popups may contain child windows, which is why we compare .RootWindow!
 			//     Window . Popup1 . Popup1_Child . Popup2 . Popup2_Child
-			var ref_window_is_descendent_of_popup bool = false
+			var ref_window_is_descendent_of_popup = false
 			for n := popup_count_to_keep; n < int(len(g.OpenPopupStack)); n++ {
 				if popup_window := g.OpenPopupStack[n].Window; popup_window != nil {
 					if popup_window.RootWindow == ref_window.RootWindow {
@@ -642,7 +642,7 @@ func BeginPopupEx(id ImGuiID, flags ImGuiWindowFlags) bool {
 	}
 
 	flags |= ImGuiWindowFlags_Popup
-	var is_open bool = Begin(string(name[:]), nil, flags)
+	var is_open = Begin(string(name[:]), nil, flags)
 	if !is_open { // NB: Begin can return false when the popup is completely clipped (e.g. zero size display)
 		EndPopup()
 	}

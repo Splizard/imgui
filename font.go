@@ -15,15 +15,15 @@ var FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA = [ImGuiMouseCursor_COUNT][3]ImVec2{
 	{ImVec2{91, 0}, ImVec2{17, 22}, ImVec2{5, 0}},   // ImGuiMouseCursor_Hand
 }
 
-// get current font
+// GetFont get current font
 func GetFont() *ImFont { return GImGui.Font }
 
-// get current font size (= height in pixels) of current font with current scale applied
+// GetFontSize get current font size (= height in pixels) of current font with current scale applied
 func GetFontSize() float { return GImGui.FontSize }
 
 func GetFontTexUvWhitePixel() ImVec2 { return GImGui.DrawListSharedData.TexUvWhitePixel } // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
 
-// Parameters stacks (shared)
+// PushFont Parameters stacks (shared)
 // use NULL as a shortcut to push default font
 func PushFont(font *ImFont) {
 	var g = GImGui
@@ -45,9 +45,9 @@ func PopFont() {
 	}
 }
 
-// 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
+// CalcWordWrapPositionA 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
 // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
-func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width float) int {
+func (f *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width float) int {
 	// Simple word-wrapping for English, not full-featured. Please submit failing cases!
 	// FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
 
@@ -70,11 +70,11 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 
 	var word_end int = 0
 	var prev_word_end int = -1
-	var inside_word bool = true
+	var inside_word = true
 
 	var i int
 	for i = 0; i < int(len(text)); {
-		var c rune = rune(text[i])
+		var c = rune(text[i])
 
 		var next_i int
 		if c < 0x80 {
@@ -102,12 +102,12 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 			}
 		}
 
-		var char_width float = this.FallbackAdvanceX
-		if (int)(c) < int(len(this.IndexAdvanceX)) {
-			char_width = this.IndexAdvanceX[c]
+		var char_width = f.FallbackAdvanceX
+		if c < int(len(f.IndexAdvanceX)) {
+			char_width = f.IndexAdvanceX[c]
 		}
 
-		if ImCharIsBlankW(rune(c)) {
+		if ImCharIsBlankW(c) {
 			if inside_word {
 				line_width += blank_width
 				blank_width = 0.0
@@ -127,7 +127,7 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 			}
 
 			// Allow wrapping after punctuation.
-			inside_word = (c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '"')
+			inside_word = c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '"'
 		}
 
 		// We ignore blank width at the end of the line (they can be skipped)
@@ -149,14 +149,14 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 	return i
 }
 
-func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string, remaining *string) ImVec2 {
+func (f *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string, remaining *string) ImVec2 {
 	var line_height = size
-	var scale = size / this.FontSize
+	var scale = size / f.FontSize
 
-	var text_size ImVec2 = ImVec2{}
+	var text_size = ImVec2{}
 	var line_width float = 0.0
 
-	var word_wrap_enabled = (wrap_width > 0.0)
+	var word_wrap_enabled = wrap_width > 0.0
 	var word_wrap_eol int = -1
 
 	var i int
@@ -165,7 +165,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 		if word_wrap_enabled {
 			// Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
 			if word_wrap_eol == -1 {
-				word_wrap_eol = i + this.CalcWordWrapPositionA(scale, text[i:], wrap_width-line_width)
+				word_wrap_eol = i + f.CalcWordWrapPositionA(scale, text[i:], wrap_width-line_width)
 				if word_wrap_eol == i { // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
 					word_wrap_eol++ // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
 				}
@@ -197,7 +197,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 
 		// Decode and advance source
 		var prev_i = i
-		var c rune = rune(text[i])
+		var c = rune(text[i])
 		if c < 0x80 {
 			i += 1
 		} else {
@@ -219,9 +219,9 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 			}
 		}
 
-		var char_width float = this.FallbackAdvanceX
-		if (int)(c) < int(len(this.IndexAdvanceX)) {
-			char_width = this.IndexAdvanceX[c]
+		var char_width = f.FallbackAdvanceX
+		if c < int(len(f.IndexAdvanceX)) {
+			char_width = f.IndexAdvanceX[c]
 		}
 		char_width *= scale
 
@@ -262,7 +262,7 @@ func SetCurrentFont(font *ImFont) {
 		g.FontSize = 0
 	}
 
-	var atlas *ImFontAtlas = g.Font.ContainerAtlas
+	var atlas = g.Font.ContainerAtlas
 	g.DrawListSharedData.TexUvWhitePixel = atlas.TexUvWhitePixel
 	g.DrawListSharedData.TexUvLines = atlas.TexUvLines[:]
 	g.DrawListSharedData.Font = g.Font
@@ -270,40 +270,40 @@ func SetCurrentFont(font *ImFont) {
 }
 
 func GetDefaultFont() *ImFont {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	if g.IO.FontDefault != nil {
 		return g.IO.FontDefault
 	}
 	return g.IO.Fonts.Fonts[0]
 }
 
-func (this *ImFont) ClearOutputData() {
-	this.FontSize = 0
-	this.FallbackAdvanceX = 0
-	this.Glyphs = this.Glyphs[:0]
-	this.IndexAdvanceX = this.IndexAdvanceX[:0]
-	this.IndexLookup = this.IndexLookup[:0]
-	this.FallbackGlyph = nil
-	this.ContainerAtlas = nil
-	this.DirtyLookupTables = true
-	this.Ascent = 0
-	this.Descent = 0
-	this.MetricsTotalSurface = 0
+func (f *ImFont) ClearOutputData() {
+	f.FontSize = 0
+	f.FallbackAdvanceX = 0
+	f.Glyphs = f.Glyphs[:0]
+	f.IndexAdvanceX = f.IndexAdvanceX[:0]
+	f.IndexLookup = f.IndexLookup[:0]
+	f.FallbackGlyph = nil
+	f.ContainerAtlas = nil
+	f.DirtyLookupTables = true
+	f.Ascent = 0
+	f.Descent = 0
+	f.MetricsTotalSurface = 0
 }
 
-func (this *ImFont) FindGlyph(c ImWchar) *ImFontGlyph {
-	if (size_t)(c) >= (size_t)(len(this.IndexLookup)) {
-		return this.FallbackGlyph
+func (f *ImFont) FindGlyph(c ImWchar) *ImFontGlyph {
+	if (size_t)(c) >= (size_t)(len(f.IndexLookup)) {
+		return f.FallbackGlyph
 	}
-	var i ImWchar = this.IndexLookup[c]
+	var i = f.IndexLookup[c]
 	if i == (ImWchar)(-1) {
-		return this.FallbackGlyph
+		return f.FallbackGlyph
 	}
-	return &this.Glyphs[i]
+	return &f.Glyphs[i]
 }
 
-func (this *ImFont) SetGlyphVisible(c ImWchar, visible bool) {
-	if glyph := this.FindGlyph((ImWchar)(c)); glyph != nil {
+func (f *ImFont) SetGlyphVisible(c ImWchar, visible bool) {
+	if glyph := f.FindGlyph(c); glyph != nil {
 		if visible {
 			glyph.Visible = 1
 		} else {
@@ -312,13 +312,13 @@ func (this *ImFont) SetGlyphVisible(c ImWchar, visible bool) {
 	}
 }
 
-// x0/y0/x1/y1 are offset from the character upper-left layout position, in pixels. Therefore x0/y0 are often fairly close to zero.
+// AddGlyph x0/y0/x1/y1 are offset from the character upper-left layout position, in pixels. Therefore x0/y0 are often fairly close to zero.
 // Not to be mistaken with texture coordinates, which are held by u0/v0/u1/v1 in normalized format (0.0..1.0 on each texture axis).
 // 'cfg' is not necessarily == 'this.ConfigData' because multiple source fonts+configs can be used to build one target font.
-func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y1, u0, v0, u1, v1, advance_x float) {
+func (f *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y1, u0, v0, u1, v1, advance_x float) {
 	if cfg != nil {
 		// Clamp & recenter if needed
-		var advance_x_original float = advance_x
+		var advance_x_original = advance_x
 		advance_x = ImClamp(advance_x, cfg.GlyphMinAdvanceX, cfg.GlyphMaxAdvanceX)
 		if advance_x != advance_x_original {
 			var char_off_x float
@@ -340,8 +340,8 @@ func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y
 		advance_x += cfg.GlyphExtraSpacing.x
 	}
 
-	this.Glyphs = append(this.Glyphs, ImFontGlyph{})
-	var glyph *ImFontGlyph = &this.Glyphs[len(this.Glyphs)-1]
+	f.Glyphs = append(f.Glyphs, ImFontGlyph{})
+	var glyph = &f.Glyphs[len(f.Glyphs)-1]
 	glyph.Codepoint = (uint)(codepoint)
 	glyph.Visible = uint(bool2int((x0 != x1) && (y0 != y1)))
 	glyph.Colored = uint(bool2int(false))
@@ -357,9 +357,9 @@ func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y
 
 	// Compute rough surface usage metrics (+1 to account for average padding, +0.99 to round)
 	// We use (U1-U0)*TexWidth instead of X1-X0 to account for oversampling.
-	var pad float = float(this.ContainerAtlas.TexGlyphPadding) + 0.99
-	this.DirtyLookupTables = true
-	this.MetricsTotalSurface += (int)((glyph.U1-glyph.U0)*float(this.ContainerAtlas.TexWidth)+pad) * (int)((glyph.V1-glyph.V0)*float(this.ContainerAtlas.TexHeight)+pad)
+	var pad = float(f.ContainerAtlas.TexGlyphPadding) + 0.99
+	f.DirtyLookupTables = true
+	f.MetricsTotalSurface += (int)((glyph.U1-glyph.U0)*float(f.ContainerAtlas.TexWidth)+pad) * (int)((glyph.V1-glyph.V0)*float(f.ContainerAtlas.TexHeight)+pad)
 }
 
 func FindFirstExistingGlyph(font *ImFont, candidate_chars []ImWchar, candidate_chars_count int) ImWchar {
@@ -371,99 +371,99 @@ func FindFirstExistingGlyph(font *ImFont, candidate_chars []ImWchar, candidate_c
 	return (ImWchar)(-1)
 }
 
-func (this *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph {
-	if size_t(c) >= (size_t)(len(this.IndexLookup)) {
+func (f *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph {
+	if size_t(c) >= (size_t)(len(f.IndexLookup)) {
 		return nil
 	}
-	var i ImWchar = this.IndexLookup[c]
+	var i = f.IndexLookup[c]
 	if i == (ImWchar)(-1) {
 		return nil
 	}
-	return &this.Glyphs[i]
+	return &f.Glyphs[i]
 }
 
-func (this *ImFont) GrowIndex(new_size int) {
-	IM_ASSERT(len(this.IndexAdvanceX) == len(this.IndexLookup))
-	if new_size <= int(len(this.IndexLookup)) {
+func (f *ImFont) GrowIndex(new_size int) {
+	IM_ASSERT(len(f.IndexAdvanceX) == len(f.IndexLookup))
+	if new_size <= int(len(f.IndexLookup)) {
 		return
 	}
-	for int(len(this.IndexAdvanceX)) < new_size {
-		this.IndexAdvanceX = append(this.IndexAdvanceX, -1)
+	for int(len(f.IndexAdvanceX)) < new_size {
+		f.IndexAdvanceX = append(f.IndexAdvanceX, -1)
 	}
-	for int(len(this.IndexLookup)) < new_size {
-		this.IndexLookup = append(this.IndexLookup, (ImWchar)(-1))
+	for int(len(f.IndexLookup)) < new_size {
+		f.IndexLookup = append(f.IndexLookup, (ImWchar)(-1))
 	}
 }
 
-func (this *ImFont) BuildLookupTable() {
+func (f *ImFont) BuildLookupTable() {
 	var max_codepoint int = 0
-	for i := range this.Glyphs {
-		max_codepoint = ImMaxInt(max_codepoint, (int)(this.Glyphs[i].Codepoint))
+	for i := range f.Glyphs {
+		max_codepoint = ImMaxInt(max_codepoint, (int)(f.Glyphs[i].Codepoint))
 	}
 
 	// Build lookup table
-	IM_ASSERT(len(this.Glyphs) < 0xFFFF) // -1 is reserved
-	this.IndexAdvanceX = this.IndexAdvanceX[:0]
-	this.IndexLookup = this.IndexLookup[:0]
-	this.DirtyLookupTables = false
-	this.Used4kPagesMap = [2]byte{}
-	this.GrowIndex(max_codepoint + 1)
-	for i := range this.Glyphs {
-		var codepoint int = (int)(this.Glyphs[i].Codepoint)
-		this.IndexAdvanceX[codepoint] = this.Glyphs[i].AdvanceX
-		this.IndexLookup[codepoint] = (ImWchar)(i)
+	IM_ASSERT(len(f.Glyphs) < 0xFFFF) // -1 is reserved
+	f.IndexAdvanceX = f.IndexAdvanceX[:0]
+	f.IndexLookup = f.IndexLookup[:0]
+	f.DirtyLookupTables = false
+	f.Used4kPagesMap = [2]byte{}
+	f.GrowIndex(max_codepoint + 1)
+	for i := range f.Glyphs {
+		var codepoint = (int)(f.Glyphs[i].Codepoint)
+		f.IndexAdvanceX[codepoint] = f.Glyphs[i].AdvanceX
+		f.IndexLookup[codepoint] = (ImWchar)(i)
 
 		// Mark 4K page as used
-		var page_n int = codepoint / 4096
-		this.Used4kPagesMap[page_n>>3] |= 1 << (page_n & 7)
+		var page_n = codepoint / 4096
+		f.Used4kPagesMap[page_n>>3] |= 1 << (page_n & 7)
 	}
 
 	// Create a glyph to handle TAB
 	// FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
-	if this.FindGlyph((ImWchar)(' ')) != nil {
-		if this.Glyphs[len(this.Glyphs)-1].Codepoint != '\t' { // So we can call this function multiple times (FIXME: Flaky)
-			this.Glyphs = append(this.Glyphs, ImFontGlyph{})
+	if f.FindGlyph(' ') != nil {
+		if f.Glyphs[len(f.Glyphs)-1].Codepoint != '\t' { // So we can call f function multiple times (FIXME: Flaky)
+			f.Glyphs = append(f.Glyphs, ImFontGlyph{})
 		}
-		var tab_glyph *ImFontGlyph = &this.Glyphs[len(this.Glyphs)-1]
-		*tab_glyph = *this.FindGlyph((ImWchar)(' '))
+		var tab_glyph = &f.Glyphs[len(f.Glyphs)-1]
+		*tab_glyph = *f.FindGlyph(' ')
 		tab_glyph.Codepoint = '\t'
 		tab_glyph.AdvanceX *= IM_TABSIZE
-		this.IndexAdvanceX[(int)(tab_glyph.Codepoint)] = (float)(tab_glyph.AdvanceX)
-		this.IndexLookup[(int)(tab_glyph.Codepoint)] = (ImWchar)(len(this.Glyphs) - 1)
+		f.IndexAdvanceX[(int)(tab_glyph.Codepoint)] = tab_glyph.AdvanceX
+		f.IndexLookup[(int)(tab_glyph.Codepoint)] = (ImWchar)(len(f.Glyphs) - 1)
 	}
 
 	// Mark special glyphs as not visible (note that AddGlyph already mark as non-visible glyphs with zero-size polygons)
-	this.SetGlyphVisible((ImWchar)(' '), false)
-	this.SetGlyphVisible((ImWchar)('\t'), false)
+	f.SetGlyphVisible(' ', false)
+	f.SetGlyphVisible('\t', false)
 
 	// Ellipsis character is required for rendering elided text. We prefer using U+2026 (horizontal ellipsis).
 	// However some old fonts may contain ellipsis at U+0085. Here we auto-detect most suitable ellipsis character.
-	// FIXME: Note that 0x2026 is rarely included in our font ranges. Because of this we are more likely to use three individual dots.
+	// FIXME: Note that 0x2026 is rarely included in our font ranges. Because of f we are more likely to use three individual dots.
 	var ellipsis_chars = []ImWchar{(ImWchar)(0x2026), (ImWchar)(0x0085)}
-	var dots_chars = []ImWchar{(ImWchar)('.'), (ImWchar)(0xFF0E)}
-	if this.EllipsisChar == (ImWchar)(-1) {
-		this.EllipsisChar = FindFirstExistingGlyph(this, ellipsis_chars, int(len(ellipsis_chars)))
+	var dots_chars = []ImWchar{'.', (ImWchar)(0xFF0E)}
+	if f.EllipsisChar == (ImWchar)(-1) {
+		f.EllipsisChar = FindFirstExistingGlyph(f, ellipsis_chars, int(len(ellipsis_chars)))
 	}
-	if this.DotChar == (ImWchar)(-1) {
-		this.DotChar = FindFirstExistingGlyph(this, dots_chars, int(len(dots_chars)))
+	if f.DotChar == (ImWchar)(-1) {
+		f.DotChar = FindFirstExistingGlyph(f, dots_chars, int(len(dots_chars)))
 	}
 
 	// Setup fallback character
-	var fallback_chars = []ImWchar{(ImWchar)(IM_UNICODE_CODEPOINT_INVALID), (ImWchar)('?'), (ImWchar)(' ')}
-	this.FallbackGlyph = this.FindGlyphNoFallback(this.FallbackChar)
-	if this.FallbackGlyph == nil {
-		this.FallbackChar = FindFirstExistingGlyph(this, fallback_chars, int(len(fallback_chars)))
-		this.FallbackGlyph = this.FindGlyphNoFallback(this.FallbackChar)
-		if this.FallbackGlyph == nil {
-			this.FallbackGlyph = &this.Glyphs[len(this.Glyphs)-1]
-			this.FallbackChar = (ImWchar)(this.FallbackGlyph.Codepoint)
+	var fallback_chars = []ImWchar{IM_UNICODE_CODEPOINT_INVALID, '?', ' '}
+	f.FallbackGlyph = f.FindGlyphNoFallback(f.FallbackChar)
+	if f.FallbackGlyph == nil {
+		f.FallbackChar = FindFirstExistingGlyph(f, fallback_chars, int(len(fallback_chars)))
+		f.FallbackGlyph = f.FindGlyphNoFallback(f.FallbackChar)
+		if f.FallbackGlyph == nil {
+			f.FallbackGlyph = &f.Glyphs[len(f.Glyphs)-1]
+			f.FallbackChar = (ImWchar)(f.FallbackGlyph.Codepoint)
 		}
 	}
 
-	this.FallbackAdvanceX = this.FallbackGlyph.AdvanceX
+	f.FallbackAdvanceX = f.FallbackGlyph.AdvanceX
 	for i := int(0); i < max_codepoint+1; i++ {
-		if this.IndexAdvanceX[i] < 0.0 {
-			this.IndexAdvanceX[i] = this.FallbackAdvanceX
+		if f.IndexAdvanceX[i] < 0.0 {
+			f.IndexAdvanceX[i] = f.FallbackAdvanceX
 		}
 	}
 }
