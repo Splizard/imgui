@@ -4,12 +4,12 @@ package imgui
 // - 'current window' = the window we are appending into while inside a Begin()/End() block. 'next window' = next window we will Begin() into.
 
 func IsWindowAppearing() bool {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.Appearing
 }
 
 func IsWindowCollapsed() bool {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.Collapsed
 }
 
@@ -97,7 +97,7 @@ func GetWindowPos() ImVec2 {
 
 // get current window size
 func GetWindowSize() ImVec2 {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.Size
 }
 

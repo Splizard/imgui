@@ -8,7 +8,7 @@ package imgui
 //    Window-local coordinates:   SameLine(), GetCursorPos(), SetCursorPos(), GetCursorStartPos(), GetContentRegionMax(), GetWindowContentRegion*(), PushTextWrapPos()
 //    Absolute coordinate:        GetCursorScreenPos(), SetCursorScreenPos(), all ImDrawList:: functions.
 
-// undo a SameLine() or force a new line when in an horizontal-layout context.
+// NewLine undo a SameLine() or force a new line when in an horizontal-layout context.
 func NewLine() {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -26,7 +26,7 @@ func NewLine() {
 	window.DC.LayoutType = backup_layout_type
 }
 
-// add vertical spacing.
+// Spacing add vertical spacing.
 func Spacing() {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -35,7 +35,7 @@ func Spacing() {
 	ItemSizeVec(&ImVec2{}, 0)
 }
 
-// add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
+// Dummy add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
 func Dummy(size ImVec2) {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -47,7 +47,7 @@ func Dummy(size ImVec2) {
 	ItemAdd(&bb, 0, nil, 0)
 }
 
-// Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
+// BeginGroup Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
 func BeginGroup() {
 	g := GImGui
@@ -77,7 +77,7 @@ func BeginGroup() {
 	}
 }
 
-// unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
+// EndGroup unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 func EndGroup() {
 	g := GImGui
 	var window = g.CurrentWindow
@@ -143,13 +143,13 @@ func EndGroup() {
 	//window.DrawList.AddRect(group_bb.Min, group_bb.Max, IM_COL32(255,0,255,255));   // [Debug]
 }
 
-// cursor position in window coordinates (relative to window position)
+// GetCursorPos cursor position in window coordinates (relative to window position)
 func GetCursorPos() ImVec2 {
 
 	// User generally sees positions in window coordinates. Internally we store CursorPos in absolute screen coordinates because it is more convenient.
 	// Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (DC.CursorPos - window.Pos). May want to rename 'DC.CursorPos'.
 
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.DC.CursorPos.Sub(window.Pos).Add(window.Scroll)
 }
 
@@ -159,12 +159,12 @@ func GetCursorPos() ImVec2 {
 //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
 
 func GetCursorPosX() float {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.DC.CursorPos.x - window.Pos.x + window.Scroll.x
 }
 
 func GetCursorPosY() float {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.DC.CursorPos.y - window.Pos.y + window.Scroll.y
 }
 
@@ -186,26 +186,26 @@ func SetCursorPosY(local_y float) {
 	window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y)
 }
 
-// initial cursor position in window coordinates
+// GetCursorStartPos initial cursor position in window coordinates
 func GetCursorStartPos() ImVec2 {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.DC.CursorStartPos.Sub(window.Pos)
 }
 
-// cursor position in absolute coordinates (useful to work with ImDrawList API). generally top-left == GetMainViewport()->Pos == (0,0) in single viewport mode, and bottom-right == GetMainViewport()->Pos+Size == io.DisplaySize in single-viewport mode.
+// GetCursorScreenPos cursor position in absolute coordinates (useful to work with ImDrawList API). generally top-left == GetMainViewport()->Pos == (0,0) in single viewport mode, and bottom-right == GetMainViewport()->Pos+Size == io.DisplaySize in single-viewport mode.
 func GetCursorScreenPos() ImVec2 {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	return window.DC.CursorPos
 }
 
-// cursor position in absolute coordinates
+// SetCursorScreenPos cursor position in absolute coordinates
 func SetCursorScreenPos(pos ImVec2) {
 	var window = GetCurrentWindow()
 	window.DC.CursorPos = pos
 	window.DC.CursorMaxPos = ImMaxVec2(&window.DC.CursorMaxPos, &window.DC.CursorPos)
 }
 
-// vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
+// AlignTextToFramePadding vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
 func AlignTextToFramePadding() {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -217,25 +217,25 @@ func AlignTextToFramePadding() {
 	window.DC.CurrLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, g.Style.FramePadding.y)
 }
 
-// ~ FontSize
+// GetTextLineHeight ~ FontSize
 func GetTextLineHeight() float {
 	g := GImGui
 	return g.FontSize
 }
 
-// ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
+// GetTextLineHeightWithSpacing ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
 func GetTextLineHeightWithSpacing() float {
 	g := GImGui
 	return g.FontSize + g.Style.ItemSpacing.y
 }
 
-// ~ FontSize + style.FramePadding.y * 2
+// GetFrameHeight ~ FontSize + style.FramePadding.y * 2
 func GetFrameHeight() float {
 	g := GImGui
 	return g.FontSize + g.Style.FramePadding.y*2.0
 }
 
-// ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
+// GetFrameHeightWithSpacing ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
 func GetFrameHeightWithSpacing() float {
 	g := GImGui
 	return g.FontSize + g.Style.FramePadding.y*2.0 + g.Style.ItemSpacing.y
@@ -243,7 +243,7 @@ func GetFrameHeightWithSpacing() float {
 
 // Parameters stacks (current window)
 
-// push width of items for common large "item+label" widgets. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side).
+// PushItemWidth push width of items for common large "item+label" widgets. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side).
 func PushItemWidth(item_width float) {
 	// FIXME: Remove the == 0.0f behavior?
 
@@ -283,7 +283,7 @@ func PopItemWidth() {
 	window.DC.ItemWidthStack = window.DC.ItemWidthStack[:len(window.DC.ItemWidthStack)-1]
 }
 
-// set width of the _next_ common large "item+label" widget. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
+// SetNextItemWidth set width of the _next_ common large "item+label" widget. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
 // Affect large frame+labels widgets only.
 func SetNextItemWidth(item_width float) {
 	g := GImGui
@@ -291,7 +291,7 @@ func SetNextItemWidth(item_width float) {
 	g.NextItemData.Width = item_width
 }
 
-// Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
+// CalcItemWidth Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
 // The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()
 // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
 func CalcItemWidth() float {
@@ -317,13 +317,13 @@ func CalcItemWidth() float {
 // - Retrieve available space from a given point. GetContentRegionAvail() is frequently useful.
 // - Those functions are bound to be redesigned (they are confusing, incomplete and the Min/Max return values are in local window coordinates which increases confusion)
 
-// == GetContentRegionMax() - GetCursorPos()
+// GetContentRegionAvail == GetContentRegionMax() - GetCursorPos()
 func GetContentRegionAvail() ImVec2 {
 	var window = GImGui.CurrentWindow
 	return GetContentRegionMaxAbs().Sub(window.DC.CursorPos)
 }
 
-// current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
+// GetContentRegionMax current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
 // FIXME: This is in window space (not screen space!).
 func GetContentRegionMax() ImVec2 {
 	g := GImGui
@@ -335,7 +335,7 @@ func GetContentRegionMax() ImVec2 {
 	return mx
 }
 
-// [Internal] Absolute coordinate. Saner. This is not exposed until we finishing refactoring work rect features.
+// GetContentRegionMaxAbs [Internal] Absolute coordinate. Saner. This is not exposed until we finishing refactoring work rect features.
 func GetContentRegionMaxAbs() ImVec2 {
 	g := GImGui
 	var window = g.CurrentWindow
@@ -346,13 +346,13 @@ func GetContentRegionMaxAbs() ImVec2 {
 	return mx
 }
 
-// content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
+// GetWindowContentRegionMin content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
 func GetWindowContentRegionMin() ImVec2 {
 	var window = GImGui.CurrentWindow
 	return window.ContentRegionRect.Min.Sub(window.Pos)
 }
 
-// content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
+// GetWindowContentRegionMax content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
 func GetWindowContentRegionMax() ImVec2 {
 	var window = GImGui.CurrentWindow
 	return window.ContentRegionRect.Max.Sub(window.Pos)

@@ -56,7 +56,7 @@ func SetNextWindowFocus() {
 
 // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
 func SetWindowPos(pos ImVec2, cond ImGuiCond) {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	setWindowPos(window, &pos, cond)
 }
 

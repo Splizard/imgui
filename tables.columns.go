@@ -4,7 +4,7 @@ const COLUMNS_HIT_RECT_HALF_WIDTH float = 4
 
 // Get into the columns background draw command (which is generally the same draw command as before we called BeginColumns)
 func PushColumnsBackground() {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
 	if columns.Count == 1 {
 		return
@@ -189,7 +189,7 @@ func EndColumns() {
 }
 
 func PushColumnClipRect(column_index int) {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
 	if column_index < 0 {
 		column_index = columns.Current
@@ -200,7 +200,7 @@ func PushColumnClipRect(column_index int) {
 }
 
 func PopColumnsBackground() {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
 	if columns.Count == 1 {
 		return
@@ -333,7 +333,7 @@ func NextColumn() {
 
 // get current column index
 func GetColumnIndex() int {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	if window.DC.CurrentColumns != nil {
 		return window.DC.CurrentColumns.Current
 	}
@@ -357,7 +357,7 @@ func GetColumnWidth(column_index int /*= -1*/) float {
 
 // set column width (in pixels). pass -1 to use current column
 func SetColumnWidth(column_index int, width float) {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
 	IM_ASSERT(columns != nil)
 
@@ -369,7 +369,7 @@ func SetColumnWidth(column_index int, width float) {
 
 // get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0.0
 func GetColumnOffset(column_index int /*= -1*/) float {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
 	if columns == nil {
 		return 0.0
@@ -414,7 +414,7 @@ func SetColumnOffset(column_index int, offset float) {
 }
 
 func GetColumnsCount() int {
-	var window = GetCurrentWindowRead()
+	window := GetCurrentWindowRead()
 	if window.DC.CurrentColumns != nil {
 		return window.DC.CurrentColumns.Count
 	}
