@@ -16,7 +16,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 	// Find or create
 	var window = FindWindowByName(name)
-	var window_just_created = (window == nil)
+	var window_just_created = window == nil
 	if window_just_created {
 		window = CreateNewWindow(name, flags)
 	}
@@ -31,11 +31,11 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	}
 
 	var current_frame = g.FrameCount
-	var first_begin_of_the_frame = (window.LastFrameActive != current_frame)
-	window.IsFallbackWindow = (len(g.CurrentWindowStack) == 0 && g.WithinFrameScopeWithImplicitWindow)
+	var first_begin_of_the_frame = window.LastFrameActive != current_frame
+	window.IsFallbackWindow = len(g.CurrentWindowStack) == 0 && g.WithinFrameScopeWithImplicitWindow
 
 	// Update the Appearing flag
-	var window_just_activated_by_user = (window.LastFrameActive < current_frame-1) // Not using !WasActive because the implicit "Debug" window would always toggle off.on
+	var window_just_activated_by_user = window.LastFrameActive < current_frame-1 // Not using !WasActive because the implicit "Debug" window would always toggle off.on
 	if flags&ImGuiWindowFlags_Popup != 0 {
 		var popup_ref = &g.OpenPopupStack[len(g.BeginPopupStack)]
 		window_just_activated_by_user = window_just_activated_by_user || (window.PopupId != popup_ref.PopupId) // We recycle popups so treat window as activated if popup id changed
@@ -154,7 +154,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// Initialize
 		var window_is_child_tooltip = (flags&ImGuiWindowFlags_ChildWindow != 0) && (flags&ImGuiWindowFlags_Tooltip != 0) // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
 		window.Active = true
-		window.HasCloseButton = (p_open != nil)
+		window.HasCloseButton = p_open != nil
 		window.ClipRect = ImRect{ImVec2{-FLT_MAX, -FLT_MAX}, ImVec2{+FLT_MAX, +FLT_MAX}}
 		window.IDStack = window.IDStack[:1]
 		window.DrawList._ResetForNewFrame()
@@ -178,7 +178,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// UPDATE CONTENTS SIZE, UPDATE HIDDEN STATUS
 
 		// Update contents size from last frame for auto-fitting (or use explicit size)
-		var window_just_appearing_after_hidden_for_resize = (window.HiddenFramesCannotSkipItems > 0)
+		var window_just_appearing_after_hidden_for_resize = window.HiddenFramesCannotSkipItems > 0
 		CalcWindowContentSizes(window, &window.ContentSize, &window.ContentSizeIdeal)
 		if window.HiddenFramesCanSkipItems > 0 {
 			window.HiddenFramesCanSkipItems--
@@ -331,7 +331,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			}
 		}
 
-		var window_pos_with_pivot = (window.SetWindowPosVal.x != FLT_MAX && window.HiddenFramesCannotSkipItems == 0)
+		var window_pos_with_pivot = window.SetWindowPosVal.x != FLT_MAX && window.HiddenFramesCannotSkipItems == 0
 		if window_pos_with_pivot {
 			p := window.SetWindowPosVal.Sub(window.Size.Mul(window.SetWindowPosPivot))
 			setWindowPos(window, &p, 0) // Position given a pivot (e.g. for centering)
@@ -672,7 +672,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		window.DC.NavLayersActiveMask = window.DC.NavLayersActiveMaskNext
 		window.DC.NavLayersActiveMaskNext = 0x00
 		window.DC.NavHideHighlightOneFrame = false
-		window.DC.NavHasScroll = (window.ScrollMax.y > 0.0)
+		window.DC.NavHasScroll = window.ScrollMax.y > 0.0
 
 		window.DC.MenuBarAppending = false
 		window.DC.MenuColumns.Update(style.ItemSpacing.x, window_just_activated_by_user)

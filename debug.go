@@ -458,7 +458,7 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 }
 
 func DebugNodeTable(table *ImGuiTable) {
-	var buf string
+	buf := ""
 	var is_active = (table.LastFrameActive >= GetFrameCount()-2) // Note that fully clipped early out scrolling tables will appear as inactive here.
 
 	var active string
@@ -1041,7 +1041,7 @@ func ShowMetricsWindow(p_open *bool) {
 					GetForegroundDrawList(nil).AddRect(table.OuterRect.Min.Sub(ImVec2{1, 1}), table.OuterRect.Max.Add(ImVec2{1, 1}), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0)
 				}
 				Indent(0)
-				var buf string
+				buf := ""
 				for rect_n := int(0); rect_n < TRT_Count; rect_n++ {
 					if rect_n >= TRT_ColumnsRect {
 						if rect_n != TRT_ColumnsRect && rect_n != TRT_ColumnsClipRect {
