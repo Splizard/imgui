@@ -4,7 +4,7 @@ import "fmt"
 
 // Debug Tools
 
-// Experimental recovery from incorrect usage of BeginXXX/EndXXX/PushXXX/PopXXX calls.
+// ErrorCheckEndFrameRecover Experimental recovery from incorrect usage of BeginXXX/EndXXX/PushXXX/PopXXX calls.
 // Must be called during or before EndFrame().
 // This is generally flawed as we are not necessarily End/Popping things in the right order.
 // FIXME: Can't recover from inside BeginTabItem/EndTabItem yet.
@@ -88,7 +88,7 @@ func DebugDrawItemRect(col ImU32 /*= IM_COL32(255,0,0,255)*/) {
 }
 func DebugStartItemPicker() { var g = GImGui; g.DebugItemPickerActive = true }
 
-// [DEBUG] List fonts in a font atlas and display its texture
+// ShowFontAtlas [DEBUG] List fonts in a font atlas and display its texture
 func ShowFontAtlas(atlas *ImFontAtlas) {
 	for i := range atlas.Fonts {
 		var font = atlas.Fonts[i]
@@ -809,7 +809,7 @@ func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewport
 	draw_list.AddRect(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_Border, alpha_mul), 0, 0, 1)
 }
 
-// Avoid naming collision with imgui_demo.cpp's HelpMarker() for unity builds.
+// MetricsHelpMarker Avoid naming collision with imgui_demo.cpp's HelpMarker() for unity builds.
 func MetricsHelpMarker(desc string) {
 	TextDisabled("(?)")
 	if IsItemHovered(0) {
@@ -879,7 +879,7 @@ var trt_rects_names = []string{
 	"OuterRect", "InnerRect", "WorkRect", "HostClipRect", "InnerClipRect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen",
 }
 
-// [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
+// UpdateDebugToolItemPicker [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
 func UpdateDebugToolItemPicker() {
 	var g = GImGui
 	g.DebugItemPickerBreakId = 0
@@ -908,7 +908,7 @@ func UpdateDebugToolItemPicker() {
 	}
 }
 
-// create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
+// ShowMetricsWindow create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.
 func ShowMetricsWindow(p_open *bool) {
 	if !Begin("Dear ImGui Metrics/Debugger", p_open, 0) {
 		End()
