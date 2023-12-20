@@ -10,7 +10,7 @@ func TextUnformatted(text string) {
 
 // shortcut for PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
 func TextDisabled(format string, args ...any) {
-	var g = GImGui
+	g := GImGui
 	PushStyleColorVec(ImGuiCol_Text, &g.Style.Colors[ImGuiCol_TextDisabled])
 	if format[0] == '%' && format[1] == 's' && format[2] == 0 {
 		TextEx(fmt.Sprintf(format, args...), ImGuiTextFlags_NoWidthForLargeClippedText) // Skip formatting
@@ -22,7 +22,7 @@ func TextDisabled(format string, args ...any) {
 
 // shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
 func TextWrapped(format string, args ...any) {
-	var g = GImGui
+	g := GImGui
 	var need_backup = (g.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
 	if need_backup {
 		PushTextWrapPos(0.0)
@@ -44,7 +44,7 @@ func LabelText(label string, format string, args ...any) {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = g.Style
 	var w = CalcItemWidth()
 
@@ -82,7 +82,7 @@ func BulletText(format string, args ...any) {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = g.Style
 
 	var text = fmt.Sprintf(format, args...)
@@ -115,7 +115,7 @@ func Bullet() {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = g.Style
 	var line_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{g.FontSize, line_height})}

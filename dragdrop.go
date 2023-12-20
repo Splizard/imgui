@@ -2,7 +2,7 @@ package imgui
 
 // BeginDragDropTargetCustom Drag and Drop
 func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool {
-	var g = GImGui
+	g := GImGui
 	if !g.DragDropActive {
 		return false
 	}
@@ -28,7 +28,7 @@ func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool {
 }
 
 func ClearDragDrop() {
-	var g = GImGui
+	g := GImGui
 	g.DragDropActive = false
 	g.DragDropPayload = ImGuiPayload{}
 	g.DragDropAcceptFlags = ImGuiDragDropFlags_None
@@ -42,7 +42,7 @@ func ClearDragDrop() {
 }
 
 func IsDragDropPayloadBeingAccepted() bool {
-	var g = GImGui
+	g := GImGui
 	return g.DragDropActive && g.DragDropAcceptIdPrev != 0
 }
 
@@ -61,7 +61,7 @@ func IsDragDropPayloadBeingAccepted() bool {
 // - Currently always assume left mouse button.
 // call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
 func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 
 	// FIXME-DRAGDROP: While in the common-most "drag from non-zero active id" case we can tell the mouse button,
@@ -174,7 +174,7 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 // SetDragDropPayload Use 'cond' to choose to submit payload on drag start or every frame
 // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
 func SetDragDropPayload(ptype string, data any, data_size uintptr, cond ImGuiCond) bool {
-	var g = GImGui
+	g := GImGui
 	var payload = &g.DragDropPayload
 	if cond == 0 {
 		cond = ImGuiCond_Always
@@ -200,7 +200,7 @@ func SetDragDropPayload(ptype string, data any, data_size uintptr, cond ImGuiCon
 
 // EndDragDropSource only call EndDragDropSource() if BeginDragDropSource() returns true!
 func EndDragDropSource() {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.DragDropActive)
 	IM_ASSERT_USER_ERROR(g.DragDropWithinSource, "Not after a BeginDragDropSource()?")
 
@@ -221,7 +221,7 @@ func EndDragDropSource() {
 // 2) and it's faster. as this code may be very frequently called, we want to early out as fast as we can.
 // Also note how the HoveredWindow test is positioned differently in both functions (in both functions we optimize for the cheapest early out case)
 func BeginDragDropTarget() bool {
-	var g = GImGui
+	g := GImGui
 	if !g.DragDropActive {
 		return false
 	}
@@ -256,7 +256,7 @@ func BeginDragDropTarget() bool {
 
 // AcceptDragDropPayload accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 func AcceptDragDropPayload(ptype string, flags ImGuiDragDropFlags) *ImGuiPayload {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var payload = g.DragDropPayload
 	IM_ASSERT(g.DragDropActive)             // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
@@ -296,7 +296,7 @@ func AcceptDragDropPayload(ptype string, flags ImGuiDragDropFlags) *ImGuiPayload
 // EndDragDropTarget We don't really use/need this now, but added it for the sake of consistency and because we might need it later.
 // only call EndDragDropTarget() if BeginDragDropTarget() returns true!
 func EndDragDropTarget() {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.DragDropActive)
 	IM_ASSERT(g.DragDropWithinTarget)
 	g.DragDropWithinTarget = false
@@ -304,7 +304,7 @@ func EndDragDropTarget() {
 
 // GetDragDropPayload peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.
 func GetDragDropPayload() *ImGuiPayload {
-	var g = GImGui
+	g := GImGui
 	if g.DragDropActive {
 		return &g.DragDropPayload
 	}

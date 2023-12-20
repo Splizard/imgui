@@ -6,7 +6,7 @@ const NAV_WINDOWING_LIST_APPEAR_DELAY float = 0.15 // Time before the window lis
 const NAV_WINDOWING_HIGHLIGHT_DELAY float = 0.20 // Time before the highlight and screen dimming starts fading in
 
 func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OPT O(N)
-	var g = GImGui
+	g := GImGui
 	for i := i_start; i >= 0 && i < int(len(g.WindowsFocusOrder)) && i != i_stop; i += dir {
 		if IsWindowNavFocusable(g.WindowsFocusOrder[i]) {
 			return g.WindowsFocusOrder[i]
@@ -17,7 +17,7 @@ func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OP
 
 // NavMoveRequestForward Forward will reuse the move request again on the next frame (generally with modifications done to it)
 func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(!g.NavMoveForwardToNextFrame)
 	NavMoveRequestCancel()
 	g.NavMoveForwardToNextFrame = true
@@ -29,7 +29,7 @@ func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGu
 // NavMoveRequestTryWrapping Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
 // popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
 func NavMoveRequestTryWrapping(window *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(move_flags != 0) // Call with _WrapX, _WrapY, _LoopX, _LoopY
 	// In theory we should test for NavMoveRequestButNoResultYet() but there's no point doing it, NavEndFrame() will do the same test
 	if g.NavWindow == window && g.NavMoveScoringItems && g.NavLayer == ImGuiNavLayer_Main {
@@ -40,7 +40,7 @@ func NavMoveRequestTryWrapping(window *ImGuiWindow, move_flags ImGuiNavMoveFlags
 // SetNavID FIXME-NAV: The existence of SetNavID vs SetFocusID properly needs to be clarified/reworked.
 // In our terminology those should be interchangeable. Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 func SetNavID(id ImGuiID, nav_layer ImGuiNavLayer, focus_scope_id ImGuiID, rect_rel *ImRect) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.NavWindow != nil)
 	IM_ASSERT(nav_layer == ImGuiNavLayer_Main || nav_layer == ImGuiNavLayer_Menu)
 	g.NavId = id
@@ -53,7 +53,7 @@ func SetNavID(id ImGuiID, nav_layer ImGuiNavLayer, focus_scope_id ImGuiID, rect_
 }
 
 func NavUpdateAnyRequestFlag() {
-	var g = GImGui
+	g := GImGui
 	g.NavAnyRequest = g.NavMoveScoringItems || g.NavInitRequest
 	if g.NavAnyRequest {
 		IM_ASSERT(g.NavWindow != nil)
@@ -70,7 +70,7 @@ func NavRestoreLastChildNavWindow(window *ImGuiWindow) *ImGuiWindow {
 }
 
 func GetNavInputAmount(n ImGuiNavInput, mode ImGuiInputReadMode) float {
-	var g = GImGui
+	g := GImGui
 	if mode == ImGuiInputReadMode_Down {
 		return g.IO.NavInputs[n] // Instant, read analog input (0.0f..1.0f, as provided by user)
 	}
@@ -108,12 +108,12 @@ func GetNavInputAmount(n ImGuiNavInput, mode ImGuiInputReadMode) float {
 
 // NavMoveRequestButNoResultYet Gamepad/Keyboard Navigation
 func NavMoveRequestButNoResultYet() bool {
-	var g = GImGui
+	g := GImGui
 	return g.NavMoveScoringItems && g.NavMoveResultLocal.ID == 0 && g.NavMoveResultOther.ID == 0
 }
 
 func NavApplyItemToResult(result *ImGuiNavItemData) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	result.Window = window
 	result.ID = g.LastItemData.ID
@@ -124,7 +124,7 @@ func NavApplyItemToResult(result *ImGuiNavItemData) {
 // NavProcessItem We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after LastItemData is set.
 func NavProcessItem() {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var id = g.LastItemData.ID
 	var nav_bb = g.LastItemData.NavRect
@@ -185,8 +185,8 @@ func NavProcessItem() {
 // FIXME-NAV: This doesn't work properly with NavFlattened siblings as we use NavWindow rectangle for reference
 // FIXME-NAV: how to get Home/End to aim at the beginning/end of a 2D grid?
 func NavUpdatePageUpPageDown() float {
-	var g = GImGui
-	var io = g.IO
+	g := GImGui
+	io := g.IO
 
 	var window = g.NavWindow
 	if (window.Flags&ImGuiWindowFlags_NoNavInputs != 0) || g.NavWindowingTarget != nil || g.NavLayer != ImGuiNavLayer_Main {
@@ -256,8 +256,8 @@ func NavUpdatePageUpPageDown() float {
 }
 
 func NavUpdateCreateMoveRequest() {
-	var g = GImGui
-	var io = g.IO
+	g := GImGui
+	io := g.IO
 	var window = g.NavWindow
 
 	if g.NavMoveForwardToNextFrame && window != nil {
@@ -348,7 +348,7 @@ func NavUpdateCreateMoveRequest() {
 // - either to store the equivalent of ActiveIdUsingKeyInputMask for a FocusScope and test for it.
 // - either to move most/all of those tests to the epilogue/end functions of the scope they are dealing with (e.g. exit child window in EndChild()) or in EndFrame(), to allow an earlier intercept
 func NavUpdateCancelRequest() {
-	var g = GImGui
+	g := GImGui
 	if !IsNavInputTest(ImGuiNavInput_Cancel, ImGuiInputReadMode_Pressed) {
 		return
 	}
@@ -385,7 +385,7 @@ func NavUpdateCancelRequest() {
 }
 
 func NavRestoreLayer(layer ImGuiNavLayer) {
-	var g = GImGui
+	g := GImGui
 	if layer == ImGuiNavLayer_Main {
 		g.NavWindow = NavRestoreLastChildNavWindow(g.NavWindow)
 	}
@@ -402,14 +402,14 @@ func NavRestoreLayer(layer ImGuiNavLayer) {
 }
 
 func FindWindowFocusIndex(window *ImGuiWindow) int {
-	var g = GImGui
+	g := GImGui
 	var order = int(window.FocusOrder)
 	IM_ASSERT(g.WindowsFocusOrder[order] == window)
 	return order
 }
 
 func NavUpdateWindowingHighlightWindow(focus_change_dir int) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.NavWindowingTarget != nil)
 	if g.NavWindowingTarget.Flags&ImGuiWindowFlags_Modal != 0 {
 		return
@@ -433,7 +433,7 @@ func NavUpdateWindowingHighlightWindow(focus_change_dir int) {
 
 func NavUpdateInitResult() {
 	// In very rare cases g.NavWindow may be nil (e.g. clearing focus after requesting an init request, which does happen when releasing Alt while clicking on void)
-	var g = GImGui
+	g := GImGui
 	if g.NavWindow == nil {
 		return
 	}
@@ -451,7 +451,7 @@ func NavUpdateInitResult() {
 }
 
 func NavCalcPreferredRefPos() ImVec2 {
-	var g = GImGui
+	g := GImGui
 	if g.NavDisableHighlight || !g.NavDisableMouseHover || g.NavWindow == nil {
 		// Mouse (we need a fallback in case the mouse becomes invalid after being used)
 		if IsMousePosValid(&g.IO.MousePos) {
@@ -485,8 +485,8 @@ func NavSaveLastChildNavWindowIntoParent(nav_window *ImGuiWindow) {
 // Keyboard: CTRL+Tab (change focus/move/resize), Alt (toggle menu layer)
 // Gamepad:  Hold Menu/Square (change focus/move/resize), Tap Menu/Square (toggle menu layer)
 func NavUpdateWindowing() {
-	var g = GImGui
-	var io = g.IO
+	g := GImGui
+	io := g.IO
 
 	var apply_focus_window *ImGuiWindow = nil
 	var apply_toggle_layer = false
@@ -687,8 +687,8 @@ func NavUpdateWindowing() {
 }
 
 func NavUpdate() {
-	var g = GImGui
-	var io = g.IO
+	g := GImGui
+	io := g.IO
 
 	io.WantSetMousePos = false
 
@@ -883,7 +883,7 @@ func NavUpdate() {
 
 // NavInitWindow This needs to be called before we submit any widget (aka in or before Begin)
 func NavInitWindow(window *ImGuiWindow, force_reinit bool) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(window == g.NavWindow)
 
 	if window.Flags&ImGuiWindowFlags_NoNavInputs != 0 {
@@ -923,7 +923,7 @@ func NavScoreItemDistInterval(a0, a1, b0, b1 float) float {
 
 // NavScoreItem Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
 func NavScoreItem(result *ImGuiNavItemData) bool {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if g.NavLayer != window.DC.NavLayerCurrent {
 		return false
@@ -1051,7 +1051,7 @@ func NavClampRectToVisibleAreaForMoveDir(move_dir ImGuiDir, r *ImRect, clip_rect
 }
 
 func NavEndFrame() {
-	var g = GImGui
+	g := GImGui
 
 	// Show CTRL+TAB list window
 	if g.NavWindowingTarget != nil {
@@ -1115,7 +1115,7 @@ func NavEndFrame() {
 
 // NavUpdateWindowingOverlay Overlay displayed when using CTRL+TAB. Called by EndFrame().
 func NavUpdateWindowingOverlay() {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.NavWindowingTarget != nil)
 
 	if g.NavWindowingTimer < NAV_WINDOWING_LIST_APPEAR_DELAY {
@@ -1149,7 +1149,7 @@ func NavUpdateWindowingOverlay() {
 
 // NavMoveRequestSubmit FIXME: ScoringRect is not set
 func NavMoveRequestSubmit(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.NavWindow != nil)
 	g.NavMoveSubmitted = true
 	g.NavMoveScoringItems = true
@@ -1186,7 +1186,7 @@ func GetNavInputAmount2d(dir_sources ImGuiNavDirSourceFlags, mode ImGuiInputRead
 
 // NavMoveRequestApplyResult Apply result from previous frame navigation directional move request. Always called from NavUpdate()
 func NavMoveRequestApplyResult() {
-	var g = GImGui
+	g := GImGui
 
 	// No result
 	// In a situation when there is no results but NavId != 0, re-enable the Navigation highlight (because g.NavId is not considered as a possible result)
@@ -1261,7 +1261,7 @@ func NavMoveRequestApplyResult() {
 }
 
 func NavMoveRequestCancel() {
-	var g = GImGui
+	g := GImGui
 	g.NavMoveSubmitted = false
 	g.NavMoveScoringItems = false
 	NavUpdateAnyRequestFlag()

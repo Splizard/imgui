@@ -4,7 +4,7 @@ package imgui
 
 func GetViewportDrawList(viewport *ImGuiViewportP, drawlist_no size_t, drawlist_name string) *ImDrawList {
 	// Create the draw list on demand, because they are not frequently used for all viewports
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(drawlist_no < size_t(len(viewport.DrawLists)))
 	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {
@@ -41,7 +41,7 @@ func GetFrameCount() int { return GImGui.FrameCount } // get global imgui frame 
 
 // this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
 func GetBackgroundDrawList(viewport *ImGuiViewport) *ImDrawList {
-	var g = GImGui
+	g := GImGui
 	if viewport == nil {
 		viewport = g.Viewports[0]
 	}
@@ -50,7 +50,7 @@ func GetBackgroundDrawList(viewport *ImGuiViewport) *ImDrawList {
 
 // this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 func GetForegroundDrawList(viewport *ImGuiViewport) *ImDrawList {
-	var g = GImGui
+	g := GImGui
 	if viewport == nil {
 		viewport = g.Viewports[0]
 	}

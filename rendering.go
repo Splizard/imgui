@@ -1,7 +1,7 @@
 package imgui
 
 func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var border_size = g.Style.FrameBorderSize
 	if border_size > 0.0 {
@@ -55,7 +55,7 @@ func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, sca
 // (As with anything within the ImGui:: namspace this doesn't touch your GPU or graphics API at all:
 // it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend).
 func Render() {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.Initialized)
 
 	if g.FrameCountEnded != g.FrameCount {

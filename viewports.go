@@ -2,7 +2,7 @@ package imgui
 
 // Update viewports and monitor infos
 func UpdateViewportsNewFrame() {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(len(g.Viewports) == 1)
 
 	// Update main viewport with current platform position.

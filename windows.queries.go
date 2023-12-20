@@ -22,7 +22,7 @@ func IsWindowNavFocusable(window *ImGuiWindow) bool {
 
 // is current window focused? or its root/child, depending on flags. see flags for options.
 func IsWindowFocused(flags ImGuiFocusedFlags) bool {
-	var g = GImGui
+	g := GImGui
 
 	if flags&ImGuiFocusedFlags_AnyWindow != 0 {
 		return g.NavWindow != nil
@@ -44,7 +44,7 @@ func IsWindowFocused(flags ImGuiFocusedFlags) bool {
 // is current window hovered (and typically: not blocked by a popup/modal)? see flags for options. NB: If you are trying to check whether your mouse should be dispatched to imgui or to your app, you should use the 'io.WantCaptureMouse' boolean for that! Please read the FAQ!
 func IsWindowHovered(flags ImGuiHoveredFlags) bool {
 	IM_ASSERT((flags & ImGuiHoveredFlags_AllowWhenOverlapped) == 0) // Flags not supported by this function
-	var g = GImGui
+	g := GImGui
 	if g.HoveredWindow == nil {
 		return false
 	}
@@ -90,7 +90,7 @@ func GetWindowDrawList() *ImDrawList {
 
 // get current window position in screen space (useful if you want to do your own drawing via the DrawList API)
 func GetWindowPos() ImVec2 {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	return window.Pos
 }

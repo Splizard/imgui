@@ -26,7 +26,7 @@ func GetFontTexUvWhitePixel() ImVec2 { return GImGui.DrawListSharedData.TexUvWhi
 // PushFont Parameters stacks (shared)
 // use NULL as a shortcut to push default font
 func PushFont(font *ImFont) {
-	var g = GImGui
+	g := GImGui
 	if font == nil {
 		font = GetDefaultFont()
 	}
@@ -35,7 +35,7 @@ func PushFont(font *ImFont) {
 	g.CurrentWindow.DrawList.PushTextureID(font.ContainerAtlas.TexID)
 }
 func PopFont() {
-	var g = GImGui
+	g := GImGui
 	g.CurrentWindow.DrawList.PopTextureID()
 	g.FontStack = g.FontStack[:len(g.FontStack)-1]
 	if len(g.FontStack) == 0 {
@@ -249,7 +249,7 @@ func (f *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string, r
 }
 
 func SetCurrentFont(font *ImFont) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(font != nil && font.IsLoaded()) // Font Atlas not created. Did you call io.Fonts.GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
 	IM_ASSERT(font.Scale > 0.0)
 
@@ -270,7 +270,7 @@ func SetCurrentFont(font *ImFont) {
 }
 
 func GetDefaultFont() *ImFont {
-	var g = GImGui
+	g := GImGui
 	if g.IO.FontDefault != nil {
 		return g.IO.FontDefault
 	}

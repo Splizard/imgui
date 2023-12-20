@@ -4,7 +4,7 @@ const DRAGDROP_HOLD_TO_OPEN_TIMER float = 0.70 // Time for drag-hold to activate
 const DRAG_MOUSE_THRESHOLD_FACTOR float = 0.50 // Multiplier for the default value of io.MouseDragThreshold to make DragFloat/DragInt react faster to mouse drags.
 
 func IsClippedEx(bb *ImRect, id ImGuiID, clip_even_when_logged bool) bool {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if !bb.Overlaps(window.ClipRect) {
 		if id == 0 || (id != g.ActiveId && id != g.NavId) {
@@ -18,7 +18,7 @@ func IsClippedEx(bb *ImRect, id ImGuiID, clip_even_when_logged bool) bool {
 
 // is the last item active? (e.g. button being held, text field being edited. This will continuously return true while holding mouse button on an item. Items that don't interact will always return false)
 func IsItemActive() bool {
-	var g = GImGui
+	g := GImGui
 	if g.ActiveId != 0 {
 		return g.ActiveId == g.LastItemData.ID
 	}
@@ -27,7 +27,7 @@ func IsItemActive() bool {
 
 // Internal facing ItemHoverable() used when submitting widgets. Differs slightly from IsItemHovered().
 func ItemHoverable(bb *ImRect, id ImGuiID) bool {
-	var g = GImGui
+	g := GImGui
 	if g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap {
 		return false
 	}
@@ -118,7 +118,7 @@ func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 {
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
 func ItemAdd(bb *ImRect, id ImGuiID, nav_bb_arg *ImRect, extra_flags ImGuiItemFlags) bool {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 
 	// Set item data
@@ -177,7 +177,7 @@ func ItemAdd(bb *ImRect, id ImGuiID, nav_bb_arg *ImRect, extra_flags ImGuiItemFl
 // Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
 func ItemSizeVec(size *ImVec2, text_baseline_y float) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if window.SkipItems {
 		return
@@ -225,7 +225,7 @@ func SameLine(offset_from_start_x, spacing_w float) {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	if offset_from_start_x != 0.0 {
 		if spacing_w < 0.0 {
 			spacing_w = 0.0

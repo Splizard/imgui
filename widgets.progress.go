@@ -9,7 +9,7 @@ func ProgressBar(fraction float, size_arg ImVec2 /*= ImVec2(-FLT_MIN, 0)*/, over
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = g.Style
 
 	var pos = window.DC.CursorPos

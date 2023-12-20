@@ -51,7 +51,7 @@ func STB_TEXTEDIT_GETWIDTH(obj *STB_TEXTEDIT_STRING, line_start_idx, char_idx in
 	if c == '\n' {
 		return STB_TEXTEDIT_GETWIDTH_NEWLINE
 	}
-	var g = GImGui
+	g := GImGui
 	return g.Font.GetCharAdvance(c) * (g.FontSize / g.Font.FontSize)
 }
 

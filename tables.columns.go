@@ -31,7 +31,7 @@ func SetWindowClipRectBeforeSetChannel(window *ImGuiWindow, clip_rect *ImRect) {
 
 // setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
 func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
-	var g = GImGui
+	g := GImGui
 	var window = GetCurrentWindow()
 
 	IM_ASSERT(columns_count >= 1)
@@ -105,7 +105,7 @@ func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 
 // close columns
 func EndColumns() {
-	var g = GImGui
+	g := GImGui
 	var window = GetCurrentWindow()
 	var columns = window.DC.CurrentColumns
 	IM_ASSERT(columns != nil)
@@ -284,7 +284,7 @@ func NextColumn() {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	var columns = window.DC.CurrentColumns
 
 	if columns.Count == 1 {
@@ -342,7 +342,7 @@ func GetColumnIndex() int {
 
 // get column width (in pixels). pass -1 to use current column
 func GetColumnWidth(column_index int /*= -1*/) float {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var columns = window.DC.CurrentColumns
 	if columns == nil {
@@ -387,7 +387,7 @@ func GetColumnOffset(column_index int /*= -1*/) float {
 
 // set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
 func SetColumnOffset(column_index int, offset float) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var columns = window.DC.CurrentColumns
 	IM_ASSERT(columns != nil)
@@ -424,7 +424,7 @@ func GetColumnsCount() int {
 func GetDraggedColumnOffset(columns *ImGuiOldColumns, column_index int) float {
 	// Active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
 	// window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	IM_ASSERT(column_index > 0) // We are not supposed to drag column 0.
 	IM_ASSERT(g.ActiveId == columns.ID+ImGuiID(column_index))

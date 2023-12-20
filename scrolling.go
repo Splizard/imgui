@@ -35,7 +35,7 @@ func GetWindowScrollbarID(window *ImGuiWindow, axis ImGuiAxis) ImGuiID {
 }
 
 func Scrollbar(axis ImGuiAxis) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 
 	var id = GetWindowScrollbarID(window, axis)
@@ -88,7 +88,7 @@ func Scrollbar(axis ImGuiAxis) {
 // - We handle both horizontal and vertical scrollbars, which makes the terminology not ideal.
 // Still, the code should probably be made simpler..
 func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float, size_avail_v float, size_contents_v float, flags ImDrawFlags) bool {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if window.SkipItems {
 		return false

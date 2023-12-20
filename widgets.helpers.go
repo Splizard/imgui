@@ -8,7 +8,7 @@ import (
 
 // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.
 func ActivateItem(id ImGuiID) {
-	var g = GImGui
+	g := GImGui
 	g.NavNextActivateId = id
 }
 
@@ -16,7 +16,7 @@ func ActivateItem(id ImGuiID) {
 // Process TAB/Shift+TAB. Be mindful that this function may _clear_ the ActiveID when tabbing out.
 // [WIP] This will eventually be refactored and moved into NavProcessItem()
 func ItemInputable(window *ImGuiWindow, id ImGuiID) {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(id != 0 && id == g.LastItemData.ID)
 
 	// Increment counters
@@ -71,7 +71,7 @@ func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float {
 		return 0.0
 	}
 
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if wrap_pos_x == 0.0 {
 		// We could decide to setup a default wrapping max point for auto-resizing windows,
@@ -89,7 +89,7 @@ func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float {
 
 // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
 func IsItemToggledSelection() bool {
-	var g = GImGui
+	g := GImGui
 	return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_ToggledSelection) != 0
 }
 
@@ -149,7 +149,7 @@ func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
 // Inputs
 // FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
 func SetItemUsingMouseWheel() {
-	var g = GImGui
+	g := GImGui
 	var id = g.LastItemData.ID
 	if g.HoveredId == id {
 		g.HoveredIdUsingMouseWheel = true

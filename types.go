@@ -331,7 +331,7 @@ func (this *ImGuiInputTextCallbackData) InsertChars(pos int, new_text string) {
 		}
 
 		// Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
-		var g = GImGui
+		g := GImGui
 		var edit_state = &g.InputTextState
 		IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID)
 		//IM_ASSERT(this.Buf == edit_state.TextA)

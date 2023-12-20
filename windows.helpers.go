@@ -8,11 +8,11 @@ import "unsafe"
 // - ImGui::NewFrame() has never been called, which is illegal.
 // - You are calling ImGui functions after ImGui::EndFrame()/ImGui::Render() and before the next ImGui::NewFrame(), which is also illegal.
 func GetCurrentWindowRead() *ImGuiWindow {
-	var g = GImGui
+	g := GImGui
 	return g.CurrentWindow
 }
 func GetCurrentWindow() *ImGuiWindow {
-	var g = GImGui
+	g := GImGui
 	g.CurrentWindow.WriteAccessed = true
 	return g.CurrentWindow
 }
@@ -57,7 +57,7 @@ func IsWindowChildOf(window *ImGuiWindow, potential_parent *ImGuiWindow) bool {
 }
 
 func IsWindowAbove(potential_above *ImGuiWindow, potential_below *ImGuiWindow) bool {
-	var g = GImGui
+	g := GImGui
 	for i := len(g.Windows) - 1; i >= 0; i-- {
 		var candidate_window = g.Windows[i]
 		if candidate_window == potential_above {
@@ -78,7 +78,7 @@ func SetWindowHitTestHole(window *ImGuiWindow, pos *ImVec2, size *ImVec2) {
 }
 
 func BringWindowToDisplayBack(window *ImGuiWindow) {
-	var g = GImGui
+	g := GImGui
 	if g.Windows[0] == window {
 		return
 	}

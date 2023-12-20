@@ -1,7 +1,7 @@
 package imgui
 
 func UpdateTabFocus() {
-	var g = GImGui
+	g := GImGui
 
 	// Pressing TAB activate widget focus
 	g.TabFocusPressed = g.NavWindow != nil && g.NavWindow.Active && (g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0) && !g.IO.KeyCtrl && IsKeyPressedMap(ImGuiKey_Tab, true)

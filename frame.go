@@ -1,7 +1,7 @@
 package imgui
 
 func ErrorCheckNewFrameSanityChecks() {
-	var g = GImGui
+	g := GImGui
 
 	// Check user IM_ASSERT macro
 	// (IF YOU GET A WARNING OR COMPILE ERROR HERE: it means your assert macro is incorrectly defined!
@@ -45,7 +45,7 @@ func ErrorCheckNewFrameSanityChecks() {
 // start a new Dear ImGui frame, you can submit any command from this pountil int Render()/EndFrame().
 func NewFrame() {
 	IM_ASSERT_USER_ERROR(GImGui != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
-	var g = GImGui
+	g := GImGui
 
 	// Remove pending delete hooks before frame start.
 	// This deferred removal avoid issues of removal while iterating the hook vector
@@ -286,7 +286,7 @@ func NewFrame() {
 }
 
 func ErrorCheckEndFrameSanityChecks() {
-	var g = GImGui
+	g := GImGui
 
 	// Verify that io.KeyXXX fields haven't been tampered with. Key mods should not be modified between NewFrame() and EndFrame()
 	// One possible reason leading to this assert is that your backends update inputs _AFTER_ NewFrame().
@@ -318,7 +318,7 @@ func ErrorCheckEndFrameSanityChecks() {
 
 // ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!
 func EndFrame() {
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(g.Initialized)
 
 	// Don't process EndFrame() multiple times.

@@ -56,7 +56,7 @@ func EndMenuBar() {
 	if window.SkipItems {
 		return
 	}
-	var g = GImGui
+	g := GImGui
 
 	// Nav: When a move request within one of our child menu failed, capture the request to navigate among our siblings.
 	if NavMoveRequestButNoResultYet() && (g.NavMoveDir == ImGuiDir_Left || g.NavMoveDir == ImGuiDir_Right) && (g.NavWindow.Flags&ImGuiWindowFlags_ChildMenu) != 0 {
@@ -93,7 +93,7 @@ func EndMenuBar() {
 
 // create and append to a full screen menu-bar.
 func BeginMainMenuBar() bool {
-	var g = GImGui
+	g := GImGui
 	var viewport = GetMainViewport()
 
 	// For the main menu bar, which cannot be moved, we honor g.Style.DisplaySafeAreaPadding to ensure text can be visible on a TV set.
@@ -120,7 +120,7 @@ func EndMainMenuBar() {
 
 	// When the user has left the menu layer (typically: closed menus through activation of an item), we restore focus to the previous window
 	// FIXME: With this strategy we won't be able to restore a nil focus.
-	var g = GImGui
+	g := GImGui
 	if g.CurrentWindow == g.NavWindow && g.NavLayer == ImGuiNavLayer_Main && !g.NavAnyRequest {
 		FocusTopMostWindowUnderOne(g.NavWindow, nil)
 	}
@@ -138,7 +138,7 @@ func EndMenu() {
 	// Nav: When a left move request _within our child menu_ failed, close ourselves (the _parent_ menu).
 	// A menu doesn't close itself because EndMenuBar() wants the catch the last Left<>Right inputs.
 	// However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if g.NavWindow != nil && g.NavWindow.ParentWindow == window && g.NavMoveDir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.LayoutType == ImGuiLayoutType_Vertical {
 		ClosePopupToLevel(int(len(g.BeginPopupStack)), true)
@@ -240,7 +240,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		return false
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = g.Style
 	var id = window.GetIDs(label)
 	var menu_is_open = IsPopupOpenID(id, ImGuiPopupFlags_None)
@@ -436,7 +436,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 		return false
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = g.Style
 	var pos = window.DC.CursorPos
 	var label_size = CalcTextSize(label, true, -1)

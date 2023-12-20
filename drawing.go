@@ -6,7 +6,7 @@ import (
 
 // GetDrawData Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
 func GetDrawData() *ImDrawData {
-	var g = GImGui
+	g := GImGui
 	var viewport = g.Viewports[0]
 
 	if viewport.DrawDataP.Valid {

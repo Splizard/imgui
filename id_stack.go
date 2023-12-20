@@ -14,7 +14,7 @@ package imgui
 
 // PushOverrideID Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
 func PushOverrideID(id ImGuiID) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	window.IDStack = append(window.IDStack, id)
 }
@@ -30,7 +30,7 @@ func GetIDWithSeed(str string, seed ImGuiID) ImGuiID {
 }
 
 func PushString(str_id string) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var id = window.GetIDNoKeepAlive(str_id)
 	window.IDStack = append(window.IDStack, id)
@@ -38,7 +38,7 @@ func PushString(str_id string) {
 
 // PushInterface push pointer into the ID stack (will hash pointer).
 func PushInterface(ptr_id any) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var id = window.GetIDNoKeepAliveInterface(ptr_id)
 	window.IDStack = append(window.IDStack, id)
@@ -46,7 +46,7 @@ func PushInterface(ptr_id any) {
 
 // PushID push integer into the ID stack (will hash integer).
 func PushID(int_id int) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var id = window.GetIDNoKeepAliveInt(int_id)
 	window.IDStack = append(window.IDStack, id)

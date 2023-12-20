@@ -808,7 +808,7 @@ type ImGuiStackSizes struct {
 }
 
 func (s *ImGuiStackSizes) SetToCurrentState() {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	s.SizeOfIDStack = (short)(len(window.IDStack))
 	s.SizeOfColorStack = (short)(len(g.ColorStack))
@@ -820,7 +820,7 @@ func (s *ImGuiStackSizes) SetToCurrentState() {
 }
 
 func (s *ImGuiStackSizes) CompareWithCurrentState() {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 
 	// Window stacks
@@ -1080,7 +1080,7 @@ func (w *ImGuiWindow) Rect() ImRect {
 }
 
 func (w *ImGuiWindow) CalcFontSize() float {
-	var g = GImGui
+	g := GImGui
 	var scale = g.FontBaseSize * w.FontWindowScale
 	if w.ParentWindow != nil {
 		scale *= w.ParentWindow.FontWindowScale
@@ -1090,7 +1090,7 @@ func (w *ImGuiWindow) CalcFontSize() float {
 }
 
 func (w *ImGuiWindow) TitleBarHeight() float {
-	var g = GImGui
+	g := GImGui
 	if w.Flags&ImGuiWindowFlags_NoTitleBar != 0 {
 		return 0.0
 	}
@@ -1102,7 +1102,7 @@ func (w *ImGuiWindow) TitleBarRect() ImRect {
 }
 
 func (w *ImGuiWindow) MenuBarHeight() float {
-	var g = GImGui
+	g := GImGui
 	if w.Flags&ImGuiWindowFlags_MenuBar != 0 {
 		return w.DC.MenuBarOffset.y + w.CalcFontSize() + g.Style.FramePadding.y*2.0
 	}

@@ -67,7 +67,7 @@ func TreePushInterface(ptr_id any) {
 
 // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
 func GetTreeNodeToLabelSpacing() float {
-	var g = GImGui
+	g := GImGui
 	return g.FontSize + (g.Style.FramePadding.x * 2.0)
 }
 
@@ -108,7 +108,7 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 		// Create a small overlapping close button
 		// FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
 		// FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
-		var g = GImGui
+		g := GImGui
 		var last_item_backup = g.LastItemData
 		var button_size = g.FontSize
 		var button_x = ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x-g.Style.FramePadding.x*2.0-button_size)
@@ -125,7 +125,7 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 
 // set next TreeNode/CollapsingHeader open state.
 func SetNextItemOpen(is_open bool, cond ImGuiCond) {
-	var g = GImGui
+	g := GImGui
 	if g.CurrentWindow.SkipItems {
 		return
 	}
@@ -147,7 +147,7 @@ func TreeNode(label string) bool {
 }
 
 func TreePushOverrideID(id ImGuiID) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	Indent(0)
 	window.DC.TreeDepth++
@@ -156,7 +156,7 @@ func TreePushOverrideID(id ImGuiID) {
 
 // ~ Unindent()+PopId()
 func TreePop() {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	Unindent(0)
 
@@ -183,7 +183,7 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 	}
 
 	// We only write to the tree storage if the user clicks (or explicitly use the SetNextItemOpen function)
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var storage = &window.DC.StateStorage
 
@@ -225,7 +225,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		return false
 	}
 
-	var g = GImGui
+	g := GImGui
 	var style = &g.Style
 	var display_frame = (flags & ImGuiTreeNodeFlags_Framed) != 0
 	var padding ImVec2

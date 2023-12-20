@@ -15,7 +15,7 @@ func NewLine() {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	var backup_layout_type = window.DC.LayoutType
 	window.DC.LayoutType = ImGuiLayoutType_Vertical
 	if window.DC.CurrLineSize.y > 0.0 { // In the event that we are on a line with items that is smaller that FontSize high, we will preserve its height.
@@ -50,7 +50,7 @@ func Dummy(size ImVec2) {
 // Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
 func BeginGroup() {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 
 	g.GroupStack = append(g.GroupStack, ImGuiGroupData{})
@@ -79,7 +79,7 @@ func BeginGroup() {
 
 // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 func EndGroup() {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	IM_ASSERT(len(g.GroupStack) > 0) // Mismatched BeginGroup()/EndGroup() calls
 
@@ -212,32 +212,32 @@ func AlignTextToFramePadding() {
 		return
 	}
 
-	var g = GImGui
+	g := GImGui
 	window.DC.CurrLineSize.y = ImMax(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2)
 	window.DC.CurrLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, g.Style.FramePadding.y)
 }
 
 // ~ FontSize
 func GetTextLineHeight() float {
-	var g = GImGui
+	g := GImGui
 	return g.FontSize
 }
 
 // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
 func GetTextLineHeightWithSpacing() float {
-	var g = GImGui
+	g := GImGui
 	return g.FontSize + g.Style.ItemSpacing.y
 }
 
 // ~ FontSize + style.FramePadding.y * 2
 func GetFrameHeight() float {
-	var g = GImGui
+	g := GImGui
 	return g.FontSize + g.Style.FramePadding.y*2.0
 }
 
 // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
 func GetFrameHeightWithSpacing() float {
-	var g = GImGui
+	g := GImGui
 	return g.FontSize + g.Style.FramePadding.y*2.0 + g.Style.ItemSpacing.y
 }
 
@@ -247,7 +247,7 @@ func GetFrameHeightWithSpacing() float {
 func PushItemWidth(item_width float) {
 	// FIXME: Remove the == 0.0f behavior?
 
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
 	if item_width == 0 {
@@ -259,7 +259,7 @@ func PushItemWidth(item_width float) {
 }
 
 func PushMultiItemsWidths(components int, width_full float) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var style = g.Style
 	var w_item_one = ImMax(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
@@ -286,7 +286,7 @@ func PopItemWidth() {
 // set width of the _next_ common large "item+label" widget. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
 // Affect large frame+labels widgets only.
 func SetNextItemWidth(item_width float) {
-	var g = GImGui
+	g := GImGui
 	g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasWidth
 	g.NextItemData.Width = item_width
 }
@@ -295,7 +295,7 @@ func SetNextItemWidth(item_width float) {
 // The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()
 // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
 func CalcItemWidth() float {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var w float
 	if g.NextItemData.Flags&ImGuiNextItemDataFlags_HasWidth != 0 {
@@ -326,7 +326,7 @@ func GetContentRegionAvail() ImVec2 {
 // current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
 // FIXME: This is in window space (not screen space!).
 func GetContentRegionMax() ImVec2 {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var mx = window.ContentRegionRect.Max.Sub(window.Pos)
 	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
@@ -337,7 +337,7 @@ func GetContentRegionMax() ImVec2 {
 
 // [Internal] Absolute coordinate. Saner. This is not exposed until we finishing refactoring work rect features.
 func GetContentRegionMaxAbs() ImVec2 {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var mx = window.ContentRegionRect.Max
 	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {

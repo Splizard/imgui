@@ -36,7 +36,7 @@ func BeginTable(str_id string, columns_count int, flags ImGuiTableFlags, outer_s
 
 // EndTable only call EndTable() if BeginTable() returns true!
 func EndTable() {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Only call EndTable() if BeginTable() returns true!")
 
@@ -259,7 +259,7 @@ func EndTable() {
 
 // TableNextRow [Public] Starts into the first cell of a new row
 func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 
 	if !table.IsLayoutLocked {
@@ -287,7 +287,7 @@ func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
 // append into the first cell of a new row.
 // append into the next column (or first column of next row if currently in last column). Return true when column is visible.
 func TableNextColumn() bool {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return false
@@ -312,7 +312,7 @@ func TableNextColumn() bool {
 // TableSetColumnIndex [Public] Append into a specific column
 // append into the specified column. Return true when column is visible.
 func TableSetColumnIndex(column_n int) bool {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return false
@@ -343,7 +343,7 @@ func TableSetColumnIndex(column_n int) bool {
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0.0f) it is ignored
 func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_weight float /*= 0*/, user_id ImGuiID) {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
 	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call call TableSetupColumn() before first row!")
@@ -422,7 +422,7 @@ func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_w
 // TableSetupScrollFreeze [Public]
 // lock columns/rows so they stay visible when scrolled.
 func TableSetupScrollFreeze(columns int, rows int) {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
 	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call TableSetupColumn() before first row!")
@@ -472,7 +472,7 @@ func TableSetupScrollFreeze(columns int, rows int) {
 // FIXME-TABLE: TableOpenContextMenu() and TableGetHeaderRowHeight() are not public.
 // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
 func TableHeadersRow() {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableHeadersRow() after BeginTable()!")
 
@@ -521,7 +521,7 @@ func TableHeadersRow() {
 // Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use SameLine() after a TableHeader()
 // submit one header cell manually (rarely used)
 func TableHeader(label string) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if window.SkipItems {
 		return
@@ -694,7 +694,7 @@ func TableHeader(label string) {
 //
 // get latest sort specs for the table (NULL if not sorting).
 func TableGetSortSpecs() *ImGuiTableSortSpecs {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(table != nil)
 
@@ -721,7 +721,7 @@ func TableGetColumnAvailSortDirection(column *ImGuiTableColumn, n int) ImGuiSort
 // - Functions args 'column_n int' treat the default value of -1 as the same as passing the current column index.
 // return number of columns (value passed to BeginTable)
 func TableGetColumnCount() int {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table != nil {
 		return int(table.ColumnsCount)
@@ -731,7 +731,7 @@ func TableGetColumnCount() int {
 
 // TableGetColumnIndex return current column index.
 func TableGetColumnIndex() int {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return 0
@@ -742,7 +742,7 @@ func TableGetColumnIndex() int {
 // TableGetRowIndex [Public] Note: for row coloring we use .RowBgColorCounter which is the same value without counting header rows
 // return current row index.
 func TableGetRowIndex() int {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return 0
@@ -752,7 +752,7 @@ func TableGetRowIndex() int {
 
 // TableGetColumnName return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
 func TableGetColumnName(column_n int /*= -1*/) string {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return ""
@@ -766,7 +766,7 @@ func TableGetColumnName(column_n int /*= -1*/) string {
 // TableGetColumnFlags We allow querying for an extra column in order to poll the IsHovered state of the right-most section
 // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return ImGuiTableColumnFlags_None
@@ -791,7 +791,7 @@ func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
 // - Alternative: the ImGuiTableColumnFlags_Disabled is an overriding/master disable flag which will also hide the column from context menu.
 // change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
 func TableSetColumnEnabled(column_n int, enabled bool) {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(table != nil)
 	if table == nil {
@@ -808,7 +808,7 @@ func TableSetColumnEnabled(column_n int, enabled bool) {
 
 // TableSetBgColor change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1*/) {
-	var g = GImGui
+	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(target != ImGuiTableBgTarget_None)
 

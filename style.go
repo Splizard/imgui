@@ -219,7 +219,7 @@ func (style *ImGuiStyle) ScaleAllSizes(scale_factor float) {
 
 // modify a style variable float. always use this if you modify the style after NewFrame().
 func PushStyleFloat(idx ImGuiStyleVar, val float) {
-	var g = GImGui
+	g := GImGui
 	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*float)
 	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModFloat(idx, *pvar))
 	*pvar = val
@@ -227,14 +227,14 @@ func PushStyleFloat(idx ImGuiStyleVar, val float) {
 
 // modify a style variable ImVec2. always use this if you modify the style after NewFrame().
 func PushStyleVec(idx ImGuiStyleVar, val ImVec2) {
-	var g = GImGui
+	g := GImGui
 	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*ImVec2)
 	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModVec(idx, *pvar))
 	*pvar = val
 }
 
 func PopStyleVar(count int /*= 1*/) {
-	var g = GImGui
+	g := GImGui
 	for count > 0 {
 		// We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info.Type] * info.Count), the overhead in Debug is not worth it.
 		var backup = &g.StyleVarStack[len(g.StyleVarStack)-1]
@@ -288,7 +288,7 @@ func GetStyleColorVec4(idx ImGuiCol) *ImVec4 {
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
 func PushStyleColorInt(idx ImGuiCol, col ImU32) {
-	var g = GImGui
+	g := GImGui
 	var backup ImGuiColorMod
 	backup.Col = idx
 	backup.BackupValue = g.Style.Colors[idx]
@@ -297,7 +297,7 @@ func PushStyleColorInt(idx ImGuiCol, col ImU32) {
 }
 
 func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
-	var g = GImGui
+	g := GImGui
 	var backup ImGuiColorMod
 	backup.Col = idx
 	backup.BackupValue = g.Style.Colors[idx]
@@ -306,7 +306,7 @@ func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
 }
 
 func PopStyleColor(count int /*= 1*/) {
-	var g = GImGui
+	g := GImGui
 	for count > 0 {
 		var backup = &g.ColorStack[len(g.ColorStack)-1]
 		g.Style.Colors[backup.Col] = backup.BackupValue

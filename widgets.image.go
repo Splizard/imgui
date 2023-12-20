@@ -26,7 +26,7 @@ func Image(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec2, tin
 // ImageButton() is flawed as 'id' is always derived from 'texture_id' (see #2464 #1390)
 // We provide this internal helper to write your own variant while we figure out how to redesign the public ImageButton() API.
 func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2, uv1 *ImVec2, padding *ImVec2, bg_col *ImVec4, tint_col *ImVec4) bool {
-	var g = GImGui
+	g := GImGui
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -63,7 +63,7 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 // frame_padding = 0: no framing
 // frame_padding > 0: set framing size
 func ImageButton(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec2, frame_padding int /*/*= /*/, bg_col ImVec4, tint_col ImVec4) bool {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	if window.SkipItems {
 		return false

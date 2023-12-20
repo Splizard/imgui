@@ -15,7 +15,7 @@ func PopAllowKeyboardFocus() {
 // map ImGuiKey_* values into user's key index. == io.KeyMap[key]
 func GetKeyIndex(imgui_key ImGuiKey) int {
 	IM_ASSERT(imgui_key >= 0 && imgui_key < ImGuiKey_COUNT)
-	var g = GImGui
+	g := GImGui
 	return g.IO.KeyMap[imgui_key]
 }
 
@@ -26,14 +26,14 @@ func IsKeyDown(user_key_index int) bool {
 	if user_key_index < 0 {
 		return false
 	}
-	var g = GImGui
+	g := GImGui
 	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
 	return g.IO.KeysDown[user_key_index]
 }
 
 // was key released (went from Down to !Down)?
 func IsKeyReleased(user_key_index int) bool {
-	var g = GImGui
+	g := GImGui
 	if user_key_index < 0 {
 		return false
 	}
@@ -43,7 +43,7 @@ func IsKeyReleased(user_key_index int) bool {
 
 // uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
 func GetKeyPressedAmount(key_index int, repeat_delay float, repeat_rate float) int {
-	var g = GImGui
+	g := GImGui
 	if key_index < 0 {
 		return 0
 	}
@@ -86,7 +86,7 @@ func (io *ImGuiIO) ClearInputCharacters() {
 }
 
 func GetMergedKeyModFlags() ImGuiKeyModFlags {
-	var g = GImGui
+	g := GImGui
 	var key_mod_flags = ImGuiKeyModFlags_None
 	if g.IO.KeyCtrl {
 		key_mod_flags |= ImGuiKeyModFlags_Ctrl
@@ -104,7 +104,7 @@ func GetMergedKeyModFlags() ImGuiKeyModFlags {
 }
 
 func IsKeyPressed(user_key_index int, repeat bool /*= true*/) bool {
-	var g = GImGui
+	g := GImGui
 	if user_key_index < 0 {
 		return false
 	}

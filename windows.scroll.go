@@ -17,13 +17,13 @@ func GetScrollY() float {
 
 // SetScrollX set scrolling amount [0 .. GetScrollMaxX()]
 func SetScrollX(scroll_x float) {
-	var g = GImGui
+	g := GImGui
 	setScrollX(g.CurrentWindow, scroll_x)
 }
 
 // SetScrollY set scrolling amount [0 .. GetScrollMaxY()]
 func SetScrollY(scroll_y float) {
-	var g = GImGui
+	g := GImGui
 	setScrollY(g.CurrentWindow, scroll_y)
 }
 
@@ -42,7 +42,7 @@ func GetScrollMaxY() float {
 // SetScrollHereX adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
 // center_x_ratio: 0.0f left of last item, 0.5f horizontal center of last item, 1.0f right of last item.
 func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var spacing_x = ImMax(window.WindowPadding.x, g.Style.ItemSpacing.x)
 	var target_pos_x = ImLerp(g.LastItemData.Rect.Min.x-spacing_x, g.LastItemData.Rect.Max.x+spacing_x, center_x_ratio)
@@ -55,7 +55,7 @@ func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 // SetScrollHereY adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
 // center_y_ratio: 0.0f top of last item, 0.5f vertical center of last item, 1.0f bottom of last item.
 func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
-	var g = GImGui
+	g := GImGui
 	var window = g.CurrentWindow
 	var spacing_y = ImMax(window.WindowPadding.y, g.Style.ItemSpacing.y)
 	var target_pos_y = ImLerp(window.DC.CursorPosPrevLine.y-spacing_y, window.DC.CursorPosPrevLine.y+window.DC.PrevLineSize.y+spacing_y, center_y_ratio)
@@ -67,19 +67,19 @@ func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
 
 // SetScrollFromPosX adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position
 func SetScrollFromPosX(local_x, center_x_ratio float /*= 0.5*/) {
-	var g = GImGui
+	g := GImGui
 	setScrollFromPosX(g.CurrentWindow, local_x, center_x_ratio)
 }
 
 // SetScrollFromPosY adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 func SetScrollFromPosY(local_y, center_y_ratio float /*= 0.5*/) {
-	var g = GImGui
+	g := GImGui
 	setScrollFromPosY(g.CurrentWindow, local_y, center_y_ratio)
 }
 
 // SetNextWindowScroll Use -1.0f on one axis to leave as-is
 func SetNextWindowScroll(scroll *ImVec2) {
-	var g = GImGui
+	g := GImGui
 	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasScroll
 	g.NextWindowData.ScrollVal = *scroll
 }
@@ -125,7 +125,7 @@ func setScrollFromPosY(window *ImGuiWindow, local_y float, center_y_ratio float)
 }
 
 func ScrollToBringRectIntoView(window *ImGuiWindow, item_rect *ImRect) ImVec2 {
-	var g = GImGui
+	g := GImGui
 	var window_rect = ImRect{window.InnerRect.Min.Sub(ImVec2{1, 1}), window.InnerRect.Max.Add(ImVec2{1, 1})}
 	//GetForegroundDrawList(window).AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
 

@@ -4,7 +4,7 @@ package imgui
 // - Also see the LogToClipboard() function to capture GUI into clipboard, or easily output text data to the clipboard.
 
 func GetClipboardText() string {
-	var g = GImGui
+	g := GImGui
 	if g.IO.GetClipboardTextFn != nil {
 		return g.IO.GetClipboardTextFn(g.IO.ClipboardUserData)
 	}
@@ -12,7 +12,7 @@ func GetClipboardText() string {
 }
 
 func SetClipboardText(text string) {
-	var g = GImGui
+	g := GImGui
 	if g.IO.SetClipboardTextFn != nil {
 		g.IO.SetClipboardTextFn(g.IO.ClipboardUserData, text)
 	}
@@ -20,7 +20,7 @@ func SetClipboardText(text string) {
 
 // GetClipboardTextFn_DefaultImpl Local Dear ImGui-only clipboard implementation, if user hasn't defined better clipboard handlers.
 func GetClipboardTextFn_DefaultImpl(any) string {
-	var g = GImGui
+	g := GImGui
 	if len(g.ClipboardHandlerData) == 0 {
 		return ""
 	}
@@ -28,7 +28,7 @@ func GetClipboardTextFn_DefaultImpl(any) string {
 }
 
 func SetClipboardTextFn_DefaultImpl(_ any, text string) {
-	var g = GImGui
+	g := GImGui
 	g.ClipboardHandlerData = g.ClipboardHandlerData[:0]
 	g.ClipboardHandlerData = []byte(text)
 }
