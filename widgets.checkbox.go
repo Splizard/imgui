@@ -55,7 +55,7 @@ func Checkbox(label string, v *bool) bool {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)
 

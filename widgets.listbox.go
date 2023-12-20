@@ -17,7 +17,7 @@ func BeginListBox(label string, size_arg ImVec2) bool {
 		return false
 	}
 
-	var style = g.Style
+	style := g.Style
 	var id = GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)
 
@@ -59,7 +59,7 @@ func BeginListBox(label string, size_arg ImVec2) bool {
 // only call EndListBox() if BeginListBox() returned true!
 func EndListBox() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT_USER_ERROR((window.Flags&ImGuiWindowFlags_ChildWindow) != 0, "Mismatched BeginListBox/EndListBox calls. Did you test the return value of BeginListBox?")
 
 	EndChildFrame()

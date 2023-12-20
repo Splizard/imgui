@@ -45,7 +45,7 @@ func LabelText(label string, format string, args ...any) {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var w = CalcItemWidth()
 
 	var value = fmt.Sprintf(format, args...)
@@ -83,7 +83,7 @@ func BulletText(format string, args ...any) {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	var text = fmt.Sprintf(format, args...)
 	var label_size = CalcTextSize(text, false, -1)
@@ -116,7 +116,7 @@ func Bullet() {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var line_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{g.FontSize, line_height})}
 	ItemSizeRect(&bb, 0)

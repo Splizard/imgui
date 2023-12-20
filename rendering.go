@@ -2,7 +2,7 @@ package imgui
 
 func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var border_size = g.Style.FrameBorderSize
 	if border_size > 0.0 {
 		window.DrawList.AddRect(p_min.Add(ImVec2{1, 1}), p_max.Add(ImVec2{1, 1}), GetColorU32FromID(ImGuiCol_BorderShadow, 1), rounding, 0, border_size)

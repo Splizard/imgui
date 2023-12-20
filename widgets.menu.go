@@ -139,7 +139,7 @@ func EndMenu() {
 	// A menu doesn't close itself because EndMenuBar() wants the catch the last Left<>Right inputs.
 	// However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if g.NavWindow != nil && g.NavWindow.ParentWindow == window && g.NavMoveDir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.LayoutType == ImGuiLayoutType_Vertical {
 		ClosePopupToLevel(int(len(g.BeginPopupStack)), true)
 		NavMoveRequestCancel()
@@ -241,7 +241,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 	var menu_is_open = IsPopupOpenID(id, ImGuiPopupFlags_None)
 
@@ -437,7 +437,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var pos = window.DC.CursorPos
 	var label_size = CalcTextSize(label, true, -1)
 

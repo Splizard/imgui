@@ -36,7 +36,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var square_sz = GetFrameHeight()
 	var w_full = CalcItemWidth()
 	var w_button float = 0.0
@@ -351,7 +351,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	}
 
 	var draw_list = window.DrawList
-	var style = g.Style
+	style := g.Style
 	io := g.IO
 
 	var width = CalcItemWidth()

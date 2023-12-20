@@ -256,7 +256,7 @@ func TableGetHeaderRowHeight() float {
 // Unlike our Bg0/1 channel which we uses for RowBg/CellBg/Borders and where we guarantee all shapes to be CPU-clipped, the Bg2 channel being widgets-facing will rely on regular ClipRect.
 func TablePushBackgroundChannel() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var table = g.CurrentTable
 
 	// Optimization: avoid SetCurrentChannel() + PushClipRect()
@@ -267,7 +267,7 @@ func TablePushBackgroundChannel() {
 
 func TablePopBackgroundChannel() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var table = g.CurrentTable
 	var column = &table.Columns[table.CurrentColumn]
 
@@ -1599,7 +1599,7 @@ func TableDrawBorders(table *ImGuiTable) {
 // FIXME-TABLE: Ideally this should be writable by the user. Full programmatic access to that data?
 func TableDrawContextMenu(table *ImGuiTable) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return
 	}
@@ -2104,7 +2104,7 @@ func TableBeginRow(table *ImGuiTable) {
 // [Internal] Called by TableNextRow()
 func TableEndRow(table *ImGuiTable) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(window == table.InnerWindow)
 	IM_ASSERT(table.IsInsideRow)
 

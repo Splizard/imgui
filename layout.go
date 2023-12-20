@@ -51,7 +51,7 @@ func Dummy(size ImVec2) {
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
 func BeginGroup() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	g.GroupStack = append(g.GroupStack, ImGuiGroupData{})
 
@@ -80,7 +80,7 @@ func BeginGroup() {
 // EndGroup unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 func EndGroup() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(len(g.GroupStack) > 0) // Mismatched BeginGroup()/EndGroup() calls
 
 	var group_data = &g.GroupStack[len(g.GroupStack)-1]
@@ -248,7 +248,7 @@ func PushItemWidth(item_width float) {
 	// FIXME: Remove the == 0.0f behavior?
 
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
 	if item_width == 0 {
 		window.DC.ItemWidth = window.ItemWidthDefault
@@ -260,10 +260,10 @@ func PushItemWidth(item_width float) {
 
 func PushMultiItemsWidths(components int, width_full float) {
 	g := GImGui
-	var window = g.CurrentWindow
-	var style = g.Style
-	var w_item_one = ImMax(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
-	var w_item_last = ImMax(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
+	window := g.CurrentWindow
+	style := g.Style
+	w_item_one := ImMax(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
+	w_item_last := ImMax(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, w_item_last)
 	for i := int(0); i < components-2; i++ {
@@ -296,7 +296,7 @@ func SetNextItemWidth(item_width float) {
 // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
 func CalcItemWidth() float {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var w float
 	if g.NextItemData.Flags&ImGuiNextItemDataFlags_HasWidth != 0 {
 		w = g.NextItemData.Width
@@ -327,7 +327,7 @@ func GetContentRegionAvail() ImVec2 {
 // FIXME: This is in window space (not screen space!).
 func GetContentRegionMax() ImVec2 {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var mx = window.ContentRegionRect.Max.Sub(window.Pos)
 	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
 		mx.x = window.WorkRect.Max.x - window.Pos.x
@@ -338,7 +338,7 @@ func GetContentRegionMax() ImVec2 {
 // GetContentRegionMaxAbs [Internal] Absolute coordinate. Saner. This is not exposed until we finishing refactoring work rect features.
 func GetContentRegionMaxAbs() ImVec2 {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var mx = window.ContentRegionRect.Max
 	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
 		mx.x = window.WorkRect.Max.x

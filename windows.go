@@ -249,7 +249,7 @@ func GetWindowBgColorIdxFromFlags(flags ImGuiWindowFlags) ImGuiCol {
 
 func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var decoration_up_height = window.TitleBarHeight() + window.MenuBarHeight()
 	var size_pad = window.WindowPadding.Scale(2)
 	var size_desired = size_contents.Add(size_pad).Add(ImVec2{0.0, decoration_up_height})
@@ -374,7 +374,7 @@ func CalcWindowContentSizes(window *ImGuiWindow, content_size_current, content_s
 
 func End() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	window.StateStorage = window.DC.StateStorage
 

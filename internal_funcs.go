@@ -314,7 +314,7 @@ func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
 	if g.NavDisableHighlight && flags&ImGuiNavHighlightFlags_AlwaysDraw == 0 {
 		return
 	}
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.DC.NavHideHighlightOneFrame {
 		return
 	}

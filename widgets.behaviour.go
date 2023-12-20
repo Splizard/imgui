@@ -2,7 +2,7 @@ package imgui
 
 func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size2 *float, min_size1 float, min_size2 float, hover_extend float, hover_visibility_delay float) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	var item_flags_backup = g.CurrentItemFlags
 	g.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus
@@ -89,7 +89,7 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 // FIXME: Move more of the code into SliderBehavior()
 func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	var axis = ImGuiAxis_X
 	if (flags & ImGuiSliderFlags_Vertical) != 0 {

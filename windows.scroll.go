@@ -43,7 +43,7 @@ func GetScrollMaxY() float {
 // center_x_ratio: 0.0f left of last item, 0.5f horizontal center of last item, 1.0f right of last item.
 func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var spacing_x = ImMax(window.WindowPadding.x, g.Style.ItemSpacing.x)
 	var target_pos_x = ImLerp(g.LastItemData.Rect.Min.x-spacing_x, g.LastItemData.Rect.Max.x+spacing_x, center_x_ratio)
 	setScrollFromPosX(window, target_pos_x-window.Pos.x, center_x_ratio) // Convert from absolute to local pos
@@ -56,7 +56,7 @@ func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 // center_y_ratio: 0.0f top of last item, 0.5f vertical center of last item, 1.0f bottom of last item.
 func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var spacing_y = ImMax(window.WindowPadding.y, g.Style.ItemSpacing.y)
 	var target_pos_y = ImLerp(window.DC.CursorPosPrevLine.y-spacing_y, window.DC.CursorPosPrevLine.y+window.DC.PrevLineSize.y+spacing_y, center_y_ratio)
 	setScrollFromPosY(window, target_pos_y-window.Pos.y, center_y_ratio) // Convert from absolute to local pos

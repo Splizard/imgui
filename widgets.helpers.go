@@ -72,7 +72,7 @@ func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float {
 	}
 
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if wrap_pos_x == 0.0 {
 		// We could decide to setup a default wrapping max point for auto-resizing windows,
 		// or have auto-wrap (with unspecified wrapping pos) behave as a ContentSize extending function?

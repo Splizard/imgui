@@ -18,7 +18,7 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any
 			}
 			EndTable()
 		}
-		var window = g.CurrentWindow
+		window := g.CurrentWindow
 		IM_ASSERT(window != nil)
 		for g.CurrentTabBar != nil {
 			if log_callback != nil {
@@ -83,7 +83,7 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any
 
 func DebugDrawItemRect(col ImU32 /*= IM_COL32(255,0,0,255)*/) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	getForegroundDrawList(window).AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col, 0, 0, 1)
 }
 func DebugStartItemPicker() { g := GImGui; g.DebugItemPickerActive = true }
@@ -772,7 +772,7 @@ func DebugNodeViewport(viewport *ImGuiViewportP) {
 
 func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewportP, bb *ImRect) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	var scale = bb.GetSize().Div(viewport.Size)
 	var off = bb.Min.Sub(viewport.Pos.Mul(scale))
@@ -823,7 +823,7 @@ func MetricsHelpMarker(desc string) {
 
 func RenderViewportsThumbnails() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
 	const SCALE = 1.0 / 8.0

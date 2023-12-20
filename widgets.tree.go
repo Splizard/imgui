@@ -148,7 +148,7 @@ func TreeNode(label string) bool {
 
 func TreePushOverrideID(id ImGuiID) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	Indent(0)
 	window.DC.TreeDepth++
 	window.IDStack = append(window.IDStack, id)
@@ -157,7 +157,7 @@ func TreePushOverrideID(id ImGuiID) {
 // ~ Unindent()+PopId()
 func TreePop() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	Unindent(0)
 
 	window.DC.TreeDepth--
@@ -184,7 +184,7 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 
 	// We only write to the tree storage if the user clicks (or explicitly use the SetNextItemOpen function)
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var storage = &window.DC.StateStorage
 
 	var is_open bool

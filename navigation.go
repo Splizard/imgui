@@ -114,7 +114,7 @@ func NavMoveRequestButNoResultYet() bool {
 
 func NavApplyItemToResult(result *ImGuiNavItemData) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	result.Window = window
 	result.ID = g.LastItemData.ID
 	result.FocusScopeId = window.DC.NavFocusScopeIdCurrent
@@ -125,7 +125,7 @@ func NavApplyItemToResult(result *ImGuiNavItemData) {
 // This is called after LastItemData is set.
 func NavProcessItem() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var id = g.LastItemData.ID
 	var nav_bb = g.LastItemData.NavRect
 	var item_flags = g.LastItemData.InFlags
@@ -924,7 +924,7 @@ func NavScoreItemDistInterval(a0, a1, b0, b1 float) float {
 // NavScoreItem Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
 func NavScoreItem(result *ImGuiNavItemData) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if g.NavLayer != window.DC.NavLayerCurrent {
 		return false
 	}

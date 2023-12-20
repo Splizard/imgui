@@ -84,7 +84,7 @@ func BeginChildID(id ImGuiID, size ImVec2, border bool, flags ImGuiWindowFlags) 
 
 func EndChild() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	IM_ASSERT(!g.WithinEndChild)
 	IM_ASSERT(window.Flags&ImGuiWindowFlags_ChildWindow != 0) // Mismatched BeginChild()/EndChild() calls
@@ -129,7 +129,7 @@ func EndChild() {
 // helper to create a child window / scrolling region that looks like a normal widget frame
 func BeginChildFrame(id ImGuiID, size ImVec2, flags ImGuiWindowFlags) bool {
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	PushStyleColorVec(ImGuiCol_ChildBg, &style.Colors[ImGuiCol_FrameBg])
 	PushStyleFloat(ImGuiStyleVar_ChildRounding, style.FrameRounding)
 	PushStyleFloat(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize)

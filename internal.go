@@ -809,7 +809,7 @@ type ImGuiStackSizes struct {
 
 func (s *ImGuiStackSizes) SetToCurrentState() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	s.SizeOfIDStack = (short)(len(window.IDStack))
 	s.SizeOfColorStack = (short)(len(g.ColorStack))
 	s.SizeOfStyleVarStack = (short)(len(g.StyleVarStack))
@@ -821,7 +821,7 @@ func (s *ImGuiStackSizes) SetToCurrentState() {
 
 func (s *ImGuiStackSizes) CompareWithCurrentState() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// Window stacks
 	// NOT checking: DC.ItemWidth, DC.TextWrapPos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)

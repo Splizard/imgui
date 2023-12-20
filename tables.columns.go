@@ -343,7 +343,7 @@ func GetColumnIndex() int {
 // get column width (in pixels). pass -1 to use current column
 func GetColumnWidth(column_index int /*= -1*/) float {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var columns = window.DC.CurrentColumns
 	if columns == nil {
 		return GetContentRegionAvail().x
@@ -388,7 +388,7 @@ func GetColumnOffset(column_index int /*= -1*/) float {
 // set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
 func SetColumnOffset(column_index int, offset float) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var columns = window.DC.CurrentColumns
 	IM_ASSERT(columns != nil)
 
@@ -425,7 +425,7 @@ func GetDraggedColumnOffset(columns *ImGuiOldColumns, column_index int) float {
 	// Active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
 	// window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(column_index > 0) // We are not supposed to drag column 0.
 	IM_ASSERT(g.ActiveId == columns.ID+ImGuiID(column_index))
 

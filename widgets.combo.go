@@ -16,7 +16,7 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 		return false
 	}
 
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 	IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) // Can't use both flags together
 
@@ -121,7 +121,7 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 // (Experimental, see GitHub issues: #1658, #4168)
 func BeginComboPreview() bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var preview_data = &g.ComboPreviewData
 
 	if window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect) { // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
@@ -148,7 +148,7 @@ func BeginComboPreview() bool {
 
 func EndComboPreview() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var preview_data = &g.ComboPreviewData
 
 	// FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future

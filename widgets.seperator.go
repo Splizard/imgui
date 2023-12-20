@@ -3,7 +3,7 @@ package imgui
 // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
 func Separator() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return
 	}

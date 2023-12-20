@@ -5,7 +5,7 @@ const DRAG_MOUSE_THRESHOLD_FACTOR float = 0.50 // Multiplier for the default val
 
 func IsClippedEx(bb *ImRect, id ImGuiID, clip_even_when_logged bool) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if !bb.Overlaps(window.ClipRect) {
 		if id == 0 || (id != g.ActiveId && id != g.NavId) {
 			if clip_even_when_logged || !g.LogEnabled {
@@ -32,7 +32,7 @@ func ItemHoverable(bb *ImRect, id ImGuiID) bool {
 		return false
 	}
 
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if g.HoveredWindow != window {
 		return false
 	}
@@ -119,7 +119,7 @@ func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 {
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
 func ItemAdd(bb *ImRect, id ImGuiID, nav_bb_arg *ImRect, extra_flags ImGuiItemFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// Set item data
 	// (DisplayRect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
@@ -178,7 +178,7 @@ func ItemAdd(bb *ImRect, id ImGuiID, nav_bb_arg *ImRect, extra_flags ImGuiItemFl
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
 func ItemSizeVec(size *ImVec2, text_baseline_y float) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return
 	}

@@ -9,7 +9,7 @@ import (
 // . BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
 func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(!g.LogEnabled)
 	IM_ASSERT(g.LogFile == nil)
 	IM_ASSERT(g.LogBuffer.Len() == 0)

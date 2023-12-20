@@ -127,7 +127,7 @@ func GetTabBarRefFromTabBar(tab_bar *ImGuiTabBar) ImGuiPtrOrIndex {
 // create and append into a TabBar
 func BeginTabBar(str_id string, flags ImGuiTabBarFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -147,7 +147,7 @@ func BeginTabBar(str_id string, flags ImGuiTabBarFlags) bool {
 // only call EndTabBar() if BeginTabBar() returns true!
 func EndTabBar() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return
 	}
@@ -189,7 +189,7 @@ func EndTabBar() {
 // create a Tab. Returns true if the Tab is selected.
 func BeginTabItem(label string, p_open *bool, flags ImGuiTabItemFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -212,7 +212,7 @@ func BeginTabItem(label string, p_open *bool, flags ImGuiTabItemFlags) bool {
 // only call EndTabItem() if BeginTabItem() returns true!
 func EndTabItem() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return
 	}
@@ -232,7 +232,7 @@ func EndTabItem() {
 // create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 func TabItemButton(label string, flags ImGuiTabItemFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -265,7 +265,7 @@ func SetTabItemClosed(tab_or_docked_window_label string) {
 // Tab Bars
 func BeginTabBarEx(tab_bar *ImGuiTabBar, tab_bar_bb *ImRect, flags ImGuiTabBarFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -501,12 +501,12 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 	}
 
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
 
-	var style = g.Style
+	style := g.Style
 	var id = TabBarCalcTabID(tab_bar, label)
 
 	// If the user called us with *p_open == false, we early out and don't render.
@@ -917,7 +917,7 @@ func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTa
 
 func TabBarTabListPopupButton(tab_bar *ImGuiTabBar) *ImGuiTabItem {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// We use g.Style.FramePadding.y to match the square ArrowButton size
 	var tab_list_popup_button_width = g.FontSize + g.Style.FramePadding.y
@@ -976,7 +976,7 @@ func TabBarCalcMaxTabWidth() float {
 
 func TabBarScrollingButtons(tab_bar *ImGuiTabBar) *ImGuiTabItem {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	var arrow_button_size = ImVec2{g.FontSize - 2.0, g.FontSize + g.Style.FramePadding.y*2.0}
 	var scrolling_buttons_width = arrow_button_size.x * 2.0
@@ -1325,7 +1325,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	}
 
 	// Actual layout in host window (we don't do it in BeginTabBar() so as not to waste an extra frame)
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	window.DC.CursorPos = tab_bar.BarRect.Min
 	ItemSizeVec(&ImVec2{tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()}, tab_bar.FramePadding.y)
 	window.DC.IdealMaxPos.x = ImMax(window.DC.IdealMaxPos.x, tab_bar.BarRect.Min.x+tab_bar.WidthAllTabsIdeal)

@@ -397,7 +397,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 	g := GImGui
 	io := g.IO
-	var style = g.Style
+	style := g.Style
 
 	var RENDER_SELECTION_WHEN_INACTIVE = false
 	var is_multiline = (flags & ImGuiInputTextFlags_Multiline) != 0

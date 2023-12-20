@@ -46,7 +46,7 @@ func NewImGuiListClipper() ImGuiListClipper {
 // items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
 func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f*/) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	if table := g.CurrentTable; table != nil {
 		if table.IsInsideRow {
@@ -79,7 +79,7 @@ func (this ImGuiListClipper) End() {
 
 func (this ImGuiListClipper) Step() bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	var table = g.CurrentTable
 	if table != nil && table.IsInsideRow {
@@ -186,7 +186,7 @@ func GetSkipItemForListClipping() bool {
 // NB: 'items_count' is only used to clamp the result, if you don't know your count you can use INT_MAX
 func CalcListClipping(items_count int, items_height float, out_items_display_start *int, out_items_display_end *int) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if g.LogEnabled {
 		// If logging is active, do not perform any clipping
 		*out_items_display_start = 0
@@ -232,7 +232,7 @@ func SetCursorPosYAndSetupForPrevLine(pos_y, line_height float) {
 	// FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
 	// The clipper should probably have a 4th step to display the last item in a regular manner.
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var off_y = pos_y - window.DC.CursorPos.y
 	window.DC.CursorPos.y = pos_y
 	window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, pos_y)

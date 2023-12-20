@@ -169,7 +169,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 	var w = CalcItemWidth()
 

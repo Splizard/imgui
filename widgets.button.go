@@ -30,7 +30,7 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, 0)
 
@@ -334,7 +334,7 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 
 func CollapseButton(id ImGuiID, pos *ImVec2) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	var bb = ImRect{*pos, pos.Add(ImVec2{g.FontSize, g.FontSize}).Add(g.Style.FramePadding.Scale(2.0))}
 	ItemAdd(&bb, id, nil, 0)
@@ -410,7 +410,7 @@ func RadioButtonBool(label string, active bool) bool {
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)
 
@@ -488,7 +488,7 @@ func RadioButtonInt(label string, v *int, v_button int) bool {
 // Button to close a window
 func CloseButton(id ImGuiID, pos *ImVec2) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
 	// This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?

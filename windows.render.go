@@ -3,7 +3,7 @@ package imgui
 // Render a rectangle shaped with optional rounding and borders
 func RenderFrame(p_min ImVec2, p_max ImVec2, fill_col ImU32, border bool /*= true*/, rounding float) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	window.DrawList.AddRectFilled(p_min, p_max, fill_col, rounding, 0)
 	var border_size = g.Style.FrameBorderSize
 	if border && border_size > 0.0 {
@@ -16,7 +16,7 @@ func RenderFrame(p_min ImVec2, p_max ImVec2, fill_col ImU32, border bool /*= tru
 // Draw and handle scrollbars
 func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_bar_is_highlight bool, resize_grip_count int, resize_grip_col [4]ImU32, resize_grip_draw_size float) {
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var flags = window.Flags
 
 	// Ensure that ScrollBar doesn't read last frame's SkipItems
@@ -152,7 +152,7 @@ func RenderWindowOuterBorders(window *ImGuiWindow) {
 // Render title text, collapse button, close button
 func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, name string, p_open *bool) {
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 	var flags = window.Flags
 
 	var has_close_button = (p_open != nil)

@@ -31,7 +31,7 @@ func BeginPopup(str_id string, flags ImGuiWindowFlags) bool {
 // return true if the modal is open, and you can start outputting to it.
 func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var id = window.GetIDs(name)
 	if !isPopupOpen(id, ImGuiPopupFlags_None) {
 		g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
@@ -62,7 +62,7 @@ func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 // EndPopup only call EndPopup() if BeginPopupXXX() returns true!
 func EndPopup() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(window.Flags&ImGuiWindowFlags_Popup != 0) // Mismatched BeginPopup()/EndPopup() calls
 	IM_ASSERT(len(g.BeginPopupStack) > 0)
 
@@ -104,7 +104,7 @@ func OpenPopupID(id ImGuiID, popup_flags ImGuiPopupFlags) {
 // helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 func OpenPopupOnItemClick(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*/) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var mouse_button = ImGuiMouseButton(popup_flags & ImGuiPopupFlags_MouseButtonMask_)
 	if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
 		var id = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
@@ -176,7 +176,7 @@ func CloseCurrentPopup() {
 // open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
 func BeginPopupContextItem(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*/) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -194,7 +194,7 @@ func BeginPopupContextItem(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*
 
 func BeginPopupContextVoid(str_id string, popup_flags ImGuiPopupFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if str_id == "" {
 		str_id = "void_context"
 	}

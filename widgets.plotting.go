@@ -50,7 +50,7 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, 
 		return -1
 	}
 
-	var style = g.Style
+	style := g.Style
 	var id = window.GetIDs(label)
 
 	var label_size = CalcTextSize(label, true, -1)

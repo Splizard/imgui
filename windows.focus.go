@@ -24,7 +24,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	// Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
 	var id = window.GetIDs(label)
@@ -211,7 +211,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 // make last item the default focused item of a window.
 func SetItemDefaultFocus() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if !window.Appearing {
 		return
 	}
@@ -230,7 +230,7 @@ func SetItemDefaultFocus() {
 func SetKeyboardFocusHere(offset int) {
 	IM_ASSERT(offset >= -1) // -1 is allowed but not below
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	g.TabFocusRequestNextWindow = window
 	g.TabFocusRequestNextCounterRegular = window.DC.FocusCounterRegular + 1 + offset
 	g.TabFocusRequestNextCounterTabStop = INT_MAX
@@ -241,14 +241,14 @@ func SetKeyboardFocusHere(offset int) {
 // patterns generally need to react (e.g. clear selection) when landing on an item of the set.
 func PushFocusScope(id ImGuiID) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	g.FocusScopeStack = append(g.FocusScopeStack, window.DC.NavFocusScopeIdCurrent)
 	window.DC.NavFocusScopeIdCurrent = id
 }
 
 func PopFocusScope() {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(len(g.FocusScopeStack) > 0) // Too many PopFocusScope() ?
 	window.DC.NavFocusScopeIdCurrent = g.FocusScopeStack[len(g.FocusScopeStack)-1]
 	g.FocusScopeStack = g.FocusScopeStack[:len(g.FocusScopeStack)-1]

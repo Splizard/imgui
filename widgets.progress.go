@@ -10,7 +10,7 @@ func ProgressBar(fraction float, size_arg ImVec2 /*= ImVec2(-FLT_MIN, 0)*/, over
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	var pos = window.DC.CursorPos
 	var size = CalcItemSize(size_arg, CalcItemWidth(), g.FontSize+style.FramePadding.y*2.0)

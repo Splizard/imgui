@@ -522,7 +522,7 @@ func TableHeadersRow() {
 // submit one header cell manually (rarely used)
 func TableHeader(label string) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if window.SkipItems {
 		return
 	}

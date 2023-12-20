@@ -24,7 +24,7 @@ func TextColored(col *ImVec4, format string, args ...any) {
 // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
 func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// Hide anything after a '##' string
 	var text_display_end string
@@ -43,7 +43,7 @@ func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
 
 func RenderTextWrapped(pos ImVec2, text string, wrap_width float) {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	if len(text) > 0 {
 		window.DrawList.AddTextV(g.Font, g.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, wrap_width, nil)
@@ -367,7 +367,7 @@ func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_size_
 	}
 
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_size_if_known, align, clip_rect)
 	if g.LogEnabled {
 		LogRenderedText(pos_min, text)

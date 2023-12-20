@@ -50,7 +50,7 @@ func IsWindowHovered(flags ImGuiHoveredFlags) bool {
 	}
 
 	if (flags & ImGuiHoveredFlags_AnyWindow) == 0 {
-		var window = g.CurrentWindow
+		window := g.CurrentWindow
 		switch flags & (ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows) {
 		case ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows:
 			if g.HoveredWindow.RootWindow != window.RootWindow {
@@ -91,7 +91,7 @@ func GetWindowDrawList() *ImDrawList {
 // get current window position in screen space (useful if you want to do your own drawing via the DrawList API)
 func GetWindowPos() ImVec2 {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	return window.Pos
 }
 

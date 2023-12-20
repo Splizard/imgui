@@ -7,7 +7,7 @@ func BeginDragDropTargetCustom(bb *ImRect, id ImGuiID) bool {
 		return false
 	}
 
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var hovered_window = g.HoveredWindowUnderMovingWindow
 	if hovered_window == nil || window.RootWindow != hovered_window.RootWindow {
 		return false
@@ -62,7 +62,7 @@ func IsDragDropPayloadBeingAccepted() bool {
 // call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
 func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 
 	// FIXME-DRAGDROP: While in the common-most "drag from non-zero active id" case we can tell the mouse button,
 	// in both SourceExtern and id==0 cases we may requires something else (explicit flags or some heuristic).
@@ -226,7 +226,7 @@ func BeginDragDropTarget() bool {
 		return false
 	}
 
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if g.LastItemData.StatusFlags&ImGuiItemStatusFlags_HoveredRect == 0 {
 		return false
 	}
@@ -257,7 +257,7 @@ func BeginDragDropTarget() bool {
 // AcceptDragDropPayload accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 func AcceptDragDropPayload(ptype string, flags ImGuiDragDropFlags) *ImGuiPayload {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	var payload = g.DragDropPayload
 	IM_ASSERT(g.DragDropActive)             // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
 	IM_ASSERT(payload.DataFrameCount != -1) // Forgot to call EndDragDropTarget() ?

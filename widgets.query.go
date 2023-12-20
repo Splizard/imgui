@@ -10,7 +10,7 @@ package imgui
 // - this should work even for non-interactive items that have no ID, so we cannot use LastItemId
 func IsItemHovered(flags ImGuiHoveredFlags) bool {
 	g := GImGui
-	var window = g.CurrentWindow
+	window := g.CurrentWindow
 	if g.NavDisableMouseHover && !g.NavDisableHighlight {
 		if (g.LastItemData.InFlags&ImGuiItemFlags_Disabled != 0) && (flags&ImGuiHoveredFlags_AllowWhenDisabled == 0) {
 			return false

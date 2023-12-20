@@ -13,7 +13,7 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	if format == "" {
 		format = "%v"
@@ -130,7 +130,7 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	if format == "" {
 		format = "%v"
@@ -247,7 +247,7 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	if format == "" {
 		format = "%v"
@@ -364,7 +364,7 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 	}
 
 	g := GImGui
-	var style = g.Style
+	style := g.Style
 
 	if format == "" {
 		format = "%v"
