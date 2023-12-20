@@ -296,7 +296,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 //   - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
 //     for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
-	var ctx ImGuiContext = NewImGuiContext(shared_font_atlas)
+	var ctx = NewImGuiContext(shared_font_atlas)
 	if GImGui == nil {
 		SetCurrentContext(&ctx)
 	}
@@ -347,7 +347,7 @@ func RemoveContextHook(context *ImGuiContext, hook_to_remove ImGuiID) {
 
 // Init
 func Initialize(context *ImGuiContext) {
-	var g *ImGuiContext = context
+	var g = context
 	IM_ASSERT(!g.Initialized && !g.SettingsLoaded)
 
 	// Add .ini handle for ImGuiWindow type
@@ -367,7 +367,7 @@ func Initialize(context *ImGuiContext) {
 	//TableSettingsInstallHandler(context)
 
 	// Create default viewport
-	var viewport ImGuiViewportP = NewImGuiViewportP()
+	var viewport = NewImGuiViewportP()
 	g.Viewports = append(g.Viewports, &viewport)
 
 	g.Initialized = true
