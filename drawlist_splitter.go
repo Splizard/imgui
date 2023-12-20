@@ -78,7 +78,7 @@ func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	}
 
 	for i := int(1); i < this._Count; i++ {
-		var ch *ImDrawChannel = &this._Channels[i]
+		var ch = &this._Channels[i]
 
 		// Equivalent of PopUnusedDrawCmd() for this channel's cmdbuffer and except we don't need to test for UserCallback.
 		if len(ch._CmdBuffer) > 0 && ch._CmdBuffer[len(ch._CmdBuffer)-1].ElemCount == 0 {

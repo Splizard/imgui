@@ -66,9 +66,9 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 
 	// FIXME-DRAGDROP: While in the common-most "drag from non-zero active id" case we can tell the mouse button,
 	// in both SourceExtern and id==0 cases we may requires something else (explicit flags or some heuristic).
-	var mouse_button ImGuiMouseButton = ImGuiMouseButton_Left
+	var mouse_button = ImGuiMouseButton_Left
 
-	var source_drag_active bool = false
+	var source_drag_active = false
 	var source_id ImGuiID = 0
 	var source_parent_id ImGuiID = 0
 	if flags&ImGuiDragDropFlags_SourceExtern == 0 {
@@ -110,7 +110,7 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 			// Rely on keeping other window.LastItemXXX fields intact.
 			source_id = window.GetIDFromRectangle(g.LastItemData.Rect)
 			g.LastItemData.ID = source_id
-			var is_hovered bool = ItemHoverable(&g.LastItemData.Rect, source_id)
+			var is_hovered = ItemHoverable(&g.LastItemData.Rect, source_id)
 			if is_hovered && g.IO.MouseClicked[mouse_button] {
 				SetActiveID(source_id, window)
 				FocusWindow(window)
@@ -137,7 +137,7 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 		if !g.DragDropActive {
 			IM_ASSERT(source_id != 0)
 			ClearDragDrop()
-			var payload *ImGuiPayload = &g.DragDropPayload
+			var payload = &g.DragDropPayload
 			payload.SourceId = source_id
 			payload.SourceParentId = source_parent_id
 			g.DragDropActive = true
@@ -175,7 +175,7 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
 func SetDragDropPayload(ptype string, data interface{}, data_size uintptr, cond ImGuiCond) bool {
 	var g = GImGui
-	var payload *ImGuiPayload = &g.DragDropPayload
+	var payload = &g.DragDropPayload
 	if cond == 0 {
 		cond = ImGuiCond_Always
 	}
@@ -235,11 +235,11 @@ func BeginDragDropTarget() bool {
 		return false
 	}
 
-	var display_rect ImRect = g.LastItemData.Rect
+	var display_rect = g.LastItemData.Rect
 	if g.LastItemData.StatusFlags&ImGuiItemStatusFlags_HasDisplayRect != 0 {
 		display_rect = g.LastItemData.DisplayRect
 	}
-	var id ImGuiID = g.LastItemData.ID
+	var id = g.LastItemData.ID
 	if id == 0 {
 		id = window.GetIDFromRectangle(display_rect)
 	}
@@ -268,8 +268,8 @@ func AcceptDragDropPayload(ptype string, flags ImGuiDragDropFlags) *ImGuiPayload
 	// Accept smallest drag target bounding box, this allows us to nest drag targets conveniently without ordering constraints.
 	// NB: We currently accept nil id as target. However, overlapping targets requires a unique ID to function!
 	var was_accepted_previously = (g.DragDropAcceptIdPrev == g.DragDropTargetId)
-	var r ImRect = g.DragDropTargetRect
-	var r_surface float = r.GetWidth() * r.GetHeight()
+	var r = g.DragDropTargetRect
+	var r_surface = r.GetWidth() * r.GetHeight()
 	if r_surface <= g.DragDropAcceptIdCurrRectSurface {
 		g.DragDropAcceptFlags = flags
 		g.DragDropAcceptIdCurr = g.DragDropTargetId

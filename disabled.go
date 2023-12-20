@@ -13,7 +13,7 @@ package imgui
 // - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
 func BeginDisabled(disabled bool /*= true*/) {
 	var g = GImGui
-	var was_disabled bool = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
+	var was_disabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
 	if !was_disabled && disabled {
 		g.DisabledAlphaBackup = g.Style.Alpha
 		g.Style.Alpha *= g.Style.DisabledAlpha // PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * g.Style.DisabledAlpha);
@@ -26,7 +26,7 @@ func BeginDisabled(disabled bool /*= true*/) {
 
 func EndDisabled() {
 	var g = GImGui
-	var was_disabled bool = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
+	var was_disabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
 	//PopItemFlag();
 	g.ItemFlagsStack = g.ItemFlagsStack[:len(g.ItemFlagsStack)-1]
 	g.CurrentItemFlags = g.ItemFlagsStack[len(g.ItemFlagsStack)-1]

@@ -24,14 +24,14 @@ func NewImFontGlyphRangesBuilder() ImFontGlyphRangesBuilder {
 }
 
 func (this ImFontGlyphRangesBuilder) GetBit(n uintptr) bool {
-	var off int = (int)(n >> 5)
-	var mask ImU32 = uint(1) << (n & 31)
+	var off = (int)(n >> 5)
+	var mask = uint(1) << (n & 31)
 	return (this[off] & mask) != 0
 }
 
 func (this ImFontGlyphRangesBuilder) SetBit(n uintptr) {
-	var off int = (int)(n >> 5)
-	var mask ImU32 = uint(1) << (n & 31)
+	var off = (int)(n >> 5)
+	var mask = uint(1) << (n & 31)
 	this[off] |= mask
 }
 

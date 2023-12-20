@@ -64,9 +64,9 @@ func (this *ImDrawData) DeIndexAllBuffers() {
 // or if there is a difference between your window resolution and framebuffer resolution.
 func (this *ImDrawData) ScaleClipRects(fb_scale *ImVec2) {
 	for i := int(0); i < this.CmdListsCount; i++ {
-		var cmd_list *ImDrawList = this.CmdLists[i]
+		var cmd_list = this.CmdLists[i]
 		for cmd_i := range cmd_list.CmdBuffer {
-			var cmd *ImDrawCmd = &cmd_list.CmdBuffer[cmd_i]
+			var cmd = &cmd_list.CmdBuffer[cmd_i]
 			cmd.ClipRect = ImVec4{cmd.ClipRect.x * fb_scale.x, cmd.ClipRect.y * fb_scale.y, cmd.ClipRect.z * fb_scale.x, cmd.ClipRect.w * fb_scale.y}
 		}
 	}
@@ -105,7 +105,7 @@ func (this *ImDrawList) PushTextureID(texture_id ImTextureID) {
 
 func (this *ImDrawList) _OnChangedTextureID() {
 	// If current command is used with different settings we need to add a new command
-	var curr_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 	if curr_cmd.ElemCount != 0 && curr_cmd.TextureId != this._CmdHeader.TextureId {
 		this.AddDrawCmd()
 		return
@@ -113,7 +113,7 @@ func (this *ImDrawList) _OnChangedTextureID() {
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 
 	// Try to merge with previous command if it matches, else use current command
-	var prev_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var prev_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 
 	prevHeader := ImDrawCmdHeader{
 		ClipRect:  prev_cmd.ClipRect,
@@ -134,7 +134,7 @@ func (this *ImDrawList) _OnChangedTextureID() {
 // The cost of figuring out if a new command has to be added or if we can merge is paid in those Update** functions only.
 func (this *ImDrawList) _OnChangedClipRect() {
 	// If current command is used with different settings we need to add a new command
-	var curr_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 	if curr_cmd.ElemCount != 0 && curr_cmd.ClipRect != this._CmdHeader.ClipRect {
 		this.AddDrawCmd()
 		return
@@ -142,7 +142,7 @@ func (this *ImDrawList) _OnChangedClipRect() {
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 
 	// Try to merge with previous command if it matches, else use current command
-	var prev_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var prev_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 
 	prevHeader := ImDrawCmdHeader{
 		ClipRect:  prev_cmd.ClipRect,
@@ -189,20 +189,20 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 		return
 	}
 
-	var uv ImVec2 = this._Data.TexUvWhitePixel
+	var uv = this._Data.TexUvWhitePixel
 
 	if this.Flags&ImDrawListFlags_AntiAliasedFill != 0 {
 
 		// Anti-aliased Fill
-		var AA_SIZE float = this._FringeScale
-		var col_trans ImU32 = col &^ IM_COL32_A_MASK
-		var idx_count int = (points_count-2)*3 + points_count*6
-		var vtx_count int = (points_count * 2)
+		var AA_SIZE = this._FringeScale
+		var col_trans = col &^ IM_COL32_A_MASK
+		var idx_count = (points_count-2)*3 + points_count*6
+		var vtx_count = (points_count * 2)
 		this.PrimReserve(idx_count, vtx_count)
 
 		// Add indexes for fill
-		var vtx_inner_idx uint = this._VtxCurrentIdx
-		var vtx_outer_idx uint = this._VtxCurrentIdx + 1
+		var vtx_inner_idx = this._VtxCurrentIdx
+		var vtx_outer_idx = this._VtxCurrentIdx + 1
 		for i := int(2); i < points_count; i++ {
 			this.IdxBuffer[this._IdxWritePtr] = (ImDrawIdx)(vtx_inner_idx)
 			this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(vtx_inner_idx + ((uint(i) - 1) << 1))
@@ -211,13 +211,13 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 		}
 
 		// Compute normals
-		var temp_normals []ImVec2 = make([]ImVec2, points_count) //-V630
+		var temp_normals = make([]ImVec2, points_count) //-V630
 		for i0, i1 := points_count-1, int(0); i1 < points_count; i0, i1 = i1, i1+1 {
 
-			var p0 *ImVec2 = &points[i0]
-			var p1 *ImVec2 = &points[i1]
-			var dx float = p1.x - p0.x
-			var dy float = p1.y - p0.y
+			var p0 = &points[i0]
+			var p1 = &points[i1]
+			var dx = p1.x - p0.x
+			var dy = p1.y - p0.y
 			IM_NORMALIZE2F_OVER_ZERO(&dx, &dy)
 			temp_normals[i0].x = dy
 			temp_normals[i0].y = -dx
@@ -225,10 +225,10 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 
 		for i0, i1 := points_count-1, int(0); i1 < points_count; i0, i1 = i1, i1+1 {
 			// Average normals
-			var n0 *ImVec2 = &temp_normals[i0]
-			var n1 *ImVec2 = &temp_normals[i1]
-			var dm_x float = (n0.x + n1.x) * 0.5
-			var dm_y float = (n0.y + n1.y) * 0.5
+			var n0 = &temp_normals[i0]
+			var n1 = &temp_normals[i1]
+			var dm_x = (n0.x + n1.x) * 0.5
+			var dm_y = (n0.y + n1.y) * 0.5
 			IM_FIXNORMAL2F(&dm_x, &dm_y)
 			dm_x *= AA_SIZE * 0.5
 			dm_y *= AA_SIZE * 0.5
@@ -259,8 +259,8 @@ func (this *ImDrawList) AddConvexPolyFilled(points []ImVec2, points_count int, c
 	} else {
 
 		// Non Anti-aliased Fill
-		var idx_count int = (points_count - 2) * 3
-		var vtx_count int = points_count
+		var idx_count = (points_count - 2) * 3
+		var vtx_count = points_count
 		this.PrimReserve(idx_count, vtx_count)
 		for i := int(0); i < vtx_count; i++ {
 			this.VtxBuffer[this._VtxWritePtr+0].Pos = points[i]
@@ -292,14 +292,14 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 	// Make sure we never do steps larger than one quarter of the circle
 	a_step = int(ImClamp(float(a_step), 1, IM_DRAWLIST_ARCFAST_TABLE_SIZE/4))
 
-	var sample_range int = ImAbsInt(a_max_sample - a_min_sample)
+	var sample_range = ImAbsInt(a_max_sample - a_min_sample)
 	var a_next_step = a_step
 
-	var samples int = sample_range + 1
-	var extra_max_sample bool = false
+	var samples = sample_range + 1
+	var extra_max_sample = false
 	if a_step > 1 {
 		samples = sample_range/a_step + 1
-		var overstep int = sample_range % a_step
+		var overstep = sample_range % a_step
 
 		if overstep > 0 {
 			extra_max_sample = true
@@ -314,9 +314,9 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 	}
 
 	this._Path = append(this._Path, make([]ImVec2, samples)...)
-	var out_ptr []ImVec2 = this._Path[(int(len(this._Path)) - samples):]
+	var out_ptr = this._Path[(int(len(this._Path)) - samples):]
 
-	var sample_index int = a_min_sample
+	var sample_index = a_min_sample
 	if sample_index < 0 || sample_index >= IM_DRAWLIST_ARCFAST_SAMPLE_MAX {
 		sample_index = sample_index % IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 		if sample_index < 0 {
@@ -331,7 +331,7 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 				sample_index -= IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 			}
 
-			var s ImVec2 = this._Data.ArcFastVtx[sample_index]
+			var s = this._Data.ArcFastVtx[sample_index]
 			out_ptr[0].x = center.x + s.x*radius
 			out_ptr[0].y = center.y + s.y*radius
 			out_ptr = out_ptr[1:]
@@ -343,7 +343,7 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 				sample_index += IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 			}
 
-			var s ImVec2 = this._Data.ArcFastVtx[sample_index]
+			var s = this._Data.ArcFastVtx[sample_index]
 			out_ptr[0].x = center.x + s.x*radius
 			out_ptr[0].y = center.y + s.y*radius
 			out_ptr = out_ptr[1:]
@@ -351,12 +351,12 @@ func (this *ImDrawList) PathArcToFastEx(center ImVec2, radius float, a_min_sampl
 	}
 
 	if extra_max_sample {
-		var normalized_max_sample int = a_max_sample % IM_DRAWLIST_ARCFAST_SAMPLE_MAX
+		var normalized_max_sample = a_max_sample % IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 		if normalized_max_sample < 0 {
 			normalized_max_sample += IM_DRAWLIST_ARCFAST_SAMPLE_MAX
 		}
 
-		var s ImVec2 = this._Data.ArcFastVtx[normalized_max_sample]
+		var s = this._Data.ArcFastVtx[normalized_max_sample]
 		out_ptr[0].x = center.x + s.x*radius
 		out_ptr[0].y = center.y + s.y*radius
 		out_ptr = out_ptr[1:]
@@ -383,14 +383,14 @@ func (this *ImDrawList) PrimReserve(idx_count, vtx_count int) {
 		this._OnChangedVtxOffset()
 	}
 
-	var draw_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var draw_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 	draw_cmd.ElemCount += uint(idx_count)
 
-	var vtx_buffer_old_size int = int(len(this.VtxBuffer))
+	var vtx_buffer_old_size = int(len(this.VtxBuffer))
 	this.VtxBuffer = append(this.VtxBuffer, make([]ImDrawVert, vtx_count)...)
 	this._VtxWritePtr = vtx_buffer_old_size
 
-	var idx_buffer_old_size int = int(len(this.IdxBuffer))
+	var idx_buffer_old_size = int(len(this.IdxBuffer))
 	this.IdxBuffer = append(this.IdxBuffer, make([]ImDrawIdx, idx_count)...)
 	this._IdxWritePtr = idx_buffer_old_size
 }
@@ -453,8 +453,8 @@ func AddDrawListToDrawData(out_list *[]*ImDrawList, draw_list *ImDrawList) {
 // Fully unrolled with inline call to keep our debug builds decently fast.
 func (this *ImDrawList) PrimRect(a, c *ImVec2, col ImU32) {
 
-	var b, d, uv ImVec2 = ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, this._Data.TexUvWhitePixel
-	var idx ImDrawIdx = (ImDrawIdx)(this._VtxCurrentIdx)
+	var b, d, uv = ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, this._Data.TexUvWhitePixel
+	var idx = (ImDrawIdx)(this._VtxCurrentIdx)
 	this.IdxBuffer[this._IdxWritePtr+0] = idx
 	this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(idx + 1)
 	this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(idx + 2)
@@ -485,30 +485,30 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 		return
 	}
 
-	var closed bool = (flags & ImDrawFlags_Closed) != 0
-	var opaque_uv ImVec2 = this._Data.TexUvWhitePixel
+	var closed = (flags & ImDrawFlags_Closed) != 0
+	var opaque_uv = this._Data.TexUvWhitePixel
 	var count int // The number of line segments we need to draw
 	if closed {
 		count = points_count
 	} else {
 		count = points_count - 1
 	}
-	var thick_line bool = (thickness > this._FringeScale)
+	var thick_line = (thickness > this._FringeScale)
 
 	if this.Flags&ImDrawListFlags_AntiAliasedLines != 0 {
 		// Anti-aliased stroke
-		var AA_SIZE float = this._FringeScale
-		var col_trans ImU32 = col &^ IM_COL32_A_MASK
+		var AA_SIZE = this._FringeScale
+		var col_trans = col &^ IM_COL32_A_MASK
 
 		// Thicknesses <1.0 should behave like thickness 1.0
 		thickness = ImMax(thickness, 1.0)
-		var integer_thickness int = (int)(thickness)
-		var fractional_thickness float = thickness - float(integer_thickness)
+		var integer_thickness = (int)(thickness)
+		var fractional_thickness = thickness - float(integer_thickness)
 
 		// Do we want to draw this line using a texture?
 		// - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
 		// - If AA_SIZE is not 1.0f we cannot use the texture path.
-		var use_texture bool = (this.Flags&ImDrawListFlags_AntiAliasedLinesUseTex != 0) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0)
+		var use_texture = (this.Flags&ImDrawListFlags_AntiAliasedLinesUseTex != 0) && (integer_thickness < IM_DRAWLIST_TEX_LINES_WIDTH_MAX) && (fractional_thickness <= 0.00001) && (AA_SIZE == 1.0)
 
 		// We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
 		IM_ASSERT(!use_texture || this._Data.Font.ContainerAtlas.Flags&ImFontAtlasFlags_NoBakedLines == 0)
@@ -540,8 +540,8 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 
 		// Temporary buffer
 		// The first <points_count> items are normals at each line point, then after that there are either 2 or 4 temp points for each line point
-		var temp_normals []ImVec2 = make([]ImVec2, points_count*num_normals) //-V630
-		var temp_points []ImVec2 = temp_normals[points_count:]
+		var temp_normals = make([]ImVec2, points_count*num_normals) //-V630
+		var temp_points = temp_normals[points_count:]
 
 		// Calculate normals (tangents) for each line segment
 		for i1 := int(0); i1 < count; i1++ {
@@ -550,8 +550,8 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			if (i1 + 1) != points_count {
 				i2 = i1 + 1
 			}
-			var dx float = points[i2].x - points[i1].x
-			var dy float = points[i2].y - points[i1].y
+			var dx = points[i2].x - points[i1].x
+			var dy = points[i2].y - points[i1].y
 			IM_NORMALIZE2F_OVER_ZERO(&dx, &dy)
 			temp_normals[i1].x = dy
 			temp_normals[i1].y = -dx
@@ -570,7 +570,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			//   (see ImFontAtlasBuildRenderLinesTexData() function), and so alternate values won't work without changes to that code.
 			// - In the non texture-based paths, we would allow AA_SIZE to potentially be != 1.0f with a patch (e.g. fringe_scale patch to
 			//   allow scaling geometry while preserving one-screen-pixel AA fringe).
-			var half_draw_size float = AA_SIZE
+			var half_draw_size = AA_SIZE
 			if use_texture {
 				half_draw_size = thickness*0.5 + 1
 			}
@@ -586,7 +586,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
 			// This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
 			// FIXME-OPT: Merge the different loops, possibly remove the temporary buffer.
-			var idx1 uint = this._VtxCurrentIdx  // Vertex index for start of line segment
+			var idx1 = this._VtxCurrentIdx       // Vertex index for start of line segment
 			for i1 := int(0); i1 < count; i1++ { // i1 is the first point of the line segment
 
 				var i2 int // i2 is the second point of the line segment
@@ -606,14 +606,14 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				//printf("i1, i2, idx2 %v %v %v, this._VtxCurrentIdx %v\n ", i1, i2, idx2, this._VtxCurrentIdx)
 
 				// Average normals
-				var dm_x float = (temp_normals[i1].x + temp_normals[i2].x) * 0.5
-				var dm_y float = (temp_normals[i1].y + temp_normals[i2].y) * 0.5
+				var dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5
+				var dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5
 				IM_FIXNORMAL2F(&dm_x, &dm_y)
 				dm_x *= half_draw_size // dm_x, dm_y are offset to the outer edge of the AA area
 				dm_y *= half_draw_size
 
 				// Add temporary vertexes for the outer edges
-				var out_vtx []ImVec2 = temp_points[i2*2:]
+				var out_vtx = temp_points[i2*2:]
 				out_vtx[0].x = points[i2].x + dm_x
 				out_vtx[0].y = points[i2].y + dm_y
 				out_vtx[1].x = points[i2].x - dm_x
@@ -651,7 +651,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// Add vertexes for each point on the line
 			if use_texture {
 				// If we're using textures we only need to emit the left/right edge vertices
-				var tex_uvs ImVec4 = this._Data.TexUvLines[integer_thickness]
+				var tex_uvs = this._Data.TexUvLines[integer_thickness]
 				/*if (fractional_thickness != 0.0f) // Currently always zero when use_texture==false!
 				  {
 				      const ImVec4 tex_uvs_1 = _Data.TexUvLines[integer_thickness + 1];
@@ -688,11 +688,11 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			}
 		} else {
 			// [PATH 2] Non texture-based lines (thick): we need to draw the solid line core and thus require four vertices per point
-			var half_inner_thickness float = (thickness - AA_SIZE) * 0.5
+			var half_inner_thickness = (thickness - AA_SIZE) * 0.5
 
 			// If line is not closed, the first and last points need to be generated differently as there are no normals to blend
 			if !closed {
-				var points_last int = points_count - 1
+				var points_last = points_count - 1
 				temp_points[0] = points[0].Add(temp_normals[0].Scale(half_inner_thickness + AA_SIZE))
 				temp_points[1] = points[0].Add(temp_normals[0].Scale(half_inner_thickness))
 				temp_points[2] = points[0].Sub(temp_normals[0].Scale(half_inner_thickness))
@@ -706,7 +706,7 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 			// Generate the indices to form a number of triangles for each line segment, and the vertices for the line edges
 			// This takes points n and n+1 and writes into n+1, with the first point in a closed line being generated from the final one (as n+1 wraps)
 			// FIXME-OPT: Merge the different loops, possibly remove the temporary buffer.
-			var idx1 uint = this._VtxCurrentIdx  // Vertex index for start of line segment
+			var idx1 = this._VtxCurrentIdx       // Vertex index for start of line segment
 			for i1 := int(0); i1 < count; i1++ { // i1 is the first point of the line segment
 
 				var i2 int // i2 is the second point of the line segment
@@ -722,16 +722,16 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				}
 
 				// Average normals
-				var dm_x float = (temp_normals[i1].x + temp_normals[i2].x) * 0.5
-				var dm_y float = (temp_normals[i1].y + temp_normals[i2].y) * 0.5
+				var dm_x = (temp_normals[i1].x + temp_normals[i2].x) * 0.5
+				var dm_y = (temp_normals[i1].y + temp_normals[i2].y) * 0.5
 				IM_FIXNORMAL2F(&dm_x, &dm_y)
-				var dm_out_x float = dm_x * (half_inner_thickness + AA_SIZE)
-				var dm_out_y float = dm_y * (half_inner_thickness + AA_SIZE)
-				var dm_in_x float = dm_x * half_inner_thickness
-				var dm_in_y float = dm_y * half_inner_thickness
+				var dm_out_x = dm_x * (half_inner_thickness + AA_SIZE)
+				var dm_out_y = dm_y * (half_inner_thickness + AA_SIZE)
+				var dm_in_x = dm_x * half_inner_thickness
+				var dm_in_y = dm_y * half_inner_thickness
 
 				// Add temporary vertices
-				var out_vtx []ImVec2 = temp_points[i2*4:]
+				var out_vtx = temp_points[i2*4:]
 				out_vtx[0].x = points[i2].x + dm_out_x
 				out_vtx[0].y = points[i2].y + dm_out_y
 				out_vtx[1].x = points[i2].x + dm_in_x
@@ -786,8 +786,8 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 	} else {
 
 		// [PATH 4] Non texture-based, Non anti-aliased lines
-		var idx_count int = count * 6
-		var vtx_count int = count * 4 // FIXME-OPT: Not sharing edges
+		var idx_count = count * 6
+		var vtx_count = count * 4 // FIXME-OPT: Not sharing edges
 		this.PrimReserve(idx_count, vtx_count)
 
 		for i1 := int(0); i1 < count; i1++ {
@@ -796,11 +796,11 @@ func (this *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32
 				i2 = (i1 + 1)
 			}
 
-			var p1 *ImVec2 = &points[i1]
-			var p2 *ImVec2 = &points[i2]
+			var p1 = &points[i1]
+			var p2 = &points[i2]
 
-			var dx float = p2.x - p1.x
-			var dy float = p2.y - p1.y
+			var dx = p2.x - p1.x
+			var dy = p2.y - p1.y
 			IM_NORMALIZE2F_OVER_ZERO(&dx, &dy)
 			dx *= (thickness * 0.5)
 			dy *= (thickness * 0.5)
@@ -849,7 +849,7 @@ func (this *ImDrawList) AddCircleFilled(center ImVec2, radius float, col ImU32, 
 		num_segments = int(ImClamp(float(num_segments), 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX))
 
 		// Because we are filling a closed shape we remove 1 from the count of segments/points
-		var a_max float = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
+		var a_max = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
 		this.PathArcTo(center, radius, 0.0, a_max, num_segments-1)
 	}
 
@@ -869,12 +869,12 @@ func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num
 
 	// Automatic segment count
 	if radius <= this._Data.ArcFastRadiusCutoff {
-		var a_is_reverse bool = a_max < a_min
+		var a_is_reverse = a_max < a_min
 
 		// We are going to use precomputed values for mid samples.
 		// Determine first and last sample in lookup table that belong to the arc.
-		var a_min_sample_f float = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0)
-		var a_max_sample_f float = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0)
+		var a_min_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_min / (IM_PI * 2.0)
+		var a_max_sample_f = IM_DRAWLIST_ARCFAST_SAMPLE_MAX * a_max / (IM_PI * 2.0)
 
 		var a_min_sample int
 		if a_is_reverse {
@@ -897,10 +897,10 @@ func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num
 			a_mid_samples = ImMaxInt(a_max_sample-a_min_sample, 0)
 		}
 
-		var a_min_segment_angle float = float(a_min_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
-		var a_max_segment_angle float = float(a_max_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
-		var a_emit_start bool = (a_min_segment_angle - a_min) != 0.0
-		var a_emit_end bool = (a_max - a_max_segment_angle) != 0.0
+		var a_min_segment_angle = float(a_min_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
+		var a_max_segment_angle = float(a_max_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
+		var a_emit_start = (a_min_segment_angle - a_min) != 0.0
+		var a_emit_end = (a_max - a_max_segment_angle) != 0.0
 
 		var emit int
 		if a_emit_start {
@@ -923,9 +923,9 @@ func (this *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num
 			this._Path = append(this._Path, ImVec2{center.x + ImCos(a_max)*radius, center.y + ImSin(a_max)*radius})
 		}
 	} else {
-		var arc_length float = ImAbs(a_max - a_min)
-		var circle_segment_count int = this._CalcCircleAutoSegmentCount(radius)
-		var arc_segment_count int = ImMaxInt((int)(ImCeil(float(circle_segment_count)*arc_length/(IM_PI*2.0))), (int)(2.0*IM_PI/arc_length))
+		var arc_length = ImAbs(a_max - a_min)
+		var circle_segment_count = this._CalcCircleAutoSegmentCount(radius)
+		var arc_segment_count = ImMaxInt((int)(ImCeil(float(circle_segment_count)*arc_length/(IM_PI*2.0))), (int)(2.0*IM_PI/arc_length))
 		this._PathArcToN(center, radius, a_min, a_max, arc_segment_count)
 	}
 }

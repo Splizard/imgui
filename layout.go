@@ -16,7 +16,7 @@ func NewLine() {
 	}
 
 	var g = GImGui
-	var backup_layout_type ImGuiLayoutType = window.DC.LayoutType
+	var backup_layout_type = window.DC.LayoutType
 	window.DC.LayoutType = ImGuiLayoutType_Vertical
 	if window.DC.CurrLineSize.y > 0.0 { // In the event that we are on a line with items that is smaller that FontSize high, we will preserve its height.
 		ItemSizeVec(&ImVec2{}, 0)
@@ -80,10 +80,10 @@ func BeginGroup() {
 // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 func EndGroup() {
 	var g = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
+	var window = g.CurrentWindow
 	IM_ASSERT(len(g.GroupStack) > 0) // Mismatched BeginGroup()/EndGroup() calls
 
-	var group_data *ImGuiGroupData = &g.GroupStack[len(g.GroupStack)-1]
+	var group_data = &g.GroupStack[len(g.GroupStack)-1]
 	IM_ASSERT(group_data.WindowID == window.ID) // EndGroup() in wrong window?
 
 	var group_bb = ImRect{group_data.BackupCursorPos, ImMaxVec2(&window.DC.CursorMaxPos, &group_data.BackupCursorPos)}
@@ -113,8 +113,8 @@ func EndGroup() {
 	// It would be be neater if we replaced window.DC.LastItemId by e.g. 'bool LastItemIsActive', but would put a little more burden on individual widgets.
 	// Also if you grep for LastItemId you'll notice it is only used in that context.
 	// (The two tests not the same because ActiveIdIsAlive is an ID itself, in order to be able to handle ActiveId being overwritten during the frame.)
-	var group_contains_curr_active_id bool = (group_data.BackupActiveIdIsAlive != g.ActiveId) && (g.ActiveIdIsAlive == g.ActiveId) && g.ActiveId != 0
-	var group_contains_prev_active_id bool = (group_data.BackupActiveIdPreviousFrameIsAlive == false) && (g.ActiveIdPreviousFrameIsAlive == true)
+	var group_contains_curr_active_id = (group_data.BackupActiveIdIsAlive != g.ActiveId) && (g.ActiveIdIsAlive == g.ActiveId) && g.ActiveId != 0
+	var group_contains_prev_active_id = (group_data.BackupActiveIdPreviousFrameIsAlive == false) && (g.ActiveIdPreviousFrameIsAlive == true)
 	if group_contains_curr_active_id {
 		g.LastItemData.ID = g.ActiveId
 	} else if group_contains_prev_active_id {
@@ -123,7 +123,7 @@ func EndGroup() {
 	g.LastItemData.Rect = group_bb
 
 	// Forward Hovered flag
-	var group_contains_curr_hovered_id bool = (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0
+	var group_contains_curr_hovered_id = (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0
 	if group_contains_curr_hovered_id {
 		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow
 	}
@@ -262,8 +262,8 @@ func PushMultiItemsWidths(components int, width_full float) {
 	var g = GImGui
 	var window = g.CurrentWindow
 	var style = g.Style
-	var w_item_one float = ImMax(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
-	var w_item_last float = ImMax(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
+	var w_item_one = ImMax(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
+	var w_item_last = ImMax(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, w_item_last)
 	for i := int(0); i < components-2; i++ {
@@ -304,7 +304,7 @@ func CalcItemWidth() float {
 		w = window.DC.ItemWidth
 	}
 	if w < 0.0 {
-		var region_max_x float = GetContentRegionMaxAbs().x
+		var region_max_x = GetContentRegionMaxAbs().x
 		w = ImMax(1.0, region_max_x-window.DC.CursorPos.x+w)
 	}
 	w = IM_FLOOR(w)

@@ -26,7 +26,7 @@ func GetVersion() string {
 //     some frequently called functions which to modify both channels and clipping simultaneously tend to use the
 //     more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
 func PushClipRect(cr_min ImVec2, cr_max ImVec2, intersect_with_current_clip_rect bool) {
-	var window *ImGuiWindow = GetCurrentWindow()
+	var window = GetCurrentWindow()
 	window.DrawList.PushClipRect(cr_min, cr_max, intersect_with_current_clip_rect)
 	window.ClipRect = ImRectFromVec4(&window.DrawList._ClipRectStack[len(window.DrawList._ClipRectStack)-1])
 }
