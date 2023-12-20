@@ -1,6 +1,6 @@
 package imgui
 
-// When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
+// NAV_WINDOWING_LIST_APPEAR_DELAY When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.
 const NAV_WINDOWING_LIST_APPEAR_DELAY float = 0.15 // Time before the window list starts to appear
 
 const NAV_WINDOWING_HIGHLIGHT_DELAY float = 0.20 // Time before the highlight and screen dimming starts fading in
@@ -15,7 +15,7 @@ func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OP
 	return nil
 }
 
-// Forward will reuse the move request again on the next frame (generally with modifications done to it)
+// NavMoveRequestForward Forward will reuse the move request again on the next frame (generally with modifications done to it)
 func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
 	var g = GImGui
 	IM_ASSERT(!g.NavMoveForwardToNextFrame)
@@ -26,7 +26,7 @@ func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGu
 	g.NavMoveFlags = move_flags | ImGuiNavMoveFlags_Forwarded
 }
 
-// Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
+// NavMoveRequestTryWrapping Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
 // popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
 func NavMoveRequestTryWrapping(window *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
 	var g = GImGui
@@ -37,7 +37,7 @@ func NavMoveRequestTryWrapping(window *ImGuiWindow, move_flags ImGuiNavMoveFlags
 	}
 }
 
-// FIXME-NAV: The existence of SetNavID vs SetFocusID properly needs to be clarified/reworked.
+// SetNavID FIXME-NAV: The existence of SetNavID vs SetFocusID properly needs to be clarified/reworked.
 // In our terminology those should be interchangeable. Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 func SetNavID(id ImGuiID, nav_layer ImGuiNavLayer, focus_scope_id ImGuiID, rect_rel *ImRect) {
 	var g = GImGui
@@ -60,7 +60,7 @@ func NavUpdateAnyRequestFlag() {
 	}
 }
 
-// Restore the last focused child.
+// NavRestoreLastChildNavWindow Restore the last focused child.
 // Call when we are expected to land on the Main Layer (0) after FocusWindow()
 func NavRestoreLastChildNavWindow(window *ImGuiWindow) *ImGuiWindow {
 	if window.NavLastChildNavWindow != nil && window.NavLastChildNavWindow.WasActive {
@@ -106,7 +106,7 @@ func GetNavInputAmount(n ImGuiNavInput, mode ImGuiInputReadMode) float {
 	return 0.0
 }
 
-// Gamepad/Keyboard Navigation
+// NavMoveRequestButNoResultYet Gamepad/Keyboard Navigation
 func NavMoveRequestButNoResultYet() bool {
 	var g = GImGui
 	return g.NavMoveScoringItems && g.NavMoveResultLocal.ID == 0 && g.NavMoveResultOther.ID == 0
@@ -121,7 +121,7 @@ func NavApplyItemToResult(result *ImGuiNavItemData) {
 	result.RectRel = ImRect{g.LastItemData.NavRect.Min.Sub(window.Pos), g.LastItemData.NavRect.Max.Sub(window.Pos)}
 }
 
-// We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
+// NavProcessItem We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after LastItemData is set.
 func NavProcessItem() {
 	var g = GImGui
@@ -180,7 +180,7 @@ func NavProcessItem() {
 	}
 }
 
-// Handle PageUp/PageDown/Home/End keys
+// NavUpdatePageUpPageDown Handle PageUp/PageDown/Home/End keys
 // Called from NavUpdateCreateMoveRequest() which will use our output to create a move request
 // FIXME-NAV: This doesn't work properly with NavFlattened siblings as we use NavWindow rectangle for reference
 // FIXME-NAV: how to get Home/End to aim at the beginning/end of a 2D grid?
@@ -343,7 +343,7 @@ func NavUpdateCreateMoveRequest() {
 	g.NavScoringRect = scoring_rect
 }
 
-// Process NavCancel input (to close a popup, get back to parent, clear focus)
+// NavUpdateCancelRequest Process NavCancel input (to close a popup, get back to parent, clear focus)
 // FIXME: In order to support e.g. Escape to clear a selection we'll need:
 // - either to store the equivalent of ActiveIdUsingKeyInputMask for a FocusScope and test for it.
 // - either to move most/all of those tests to the epilogue/end functions of the scope they are dealing with (e.g. exit child window in EndChild()) or in EndFrame(), to allow an earlier intercept
@@ -469,7 +469,7 @@ func NavCalcPreferredRefPos() ImVec2 {
 	}
 }
 
-// FIXME: This could be replaced by updating a frame number in each window when (window == NavWindow) and (NavLayer == 0).
+// NavSaveLastChildNavWindowIntoParent FIXME: This could be replaced by updating a frame number in each window when (window == NavWindow) and (NavLayer == 0).
 // This way we could find the last focused window among our children. It would be much less confusing this way?
 func NavSaveLastChildNavWindowIntoParent(nav_window *ImGuiWindow) {
 	var parent *ImGuiWindow = nav_window
@@ -481,7 +481,7 @@ func NavSaveLastChildNavWindowIntoParent(nav_window *ImGuiWindow) {
 	}
 }
 
-// Windowing management mode
+// NavUpdateWindowing Windowing management mode
 // Keyboard: CTRL+Tab (change focus/move/resize), Alt (toggle menu layer)
 // Gamepad:  Hold Menu/Square (change focus/move/resize), Tap Menu/Square (toggle menu layer)
 func NavUpdateWindowing() {
@@ -881,7 +881,7 @@ func NavUpdate() {
 	g.NavScoringDebugCount = 0
 }
 
-// This needs to be called before we submit any widget (aka in or before Begin)
+// NavInitWindow This needs to be called before we submit any widget (aka in or before Begin)
 func NavInitWindow(window *ImGuiWindow, force_reinit bool) {
 	var g = GImGui
 	IM_ASSERT(window == g.NavWindow)
@@ -921,7 +921,7 @@ func NavScoreItemDistInterval(a0, a1, b0, b1 float) float {
 	return 0.0
 }
 
-// Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
+// NavScoreItem Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
 func NavScoreItem(result *ImGuiNavItemData) bool {
 	var g = GImGui
 	var window = g.CurrentWindow
@@ -1113,7 +1113,7 @@ func NavEndFrame() {
 	}
 }
 
-// Overlay displayed when using CTRL+TAB. Called by EndFrame().
+// NavUpdateWindowingOverlay Overlay displayed when using CTRL+TAB. Called by EndFrame().
 func NavUpdateWindowingOverlay() {
 	var g = GImGui
 	IM_ASSERT(g.NavWindowingTarget != nil)
@@ -1147,7 +1147,7 @@ func NavUpdateWindowingOverlay() {
 	PopStyleVar(1)
 }
 
-// FIXME: ScoringRect is not set
+// NavMoveRequestSubmit FIXME: ScoringRect is not set
 func NavMoveRequestSubmit(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
 	var g = GImGui
 	IM_ASSERT(g.NavWindow != nil)
@@ -1184,7 +1184,7 @@ func GetNavInputAmount2d(dir_sources ImGuiNavDirSourceFlags, mode ImGuiInputRead
 	return delta
 }
 
-// Apply result from previous frame navigation directional move request. Always called from NavUpdate()
+// NavMoveRequestApplyResult Apply result from previous frame navigation directional move request. Always called from NavUpdate()
 func NavMoveRequestApplyResult() {
 	var g = GImGui
 

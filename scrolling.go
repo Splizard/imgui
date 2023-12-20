@@ -2,9 +2,9 @@ package imgui
 
 // Return scrollbar rectangle, must only be called for corresponding axis if window.ScrollbarX/Y is set.
 func GetWindowScrollbarRect(window *ImGuiWindow, axis ImGuiAxis) ImRect {
-	var outer_rect ImRect = window.Rect()
-	var inner_rect ImRect = window.InnerRect
-	var border_size float = window.WindowBorderSize
+	var outer_rect = window.Rect()
+	var inner_rect = window.InnerRect
+	var border_size = window.WindowBorderSize
 	var scrollbar_size float
 
 	// (ScrollbarSizes.x = width of Y scrollbar; ScrollbarSizes.y = height of X scrollbar)
@@ -38,12 +38,12 @@ func Scrollbar(axis ImGuiAxis) {
 	var g = GImGui
 	var window = g.CurrentWindow
 
-	var id ImGuiID = GetWindowScrollbarID(window, axis)
+	var id = GetWindowScrollbarID(window, axis)
 	KeepAliveID(id)
 
 	// Calculate scrollbar bounding box
-	var bb ImRect = GetWindowScrollbarRect(window, axis)
-	var rounding_corners ImDrawFlags = ImDrawFlags_RoundCornersNone
+	var bb = GetWindowScrollbarRect(window, axis)
+	var rounding_corners = ImDrawFlags_RoundCornersNone
 	if axis == ImGuiAxis_X {
 		rounding_corners |= ImDrawFlags_RoundCornersBottomLeft
 		if !window.ScrollbarY {
@@ -94,8 +94,8 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 		return false
 	}
 
-	var bb_frame_width float = bb_frame.GetWidth()
-	var bb_frame_height float = bb_frame.GetHeight()
+	var bb_frame_width = bb_frame.GetWidth()
+	var bb_frame_height = bb_frame.GetHeight()
 	if bb_frame_width <= 0.0 || bb_frame_height <= 0.0 {
 		return false
 	}
@@ -109,10 +109,10 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 		return false
 	}
 
-	var style *ImGuiStyle = &g.Style
-	var allow_interaction bool = (alpha >= 1.0)
+	var style = &g.Style
+	var allow_interaction = alpha >= 1.0
 
-	var bb ImRect = *bb_frame
+	var bb = *bb_frame
 	bb.ExpandVec(ImVec2{-ImClamp(IM_FLOOR((bb_frame_width-2.0)*0.5), 0.0, 3.0), -ImClamp(IM_FLOOR((bb_frame_height-2.0)*0.5), 0.0, 3.0)})
 
 	// V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
@@ -127,18 +127,18 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 	// Calculate the height of our grabbable box. It generally represent the amount visible (vs the total scrollable amount)
 	// But we maintain a minimum size in pixel to allow for the user to still aim inside.
 	IM_ASSERT(ImMax(size_contents_v, size_avail_v) > 0.0) // Adding this assert to check if the ImMax(XXX,1.0f) is still needed. PLEASE CONTACT ME if this triggers.
-	var win_size_v float = ImMax(ImMax(size_contents_v, size_avail_v), 1.0)
-	var grab_h_pixels float = ImClamp(scrollbar_size_v*(size_avail_v/win_size_v), style.GrabMinSize, scrollbar_size_v)
-	var grab_h_norm float = grab_h_pixels / scrollbar_size_v
+	var win_size_v = ImMax(ImMax(size_contents_v, size_avail_v), 1.0)
+	var grab_h_pixels = ImClamp(scrollbar_size_v*(size_avail_v/win_size_v), style.GrabMinSize, scrollbar_size_v)
+	var grab_h_norm = grab_h_pixels / scrollbar_size_v
 
 	// Handle input right away. None of the code of Begin() is relying on scrolling position before calling Scrollbar().
-	var held bool = false
-	var hovered bool = false
+	var held = false
+	var hovered = false
 	ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_NoNavFocus)
 
-	var scroll_max float = ImMax(1.0, size_contents_v-size_avail_v)
-	var scroll_ratio float = ImSaturate(*p_scroll_v / scroll_max)
-	var grab_v_norm float = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v // Grab position in normalized space
+	var scroll_max = ImMax(1.0, size_contents_v-size_avail_v)
+	var scroll_ratio = ImSaturate(*p_scroll_v / scroll_max)
+	var grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v // Grab position in normalized space
 	if held && allow_interaction && grab_h_norm < 1.0 {
 		var scrollbar_pos_v float
 		var mouse_pos_v float
@@ -152,13 +152,13 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 		}
 
 		// Click position in scrollbar normalized space (0.0f.1.0f)
-		var clicked_v_norm float = ImSaturate((mouse_pos_v - scrollbar_pos_v) / scrollbar_size_v)
+		var clicked_v_norm = ImSaturate((mouse_pos_v - scrollbar_pos_v) / scrollbar_size_v)
 		SetHoveredID(id)
 
-		var seek_absolute bool = false
+		var seek_absolute = false
 		if g.ActiveIdIsJustActivated {
 			// On initial click calculate the distance between mouse and the center of the grab
-			seek_absolute = (clicked_v_norm < grab_v_norm || clicked_v_norm > grab_v_norm+grab_h_norm)
+			seek_absolute = clicked_v_norm < grab_v_norm || clicked_v_norm > grab_v_norm+grab_h_norm
 			if seek_absolute {
 				g.ScrollbarClickDeltaToGrabCenter = 0.0
 			} else {
@@ -168,7 +168,7 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 
 		// Apply scroll (p_scroll_v will generally point on one member of window.Scroll)
 		// It is ok to modify Scroll here because we are being called in Begin() after the calculation of ContentSize and before setting up our starting position
-		var scroll_v_norm float = ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm*0.5) / (1.0 - grab_h_norm))
+		var scroll_v_norm = ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm*0.5) / (1.0 - grab_h_norm))
 		*p_scroll_v = IM_ROUND(scroll_v_norm * scroll_max) //(win_size_contents_v - win_size_v));
 
 		// Update values for rendering
@@ -182,8 +182,8 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 	}
 
 	// Render
-	var bg_col ImU32 = GetColorU32FromID(ImGuiCol_ScrollbarBg, 1)
-	var grab_col ImU32 = GetColorU32FromID(ImGuiCol_ScrollbarGrab, alpha)
+	var bg_col = GetColorU32FromID(ImGuiCol_ScrollbarBg, 1)
+	var grab_col = GetColorU32FromID(ImGuiCol_ScrollbarGrab, alpha)
 
 	if held {
 		grab_col = GetColorU32FromID(ImGuiCol_ScrollbarGrabActive, 1)

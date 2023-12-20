@@ -1,7 +1,7 @@
 package imgui
 
 func ErrorCheckNewFrameSanityChecks() {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 
 	// Check user IM_ASSERT macro
 	// (IF YOU GET A WARNING OR COMPILE ERROR HERE: it means your assert macro is incorrectly defined!
@@ -112,7 +112,7 @@ func NewFrame() {
 
 	// Mark rendering data as invalid to prevent user who may have a handle on it to use it.
 	for n := range g.Viewports {
-		var viewport *ImGuiViewportP = g.Viewports[n]
+		var viewport = g.Viewports[n]
 		viewport.DrawDataP.Clear()
 	}
 
@@ -230,7 +230,7 @@ func NewFrame() {
 		memory_compact_start_time = (float)(g.Time - double(g.IO.ConfigMemoryCompactTimer))
 	}
 	for i := range g.Windows {
-		var window *ImGuiWindow = g.Windows[i]
+		var window = g.Windows[i]
 		window.WasActive = window.Active
 		window.BeginCount = 0
 		window.Active = false
@@ -294,7 +294,7 @@ func ErrorCheckEndFrameSanityChecks() {
 	// send key release events mid-frame. This would normally trigger this assertion and lead to sheared inputs.
 	// We silently accommodate for this case by ignoring/ the case where all io.KeyXXX modifiers were released (aka key_mod_flags == 0),
 	// while still correctly asserting on mid-frame key press events.
-	var key_mod_flags ImGuiKeyModFlags = GetMergedKeyModFlags()
+	var key_mod_flags = GetMergedKeyModFlags()
 	IM_ASSERT_USER_ERROR((key_mod_flags == 0 || g.IO.KeyMods == key_mod_flags), "Mismatching io.KeyCtrl/io.KeyShift/io.KeyAlt/io.KeySuper vs io.KeyMods")
 
 	// Recover from errors
@@ -349,8 +349,8 @@ func EndFrame() {
 
 	// Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
 	if g.DragDropActive {
-		var is_delivered bool = g.DragDropPayload.Delivery
-		var is_elapsed bool = (g.DragDropPayload.DataFrameCount+1 < g.FrameCount) && ((g.DragDropSourceFlags&ImGuiDragDropFlags_SourceAutoExpirePayload != 0) || !IsMouseDown(g.DragDropMouseButton))
+		var is_delivered = g.DragDropPayload.Delivery
+		var is_elapsed = (g.DragDropPayload.DataFrameCount+1 < g.FrameCount) && ((g.DragDropSourceFlags&ImGuiDragDropFlags_SourceAutoExpirePayload != 0) || !IsMouseDown(g.DragDropMouseButton))
 		if is_delivered || is_elapsed {
 			ClearDragDrop()
 		}
@@ -375,7 +375,7 @@ func EndFrame() {
 	g.WindowsTempSortBuffer = g.WindowsTempSortBuffer[:0]
 	g.WindowsTempSortBuffer = make([]*ImGuiWindow, 0, len(g.Windows))
 	for i := range g.Windows {
-		var window *ImGuiWindow = g.Windows[i]
+		var window = g.Windows[i]
 		if window.Active && (window.Flags&ImGuiWindowFlags_ChildWindow != 0) { // if a child is active its parent will add it
 			continue
 		}

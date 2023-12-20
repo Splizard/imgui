@@ -2,7 +2,7 @@ package imgui
 
 import "fmt"
 
-// Tables
+// BeginTable Tables
 // [BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
 // - Full-featured replacement for old Columns API.
 // - See Demo->Tables for demo code.
@@ -34,7 +34,7 @@ func BeginTable(str_id string, columns_count int, flags ImGuiTableFlags, outer_s
 	return BeginTableEx(str_id, id, columns_count, flags, &outer_size, inner_width)
 }
 
-// only call EndTable() if BeginTable() returns true!
+// EndTable only call EndTable() if BeginTable() returns true!
 func EndTable() {
 	var g = GImGui
 	var table = g.CurrentTable
@@ -257,7 +257,7 @@ func EndTable() {
 	}
 }
 
-// [Public] Starts into the first cell of a new row
+// TableNextRow [Public] Starts into the first cell of a new row
 func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
 	var g = GImGui
 	var table = g.CurrentTable
@@ -283,7 +283,7 @@ func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
 	table.InnerWindow.SkipItems = true
 }
 
-// [Public] Append into the next column, wrap and create a new row when already on last column
+// TableNextColumn [Public] Append into the next column, wrap and create a new row when already on last column
 // append into the first cell of a new row.
 // append into the next column (or first column of next row if currently in last column). Return true when column is visible.
 func TableNextColumn() bool {
@@ -309,7 +309,7 @@ func TableNextColumn() bool {
 	return (table.RequestOutputMaskByIndex & ((ImU64)(1 << column_n))) != 0
 }
 
-// [Public] Append into a specific column
+// TableSetColumnIndex [Public] Append into a specific column
 // append into the specified column. Return true when column is visible.
 func TableSetColumnIndex(column_n int) bool {
 	var g = GImGui
@@ -331,7 +331,7 @@ func TableSetColumnIndex(column_n int) bool {
 	return (table.RequestOutputMaskByIndex & ((ImU64)(1 << column_n))) != 0
 }
 
-// Tables: Headers & Columns declaration
+// TableSetupColumn Tables: Headers & Columns declaration
 //   - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
 //   - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
 //     Headers are required to perform: reordering, sorting, and opening the context menu.
@@ -419,7 +419,7 @@ func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_w
 	}
 }
 
-// [Public]
+// TableSetupScrollFreeze [Public]
 // lock columns/rows so they stay visible when scrolled.
 func TableSetupScrollFreeze(columns int, rows int) {
 	var g = GImGui
@@ -464,7 +464,7 @@ func TableSetupScrollFreeze(columns int, rows int) {
 	}
 }
 
-// [Public] This is a helper to output TableHeader() calls based on the column names declared in TableSetupColumn().
+// TableHeadersRow [Public] This is a helper to output TableHeader() calls based on the column names declared in TableSetupColumn().
 // The intent is that advanced users willing to create customized headers would not need to use this helper
 // and can create their own! For example: TableHeader() may be preceeded by Checkbox() or other custom widgets.
 // See 'Demo.Tables.Custom headers' for a demonstration of implementing a custom version of this.
@@ -516,7 +516,7 @@ func TableHeadersRow() {
 	}
 }
 
-// Emit a column header (text + optional sort order)
+// TableHeader Emit a column header (text + optional sort order)
 // We cpu-clip text here so that all columns headers can be merged into a same draw call.
 // Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use SameLine() after a TableHeader()
 // submit one header cell manually (rarely used)
@@ -685,7 +685,7 @@ func TableHeader(label string) {
 	}
 }
 
-// Tables: Sorting
+// TableGetSortSpecs Tables: Sorting
 //   - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
 //   - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
 //     since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
@@ -717,7 +717,7 @@ func TableGetColumnAvailSortDirection(column *ImGuiTableColumn, n int) ImGuiSort
 	return ImGuiSortDirection((column.SortDirectionsAvailList >> (n << 1)) & 0x03)
 }
 
-// Tables: Miscellaneous functions
+// TableGetColumnCount Tables: Miscellaneous functions
 // - Functions args 'column_n int' treat the default value of -1 as the same as passing the current column index.
 // return number of columns (value passed to BeginTable)
 func TableGetColumnCount() int {
@@ -729,7 +729,7 @@ func TableGetColumnCount() int {
 	return 0
 }
 
-// return current column index.
+// TableGetColumnIndex return current column index.
 func TableGetColumnIndex() int {
 	var g = GImGui
 	var table = g.CurrentTable
@@ -739,7 +739,7 @@ func TableGetColumnIndex() int {
 	return table.CurrentColumn
 }
 
-// [Public] Note: for row coloring we use .RowBgColorCounter which is the same value without counting header rows
+// TableGetRowIndex [Public] Note: for row coloring we use .RowBgColorCounter which is the same value without counting header rows
 // return current row index.
 func TableGetRowIndex() int {
 	var g = GImGui
@@ -750,7 +750,7 @@ func TableGetRowIndex() int {
 	return table.CurrentRow
 }
 
-// return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
+// TableGetColumnName return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
 func TableGetColumnName(column_n int /*= -1*/) string {
 	var g = GImGui
 	var table = g.CurrentTable
@@ -763,7 +763,7 @@ func TableGetColumnName(column_n int /*= -1*/) string {
 	return tableGetColumnName(table, column_n)
 }
 
-// We allow querying for an extra column in order to poll the IsHovered state of the right-most section
+// TableGetColumnFlags We allow querying for an extra column in order to poll the IsHovered state of the right-most section
 // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
 	var g = GImGui
@@ -783,7 +783,7 @@ func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
 	return table.Columns[column_n].Flags
 }
 
-// Change user accessible enabled/disabled state of a column (often perceived as "showing/hiding" from users point of view)
+// TableSetColumnEnabled Change user accessible enabled/disabled state of a column (often perceived as "showing/hiding" from users point of view)
 // Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
 // - Require table to have the ImGuiTableFlags_Hideable flag because we are manipulating user accessible state.
 // - Request will be applied during next layout, which happens on the first call to TableNextRow() after BeginTable().
@@ -806,7 +806,7 @@ func TableSetColumnEnabled(column_n int, enabled bool) {
 	column.IsUserEnabledNextFrame = enabled
 }
 
-// change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+// TableSetBgColor change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1*/) {
 	var g = GImGui
 	var table = g.CurrentTable

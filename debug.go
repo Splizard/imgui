@@ -82,11 +82,11 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data int
 }
 
 func DebugDrawItemRect(col ImU32 /*= IM_COL32(255,0,0,255)*/) {
-	var g *ImGuiContext = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
+	var g = GImGui
+	var window = g.CurrentWindow
 	getForegroundDrawList(window).AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col, 0, 0, 1)
 }
-func DebugStartItemPicker() { var g *ImGuiContext = GImGui; g.DebugItemPickerActive = true }
+func DebugStartItemPicker() { var g = GImGui; g.DebugItemPickerActive = true }
 
 // [DEBUG] List fonts in a font atlas and display its texture
 func ShowFontAtlas(atlas *ImFontAtlas) {
@@ -97,8 +97,8 @@ func ShowFontAtlas(atlas *ImFontAtlas) {
 		PopID()
 	}
 	if TreeNodeF("Atlas texture", "Atlas texture (%dx%d pixels)", atlas.TexWidth, atlas.TexHeight) {
-		var tint_col ImVec4 = ImVec4{1.0, 1.0, 1.0, 1.0}
-		var border_col ImVec4 = ImVec4{1.0, 1.0, 1.0, 0.5}
+		var tint_col = ImVec4{1.0, 1.0, 1.0, 1.0}
+		var border_col = ImVec4{1.0, 1.0, 1.0, 0.5}
 		Image(atlas.TexID, ImVec2{(float)(atlas.TexWidth), (float)(atlas.TexHeight)}, ImVec2{}, ImVec2{1, 1}, tint_col, border_col)
 		TreePop()
 	}
@@ -117,12 +117,12 @@ func DebugNodeColumns(columns *ImGuiOldColumns) {
 
 func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string) {
 	var g = GImGui
-	var cfg *ImGuiMetricsConfig = &g.DebugMetricsConfig
+	var cfg = &g.DebugMetricsConfig
 	var cmd_count = int(len(draw_list.CmdBuffer))
 	if cmd_count > 0 && draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].ElemCount == 0 && draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].UserCallback == nil {
 		cmd_count--
 	}
-	var node_open bool = TreeNodeInterface(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list._OwnerName, len(draw_list.VtxBuffer), len(draw_list.IdxBuffer), cmd_count)
+	var node_open = TreeNodeInterface(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, draw_list._OwnerName, len(draw_list.VtxBuffer), len(draw_list.IdxBuffer), cmd_count)
 	if draw_list == GetWindowDrawList() {
 		SameLine(0, 0)
 		TextColored(&ImVec4{1.0, 0.4, 0.4, 1.0}, "CURRENTLY APPENDING") // Can't display stats for active draw list! (we don't have the data double-buffered)
@@ -132,7 +132,7 @@ func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string)
 		return
 	}
 
-	var fg_draw_list *ImDrawList = getForegroundDrawList(window) // Render additional visuals into the top-most draw list
+	var fg_draw_list = getForegroundDrawList(window) // Render additional visuals into the top-most draw list
 	if window != nil && IsItemHovered(0) {
 		fg_draw_list.AddRect(window.Pos, window.Pos.Add(window.Size), IM_COL32(255, 255, 0, 255), 0, 0, 1)
 	}
@@ -156,7 +156,7 @@ func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string)
 			pcmd.ElemCount/3, pcmd.TextureId,
 			pcmd.ClipRect.x, pcmd.ClipRect.y, pcmd.ClipRect.z, pcmd.ClipRect.w,
 		)
-		var pcmd_node_open bool = TreeNodeInterface(pcmd, "%s", buf)
+		var pcmd_node_open = TreeNodeInterface(pcmd, "%s", buf)
 		if IsItemHovered(0) && (cfg.ShowDrawCmdMesh || cfg.ShowDrawCmdBoundingBoxes) && fg_draw_list != nil {
 			DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, cfg.ShowDrawCmdMesh, cfg.ShowDrawCmdBoundingBoxes)
 		}
@@ -170,7 +170,7 @@ func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string)
 		if len(draw_list.IdxBuffer) > 0 {
 			idx_buffer = draw_list.IdxBuffer
 		}
-		var vtx_buffer []ImDrawVert = draw_list.VtxBuffer[pcmd.VtxOffset:]
+		var vtx_buffer = draw_list.VtxBuffer[pcmd.VtxOffset:]
 		var total_area float = 0.0
 		for idx_n := pcmd.IdxOffset; idx_n < pcmd.IdxOffset+pcmd.ElemCount; idx_n++ {
 			var triangle [3]ImVec2
@@ -215,7 +215,7 @@ func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string)
 
 				Selectable(buf, false, 0, ImVec2{})
 				if fg_draw_list != nil && IsItemHovered(0) {
-					var backup_flags ImDrawListFlags = fg_draw_list.Flags
+					var backup_flags = fg_draw_list.Flags
 					fg_draw_list.Flags &= ^ImDrawListFlags_AntiAliasedLines // Disable AA on triangle outlines is more readable for very large and thin triangles.
 					fg_draw_list.AddPolyline(triangle[:], 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0)
 					fg_draw_list.Flags = backup_flags
@@ -233,7 +233,7 @@ func DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list *ImDrawList, draw_list
 	// Draw wire-frame version of all triangles
 	var clip_rect = ImRectFromVec4(&draw_cmd.ClipRect)
 	var vtxs_rect = ImRect{ImVec2{FLT_MAX, FLT_MAX}, ImVec2{-FLT_MAX, -FLT_MAX}}
-	var backup_flags ImDrawListFlags = out_draw_list.Flags
+	var backup_flags = out_draw_list.Flags
 	out_draw_list.Flags &= ^ImDrawListFlags_AntiAliasedLines // Disable AA on triangle outlines is more readable for very large and thin triangles.
 	for idx_n, idx_end := draw_cmd.IdxOffset, draw_cmd.IdxOffset+draw_cmd.ElemCount; idx_n < idx_end; {
 		var idx_buffer = draw_list.IdxBuffer // We don't hold on those pointers past iterations as .AddPolyline() may invalidate them if out_draw_list==draw_list
@@ -266,7 +266,7 @@ func DebugNodeFont(font *ImFont) {
 		name = font.ConfigData[0].Name
 	}
 
-	var opened bool = TreeNodeInterface(font, "Font: \"%s\"\n%.2f px, %d glyphs, %d file(s)",
+	var opened = TreeNodeInterface(font, "Font: \"%s\"\n%.2f px, %d glyphs, %d file(s)",
 		name, font.FontSize, len(font.Glyphs), font.ConfigDataCount)
 	SameLine(0, 0)
 	if SmallButton("Set as default") {
@@ -330,7 +330,7 @@ func DebugNodeFont(font *ImFont) {
 				continue
 			}
 
-			var plural string = "glyphs"
+			var plural = "glyphs"
 			if count == 1 {
 				plural = "glyph"
 			}
@@ -339,7 +339,7 @@ func DebugNodeFont(font *ImFont) {
 			}
 
 			// Draw a 16x16 grid of glyphs
-			var base_pos ImVec2 = GetCursorScreenPos()
+			var base_pos = GetCursorScreenPos()
 			for n := 0; n < 256; n++ {
 				// We use ImFont::RenderChar as a shortcut because we don't have UTF-8 conversion functions
 				// available here and thus cannot easily generate a zero-terminated UTF-8 encoded string.
@@ -391,7 +391,7 @@ func DebugNodeStorage(storage *ImGuiStorage, label string) {
 func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 	// Standalone tab bars (not associated to docking/windows functionality) currently hold no discernible strings.
 	var p string
-	var is_active bool = (tab_bar.PrevFrameVisible >= GetFrameCount()-2)
+	var is_active = (tab_bar.PrevFrameVisible >= GetFrameCount()-2)
 
 	var inactive string
 	if !is_active {
@@ -430,7 +430,7 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 	}
 	if open {
 		for tab_n := range tab_bar.Tabs {
-			var tab *ImGuiTabItem = &tab_bar.Tabs[tab_n]
+			var tab = &tab_bar.Tabs[tab_n]
 			PushInterface(tab)
 			if SmallButton("<") {
 				TabBarQueueReorder(tab_bar, tab, -1)
@@ -441,7 +441,7 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 			}
 			SameLine(0, 0)
 
-			var a, b string = " ", "???"
+			var a, b = " ", "???"
 			if tab.ID == tab_bar.SelectedTabId {
 				a = "*"
 			}
@@ -469,7 +469,7 @@ func DebugNodeTable(table *ImGuiTable) {
 	if !is_active {
 		PushStyleColorVec(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled))
 	}
-	var open bool = TreeNodeInterface(table, "%s", buf)
+	var open = TreeNodeInterface(table, "%s", buf)
 	if !is_active {
 		PopStyleColor(1)
 	}
@@ -585,7 +585,7 @@ func DebugNodeTableSettings(settings *ImGuiTableSettings) {
 			sorting = "---"
 		}
 
-		var stretch string = "Width "
+		var stretch = "Width "
 		if column_settings.IsStretch != 0 {
 			stretch = "Weight"
 		}
@@ -609,8 +609,8 @@ func DebugNodeWindow(window *ImGuiWindow, label string) {
 		selected_flags = ImGuiTreeNodeFlags_Selected
 	}
 
-	var is_active bool = window.WasActive
-	var tree_node_flags ImGuiTreeNodeFlags = selected_flags
+	var is_active = window.WasActive
+	var tree_node_flags = selected_flags
 	if !is_active {
 		PushStyleColorVec(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled))
 	}
@@ -620,7 +620,7 @@ func DebugNodeWindow(window *ImGuiWindow, label string) {
 		active_string = ""
 	}
 
-	var open bool = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, active_string)
+	var open = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, active_string)
 	if !is_active {
 		PopStyleColor(1)
 	}
@@ -678,7 +678,7 @@ func DebugNodeWindow(window *ImGuiWindow, label string) {
 		scrollY = "Y"
 	}
 
-	var BeginOrderWithinContext int16 = window.BeginOrderWithinContext
+	var BeginOrderWithinContext = window.BeginOrderWithinContext
 	if window.Active || window.WasActive {
 		BeginOrderWithinContext = -1
 	}
@@ -687,7 +687,7 @@ func DebugNodeWindow(window *ImGuiWindow, label string) {
 	BulletText("Active: %v/%v, WriteAccessed: %v, BeginOrderWithinContext: %d", window.Active, window.WasActive, window.WriteAccessed, BeginOrderWithinContext)
 	BulletText("Appearing: %v, Hidden: %v (CanSkip %v Cannot %v), SkipItems: %v", window.Appearing, window.Hidden, window.HiddenFramesCanSkipItems, window.HiddenFramesCannotSkipItems, window.SkipItems)
 	for layer := 0; layer < ImGuiNavLayer_COUNT; layer++ {
-		var r ImRect = window.NavRectRel[layer]
+		var r = window.NavRectRel[layer]
 		if r.Min.x >= r.Max.y && r.Min.y >= r.Max.y {
 			BulletText("NavLastIds[%d]: 0x%08X", layer, window.NavLastIds[layer])
 			continue
@@ -743,7 +743,7 @@ func DebugNodeWindowsList(windows []*ImGuiWindow, label string) {
 func DebugNodeViewport(viewport *ImGuiViewportP) {
 	SetNextItemOpen(true, ImGuiCond_Once)
 	if TreeNodeF("viewport0", "Viewport #%d", 0) {
-		var flags ImGuiViewportFlags = viewport.Flags
+		var flags = viewport.Flags
 		BulletText("Main Pos: (%.0f,%.0f), Size: (%.0f,%.0f)\nWorkArea Offset Left: %.0f Top: %.0f, Right: %.0f, Bottom: %.0f",
 			viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
 			viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y)
@@ -774,8 +774,8 @@ func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewport
 	var g = GImGui
 	var window = g.CurrentWindow
 
-	var scale ImVec2 = bb.GetSize().Div(viewport.Size)
-	var off ImVec2 = bb.Min.Sub(viewport.Pos.Mul(scale))
+	var scale = bb.GetSize().Div(viewport.Size)
+	var off = bb.Min.Sub(viewport.Pos.Mul(scale))
 	var alpha_mul float = 1.0
 	window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_Border, alpha_mul*0.40), 0, 0)
 	for i := range g.Windows {
@@ -831,10 +831,10 @@ func RenderViewportsThumbnails() {
 	for n := range g.Viewports {
 		bb_full.AddRect(g.Viewports[n].GetMainRect())
 	}
-	var p ImVec2 = window.DC.CursorPos
-	var off ImVec2 = p.Sub(bb_full.Min.Scale(SCALE))
+	var p = window.DC.CursorPos
+	var off = p.Sub(bb_full.Min.Scale(SCALE))
 	for n := range g.Viewports {
-		var viewport *ImGuiViewportP = g.Viewports[n]
+		var viewport = g.Viewports[n]
 		var viewport_draw_bb = ImRect{off.Add((viewport.Pos).Scale(SCALE)), off.Add((viewport.Pos.Add(viewport.Size)).Scale(SCALE))}
 		DebugRenderViewportThumbnail(window.DrawList, viewport, &viewport_draw_bb)
 	}
@@ -884,7 +884,7 @@ func UpdateDebugToolItemPicker() {
 	var g = GImGui
 	g.DebugItemPickerBreakId = 0
 	if g.DebugItemPickerActive {
-		var hovered_id ImGuiID = g.HoveredIdPreviousFrame
+		var hovered_id = g.HoveredIdPreviousFrame
 		SetMouseCursor(ImGuiMouseCursor_Hand)
 		if IsKeyPressedMap(ImGuiKey_Escape, true) {
 			g.DebugItemPickerActive = false
@@ -987,10 +987,10 @@ func ShowMetricsWindow(p_open *bool) {
 		case WRT_WorkRect:
 			return window.WorkRect
 		case WRT_Content:
-			var min ImVec2 = window.InnerRect.Min.Sub(window.Scroll).Add(window.WindowPadding)
+			var min = window.InnerRect.Min.Sub(window.Scroll).Add(window.WindowPadding)
 			return ImRect{min, min.Add(window.ContentSize)}
 		case WRT_ContentIdeal:
-			var min ImVec2 = window.InnerRect.Min.Sub(window.Scroll).Add(window.WindowPadding)
+			var min = window.InnerRect.Min.Sub(window.Scroll).Add(window.WindowPadding)
 			return ImRect{min, min.Add(window.ContentSizeIdeal)}
 		case WRT_ContentRegionRect:
 			return window.ContentRegionRect
@@ -1017,7 +1017,7 @@ func ShowMetricsWindow(p_open *bool) {
 			BulletText("'%s':", g.NavWindow.Name)
 			Indent(0)
 			for rect_n := int(0); rect_n < WRT_Count; rect_n++ {
-				var r ImRect = GetWindowRect(g.NavWindow, rect_n)
+				var r = GetWindowRect(g.NavWindow, rect_n)
 				Text("(%6.1f,%6.1f) (%6.1f,%6.1f) Size (%6.1f,%6.1f) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n])
 			}
 			Unindent(0)
@@ -1048,7 +1048,7 @@ func ShowMetricsWindow(p_open *bool) {
 							continue
 						}
 						for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
-							var r ImRect = GetTableRect(table, rect_n, column_n)
+							var r = GetTableRect(table, rect_n, column_n)
 							buf = fmt.Sprintf("(%6.1f,%6.1f) (%6.1f,%6.1f) Size (%6.1f,%6.1f) Col %d %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n])
 							Selectable(buf, false, 0, ImVec2{})
 							if IsItemHovered(0) {
@@ -1056,7 +1056,7 @@ func ShowMetricsWindow(p_open *bool) {
 							}
 						}
 					} else {
-						var r ImRect = GetTableRect(table, rect_n, -1)
+						var r = GetTableRect(table, rect_n, -1)
 						buf = fmt.Sprintf("(%6.1f,%6.1f) (%6.1f,%6.1f) Size (%6.1f,%6.1f) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n])
 						Selectable(buf, false, 0, ImVec2{})
 						if IsItemHovered(0) {
@@ -1198,7 +1198,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Text("WINDOWING")
 		Indent(0)
 
-		var name, rootName, underName, movingName string = "nil", "nil", "nil", "nil"
+		var name, rootName, underName, movingName = "nil", "nil", "nil", "nil"
 		if g.HoveredWindow != nil {
 			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
 				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
@@ -1210,7 +1210,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Text("MovingWindow: '%s'", movingName)
 		Unindent(0)
 
-		var activeName string = "nil"
+		var activeName = "nil"
 		if g.ActiveIdWindow != nil {
 			activeName = g.ActiveIdWindow.Name
 		}
@@ -1224,7 +1224,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Text("DragDrop: %d, SourceId = 0x%08X, Payload \"%s\" (%d bytes)", g.DragDropActive, g.DragDropPayload.SourceId, g.DragDropPayload.DataType, g.DragDropPayload.DataSize)
 		Unindent(0)
 
-		var navWindowName, navTargetName string = "nil", "nil"
+		var navWindowName, navTargetName = "nil", "nil"
 		if g.NavWindow != nil {
 			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
 		}
@@ -1253,7 +1253,7 @@ func ShowMetricsWindow(p_open *bool) {
 			}
 			var draw_list = getForegroundDrawList(window)
 			if cfg.ShowWindowsRects {
-				var r ImRect = GetWindowRect(window, cfg.ShowWindowsRectsType)
+				var r = GetWindowRect(window, cfg.ShowWindowsRectsType)
 				draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255), 0, 0, 1)
 			}
 			if cfg.ShowWindowsBeginOrder && (window.Flags&ImGuiWindowFlags_ChildWindow == 0) {
@@ -1273,8 +1273,8 @@ func ShowMetricsWindow(p_open *bool) {
 			var draw_list = getForegroundDrawList(table.OuterWindow)
 			if cfg.ShowTablesRectsType >= TRT_ColumnsRect {
 				for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
-					var r ImRect = GetTableRect(table, cfg.ShowTablesRectsType, column_n)
-					var col ImU32 = IM_COL32(255, 0, 128, 255)
+					var r = GetTableRect(table, cfg.ShowTablesRectsType, column_n)
+					var col = IM_COL32(255, 0, 128, 255)
 					if int(table.HoveredColumnBody) == column_n {
 						col = IM_COL32(255, 255, 128, 255)
 					}
@@ -1285,7 +1285,7 @@ func ShowMetricsWindow(p_open *bool) {
 					draw_list.AddRect(r.Min, r.Max, col, 0.0, 0, thickness)
 				}
 			} else {
-				var r ImRect = GetTableRect(table, cfg.ShowTablesRectsType, -1)
+				var r = GetTableRect(table, cfg.ShowTablesRectsType, -1)
 				draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255), 0.0, 0, 1)
 			}
 		}

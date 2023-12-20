@@ -39,7 +39,7 @@ func NewImDrawList(shared_data *ImDrawListSharedData) ImDrawList {
 func (this *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_current_clip_rect bool) {
 	var cr = ImVec4{cr_min.x, cr_min.y, cr_max.x, cr_max.y}
 	if intersect_with_current_clip_rect {
-		var current ImVec4 = this._CmdHeader.ClipRect
+		var current = this._CmdHeader.ClipRect
 		if cr.x < current.x {
 			cr.x = current.x
 		}
@@ -77,11 +77,11 @@ func (this *ImDrawList) PopClipRect() {
 }
 
 func (this *ImDrawList) GetClipRectMin() ImVec2 {
-	var cr *ImVec4 = &this._ClipRectStack[len(this._ClipRectStack)-1]
+	var cr = &this._ClipRectStack[len(this._ClipRectStack)-1]
 	return ImVec2{cr.x, cr.y}
 }
 func (this *ImDrawList) GetClipRectMax() ImVec2 {
-	var cr *ImVec4 = &this._ClipRectStack[len(this._ClipRectStack)-1]
+	var cr = &this._ClipRectStack[len(this._ClipRectStack)-1]
 	return ImVec2{cr.x, cr.y}
 }
 
@@ -180,7 +180,7 @@ func (this *ImDrawList) AddCircle(center ImVec2, radius float, col ImU32, num_se
 		num_segments = ImClampInt(num_segments, 3, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
 
 		// Because we are filling a closed shape we remove 1 from the count of segments/points
-		var a_max float = (IM_PI * 2.0) * (float(num_segments) - 1.0) / float(num_segments)
+		var a_max = (IM_PI * 2.0) * (float(num_segments) - 1.0) / float(num_segments)
 		this.PathArcTo(center, radius-0.5, 0.0, a_max, num_segments-1)
 	}
 
@@ -194,7 +194,7 @@ func (this *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segm
 	}
 
 	// Because we are filling a closed shape we remove 1 from the count of segments/points
-	var a_max float = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
+	var a_max = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
 	this.PathArcTo(center, radius-0.5, 0.0, a_max, num_segments-1)
 	this.PathStroke(col, ImDrawFlags_Closed, thickness)
 }
@@ -458,7 +458,7 @@ func (this *ImDrawList) _PopUnusedDrawCmd() {
 	if len(this.CmdBuffer) == 0 {
 		return
 	}
-	var curr_cmd *ImDrawCmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
+	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 	if curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == nil {
 		this.CmdBuffer = this.CmdBuffer[:len(this.CmdBuffer)-1]
 	}
@@ -488,7 +488,7 @@ func (this *ImDrawList) _OnChangedVtxOffset() {
 
 func (this *ImDrawList) _CalcCircleAutoSegmentCount(radius float) int {
 	// Automatic segment count
-	var radius_idx int = (int)(radius + 0.999999) // ceil to never reduce accuracy
+	var radius_idx = (int)(radius + 0.999999) // ceil to never reduce accuracy
 	if radius_idx < int(len(this._Data.CircleSegmentCounts)) {
 		return int(this._Data.CircleSegmentCounts[radius_idx]) // Use cached value
 	} else {
@@ -506,7 +506,7 @@ func (this *ImDrawList) _PathArcToN(center ImVec2, radius, a_min, a_max float, n
 	// If you are trying to draw a full closed circle you don't want the overlapping points!
 	this._Path = reserveVec2Slice(this._Path, int(len(this._Path))+(num_segments+1))
 	for i := int(0); i <= num_segments; i++ {
-		var a float = a_min + ((float)(i)/(float)(num_segments))*(a_max-a_min)
+		var a = a_min + ((float)(i)/(float)(num_segments))*(a_max-a_min)
 		this._Path = append(this._Path, ImVec2{center.x + ImCos(a)*radius, center.y + ImSin(a)*radius})
 	}
 }
@@ -541,7 +541,7 @@ func (this *ImDrawList) PopTextureID() {
 
 func (this *ImDrawList) PrimRectUV(a, c, uv_a, uv_c *ImVec2, col ImU32) {
 	var b, d, uv_b, uv_d = ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, ImVec2{uv_c.x, uv_a.y}, ImVec2{uv_a.x, uv_c.y}
-	var idx ImDrawIdx = (ImDrawIdx)(this._VtxCurrentIdx)
+	var idx = (ImDrawIdx)(this._VtxCurrentIdx)
 	this.IdxBuffer[this._IdxWritePtr+0] = idx
 	this.IdxBuffer[this._IdxWritePtr+1] = (ImDrawIdx)(idx + 1)
 	this.IdxBuffer[this._IdxWritePtr+2] = (ImDrawIdx)(idx + 2)
@@ -599,10 +599,10 @@ func (this *ImDrawList) AddImageRounded(user_texture_id ImTextureID, p_min ImVec
 		this.PushTextureID(user_texture_id)
 	}
 
-	var vert_start_idx int = int(len(this.VtxBuffer))
+	var vert_start_idx = int(len(this.VtxBuffer))
 	this.PathRect(&p_min, &p_max, rounding, flags)
 	this.PathFillConvex(col)
-	var vert_end_idx int = int(len(this.VtxBuffer))
+	var vert_end_idx = int(len(this.VtxBuffer))
 	ShadeVertsLinearUV(this, vert_start_idx, vert_end_idx, &p_min, &p_max, uv_min, uv_max, true)
 
 	if push_texture_id {

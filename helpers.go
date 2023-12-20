@@ -46,7 +46,7 @@ var GCrc32LookupTable = [256]ImU32{
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
 func ImHashStr(data_p string, data_size size_t, seed ImU32) ImGuiID {
 	seed = ^seed
-	var crc ImU32 = seed
+	var crc = seed
 	var data = data_p
 	var crc32_lut = GCrc32LookupTable
 	if data_size != 0 {
@@ -56,7 +56,7 @@ func ImHashStr(data_p string, data_size size_t, seed ImU32) ImGuiID {
 				break
 			}
 			data = data[1:]
-			var c byte = data[0]
+			var c = data[0]
 			if c == '#' && data_size >= 2 && data[0] == '#' && data[1] == '#' {
 				crc = seed
 			}

@@ -4,7 +4,7 @@ func UpdateTabFocus() {
 	var g = GImGui
 
 	// Pressing TAB activate widget focus
-	g.TabFocusPressed = (g.NavWindow != nil && g.NavWindow.Active && (g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0) && !g.IO.KeyCtrl && IsKeyPressedMap(ImGuiKey_Tab, true))
+	g.TabFocusPressed = g.NavWindow != nil && g.NavWindow.Active && (g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0) && !g.IO.KeyCtrl && IsKeyPressedMap(ImGuiKey_Tab, true)
 	if g.ActiveId == 0 && g.TabFocusPressed {
 		// - This path is only taken when no widget are active/tabbed-into yet.
 		//   Subsequent tabbing will be processed by FocusableItemRegister()
