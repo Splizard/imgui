@@ -103,11 +103,11 @@ func (f *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width floa
 		}
 
 		var char_width = f.FallbackAdvanceX
-		if (int)(c) < int(len(f.IndexAdvanceX)) {
+		if c < int(len(f.IndexAdvanceX)) {
 			char_width = f.IndexAdvanceX[c]
 		}
 
-		if ImCharIsBlankW(rune(c)) {
+		if ImCharIsBlankW(c) {
 			if inside_word {
 				line_width += blank_width
 				blank_width = 0.0
@@ -220,7 +220,7 @@ func (f *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string, r
 		}
 
 		var char_width = f.FallbackAdvanceX
-		if (int)(c) < int(len(f.IndexAdvanceX)) {
+		if c < int(len(f.IndexAdvanceX)) {
 			char_width = f.IndexAdvanceX[c]
 		}
 		char_width *= scale
@@ -303,7 +303,7 @@ func (f *ImFont) FindGlyph(c ImWchar) *ImFontGlyph {
 }
 
 func (f *ImFont) SetGlyphVisible(c ImWchar, visible bool) {
-	if glyph := f.FindGlyph((ImWchar)(c)); glyph != nil {
+	if glyph := f.FindGlyph(c); glyph != nil {
 		if visible {
 			glyph.Visible = 1
 		} else {
@@ -420,27 +420,27 @@ func (f *ImFont) BuildLookupTable() {
 
 	// Create a glyph to handle TAB
 	// FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
-	if f.FindGlyph((ImWchar)(' ')) != nil {
+	if f.FindGlyph(' ') != nil {
 		if f.Glyphs[len(f.Glyphs)-1].Codepoint != '\t' { // So we can call f function multiple times (FIXME: Flaky)
 			f.Glyphs = append(f.Glyphs, ImFontGlyph{})
 		}
 		var tab_glyph = &f.Glyphs[len(f.Glyphs)-1]
-		*tab_glyph = *f.FindGlyph((ImWchar)(' '))
+		*tab_glyph = *f.FindGlyph(' ')
 		tab_glyph.Codepoint = '\t'
 		tab_glyph.AdvanceX *= IM_TABSIZE
-		f.IndexAdvanceX[(int)(tab_glyph.Codepoint)] = (float)(tab_glyph.AdvanceX)
+		f.IndexAdvanceX[(int)(tab_glyph.Codepoint)] = tab_glyph.AdvanceX
 		f.IndexLookup[(int)(tab_glyph.Codepoint)] = (ImWchar)(len(f.Glyphs) - 1)
 	}
 
 	// Mark special glyphs as not visible (note that AddGlyph already mark as non-visible glyphs with zero-size polygons)
-	f.SetGlyphVisible((ImWchar)(' '), false)
-	f.SetGlyphVisible((ImWchar)('\t'), false)
+	f.SetGlyphVisible(' ', false)
+	f.SetGlyphVisible('\t', false)
 
 	// Ellipsis character is required for rendering elided text. We prefer using U+2026 (horizontal ellipsis).
 	// However some old fonts may contain ellipsis at U+0085. Here we auto-detect most suitable ellipsis character.
 	// FIXME: Note that 0x2026 is rarely included in our font ranges. Because of f we are more likely to use three individual dots.
 	var ellipsis_chars = []ImWchar{(ImWchar)(0x2026), (ImWchar)(0x0085)}
-	var dots_chars = []ImWchar{(ImWchar)('.'), (ImWchar)(0xFF0E)}
+	var dots_chars = []ImWchar{'.', (ImWchar)(0xFF0E)}
 	if f.EllipsisChar == (ImWchar)(-1) {
 		f.EllipsisChar = FindFirstExistingGlyph(f, ellipsis_chars, int(len(ellipsis_chars)))
 	}
@@ -449,7 +449,7 @@ func (f *ImFont) BuildLookupTable() {
 	}
 
 	// Setup fallback character
-	var fallback_chars = []ImWchar{(ImWchar)(IM_UNICODE_CODEPOINT_INVALID), (ImWchar)('?'), (ImWchar)(' ')}
+	var fallback_chars = []ImWchar{IM_UNICODE_CODEPOINT_INVALID, '?', ' '}
 	f.FallbackGlyph = f.FindGlyphNoFallback(f.FallbackChar)
 	if f.FallbackGlyph == nil {
 		f.FallbackChar = FindFirstExistingGlyph(f, fallback_chars, int(len(fallback_chars)))
