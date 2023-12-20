@@ -337,7 +337,7 @@ func (this *ImDrawList) PathRect(a, b *ImVec2, rounding float, flags ImDrawFlags
 
 // AddCallback Advanced
 // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
-func (this *ImDrawList) AddCallback(callback ImDrawCallback, callback_data interface{}) {
+func (this *ImDrawList) AddCallback(callback ImDrawCallback, callback_data any) {
 	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 	if curr_cmd.ElemCount != 0 {

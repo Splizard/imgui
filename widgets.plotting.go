@@ -18,7 +18,7 @@ type ImGuiPlotArrayGetterData struct {
 	Stride int
 }
 
-func Plot_ArrayGetter(data interface{}, idx int) float {
+func Plot_ArrayGetter(data any, idx int) float {
 	var plot_data = (data).(*ImGuiPlotArrayGetterData)
 	return plot_data.Values[idx*plot_data.Stride]
 }
@@ -30,7 +30,7 @@ func PlotLines(label string, values []float, values_count int, values_offset int
 	PlotEx(ImGuiPlotType_Lines, label, Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size)
 }
 
-func PlotLinesFunc(label string, values_getter func(data interface{}, idx int) float, data interface{}, values_count int, values_offset int /*= 0*/, overlay_text string /*= L*/, scale_min float /*= X*/, scale_max float /*= X*/, graph_size ImVec2 /*= 0*/) {
+func PlotLinesFunc(label string, values_getter func(data any, idx int) float, data any, values_count int, values_offset int /*= 0*/, overlay_text string /*= L*/, scale_min float /*= X*/, scale_max float /*= X*/, graph_size ImVec2 /*= 0*/) {
 	PlotEx(ImGuiPlotType_Lines, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size)
 }
 
@@ -39,11 +39,11 @@ func PlotHistogram(label string, values []float, values_count int, values_offset
 	PlotEx(ImGuiPlotType_Histogram, label, Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size)
 }
 
-func PlotHistogramFunc(label string, values_getter func(data interface{}, idx int) float, data interface{}, values_count int, values_offset int /*= 0*/, overlay_text string /*= L*/, scale_min float /*= X*/, scale_max float /*= X*/, graph_size ImVec2 /*= 0*/) {
+func PlotHistogramFunc(label string, values_getter func(data any, idx int) float, data any, values_count int, values_offset int /*= 0*/, overlay_text string /*= L*/, scale_min float /*= X*/, scale_max float /*= X*/, graph_size ImVec2 /*= 0*/) {
 	PlotEx(ImGuiPlotType_Histogram, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size)
 }
 
-func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data interface{}, idx int) float, data interface{}, values_count int, values_offset int, overlay_text string, scale_min float, scale_max float, frame_size ImVec2) int {
+func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, idx int) float, data any, values_count int, values_offset int, overlay_text string, scale_min float, scale_max float, frame_size ImVec2) int {
 	var g = GImGui
 	var window = GetCurrentWindow()
 	if window.SkipItems {

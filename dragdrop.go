@@ -173,7 +173,7 @@ func BeginDragDropSource(flags ImGuiDragDropFlags) bool {
 
 // Use 'cond' to choose to submit payload on drag start or every frame
 // type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
-func SetDragDropPayload(ptype string, data interface{}, data_size uintptr, cond ImGuiCond) bool {
+func SetDragDropPayload(ptype string, data any, data_size uintptr, cond ImGuiCond) bool {
 	var g = GImGui
 	var payload = &g.DragDropPayload
 	if cond == 0 {

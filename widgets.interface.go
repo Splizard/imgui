@@ -29,11 +29,11 @@ func PatchFormatStringFloatToInt(format string) string {
 	return format
 }
 
-func DataTypeFormatString(data_type ImGuiDataType, p_data interface{}, format string) string {
+func DataTypeFormatString(data_type ImGuiDataType, p_data any, format string) string {
 	return fmt.Sprintf(format, p_data)
 }
 
-func DataTypeApplyOp(data_type ImGuiDataType, op int, output interface{}, arg_1 interface{}, arg_2 interface{}) {
+func DataTypeApplyOp(data_type ImGuiDataType, op int, output any, arg_1 any, arg_2 any) {
 	//FIXME (porting) overflow handling was removed, need to add it back?
 	IM_ASSERT(op == '+' || op == '-')
 	switch data_type {
@@ -125,7 +125,7 @@ func DataTypeApplyOp(data_type ImGuiDataType, op int, output interface{}, arg_1 
 
 // User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
-func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImGuiDataType, p_data interface{}, format string) bool {
+func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImGuiDataType, p_data any, format string) bool {
 	for buf[0] == ' ' || buf[0] == '\t' {
 		buf = buf[1:]
 	}
@@ -274,7 +274,7 @@ func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImG
 	}
 }
 
-func DataTypeCompare(data_type ImGuiDataType, arg_1 interface{}, arg_2 interface{}) int {
+func DataTypeCompare(data_type ImGuiDataType, arg_1 any, arg_2 any) int {
 	switch data_type {
 	case ImGuiDataType_S8:
 		return int(int8(arg_1.(int8)) - int8(arg_2.(int8)))
@@ -301,7 +301,7 @@ func DataTypeCompare(data_type ImGuiDataType, arg_1 interface{}, arg_2 interface
 	return 0
 }
 
-func DataTypeClamp(data_type ImGuiDataType, a interface{}, n interface{}, x interface{}) bool {
+func DataTypeClamp(data_type ImGuiDataType, a any, n any, x any) bool {
 	switch data_type {
 	case ImGuiDataType_S8:
 		*a.(*int8) = int8(ImClampInt(int(int8(a.(int8))), int(int8(n.(int8))), int(int8(x.(int8)))))

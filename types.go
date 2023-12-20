@@ -104,7 +104,7 @@ type ImGuiIO struct {
 	KeyMap                  [ImGuiKey_COUNT]int // <unset>          // Map of indices into the KeysDown[512] entries array which represent your "native" keyboard state.
 	KeyRepeatDelay          float               // = 0.250f         // When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).
 	KeyRepeatRate           float               // = 0.050f         // When holding a key/button, rate at which it repeats, in seconds.
-	UserData                interface{}         // = NULL           // Store your own data for retrieval by callbacks.
+	UserData                any                 // = NULL           // Store your own data for retrieval by callbacks.
 
 	Fonts                   *ImFontAtlas // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
 	FontGlobalScale         float        // /*= 1.0f*/           // Global scale all fonts
@@ -127,22 +127,22 @@ type ImGuiIO struct {
 	//------------------------------------------------------------------
 
 	// Optional: Platform/Renderer backend name (informational only! will be displayed in About Window) + User data for backend/wrappers to store their own stuff.
-	BackendPlatformName     string      // = NULL
-	BackendRendererName     string      // = NULL
-	BackendPlatformUserData interface{} // = NULL           // User data for platform backend
-	BackendRendererUserData interface{} // = NULL           // User data for renderer backend
-	BackendLanguageUserData interface{} // = NULL           // User data for non C++ programming language backend
+	BackendPlatformName     string // = NULL
+	BackendRendererName     string // = NULL
+	BackendPlatformUserData any    // = NULL           // User data for platform backend
+	BackendRendererUserData any    // = NULL           // User data for renderer backend
+	BackendLanguageUserData any    // = NULL           // User data for non C++ programming language backend
 
 	// Optional: Access OS clipboard
 	// (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
-	GetClipboardTextFn func(user_data interface{}) string
-	SetClipboardTextFn func(user_data interface{}, text string)
-	ClipboardUserData  interface{}
+	GetClipboardTextFn func(user_data any) string
+	SetClipboardTextFn func(user_data any, text string)
+	ClipboardUserData  any
 
 	// Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
 	// (default to use native imm32 api on Windows)
 	ImeSetInputScreenPosFn func(x, y int)
-	ImeWindowHandle        interface{} // = NULL           // (Windows) Set this to your HWND to get automatic IME cursor positioning.
+	ImeWindowHandle        any // = NULL           // (Windows) Set this to your HWND to get automatic IME cursor positioning.
 
 	//------------------------------------------------------------------
 	// Input - Fill before calling NewFrame()
@@ -281,7 +281,7 @@ func NewImGuiIO() ImGuiIO {
 type ImGuiInputTextCallbackData struct {
 	EventFlag ImGuiInputTextFlags // One ImGuiInputTextFlags_Callback*    // Read-only
 	Flags     ImGuiInputTextFlags // What user passed to InputText()      // Read-only
-	UserData  interface{}         // What user passed to InputText()      // Read-only
+	UserData  any                 // What user passed to InputText()      // Read-only
 
 	// Arguments for the different callback events
 	// - To modify the text buffer in a callback, prefer using the InsertChars() / DeleteChars() function. InsertChars() will take care of calling the resize callback if necessary.
@@ -372,17 +372,17 @@ func (this *ImGuiInputTextCallbackData) HasSelection() bool {
 // ImGuiSizeCallbackData Resizing callback data to apply custom constraint. As enabled by SetNextWindowSizeConstraints(). Callback is called during the next Begin().
 // NB: For basic min/max size constraint on each axis you don't need to use the callback! The SetNextWindowSizeConstraints() parameters are enough.
 type ImGuiSizeCallbackData struct {
-	UserData    interface{} // Read-only.   What user passed to SetNextWindowSizeConstraints()
-	Pos         ImVec2      // Read-only.   Window position, for reference.
-	CurrentSize ImVec2      // Read-only.   Current window size.
-	DesiredSize ImVec2      // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
+	UserData    any    // Read-only.   What user passed to SetNextWindowSizeConstraints()
+	Pos         ImVec2 // Read-only.   Window position, for reference.
+	CurrentSize ImVec2 // Read-only.   Current window size.
+	DesiredSize ImVec2 // Read-write.  Desired size, based on user's mouse position. Write to this field to restrain resizing.
 }
 
 // ImGuiPayload Data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 type ImGuiPayload struct {
 	// Members
-	Data     interface{} // Data (copied and owned by dear imgui)
-	DataSize int         // Data size
+	Data     any // Data (copied and owned by dear imgui)
+	DataSize int // Data size
 
 	// [Internal]
 	SourceId       ImGuiID      // Source item id
@@ -493,7 +493,7 @@ type ImDrawCmd struct {
 	IdxOffset        uint           // 4    // Start offset in index buffer. Always equal to sum of ElemCount drawn so far.
 	ElemCount        uint           // 4    // Number of indices (multiple of 3) to be rendered as triangles. Vertices are stored in the callee ImDrawList's vtx_buffer[] array, indices in idx_buffer[].
 	UserCallback     ImDrawCallback // 4-8  // If != NULL, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
-	UserCallbackData interface{}    // 4-8  // The draw callback code can access this.
+	UserCallbackData any            // 4-8  // The draw callback code can access this.
 }
 
 func (this *ImDrawCmd) HeaderEquals(other *ImDrawCmd) bool {

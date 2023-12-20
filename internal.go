@@ -26,7 +26,7 @@ type ImGuiSeparatorFlags int      // -> enum ImGuiSeparatorFlags_     // Flags: 
 type ImGuiTextFlags int           // -> enum ImGuiTextFlags_          // Flags: for TextEx()
 type ImGuiTooltipFlags int        // -> enum ImGuiTooltipFlags_       // Flags: for BeginTooltipEx()
 
-type ImGuiErrorLogCallback func(user_data interface{}, fmt string, args ...interface{})
+type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 
 // Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
 //   - ImGui::CreateContext() will automatically set this pointer if it is nil.
@@ -43,7 +43,7 @@ type ImGuiErrorLogCallback func(user_data interface{}, fmt string, args ...inter
 //   - DLL users: read comments above.
 var GImGui *ImGuiContext
 
-func IMGUI_DEBUG_LOG(format string, args ...interface{}) {
+func IMGUI_DEBUG_LOG(format string, args ...any) {
 	fmt.Printf(fmt.Sprintf("[%05d] ", GImGui.FrameCount)+format, args...)
 }
 
@@ -315,10 +315,10 @@ func (this *ImBitVector) ClearBit(n int) {
 }
 
 type ImSpan struct {
-	Data interface{}
+	Data any
 }
 
-func (this *ImSpan) Set(data interface{}) {
+func (this *ImSpan) Set(data any) {
 	if reflect.TypeOf(data).Kind() != reflect.Slice {
 		panic("not implemented")
 	}
@@ -329,7 +329,7 @@ func (this ImSpan) Size() int {
 	return int32(reflect.ValueOf(this.Data).Len())
 }
 
-func (this ImSpan) IndexFromPointer(ptr interface{}) int {
+func (this ImSpan) IndexFromPointer(ptr any) int {
 	panic("not implemented")
 }
 
@@ -413,7 +413,7 @@ func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
 	}
 }
 
-type ImGuiDataTypeTempStorage interface{}
+type ImGuiDataTypeTempStorage any
 
 // Type information associated to one ImGuiDataType. Retrieve with DataTypeGetInfo().
 type ImGuiDataTypeInfo struct {
@@ -533,7 +533,7 @@ type ImGuiInputTextState struct {
 	Edited               bool  // edited this frame
 	Flags                ImGuiInputTextFlags
 	UserCallback         ImGuiInputTextCallback
-	UserCallbackData     interface{}
+	UserCallbackData     any
 }
 
 func (this *ImGuiInputTextState) ClearText() {
@@ -619,7 +619,7 @@ type ImGuiNextWindowData struct {
 	CollapsedVal         bool
 	SizeConstraintRect   ImRect
 	SizeCallback         ImGuiSizeCallback
-	SizeCallbackUserData interface{}
+	SizeCallbackUserData any
 	BgAlphaVal           float
 	MenuBarOffsetMinVal  ImVec2
 }
@@ -661,11 +661,11 @@ type ImGuiShrinkWidthItem struct {
 }
 
 type ImGuiPtrOrIndex struct {
-	Ptr   interface{} // Either field can be set, not both. e.g. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
-	Index int         // Usually index in a main pool.
+	Ptr   any // Either field can be set, not both. e.g. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
+	Index int // Usually index in a main pool.
 }
 
-func ImGuiPtr(ptr interface{}) ImGuiPtrOrIndex {
+func ImGuiPtr(ptr any) ImGuiPtrOrIndex {
 	return ImGuiPtrOrIndex{Ptr: ptr}
 }
 
@@ -779,13 +779,13 @@ func (this *ImGuiWindowSettings) GetName() string {
 type ImGuiSettingsHandler struct {
 	TypeName   string // Short description stored in .ini file. Disallowed characters: '[' ']'
 	TypeHash   ImGuiID
-	ClearAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                                 // Clear all settings data
-	ReadInitFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                                 // Read: Called before reading (in registration order)
-	ReadOpenFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, name string) interface{}        // Read: Called when entering into a new ini entry e.g. "[Window][Name]"
-	ReadLineFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, entry interface{}, line string) // Read: Called for every line of text within an ini entry
-	ApplyAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                                 // Read: Called after reading (in registration order)
-	WriteAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, out_buf *ImGuiTextBuffer)       // Write: Output every entries into 'out_buf'
-	UserData   interface{}
+	ClearAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                           // Clear all settings data
+	ReadInitFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                           // Read: Called before reading (in registration order)
+	ReadOpenFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, name string) any          // Read: Called when entering into a new ini entry e.g. "[Window][Name]"
+	ReadLineFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, entry any, line string)   // Read: Called for every line of text within an ini entry
+	ApplyAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                           // Read: Called after reading (in registration order)
+	WriteAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, out_buf *ImGuiTextBuffer) // Write: Output every entries into 'out_buf'
+	UserData   any
 }
 
 type ImGuiMetricsConfig struct {
@@ -854,7 +854,7 @@ type ImGuiContextHook struct {
 	Type     ImGuiContextHookType
 	Owner    ImGuiID
 	Callback ImGuiContextHookCallback
-	UserData interface{}
+	UserData any
 }
 
 // Transient per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the DC variable name in ImGuiWindow.
@@ -1031,7 +1031,7 @@ func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
 	return id
 }
 
-func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID {
+func (this *ImGuiWindow) GetIDInterface(ptr any) ImGuiID {
 	rvalue := reflect.ValueOf(ptr)
 
 	// .Elem() will panic if it's not an interface or a pointer
@@ -1063,7 +1063,7 @@ func (this *ImGuiWindow) GetIDNoKeepAlive(str string) ImGuiID {
 	return id
 }
 
-func (this *ImGuiWindow) GetIDNoKeepAliveInterface(ptr interface{}) ImGuiID {
+func (this *ImGuiWindow) GetIDNoKeepAliveInterface(ptr any) ImGuiID {
 	rvalue := reflect.ValueOf(ptr).Elem()
 	var seed = this.IDStack[len(this.IDStack)-1]
 	var id = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
@@ -1208,7 +1208,7 @@ type ImGuiTableCellData struct {
 type ImGuiTable struct {
 	ID                         ImGuiID
 	Flags                      ImGuiTableFlags
-	RawData                    interface{}           // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
+	RawData                    any                   // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
 	TempData                   *ImGuiTableTempData   // Transient data while table is active. Point within g.CurrentTableStack[]
 	Columns                    []ImGuiTableColumn    // ImGuiTableColumn Point within RawData[]
 	DisplayOrderToIndex        []ImGuiTableColumnIdx // ImGuiTableColumnIdx Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)

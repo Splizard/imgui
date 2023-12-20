@@ -6,7 +6,7 @@ import "fmt"
 // - TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
 
 // helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
-func TreeNodeF(str_id string, format string, args ...interface{}) bool {
+func TreeNodeF(str_id string, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -15,7 +15,7 @@ func TreeNodeF(str_id string, format string, args ...interface{}) bool {
 	return TreeNodeBehavior(window.GetIDs(str_id), 0, fmt.Sprintf(format, args...))
 }
 
-func TreeNodeInterface(ptr_id interface{}, format string, args ...interface{}) bool {
+func TreeNodeInterface(ptr_id any, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -24,7 +24,7 @@ func TreeNodeInterface(ptr_id interface{}, format string, args ...interface{}) b
 	return TreeNodeBehavior(window.GetIDInterface(ptr_id), 0, fmt.Sprintf(format, args...))
 }
 
-func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...interface{}) bool {
+func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -33,7 +33,7 @@ func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...
 	return TreeNodeBehavior(window.GetIDs(str_id), flags, fmt.Sprintf(format, args...))
 }
 
-func TreeNodeInterfaceEx(ptr_id interface{}, flags ImGuiTreeNodeFlags, format string, args ...interface{}) bool {
+func TreeNodeInterfaceEx(ptr_id any, flags ImGuiTreeNodeFlags, format string, args ...any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -54,7 +54,7 @@ func TreePush(str_id string) {
 	}
 }
 
-func TreePushInterface(ptr_id interface{}) {
+func TreePushInterface(ptr_id any) {
 	var window = GetCurrentWindow()
 	Indent(0)
 	window.DC.TreeDepth++

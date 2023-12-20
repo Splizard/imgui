@@ -9,7 +9,7 @@ import "fmt"
 // This is generally flawed as we are not necessarily End/Popping things in the right order.
 // FIXME: Can't recover from inside BeginTabItem/EndTabItem yet.
 // FIXME: Can't recover from interleaved BeginTabBar/Begin
-func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data interface{}) {
+func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any) {
 	var g = GImGui
 	for len(g.CurrentWindowStack) > 0 {
 		for g.CurrentTable != nil && (g.CurrentTable.OuterWindow == g.CurrentWindow || g.CurrentTable.InnerWindow == g.CurrentWindow) {

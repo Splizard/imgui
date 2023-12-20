@@ -256,7 +256,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v interface{}, p_min interface{}, p_max interface{}, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
+func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v any, p_min any, p_max any, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 

@@ -53,7 +53,7 @@ func SliderInt4(label string, v [4]int, v_min int, v_max int, format string /*= 
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
-func SliderScalar(label string, data_type ImGuiDataType, p_data interface{}, p_min interface{}, p_max interface{}, format string, flags ImGuiSliderFlags) bool {
+func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, p_max any, format string, flags ImGuiSliderFlags) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -112,7 +112,7 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data interface{}, p_m
 		// Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
 		var is_clamp_input = (flags & ImGuiSliderFlags_AlwaysClamp) != 0
 
-		var min, max interface{}
+		var min, max any
 		if is_clamp_input {
 			min = p_min
 			max = p_max
@@ -203,7 +203,7 @@ func VSliderInt(label string, size ImVec2, v *int, v_min int, v_max int, format 
 	return VSliderScalar(label, size, ImGuiDataType_S32, v, &v_min, &v_max, format, flags)
 }
 
-func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data interface{}, p_min interface{}, p_max interface{}, format string, flags ImGuiSliderFlags) bool {
+func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data any, p_min any, p_max any, format string, flags ImGuiSliderFlags) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false

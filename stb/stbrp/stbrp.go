@@ -235,7 +235,7 @@ func STBRP_ASSERT(cond bool) {
 	}
 }
 
-func STBRP_SORT(slice interface{}, _ int, _ uintptr, compare func(a, b interface{}) int) {
+func STBRP_SORT(slice any, _ int, _ uintptr, compare func(a, b any) int) {
 	sort.Slice(slice, func(i, j golang.Int) bool {
 		return compare(reflect.ValueOf(slice).Index(i).Addr().Interface(), reflect.ValueOf(slice).Index(j).Addr().Interface()) < 0
 	})
@@ -478,7 +478,7 @@ func stbrp__skyline_pack_rectangle(context *Context, width, height int) stbrp__f
 	return res
 }
 
-func rect_height_compare(a, b interface{}) int {
+func rect_height_compare(a, b any) int {
 	var p = a.(*Rect)
 	var q = b.(*Rect)
 	if p.H > q.H {
@@ -498,7 +498,7 @@ func rect_height_compare(a, b interface{}) int {
 	return -1
 }
 
-func rect_original_order(a, b interface{}) int {
+func rect_original_order(a, b any) int {
 	var p = a.(*Rect)
 	var q = b.(*Rect)
 

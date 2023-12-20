@@ -32,7 +32,7 @@ func TempInputText(bb *ImRect, id ImGuiID, label string, buf *[]byte, flags ImGu
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
-func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataType, p_data interface{}, format string, p_clamp_min interface{}, p_clamp_max interface{}) bool {
+func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataType, p_data any, format string, p_clamp_min any, p_clamp_max any) bool {
 	var g = GImGui
 	p_data_val := reflect.ValueOf(p_data).Elem()
 	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data_val)))
@@ -79,16 +79,16 @@ func GetInputTextState(id ImGuiID) *ImGuiInputTextState {
 	return nil
 } // Get input text state if active
 
-func InputText(label string, char *[]byte, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback /*= L*/, user_data interface{}) bool {
+func InputText(label string, char *[]byte, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback /*= L*/, user_data any) bool {
 	IM_ASSERT((flags & ImGuiInputTextFlags_Multiline) == 0) // call InputTextMultiline()
 	return InputTextEx(label, "", char, &ImVec2{}, flags, callback, user_data)
 }
 
-func InputTextMultiline(label string, buf *[]byte, size ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback /*= L*/, user_data interface{}) bool {
+func InputTextMultiline(label string, buf *[]byte, size ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback /*= L*/, user_data any) bool {
 	return InputTextEx(label, "", buf, &size, flags|ImGuiInputTextFlags_Multiline, callback, user_data)
 }
 
-func InputTextWithHint(label string, hint string, char *[]byte, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback /*= L*/, user_data interface{}) bool {
+func InputTextWithHint(label string, hint string, char *[]byte, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback /*= L*/, user_data any) bool {
 	IM_ASSERT((flags & ImGuiInputTextFlags_Multiline) == 0) // call InputTextMultiline()
 	return InputTextEx(label, hint, char, &ImVec2{}, flags, callback, user_data)
 }
@@ -252,7 +252,7 @@ func runesContains(runes []rune, c rune) bool {
 }
 
 // Return false to discard a character.
-func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, user_data interface{}, input_source ImGuiInputSource) bool {
+func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, user_data any, input_source ImGuiInputSource) bool {
 	IM_ASSERT(input_source == ImGuiInputSource_Keyboard || input_source == ImGuiInputSource_Clipboard)
 	var c = *p_char
 
@@ -384,7 +384,7 @@ func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find 
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //
 //	doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, callback_user_data interface{}) bool {
+func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, callback_user_data any) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false

@@ -9,7 +9,7 @@ func TextUnformatted(text string) {
 }
 
 // shortcut for PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
-func TextDisabled(format string, args ...interface{}) {
+func TextDisabled(format string, args ...any) {
 	var g = GImGui
 	PushStyleColorVec(ImGuiCol_Text, &g.Style.Colors[ImGuiCol_TextDisabled])
 	if format[0] == '%' && format[1] == 's' && format[2] == 0 {
@@ -21,7 +21,7 @@ func TextDisabled(format string, args ...interface{}) {
 }
 
 // shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
-func TextWrapped(format string, args ...interface{}) {
+func TextWrapped(format string, args ...any) {
 	var g = GImGui
 	var need_backup = (g.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
 	if need_backup {
@@ -38,7 +38,7 @@ func TextWrapped(format string, args ...interface{}) {
 }
 
 // display text+label aligned the same way as value+label widgets
-func LabelText(label string, format string, args ...interface{}) {
+func LabelText(label string, format string, args ...any) {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return
@@ -76,7 +76,7 @@ func LabelText(label string, format string, args ...interface{}) {
 
 // Text with a little bullet aligned to the typical tree node.
 // shortcut for Bullet()+Text()
-func BulletText(format string, args ...interface{}) {
+func BulletText(format string, args ...any) {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return

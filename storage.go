@@ -35,12 +35,12 @@ func (this *ImGuiStoragePair) SetFloat(key ImGuiID, val float) {
 // Types are NOT stored, so it is up to you to make sure your Key don't collide with different types.
 type ImGuiStorage struct {
 	Data     map[ImGuiID]int
-	Pointers map[ImGuiID]interface{}
+	Pointers map[ImGuiID]any
 }
 
 func (this *ImGuiStorage) Clear() {
 	this.Data = map[ImGuiID]int{}
-	this.Pointers = map[ImGuiID]interface{}{}
+	this.Pointers = map[ImGuiID]any{}
 }
 
 func (this *ImGuiStorage) GetInt(key ImGuiID, default_val int) int {
@@ -83,13 +83,13 @@ func (this *ImGuiStorage) SetFloat(key ImGuiID, val float) {
 	this.SetInt(key, *(*int)(unsafe.Pointer(&val)))
 }
 
-func (this *ImGuiStorage) GetInterface(key ImGuiID) interface{} {
+func (this *ImGuiStorage) GetInterface(key ImGuiID) any {
 	return this.Pointers[key]
 }
 
-func (this *ImGuiStorage) SetInterface(key ImGuiID, val interface{}) {
+func (this *ImGuiStorage) SetInterface(key ImGuiID, val any) {
 	if this.Pointers == nil {
-		this.Pointers = make(map[ImGuiID]interface{})
+		this.Pointers = make(map[ImGuiID]any)
 	}
 	this.Pointers[key] = val
 }

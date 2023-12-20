@@ -154,7 +154,7 @@ func LogButtons() {
 }
 
 // LogText pass text data straight to log (without being displayed)
-func LogText(format string, args ...interface{}) {
+func LogText(format string, args ...any) {
 	var g = GImGui
 	if !g.LogEnabled {
 		return

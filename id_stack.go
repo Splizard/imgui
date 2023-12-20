@@ -37,7 +37,7 @@ func PushString(str_id string) {
 }
 
 // PushInterface push pointer into the ID stack (will hash pointer).
-func PushInterface(ptr_id interface{}) {
+func PushInterface(ptr_id any) {
 	var g = GImGui
 	var window = g.CurrentWindow
 	var id = window.GetIDNoKeepAliveInterface(ptr_id)
@@ -67,7 +67,7 @@ func GetIDs(str_id_begin string) ImGuiID {
 	return GImGui.CurrentWindow.GetIDs(str_id_begin)
 }
 
-func GetIDFromInterface(ptr_id interface{}) ImGuiID {
+func GetIDFromInterface(ptr_id any) ImGuiID {
 	var window = GImGui.CurrentWindow
 	return window.GetIDInterface(ptr_id)
 }

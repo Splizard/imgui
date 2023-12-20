@@ -18,7 +18,7 @@ func SetNextWindowPos(pos *ImVec2, cond ImGuiCond, pivot ImVec2) {
 }
 
 // set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down. Use callback to apply non-trivial programmatic constraints.
-func SetNextWindowSizeConstraints(size_min ImVec2, size_max ImVec2, custom_callback ImGuiSizeCallback, custom_callback_data interface{}) {
+func SetNextWindowSizeConstraints(size_min ImVec2, size_max ImVec2, custom_callback ImGuiSizeCallback, custom_callback_data any) {
 	var g = GImGui
 	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint
 	g.NextWindowData.SizeConstraintRect = ImRect{size_min, size_max}

@@ -37,7 +37,7 @@ func LoadIniSettingsFromMemory(buf []byte, ini_size uintptr) {
 
 	var reader = bufio.NewReader(bytes.NewReader(buf))
 	var entry_handler *ImGuiSettingsHandler
-	var entry_data interface{} = nil
+	var entry_data any = nil
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -233,7 +233,7 @@ func WindowSettingsHandler_ClearAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) 
 	g.SettingsWindows = g.SettingsWindows[:0]
 }
 
-func WindowSettingsHandler_ReadOpen(_ *ImGuiContext, _ *ImGuiSettingsHandler, name string) interface{} {
+func WindowSettingsHandler_ReadOpen(_ *ImGuiContext, _ *ImGuiSettingsHandler, name string) any {
 	var settings = FindOrCreateWindowSettings(name)
 	var id = settings.ID
 	*settings = ImGuiWindowSettings{} // Clear existing if recycling previous entry
@@ -243,7 +243,7 @@ func WindowSettingsHandler_ReadOpen(_ *ImGuiContext, _ *ImGuiSettingsHandler, na
 	return settings
 }
 
-func WindowSettingsHandler_ReadLine(_ *ImGuiContext, _ *ImGuiSettingsHandler, entry interface{}, line string) {
+func WindowSettingsHandler_ReadLine(_ *ImGuiContext, _ *ImGuiSettingsHandler, entry any, line string) {
 	var settings = entry.(*ImGuiWindowSettings)
 	var x, y int
 	var i bool

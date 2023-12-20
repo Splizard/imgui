@@ -19,7 +19,7 @@ func SetClipboardText(text string) {
 }
 
 // Local Dear ImGui-only clipboard implementation, if user hasn't defined better clipboard handlers.
-func GetClipboardTextFn_DefaultImpl(interface{}) string {
+func GetClipboardTextFn_DefaultImpl(any) string {
 	var g = GImGui
 	if len(g.ClipboardHandlerData) == 0 {
 		return ""
@@ -27,7 +27,7 @@ func GetClipboardTextFn_DefaultImpl(interface{}) string {
 	return string(g.ClipboardHandlerData)
 }
 
-func SetClipboardTextFn_DefaultImpl(_ interface{}, text string) {
+func SetClipboardTextFn_DefaultImpl(_ any, text string) {
 	var g = GImGui
 	g.ClipboardHandlerData = g.ClipboardHandlerData[:0]
 	g.ClipboardHandlerData = []byte(text)

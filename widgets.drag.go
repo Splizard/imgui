@@ -162,7 +162,7 @@ func GetMinimumStepAtDecimalPrecision(decimal_precision int) float {
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
-func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_speed float /*= 0*/, p_min interface{} /*= L*/, p_max interface{} /*= L*/, format string, flags ImGuiSliderFlags) bool {
+func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float /*= 0*/, p_min any /*= L*/, p_max any /*= L*/, format string, flags ImGuiSliderFlags) bool {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -230,7 +230,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 		// Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
 		var is_clamp_input = (flags&ImGuiSliderFlags_AlwaysClamp) != 0 && (p_min == nil || p_max == nil || DataTypeCompare(data_type, p_min, p_max) < 0)
 
-		var x, y interface{}
+		var x, y any
 		if is_clamp_input {
 			x, y = p_min, p_max
 		}
@@ -675,7 +675,7 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 	return true
 }
 
-func DragBehavior(id ImGuiID, data_type ImGuiDataType, v interface{}, v_speed float, n interface{}, x interface{}, t string, flags ImGuiSliderFlags) bool {
+func DragBehavior(id ImGuiID, data_type ImGuiDataType, v any, v_speed float, n any, x any, t string, flags ImGuiSliderFlags) bool {
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 

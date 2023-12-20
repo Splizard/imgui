@@ -248,7 +248,7 @@ func CalcMaxPopupHeightFromItemCount(items_count int) float32 {
 
 // Combo box helper allowing to pass an array of strings.
 func Combo(label string, current_item *int, items []string, items_count int, popup_max_height_in_items int /*= -1*/) bool {
-	var value_changed = ComboFunc(label, current_item, func(slice interface{}, idx int, val *string) bool {
+	var value_changed = ComboFunc(label, current_item, func(slice any, idx int, val *string) bool {
 		*val = slice.([]string)[idx]
 		return true
 	}, items, items_count, popup_max_height_in_items)
@@ -256,7 +256,7 @@ func Combo(label string, current_item *int, items []string, items_count int, pop
 }
 
 // Old API, prefer using BeginCombo() nowadays if you can.
-func ComboFunc(label string, current_item *int, items_getter func(data interface{}, idx int, out_text *string) bool, data interface{}, items_count, popup_max_height_in_items int /*= -1*/) bool {
+func ComboFunc(label string, current_item *int, items_getter func(data any, idx int, out_text *string) bool, data any, items_count, popup_max_height_in_items int /*= -1*/) bool {
 	var g = GImGui
 
 	// Call the getter to obtain the preview string which is a parameter to BeginCombo()

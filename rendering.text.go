@@ -13,7 +13,7 @@ func ImTextCharFromUtf8(out_char *rune, text string) int {
 }
 
 // TextColored shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
-func TextColored(col *ImVec4, format string, args ...interface{}) {
+func TextColored(col *ImVec4, format string, args ...any) {
 	PushStyleColorVec(ImGuiCol_Text, col)
 	Text(format, args...)
 	PopStyleColor(1)
@@ -139,7 +139,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 }
 
 // Text formatted text
-func Text(format string, args ...interface{}) {
+func Text(format string, args ...any) {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
 		return

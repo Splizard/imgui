@@ -186,7 +186,7 @@ type PackedChar struct {
 // bilinear filtering).
 //
 // Returns 0 on failure, 1 on success.
-func PackBegin(spc *PackContext, pixels []byte, width, height, stride_in_bytes, padding int, alloc_context interface{}) int {
+func PackBegin(spc *PackContext, pixels []byte, width, height, stride_in_bytes, padding int, alloc_context any) int {
 	var context = new(stbrp.Context)
 	var num_nodes = width - padding
 	var nodes = make([]stbrp.Node, num_nodes)
@@ -519,8 +519,8 @@ func PackFontRangesRenderIntoRects(spc *PackContext, info *FontInfo, ranges []Pa
 // this is an opaque structure that you shouldn't mess with which holds
 // all the context needed from PackBegin to PackEnd.
 type PackContext struct {
-	user_allocator_context     interface{}
-	PackInfo                   interface{}
+	user_allocator_context     any
+	PackInfo                   any
 	width                      int
 	Height                     int
 	stride_in_bytes            int
@@ -528,7 +528,7 @@ type PackContext struct {
 	skip_missing               int
 	h_oversample, v_oversample uint
 	Pixels                     []byte
-	nodes                      interface{}
+	nodes                      any
 }
 
 // This function will determine the number of fonts in a font file.  TrueType
@@ -552,7 +552,7 @@ func GetFontOffsetForIndex(data []byte, index int) int {
 // The following structure is defined publicly so you can declare one on
 // the stack or as a global or etc, but you should treat it as opaque.
 type FontInfo struct {
-	userdata  interface{}
+	userdata  any
 	data      []byte // pointer to .ttf file
 	fontstart int    // offset of start of font
 
@@ -880,7 +880,7 @@ func stbtt_GetCodepointShape(info *FontInfo, unicode_codepoint int, vertices *[]
 func stbtt_FreeShape(info *FontInfo, vertices []stbtt_vertex) {}
 
 // frees the bitmap allocated below
-func stbtt_FreeBitmap(bitmap []byte, userdata interface{}) {}
+func stbtt_FreeBitmap(bitmap []byte, userdata any) {}
 
 // allocates a large-enough single-channel 8bpp bitmap and renders the
 // specified character/glyph at the specified scale into it, with
@@ -1084,7 +1084,7 @@ func stbtt_Rasterize(result *stbtt__bitmap, // 1-channel bitmap to draw into
 	shift_x, shift_y float, // translation applied to input vertices
 	x_off, y_off int, // another translation applied to input
 	invert int, // if non-zero, vertically flip shape
-	userdata interface{}) { // context for to STBTT_MALLOC
+	userdata any) { // context for to STBTT_MALLOC
 
 	var scale float
 	if scale_x > scale_y {
@@ -1102,7 +1102,7 @@ func stbtt_Rasterize(result *stbtt__bitmap, // 1-channel bitmap to draw into
 }
 
 // frees the SDF bitmap allocated below
-func stbtt_FreeSDF(bitmap []byte, userdata interface{}) {
+func stbtt_FreeSDF(bitmap []byte, userdata any) {
 	panic("not implemented")
 }
 
@@ -3155,7 +3155,7 @@ func stbtt__handle_clipped_edge(scanline []float, x int, e *stbtt__active_edge, 
 	}
 }
 
-func stbtt__new_active(e *stbtt__edge, off_x int, start_point float, userdata interface{}) *stbtt__active_edge {
+func stbtt__new_active(e *stbtt__edge, off_x int, start_point float, userdata any) *stbtt__active_edge {
 	var z = new(stbtt__active_edge)
 	var dxdy = (e.x1 - e.x0) / (e.y1 - e.y0)
 	STBTT_assert(z != nil)
@@ -3347,7 +3347,7 @@ func stbtt__fill_active_edges_new(scanline []float, scanline_fill []float, scanl
 }
 
 // directly AA rasterize edges w/o supersampling
-func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vsubsample, off_x, off_y int, userdata interface{}) {
+func stbtt__rasterize_sorted_edges(result *stbtt__bitmap, e []stbtt__edge, n, vsubsample, off_x, off_y int, userdata any) {
 	var active *stbtt__active_edge = nil
 	var y, j, i int
 	var scanline_data [129]float
@@ -3548,7 +3548,7 @@ type stbtt__point struct {
 	x, y float
 }
 
-func stbtt__rasterize(result *stbtt__bitmap, pts []stbtt__point, wcount []int, windings int, scale_x, scale_y, shift_x, shift_y float, off_x, off_y, invert int, userdata interface{}) {
+func stbtt__rasterize(result *stbtt__bitmap, pts []stbtt__point, wcount []int, windings int, scale_x, scale_y, shift_x, shift_y float, off_x, off_y, invert int, userdata any) {
 	var y_scale_inv float
 	if invert != 0 {
 		y_scale_inv = -scale_y
@@ -3686,7 +3686,7 @@ func stbtt__tesselate_cubic(points []stbtt__point, num_points *int, x0, y0, x1, 
 }
 
 // returns number of contours
-func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatness float, contour_lengths *[]int, num_contours *int, userdata interface{}) []stbtt__point {
+func stbtt_FlattenCurves(vertices []stbtt_vertex, num_verts int, objspace_flatness float, contour_lengths *[]int, num_contours *int, userdata any) []stbtt__point {
 	var points []stbtt__point
 	var num_points int = 0
 

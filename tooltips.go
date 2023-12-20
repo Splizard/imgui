@@ -15,7 +15,7 @@ func EndTooltip() {
 }
 
 // SetTooltip set a text-only tooltip, typically use with ImGui::IsItemHovered(). override any previous call to SetTooltip().
-func SetTooltip(format string, args ...interface{}) {
+func SetTooltip(format string, args ...any) {
 	BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip)
 	Text(format, args...)
 	EndTooltip()

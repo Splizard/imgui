@@ -235,7 +235,7 @@ func ImFontAtlasBuildInit(atlas *ImFontAtlas) {
 	}
 }
 
-func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque interface{}) {
+func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque any) {
 	var pack_context = stbrp_context_opaque.(*stbrp.Context)
 	IM_ASSERT(pack_context != nil)
 

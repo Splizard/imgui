@@ -11,7 +11,7 @@ func reserveVec2Slice(slice []ImVec2, capacity int) []ImVec2 {
 }
 
 /*
-func printf(format string, v ...interface{}) {
+func printf(format string, v ...any) {
 	fmt.Printf(format, v...)
 }
 */
