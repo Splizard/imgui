@@ -16,7 +16,7 @@ func printf(format string, v ...interface{}) {
 }
 */
 
-// CRC32 needs a 1KB lookup table (not cache friendly)
+// GCrc32LookupTable CRC32 needs a 1KB lookup table (not cache friendly)
 // Although the code to generate the table is simple and shorter than the table itself, using a const table allows us to easily:
 // - avoid an unnecessary branch/memory tap, - keep the ImHashXXX functions usable by static constructors, - make it thread-safe.
 var GCrc32LookupTable = [256]ImU32{
@@ -38,7 +38,7 @@ var GCrc32LookupTable = [256]ImU32{
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 }
 
-// Zero-terminated string hash, with support for ### to reset back to seed value
+// ImHashStr Zero-terminated string hash, with support for ### to reset back to seed value
 // We support a syntax of "label###id" where only "###id" is included in the hash, and only "label" gets displayed.
 // Because this syntax is rarely used we are optimizing for the common case.
 // - If we reach ### in the string we discard the hash so far and reset to the seed.
