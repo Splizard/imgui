@@ -616,23 +616,23 @@ func NewImFont() ImFont {
 	}
 }
 
-func (this *ImFont) GetCharAdvance(c ImWchar) float {
-	if (int)(c) < int(len(this.IndexAdvanceX)) {
-		return this.IndexAdvanceX[(int)(c)]
+func (f *ImFont) GetCharAdvance(c ImWchar) float {
+	if (int)(c) < int(len(f.IndexAdvanceX)) {
+		return f.IndexAdvanceX[(int)(c)]
 	}
-	return this.FallbackAdvanceX
+	return f.FallbackAdvanceX
 }
 
-func (this *ImFont) IsLoaded() bool { return this.ContainerAtlas != nil }
-func (this *ImFont) GetDebugName() string {
-	if this.ConfigData != nil {
-		return string(this.ConfigData[0].Name[:])
+func (f *ImFont) IsLoaded() bool { return f.ContainerAtlas != nil }
+func (f *ImFont) GetDebugName() string {
+	if f.ConfigData != nil {
+		return string(f.ConfigData[0].Name[:])
 	}
 	return "<unknown>"
 }
 
-func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, c ImWchar) {
-	var glyph = this.FindGlyph(c)
+func (f *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, c ImWchar) {
+	var glyph = f.FindGlyph(c)
 	if glyph == nil || glyph.Visible == 0 {
 		return
 	}
@@ -641,7 +641,7 @@ func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, co
 	}
 	var scale float = 1.0
 	if size >= 0.0 {
-		scale = size / this.FontSize
+		scale = size / f.FontSize
 	}
 	pos.x = IM_FLOOR(pos.x)
 	pos.y = IM_FLOOR(pos.y)
@@ -653,35 +653,35 @@ func (this *ImFont) RenderChar(draw_list *ImDrawList, size float, pos ImVec2, co
 // [Internal] Don't use!
 
 // AddRemapChar Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
-func (this *ImFont) AddRemapChar(dst, src ImWchar, overwrite_dst bool /*= true*/) {
-	IM_ASSERT(len(this.IndexLookup) > 0) // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
-	var index_size = ImWchar(len(this.IndexLookup))
+func (f *ImFont) AddRemapChar(dst, src ImWchar, overwrite_dst bool /*= true*/) {
+	IM_ASSERT(len(f.IndexLookup) > 0) // Currently f can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
+	var index_size = ImWchar(len(f.IndexLookup))
 
-	if dst < index_size && this.IndexLookup[dst] == (ImWchar)(-1) && !overwrite_dst { // 'dst' already exists
+	if dst < index_size && f.IndexLookup[dst] == (ImWchar)(-1) && !overwrite_dst { // 'dst' already exists
 		return
 	}
 	if src >= index_size && dst >= index_size { // both 'dst' and 'src' don't exist . no-op
 		return
 	}
 
-	this.GrowIndex(dst + 1)
+	f.GrowIndex(dst + 1)
 	if src < index_size {
-		this.IndexLookup[dst] = this.IndexLookup[src]
-		this.IndexAdvanceX[dst] = this.IndexAdvanceX[src]
+		f.IndexLookup[dst] = f.IndexLookup[src]
+		f.IndexAdvanceX[dst] = f.IndexAdvanceX[src]
 	} else {
-		this.IndexLookup[dst] = (ImWchar)(-1)
-		this.IndexAdvanceX[dst] = 1
+		f.IndexLookup[dst] = (ImWchar)(-1)
+		f.IndexAdvanceX[dst] = 1
 	}
 }
 
 // IsGlyphRangeUnused API is designed this way to avoid exposing the 4K page size
 // e.g. use with IsGlyphRangeUnused(0, 255)
-func (this *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
+func (f *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
 	var page_begin = c_begin / 4096
 	var page_last = c_last / 4096
 	for page_n := page_begin; page_n <= page_last; page_n++ {
-		if uintptr(page_n>>3) < unsafe.Sizeof(this.Used4kPagesMap) {
-			if this.Used4kPagesMap[page_n>>3]&(1<<(page_n&7)) != 0 {
+		if uintptr(page_n>>3) < unsafe.Sizeof(f.Used4kPagesMap) {
+			if f.Used4kPagesMap[page_n>>3]&(1<<(page_n&7)) != 0 {
 				return false
 			}
 		}

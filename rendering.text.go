@@ -374,7 +374,7 @@ func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_size_
 	}
 }
 
-func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, clip_rect *ImVec4, text string, wrap_width float, cpu_fine_clip bool) {
+func (f *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col ImU32, clip_rect *ImVec4, text string, wrap_width float, cpu_fine_clip bool) {
 
 	// Align to be pixel perfect
 	pos.x = IM_FLOOR(pos.x)
@@ -385,8 +385,8 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		return
 	}
 
-	var scale = size / this.FontSize
-	var line_height = this.FontSize * scale
+	var scale = size / f.FontSize
+	var line_height = f.FontSize * scale
 	var word_wrap_enabled = wrap_width > 0.0
 	var word_wrap_eol int = -1
 
@@ -440,7 +440,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		if word_wrap_enabled {
 			// Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
 			if word_wrap_eol == -1 {
-				word_wrap_eol = i + this.CalcWordWrapPositionA(scale, text[i:], wrap_width-(x-pos.x))
+				word_wrap_eol = i + f.CalcWordWrapPositionA(scale, text[i:], wrap_width-(x-pos.x))
 				if word_wrap_eol == i { // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
 					word_wrap_eol++ // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
 				}
@@ -492,7 +492,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 			}
 		}
 
-		var glyph = this.FindGlyph((ImWchar)(c))
+		var glyph = f.FindGlyph((ImWchar)(c))
 		if glyph == nil {
 			continue
 		}
@@ -577,7 +577,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		x += char_width
 	}
 
-	// Give back unused vertices (clipped ones, blanks) ~ this is essentially a PrimUnreserve() action.
+	// Give back unused vertices (clipped ones, blanks) ~ f is essentially a PrimUnreserve() action.
 	//fmt.Println(int(len(draw_list.VtxBuffer)) - vtx_write)
 	draw_list.VtxBuffer = draw_list.VtxBuffer[:vtx_write]
 	draw_list.IdxBuffer = draw_list.IdxBuffer[:idx_write]
