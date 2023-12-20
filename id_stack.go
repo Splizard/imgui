@@ -24,7 +24,7 @@ func PushOverrideID(id ImGuiID) {
 //
 //	for that to work we would need to do PushOverrideID() . ItemAdd() . PopID() which would alter widget code a little more)
 func GetIDWithSeed(str string, seed ImGuiID) ImGuiID {
-	var id = ImHashStr(str, uintptr(len(str)), seed)
+	id := ImHashStr(str, uintptr(len(str)), seed)
 	KeepAliveID(id)
 	return id
 }
