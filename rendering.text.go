@@ -244,10 +244,10 @@ func TextEx(text string, flags ImGuiTextFlags) {
 	}
 }
 
-func (this *ImDrawList) AddText(pos ImVec2, col ImU32, text string) {
-	this.AddTextV(nil, 0.0, pos, col, text, 0, nil)
+func (l *ImDrawList) AddText(pos ImVec2, col ImU32, text string) {
+	l.AddTextV(nil, 0.0, pos, col, text, 0, nil)
 }
-func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col ImU32, text string, wrap_width float, cpu_fine_clip_rect *ImVec4) {
+func (l *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col ImU32, text string, wrap_width float, cpu_fine_clip_rect *ImVec4) {
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
 	}
@@ -257,22 +257,22 @@ func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col 
 
 	// Pull default font/size from the shared ImDrawListSharedData instance
 	if font == nil {
-		font = this._Data.Font
+		font = l._Data.Font
 	}
 	if font_size == 0.0 {
-		font_size = this._Data.FontSize
+		font_size = l._Data.FontSize
 	}
 
-	IM_ASSERT(font.ContainerAtlas.TexID == this._CmdHeader.TextureId) // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
+	IM_ASSERT(font.ContainerAtlas.TexID == l._CmdHeader.TextureId) // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
-	var clip_rect = this._CmdHeader.ClipRect
+	var clip_rect = l._CmdHeader.ClipRect
 	if cpu_fine_clip_rect != nil {
 		clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect.x)
 		clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect.y)
 		clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect.z)
 		clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect.w)
 	}
-	font.RenderText(this, font_size, pos, col, &clip_rect, text, wrap_width, cpu_fine_clip_rect != nil)
+	font.RenderText(l, font_size, pos, col, &clip_rect, text, wrap_width, cpu_fine_clip_rect != nil)
 }
 
 // FindRenderedTextEnd Find the optional ## from which we stop displaying text.
