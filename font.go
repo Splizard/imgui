@@ -15,15 +15,15 @@ var FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA = [ImGuiMouseCursor_COUNT][3]ImVec2{
 	{ImVec2{91, 0}, ImVec2{17, 22}, ImVec2{5, 0}},   // ImGuiMouseCursor_Hand
 }
 
-// get current font
+// GetFont get current font
 func GetFont() *ImFont { return GImGui.Font }
 
-// get current font size (= height in pixels) of current font with current scale applied
+// GetFontSize get current font size (= height in pixels) of current font with current scale applied
 func GetFontSize() float { return GImGui.FontSize }
 
 func GetFontTexUvWhitePixel() ImVec2 { return GImGui.DrawListSharedData.TexUvWhitePixel } // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
 
-// Parameters stacks (shared)
+// PushFont Parameters stacks (shared)
 // use NULL as a shortcut to push default font
 func PushFont(font *ImFont) {
 	var g = GImGui
@@ -45,7 +45,7 @@ func PopFont() {
 	}
 }
 
-// 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
+// CalcWordWrapPositionA 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
 // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
 func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width float) int {
 	// Simple word-wrapping for English, not full-featured. Please submit failing cases!
@@ -312,7 +312,7 @@ func (this *ImFont) SetGlyphVisible(c ImWchar, visible bool) {
 	}
 }
 
-// x0/y0/x1/y1 are offset from the character upper-left layout position, in pixels. Therefore x0/y0 are often fairly close to zero.
+// AddGlyph x0/y0/x1/y1 are offset from the character upper-left layout position, in pixels. Therefore x0/y0 are often fairly close to zero.
 // Not to be mistaken with texture coordinates, which are held by u0/v0/u1/v1 in normalized format (0.0..1.0 on each texture axis).
 // 'cfg' is not necessarily == 'this.ConfigData' because multiple source fonts+configs can be used to build one target font.
 func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y1, u0, v0, u1, v1, advance_x float) {

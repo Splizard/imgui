@@ -1,6 +1,6 @@
 package imgui
 
-// Draw command list
+// ImDrawList Draw command list
 // This is the low-level list of polygons that ImGui:: functions are filling. At the end of the frame,
 // all command lists are passed to your ImGuiIO::RenderDrawListFn function for rendering.
 // Each dear imgui window contains its own ImDrawList. You can use ImGui::GetWindowDrawList() to
@@ -61,7 +61,7 @@ func (this *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_curre
 	this._OnChangedClipRect()
 }
 
-// Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
+// PushClipRectFullScreen Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
 func (this *ImDrawList) PushClipRectFullScreen() {
 	this.PushClipRect(ImVec2{this._Data.ClipRectFullscreen.x, this._Data.ClipRectFullscreen.y}, ImVec2{this._Data.ClipRectFullscreen.z, this._Data.ClipRectFullscreen.w}, false)
 }
@@ -85,7 +85,7 @@ func (this *ImDrawList) GetClipRectMax() ImVec2 {
 	return ImVec2{cr.x, cr.y}
 }
 
-// Primitives
+// AddLine Primitives
 //   - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
 //   - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
 //     In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
@@ -100,7 +100,7 @@ func (this *ImDrawList) AddLine(p1 *ImVec2, p2 *ImVec2, col ImU32, thickness flo
 	this.PathStroke(col, 0, thickness)
 }
 
-// p_min = upper-left, p_max = lower-right
+// AddRectFilledMultiColor p_min = upper-left, p_max = lower-right
 func (this *ImDrawList) AddRectFilledMultiColor(p_min ImVec2, p_max ImVec2, col_upr_left, col_upr_right, col_bot_right, col_bot_left ImU32) {
 	if ((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & IM_COL32_A_MASK) == 0 {
 		return
@@ -187,7 +187,7 @@ func (this *ImDrawList) AddCircle(center ImVec2, radius float, col ImU32, num_se
 	this.PathStroke(col, ImDrawFlags_Closed, thickness)
 }
 
-// Guaranteed to honor 'num_segments'
+// AddNgon Guaranteed to honor 'num_segments'
 func (this *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segments int, thickness float /*= 1.0f*/) {
 	if (col&IM_COL32_A_MASK) == 0 || num_segments <= 2 {
 		return
@@ -199,7 +199,7 @@ func (this *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segm
 	this.PathStroke(col, ImDrawFlags_Closed, thickness)
 }
 
-// Guaranteed to honor 'num_segments'
+// AddNgonFilled Guaranteed to honor 'num_segments'
 func (this *ImDrawList) AddNgonFilled(center ImVec2, radius float, col ImU32, num_segments int) {
 	if (col&IM_COL32_A_MASK) == 0 || num_segments <= 2 {
 		return
@@ -211,7 +211,7 @@ func (this *ImDrawList) AddNgonFilled(center ImVec2, radius float, col ImU32, nu
 	this.PathFillConvex(col)
 }
 
-// Cubic Bezier takes 4 controls points
+// AddBezierCubic Cubic Bezier takes 4 controls points
 func (this *ImDrawList) AddBezierCubic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImVec2, col ImU32, thickness float, num_segments int) {
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
@@ -222,7 +222,7 @@ func (this *ImDrawList) AddBezierCubic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, p4 ImV
 	this.PathStroke(col, 0, thickness)
 }
 
-// Quadratic Bezier takes 3 controls points
+// AddBezierQuadratic Quadratic Bezier takes 3 controls points
 func (this *ImDrawList) AddBezierQuadratic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, col ImU32, thickness float, num_segments int) {
 	if (col & IM_COL32_A_MASK) == 0 {
 		return
@@ -233,7 +233,7 @@ func (this *ImDrawList) AddBezierQuadratic(p1 *ImVec2, p2 *ImVec2, p3 ImVec2, co
 	this.PathStroke(col, 0, thickness)
 }
 
-// Stateful path API, add points then finish with PathFillConvex() or PathStroke()
+// PathClear Stateful path API, add points then finish with PathFillConvex() or PathStroke()
 func (this *ImDrawList) PathClear() {
 	this._Path = this._Path[:0]
 }
@@ -246,7 +246,7 @@ func (this *ImDrawList) PathLineToMergeDuplicate(pos ImVec2) {
 	}
 }
 
-// Note: Anti-aliased filling requires points to be in clockwise order.
+// PathFillConvex Note: Anti-aliased filling requires points to be in clockwise order.
 func (this *ImDrawList) PathFillConvex(col ImU32) {
 	this.AddConvexPolyFilled(this._Path, int(len(this._Path)), col)
 	this._Path = this._Path[:0]
@@ -257,7 +257,7 @@ func (this *ImDrawList) PathStroke(col ImU32, flags ImDrawFlags, thickness float
 	this._Path = this._Path[:0]
 }
 
-// Cubic Bezier (4 control points)
+// PathBezierCubicCurveTo Cubic Bezier (4 control points)
 func (this *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2, num_segments int) {
 	var p1 = this._Path[len(this._Path)-1]
 	if num_segments == 0 {
@@ -270,7 +270,7 @@ func (this *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2,
 	}
 }
 
-// Quadratic Bezier (3 control points)
+// PathBezierQuadraticCurveTo Quadratic Bezier (3 control points)
 func (this *ImDrawList) PathBezierQuadraticCurveTo(p2 *ImVec2, p3 ImVec2, num_segments int) {
 	var p1 = this._Path[len(this._Path)-1]
 	if num_segments == 0 {
@@ -335,7 +335,7 @@ func (this *ImDrawList) PathRect(a, b *ImVec2, rounding float, flags ImDrawFlags
 	}
 }
 
-// Advanced
+// AddCallback Advanced
 // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
 func (this *ImDrawList) AddCallback(callback ImDrawCallback, callback_data interface{}) {
 	var curr_cmd = &this.CmdBuffer[len(this.CmdBuffer)-1]
@@ -350,7 +350,7 @@ func (this *ImDrawList) AddCallback(callback ImDrawCallback, callback_data inter
 	this.AddDrawCmd() // Force a new command after us (see comment below)
 }
 
-// This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
+// AddDrawCmd This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
 func (this *ImDrawList) AddDrawCmd() {
 	var draw_cmd ImDrawCmd
 	draw_cmd.ClipRect = this._CmdHeader.ClipRect // Same as calling ImDrawCmd_HeaderCopy()
@@ -363,7 +363,7 @@ func (this *ImDrawList) AddDrawCmd() {
 	this.CmdBuffer = append(this.CmdBuffer, draw_cmd)
 }
 
-// Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
+// CloneOutput Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
 func (this *ImDrawList) CloneOutput() *ImDrawList {
 	var dst = NewImDrawList(this._Data)
 	dst.CmdBuffer = this.CmdBuffer
@@ -373,7 +373,7 @@ func (this *ImDrawList) CloneOutput() *ImDrawList {
 	return &dst
 }
 
-// Advanced: Channels
+// ChannelsSplit Advanced: Channels
 //   - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
 //   - Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
 //   - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
@@ -383,7 +383,7 @@ func (this *ImDrawList) ChannelsSplit(count int)  { this._Splitter.Split(this, c
 func (this *ImDrawList) ChannelsMerge()           { this._Splitter.Merge(this) }
 func (this *ImDrawList) ChannelsSetCurrent(n int) { this._Splitter.SetCurrentChannel(this, n) }
 
-// Release the a number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
+// PrimUnreserve Release the a number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
 func (this *ImDrawList) PrimUnreserve(idx_count, vtx_count int) {
 	IM_ASSERT(idx_count >= 0 && vtx_count >= 0)
 
