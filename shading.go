@@ -2,10 +2,10 @@ package imgui
 
 // Shade functions (write over already created vertices)
 
-// Generic linear color gradient, write to RGB fields, leave A untouched.
+// ShadeVertsLinearColorGradientKeepAlpha Generic linear color gradient, write to RGB fields, leave A untouched.
 func ShadeVertsLinearColorGradientKeepAlpha(draw_list *ImDrawList, vert_start_idx int, vert_end_idx int, gradient_p0 ImVec2, gradient_p1 ImVec2, col0 ImU32, col1 ImU32) {
-	var gradient_extent ImVec2 = gradient_p1.Sub(gradient_p0)
-	var gradient_inv_length2 float = 1.0 / ImLengthSqrVec2(gradient_extent)
+	var gradient_extent = gradient_p1.Sub(gradient_p0)
+	var gradient_inv_length2 = 1.0 / ImLengthSqrVec2(gradient_extent)
 	var col0_r = (int)(col0>>IM_COL32_R_SHIFT) & 0xFF
 	var col0_g = (int)(col0>>IM_COL32_G_SHIFT) & 0xFF
 	var col0_b = (int)(col0>>IM_COL32_B_SHIFT) & 0xFF
@@ -24,7 +24,7 @@ func ShadeVertsLinearColorGradientKeepAlpha(draw_list *ImDrawList, vert_start_id
 	}
 }
 
-// Distribute UV over (a, b) rectangle
+// ShadeVertsLinearUV Distribute UV over (a, b) rectangle
 func ShadeVertsLinearUV(t *ImDrawList, vert_start_idx int, vert_end_idx int, a *ImVec2, b *ImVec2, uv_a *ImVec2, uv_b *ImVec2, clamp bool) {
 	var size = b.Sub(*a)
 	var uv_size = uv_b.Sub(*uv_a)

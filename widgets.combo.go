@@ -10,21 +10,21 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 	var g = GImGui
 	var window = GetCurrentWindow()
 
-	var backup_next_window_data_flags ImGuiNextWindowDataFlags = g.NextWindowData.Flags
+	var backup_next_window_data_flags = g.NextWindowData.Flags
 	g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 	if window.SkipItems {
 		return false
 	}
 
 	var style = g.Style
-	var id ImGuiID = window.GetIDs(label)
+	var id = window.GetIDs(label)
 	IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) // Can't use both flags together
 
 	var arrow_size float = 0.0
 	if (flags & ImGuiComboFlags_NoArrowButton) == 0 {
 		arrow_size = GetFrameHeight()
 	}
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var label_size = CalcTextSize(label, true, -1)
 	var w = arrow_size
 	if (flags & ImGuiComboFlags_NoPreview) == 0 {
 		w = CalcItemWidth()
@@ -44,9 +44,9 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 
 	// Open on click
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, 0)
-	var popup_id ImGuiID = ImHashStr("##ComboPopup", 0, id)
-	var popup_open bool = isPopupOpen(popup_id, ImGuiPopupFlags_None)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, 0)
+	var popup_id = ImHashStr("##ComboPopup", 0, id)
+	var popup_open = isPopupOpen(popup_id, ImGuiPopupFlags_None)
 	if (pressed || g.NavActivateId == id) && !popup_open {
 		OpenPopupEx(popup_id, ImGuiPopupFlags_None)
 		popup_open = true
@@ -63,8 +63,8 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 	}
 
 	// Render shape
-	var frame_col ImU32 = GetColorU32FromID(c, 1)
-	var value_x2 float = ImMax(bb.Min.x, bb.Max.x-arrow_size)
+	var frame_col = GetColorU32FromID(c, 1)
+	var value_x2 = ImMax(bb.Min.x, bb.Max.x-arrow_size)
 	RenderNavHighlight(&bb, id, 0)
 	if flags&ImGuiComboFlags_NoPreview == 0 {
 		window.DrawList.AddRectFilled(bb.Min, ImVec2{value_x2, bb.Max.y}, frame_col, style.FrameRounding, rounding)
@@ -75,8 +75,8 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 			c = ImGuiCol_ButtonHovered
 		}
 
-		var bg_col ImU32 = GetColorU32FromID(c, 1)
-		var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
+		var bg_col = GetColorU32FromID(c, 1)
+		var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
 
 		var rounding = ImDrawFlags_RoundCornersRight
 		if w <= arrow_size {
@@ -177,7 +177,7 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 	}
 
 	// Set popup size
-	var w float = bb.GetWidth()
+	var w = bb.GetWidth()
 	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasSizeConstraint != 0 {
 		g.NextWindowData.SizeConstraintRect.Min.x = ImMax(g.NextWindowData.SizeConstraintRect.Min.x, w)
 	} else {
@@ -205,7 +205,7 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 	if popup_window := FindWindowByName(string(name[:])); popup_window != nil {
 		if popup_window.WasActive {
 			// Always override 'AutoPosLastDirection' to not leave a chance for a past value to affect us.
-			var size_expected ImVec2 = CalcWindowNextAutoFitSize(popup_window)
+			var size_expected = CalcWindowNextAutoFitSize(popup_window)
 
 			dir := ImGuiDir_Down
 			if (flags & ImGuiComboFlags_PopupAlignLeft) != 0 {
@@ -213,17 +213,17 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 			}
 
 			popup_window.AutoPosLastDirection = dir // Left = "Below, Toward Left", Down = "Below, Toward Right (default)"
-			var r_outer ImRect = GetPopupAllowedExtentRect(popup_window)
+			var r_outer = GetPopupAllowedExtentRect(popup_window)
 			var bl = bb.GetBL()
-			var pos ImVec2 = FindBestWindowPosForPopupEx(&bl, &size_expected, &popup_window.AutoPosLastDirection, &r_outer, bb, ImGuiPopupPositionPolicy_ComboBox)
+			var pos = FindBestWindowPosForPopupEx(&bl, &size_expected, &popup_window.AutoPosLastDirection, &r_outer, bb, ImGuiPopupPositionPolicy_ComboBox)
 			SetNextWindowPos(&pos, 0, ImVec2{})
 		}
 	}
 
 	// We don't use BeginPopupEx() solely because we have a custom name string, which we could make an argument to BeginPopupEx()
-	var window_flags ImGuiWindowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove
+	var window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove
 	PushStyleVec(ImGuiStyleVar_WindowPadding, ImVec2{g.Style.FramePadding.x, g.Style.WindowPadding.y}) // Horizontally align ourselves with the framed text
-	var ret bool = Begin(string(name[:]), nil, window_flags)
+	var ret = Begin(string(name[:]), nil, window_flags)
 	PopStyleVar(1)
 	if !ret {
 		EndPopup()
@@ -276,10 +276,10 @@ func ComboFunc(label string, current_item *int, items_getter func(data interface
 
 	// Display items
 	// FIXME-OPT: Use clipper (but we need to disable it on the appearing frame to make sure our call to SetItemDefaultFocus() is processed)
-	var value_changed bool = false
+	var value_changed = false
 	for i := int(0); i < items_count; i++ {
 		PushID(i)
-		var item_selected bool = (i == *current_item)
+		var item_selected = (i == *current_item)
 		var item_text string
 		if !items_getter(data, i, &item_text) {
 			item_text = "*Unknown item*"

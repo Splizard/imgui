@@ -709,7 +709,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		}
 
 		// Title bar
-		if flags & ImGuiWindowFlags_NoTitleBar == 0 {
+		if flags&ImGuiWindowFlags_NoTitleBar == 0 {
 			RenderWindowTitleBarContents(window, &ImRect{ImVec2{title_bar_rect.Min.x + window.WindowBorderSize, title_bar_rect.Min.y}, ImVec2{title_bar_rect.Max.x - window.WindowBorderSize, title_bar_rect.Max.y}}, name, p_open)
 		}
 

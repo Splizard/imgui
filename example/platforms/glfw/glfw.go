@@ -2,11 +2,10 @@ package platforms
 
 import (
 	"fmt"
+	"github.com/Splizard/imgui"
+	"github.com/go-gl/glfw/v3.2/glfw"
 	"math"
 	"runtime"
-
-	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/Splizard/imgui"
 )
 
 const (

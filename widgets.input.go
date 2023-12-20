@@ -37,7 +37,7 @@ func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataTy
 	p_data_val := reflect.ValueOf(p_data).Elem()
 	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data_val)))
 
-	var flags ImGuiInputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited
+	var flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited
 	flags |= ImGuiInputTextFlags_CharsDecimal
 	if data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double {
 		flags = ImGuiInputTextFlags_CharsScientific
@@ -67,12 +67,12 @@ func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataTy
 }
 
 func TempInputIsActive(id ImGuiID) bool {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	return (g.ActiveId == id && g.TempInputId == id)
 }
 
 func GetInputTextState(id ImGuiID) *ImGuiInputTextState {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	if g.InputTextState.ID == id {
 		return &g.InputTextState
 	}
@@ -176,8 +176,8 @@ func InputTextCalcLineCount(text string) int {
 func InputTextCalcTextSizeW(text []ImWchar, remaining *[]ImWchar, out_offset *ImVec2, stop_on_new_line bool) ImVec2 {
 	var g = GImGui
 	var font = g.Font
-	var line_height float = g.FontSize
-	var scale float = line_height / font.FontSize
+	var line_height = g.FontSize
+	var scale = line_height / font.FontSize
 
 	var text_size ImVec2
 	var line_width float
@@ -199,7 +199,7 @@ func InputTextCalcTextSizeW(text []ImWchar, remaining *[]ImWchar, out_offset *Im
 			continue
 		}
 
-		var char_width float = font.GetCharAdvance(rune(c)) * scale
+		var char_width = font.GetCharAdvance(rune(c)) * scale
 		line_width += char_width
 	}
 
@@ -293,7 +293,7 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 		// Change the default decimal_point with:
 		//   ImGui::GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
 		var g = GImGui
-		var c_decimal_point rune = (rune)(g.PlatformLocaleDecimalPoint)
+		var c_decimal_point = (rune)(g.PlatformLocaleDecimalPoint)
 
 		// Allow 0-9 . - + * /
 		if flags&ImGuiInputTextFlags_CharsDecimal != 0 {
@@ -436,7 +436,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	var inner_size = frame_size
 	var item_status_flags ImGuiItemStatusFlags = 0
 	if is_multiline {
-		var backup_pos ImVec2 = window.DC.CursorPos
+		var backup_pos = window.DC.CursorPos
 		ItemSizeRect(&total_bb, style.FramePadding.y)
 		if !ItemAdd(&total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) {
 			EndGroup()
@@ -480,7 +480,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	// We are only allowed to access the state if we are already the active widget.
-	var state *ImGuiInputTextState = GetInputTextState(id)
+	var state = GetInputTextState(id)
 
 	var focus_requested_by_code = (item_status_flags & ImGuiItemStatusFlags_FocusedByCode) != 0
 	var focus_requested_by_tabbing = (item_status_flags & ImGuiItemStatusFlags_FocusedByTabbing) != 0
@@ -671,7 +671,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		var ignore_char_inputs = (io.KeyCtrl && !io.KeyAlt) || (is_osx && io.KeySuper)
 		if (flags&ImGuiInputTextFlags_AllowTabInput != 0) && IsKeyPressedMap(ImGuiKey_Tab, true) && !ignore_char_inputs && !io.KeyShift && !is_readonly {
 			if !runesContains(io.InputQueueCharacters, '\t') {
-				var c rune = '\t' // Insert TAB
+				var c = '\t' // Insert TAB
 				if InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
 					state.OnKeyPressed((int)(c))
 				}
@@ -810,7 +810,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				enter_pressed = true
 				clear_active_id = true
 			} else if !is_readonly {
-				var c rune = '\n' // Insert new line
+				var c = '\n' // Insert new line
 				if InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
 					state.OnKeyPressed((int)(c))
 				}
@@ -932,7 +932,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 				// The reason we specify the usage semantic (Completion/History) is that Completion needs to disable keyboard TABBING at the moment.
 				var event_flag ImGuiInputTextFlags = 0
-				var event_key ImGuiKey = ImGuiKey_COUNT
+				var event_key = ImGuiKey_COUNT
 				if (flags&ImGuiInputTextFlags_CallbackCompletion) != 0 && IsKeyPressedMap(ImGuiKey_Tab, true) {
 					event_flag = ImGuiInputTextFlags_CallbackCompletion
 					event_key = ImGuiKey_Tab
@@ -961,7 +961,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 					callback_data.BufDirty = false
 
 					// We have to convert from wchar-positions to UTF-8-positions, which can be pretty slow (an incentive to ditch the ImWchar buffer, see https://github.com/nothings/stb/issues/188)
-					var text []rune = state.TextW
+					var text = state.TextW
 					var utf8_cursor_pos = ImTextCountUtf8BytesFromStr(text, text[state.Stb.cursor:])
 					callback_data.CursorPos = utf8_cursor_pos
 					var utf8_selection_start = ImTextCountUtf8BytesFromStr(text, text[state.Stb.select_start:])
@@ -1220,7 +1220,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				bg_offy_dn = 0.0
 			}
 
-			var rect_pos ImVec2 = draw_pos.Add(select_start_offset).Sub(draw_scroll)
+			var rect_pos = draw_pos.Add(select_start_offset).Sub(draw_scroll)
 			var slice = text_selected_begin[:len(text_selected_begin)-len(text_selected_end)]
 			for i, p := range slice {
 				if rect_pos.y > clip_rect.w+g.FontSize {
@@ -1236,7 +1236,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 					}
 				} else {
 					var pp = slice[i:]
-					var rect_size ImVec2 = InputTextCalcTextSizeW(slice[i:], &pp, nil, true)
+					var rect_size = InputTextCalcTextSizeW(slice[i:], &pp, nil, true)
 					if rect_size.x <= 0.0 {
 						rect_size.x = IM_FLOOR(g.Font.GetCharAdvance((ImWchar)(' ')) * 0.50) // So we can see selected empty lines
 					}
@@ -1270,7 +1270,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			state.CursorAnim += io.DeltaTime
 			var cursor_is_visible = (!g.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.20) <= 0.80
 			var f = draw_pos.Add(cursor_offset).Sub(draw_scroll)
-			var cursor_screen_pos ImVec2 = *ImFloorVec(&f)
+			var cursor_screen_pos = *ImFloorVec(&f)
 			var cursor_screen_rect = ImRect{ImVec2{cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5}, ImVec2{cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5}}
 			if cursor_is_visible && cursor_screen_rect.Overlaps(ImRectFromVec4(&clip_rect)) {
 				bl := cursor_screen_rect.GetBL()
@@ -1298,7 +1298,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if is_displaying_hint {
 				c = ImGuiCol_TextDisabled
 			}
-			var col ImU32 = GetColorU32FromID(c, 1)
+			var col = GetColorU32FromID(c, 1)
 			var clip = &clip_rect
 			if is_multiline {
 				clip = nil

@@ -157,7 +157,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 
 	var text_pos = ImVec2{window.DC.CursorPos.x, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset}
 	var wrap_pos_x = window.DC.TextWrapPos
-	var wrap_enabled = (wrap_pos_x >= 0.0)
+	var wrap_enabled = wrap_pos_x >= 0.0
 	if len(text) > 2000 && !wrap_enabled {
 		// Long text!
 		// Perform manual coarse clipping to optimize for long multi-line text
@@ -387,7 +387,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 
 	var scale = size / this.FontSize
 	var line_height = this.FontSize * scale
-	var word_wrap_enabled = (wrap_width > 0.0)
+	var word_wrap_enabled = wrap_width > 0.0
 	var word_wrap_eol int = -1
 
 	// Fast-forward to first visible line

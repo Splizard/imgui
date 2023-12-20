@@ -39,7 +39,7 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 	}
 
 	var hovered, held bool
-	var pressed bool = ButtonBehavior(&bb, id, &hovered, &held, 0)
+	var pressed = ButtonBehavior(&bb, id, &hovered, &held, 0)
 
 	// Render
 	var c = ImGuiCol_Button
@@ -48,7 +48,7 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 	} else if hovered {
 		c = ImGuiCol_ButtonHovered
 	}
-	var col ImU32 = GetColorU32FromID(c, 1)
+	var col = GetColorU32FromID(c, 1)
 	RenderNavHighlight(&bb, id, 0)
 	RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)(ImMin(padding.x, padding.y)), 0.0, g.Style.FrameRounding))
 	if bg_col.w > 0.0 {
@@ -71,7 +71,7 @@ func ImageButton(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec
 
 	// Default to using texture ID as ID. User can still push string/integer prefixes.
 	PushID(int(user_texture_id))
-	var id ImGuiID = window.GetIDs("#image")
+	var id = window.GetIDs("#image")
 	PopID()
 
 	var padding = g.Style.FramePadding

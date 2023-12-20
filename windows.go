@@ -325,7 +325,7 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 	}
 
 	// Minimum size
-	if window.Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_AlwaysAutoResize) == 0 {
+	if window.Flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_AlwaysAutoResize) == 0 {
 		var window_for_height *ImGuiWindow = window
 		var decoration_up_height float = window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight()
 		new_size = ImMaxVec2(&new_size, &g.Style.WindowMinSize)
@@ -397,7 +397,7 @@ func End() {
 	PopClipRect() // Inner window clip rectangle
 
 	// Stop logging
-	if window.Flags & ImGuiWindowFlags_ChildWindow == 0 { // FIXME: add more options for scope of logging
+	if window.Flags&ImGuiWindowFlags_ChildWindow == 0 { // FIXME: add more options for scope of logging
 		LogFinish()
 	}
 

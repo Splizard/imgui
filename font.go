@@ -127,7 +127,7 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 			}
 
 			// Allow wrapping after punctuation.
-			inside_word = (c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '"')
+			inside_word = c != '.' && c != ',' && c != ';' && c != '!' && c != '?' && c != '"'
 		}
 
 		// We ignore blank width at the end of the line (they can be skipped)
@@ -156,7 +156,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 	var text_size = ImVec2{}
 	var line_width float = 0.0
 
-	var word_wrap_enabled = (wrap_width > 0.0)
+	var word_wrap_enabled = wrap_width > 0.0
 	var word_wrap_eol int = -1
 
 	var i int

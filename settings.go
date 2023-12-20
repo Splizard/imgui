@@ -14,7 +14,7 @@ import (
 // - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.g. same path as executables).
 func LoadIniSettingsFromDisk(ini_filename string) {
 	var file_data_size uintptr = 0
-	var file_data []byte = ImFileLoadToMemory(ini_filename, "rb", &file_data_size, 0)
+	var file_data = ImFileLoadToMemory(ini_filename, "rb", &file_data_size, 0)
 	if file_data == nil {
 		return
 	}
@@ -84,7 +84,7 @@ func SaveIniSettingsToDisk(ini_filename string) {
 	}
 
 	var ini_data_size size_t = 0
-	var ini_data []byte = SaveIniSettingsToMemory(&ini_data_size)
+	var ini_data = SaveIniSettingsToMemory(&ini_data_size)
 
 	os.WriteFile(ini_filename, ini_data, 0666)
 } // this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
@@ -94,7 +94,7 @@ func SaveIniSettingsToMemory(out_size *uintptr) []byte {
 	g.SettingsDirtyTimer = 0.0
 	g.SettingsIniData = g.SettingsIniData[:0]
 	for handler_n := range g.SettingsHandlers {
-		var handler *ImGuiSettingsHandler = &g.SettingsHandlers[handler_n]
+		var handler = &g.SettingsHandlers[handler_n]
 		handler.WriteAllFn(g, handler, &g.SettingsIniData)
 	}
 	if out_size != nil {
@@ -167,7 +167,7 @@ func FindOrCreateWindowSettings(name string) *ImGuiWindowSettings {
 
 func FindSettingsHandler(name string) *ImGuiSettingsHandler {
 	var g = GImGui
-	var type_hash ImGuiID = ImHashStr(name, 0, 0)
+	var type_hash = ImHashStr(name, 0, 0)
 	for handler_n := range g.SettingsHandlers {
 		if g.SettingsHandlers[handler_n].TypeHash == type_hash {
 			return &g.SettingsHandlers[handler_n]
@@ -179,7 +179,7 @@ func FindSettingsHandler(name string) *ImGuiSettingsHandler {
 // UpdateSettings Called by NewFrame()
 func UpdateSettings() {
 	// Load settings on first frame (if not explicitly loaded manually before)
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	if !g.SettingsLoaded {
 		IM_ASSERT(len(g.SettingsWindows) == 0)
 		if g.IO.IniFilename != "" {

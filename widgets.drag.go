@@ -54,7 +54,7 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 	if v_min >= v_max {
 		min_max = *v_current_max
 	}
-	var min_flags ImGuiSliderFlags = flags
+	var min_flags = flags
 	if min_min == min_max {
 		min_flags |= ImGuiSliderFlags_ReadOnly
 	}
@@ -70,7 +70,7 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 	if v_min >= v_max {
 		max_max = FLT_MAX
 	}
-	var max_flags ImGuiSliderFlags = flags
+	var max_flags = flags
 	if max_min == max_max {
 		max_flags |= ImGuiSliderFlags_ReadOnly
 	}
@@ -117,7 +117,7 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 	if v_min >= v_max {
 		min_max = *v_current_max
 	}
-	var min_flags ImGuiSliderFlags = flags
+	var min_flags = flags
 	if min_min == min_max {
 		min_flags |= ImGuiSliderFlags_ReadOnly
 	}
@@ -133,7 +133,7 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 	if v_min >= v_max {
 		max_max = INT_MAX
 	}
-	var max_flags ImGuiSliderFlags = flags
+	var max_flags = flags
 	if max_min == max_max {
 		max_flags |= ImGuiSliderFlags_ReadOnly
 	}
@@ -170,10 +170,10 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 
 	var g = GImGui
 	var style = g.Style
-	var id ImGuiID = window.GetIDs(label)
+	var id = window.GetIDs(label)
 	var w = CalcItemWidth()
 
-	var label_size ImVec2 = CalcTextSize(label, true, -1)
+	var label_size = CalcTextSize(label, true, -1)
 	var frame_bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{w, label_size.y + style.FramePadding.y*2.0})}
 
 	var padding float
@@ -183,7 +183,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 
 	var total_bb = ImRect{frame_bb.Min, frame_bb.Max.Add(ImVec2{padding, 0.0})}
 
-	var temp_input_allowed bool = (flags & ImGuiSliderFlags_NoInput) == 0
+	var temp_input_allowed = (flags & ImGuiSliderFlags_NoInput) == 0
 	ItemSizeRect(&total_bb, style.FramePadding.y)
 
 	var inputable_flags ImGuiItemFlags
@@ -202,7 +202,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data interface{}, v_spe
 
 	// Tabbing or CTRL-clicking on Drag turns it into an InputText
 	var hovered = ItemHoverable(&frame_bb, id)
-	var temp_input_is_active bool = temp_input_allowed && TempInputIsActive(id)
+	var temp_input_is_active = temp_input_allowed && TempInputIsActive(id)
 	if !temp_input_is_active {
 		var focus_requested = temp_input_allowed && (g.LastItemData.StatusFlags&ImGuiItemStatusFlags_Focused) != 0
 		var clicked = (hovered && g.IO.MouseClicked[0])
@@ -380,19 +380,19 @@ func ScaleRatioFromValueT(v, v_min, v_max float, is_logarithmic bool, logarithmi
 		return 0.0
 	}
 
-	var v_clamped float = ImClamp(v, v_max, v_min)
+	var v_clamped = ImClamp(v, v_max, v_min)
 	if v_min < v_max {
 		v_clamped = ImClamp(v, v_min, v_max)
 	}
 	if is_logarithmic {
-		var flipped bool = v_max < v_min
+		var flipped = v_max < v_min
 
 		if flipped { // Handle the case where the range is backwards
 			v_min, v_max = v_max, v_min
 		}
 
 		// Fudge min/max to avoid getting close to log(0)
-		var v_min_fudged float = v_min
+		var v_min_fudged = v_min
 		if ImAbs(v_min) < logarithmic_zero_epsilon {
 			if v_min < 0.0 {
 				v_min_fudged = -logarithmic_zero_epsilon
@@ -400,7 +400,7 @@ func ScaleRatioFromValueT(v, v_min, v_max float, is_logarithmic bool, logarithmi
 				v_min_fudged = logarithmic_zero_epsilon
 			}
 		}
-		var v_max_fudged float = v_max
+		var v_max_fudged = v_max
 		if ImAbs(v_max) < logarithmic_zero_epsilon {
 			if v_max < 0.0 {
 				v_max_fudged = -logarithmic_zero_epsilon
@@ -424,9 +424,9 @@ func ScaleRatioFromValueT(v, v_min, v_max float, is_logarithmic bool, logarithmi
 			result = 1.0 // Workaround for values that are in-range but above our fudge
 		} else if (v_min * v_max) < 0.0 { // Range crosses zero, so split into two portions
 
-			var zero_point_center float = (-(float)(v_min)) / ((float)(v_max) - (float)(v_min)) // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
-			var zero_point_snap_L float = zero_point_center - zero_deadzone_halfsize
-			var zero_point_snap_R float = zero_point_center + zero_deadzone_halfsize
+			var zero_point_center = (-(float)(v_min)) / ((float)(v_max) - (float)(v_min)) // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
+			var zero_point_snap_L = zero_point_center - zero_deadzone_halfsize
+			var zero_point_snap_R = zero_point_center + zero_deadzone_halfsize
 			if v == 0.0 {
 				result = zero_point_center // Special case for exactly zero
 			} else if v < 0.0 {
@@ -465,10 +465,10 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 		} else if t >= 1.0 {
 			result = v_max
 		} else {
-			var flipped bool = v_max < v_min // Check if range is "backwards"
+			var flipped = v_max < v_min // Check if range is "backwards"
 
 			// Fudge min/max to avoid getting silly results close to zero
-			var v_min_fudged float = v_min
+			var v_min_fudged = v_min
 			if ImAbs(v_min) < logarithmic_zero_epsilon {
 				if v_min < 0.0 {
 					v_min_fudged = -logarithmic_zero_epsilon
@@ -476,7 +476,7 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 					v_min_fudged = logarithmic_zero_epsilon
 				}
 			}
-			var v_max_fudged float = v_max
+			var v_max_fudged = v_max
 			if ImAbs(v_max) < logarithmic_zero_epsilon {
 				if v_max < 0.0 {
 					v_min_fudged = -logarithmic_zero_epsilon
@@ -494,7 +494,7 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 				v_max_fudged = -logarithmic_zero_epsilon
 			}
 
-			var t_with_flip float = t // t, but flipped if necessary to account for us flipping the range
+			var t_with_flip = t // t, but flipped if necessary to account for us flipping the range
 			if flipped {
 				t_with_flip = (1.0 - t)
 			}
@@ -526,7 +526,7 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 			// - Not doing a *1.0 multiply at the end of a range as it tends to be lossy. While absolute aiming at a large s64/u64
 			//   range is going to be imprecise anyway, with this check we at least make the edge values matches expected limits.
 			if t < 1.0 {
-				var v_new_off_f float = (v_max - v_min) * t
+				var v_new_off_f = (v_max - v_min) * t
 				if v_min > v_max {
 					result = v_min + (v_new_off_f + -0.5)
 				} else {
@@ -550,7 +550,7 @@ func RoundScalarWithFormatT(format string, v float) float {
 
 func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, flags ImGuiSliderFlags) bool {
 	var g = GImGui
-	var axis ImGuiAxis = ImGuiAxis_X
+	var axis = ImGuiAxis_X
 	if (flags & ImGuiSliderFlags_Vertical) != 0 {
 		axis = ImGuiAxis_Y
 	}
@@ -603,8 +603,8 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 
 	// Clear current value on activation
 	// Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.g. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
-	var is_just_activated bool = g.ActiveIdIsJustActivated
-	var is_already_past_limits_and_pushing_outward bool = is_clamped && ((*v >= *v_max && adjust_delta > 0.0) || (*v <= *v_min && adjust_delta < 0.0))
+	var is_just_activated = g.ActiveIdIsJustActivated
+	var is_already_past_limits_and_pushing_outward = is_clamped && ((*v >= *v_max && adjust_delta > 0.0) || (*v <= *v_min && adjust_delta < 0.0))
 	if is_just_activated || is_already_past_limits_and_pushing_outward {
 		g.DragCurrentAccum = 0.0
 		g.DragCurrentAccumDirty = false
@@ -617,7 +617,7 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		return false
 	}
 
-	var v_cur float = *v
+	var v_cur = *v
 	var v_old_ref_for_accum_remainder float
 
 	var logarithmic_zero_epsilon float // Only valid when is_logarithmic is true
@@ -628,8 +628,8 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		logarithmic_zero_epsilon = ImPow(0.1, (float)(decimal_precision))
 
 		// Convert to parametric space, apply delta, convert back
-		var v_old_parametric float = ScaleRatioFromValueT(v_cur, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
-		var v_new_parametric float = v_old_parametric + g.DragCurrentAccum
+		var v_old_parametric = ScaleRatioFromValueT(v_cur, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
+		var v_new_parametric = v_old_parametric + g.DragCurrentAccum
 		v_cur = ScaleValueFromRatioT(v_new_parametric, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 		v_old_ref_for_accum_remainder = v_old_parametric
 	} else {
@@ -645,7 +645,7 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 	g.DragCurrentAccumDirty = false
 	if is_logarithmic {
 		// Convert to parametric space, apply delta, convert back
-		var v_new_parametric float = ScaleRatioFromValueT(v_cur, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
+		var v_new_parametric = ScaleRatioFromValueT(v_cur, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 		g.DragCurrentAccum -= (float)(v_new_parametric - v_old_ref_for_accum_remainder)
 	} else {
 		g.DragCurrentAccum -= (float)(v_cur - *v)

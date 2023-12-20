@@ -114,14 +114,14 @@ func IsMousePosValid(mouse_pos *ImVec2) bool {
 func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool {
 	var g = GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	var t float = g.IO.MouseDownDuration[button]
+	var t = g.IO.MouseDownDuration[button]
 	if t == 0.0 {
 		return true
 	}
 
 	if repeat && t > g.IO.KeyRepeatDelay {
 		// FIXME: 2019/05/03: Our old repeat code was wrong here and led to doubling the repeat rate, which made it an ok rate for repeat on mouse hold.
-		var amount int = CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate*0.50)
+		var amount = CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate*0.50)
 		if amount > 0 {
 			return true
 		}
@@ -177,7 +177,7 @@ func StartMouseMovingWindow(window *ImGuiWindow) {
 	g.ActiveIdNoClearOnFocusLoss = true
 	SetActiveIdUsingNavAndKeys()
 
-	var can_move_window bool = true
+	var can_move_window = true
 	if (window.Flags&ImGuiWindowFlags_NoMove != 0) || (window.RootWindow.Flags&ImGuiWindowFlags_NoMove != 0) {
 		can_move_window = false
 	}
@@ -274,8 +274,8 @@ func UpdateMouseMovingWindowEndFrame() {
 	if g.IO.MouseClicked[1] {
 		// Find the top-most window between HoveredWindow and the top-most Modal Window.
 		// This is where we can trim the popup stack.
-		var modal *ImGuiWindow = GetTopMostPopupModal()
-		var hovered_window_above_modal bool = g.HoveredWindow != nil && IsWindowAbove(g.HoveredWindow, modal)
+		var modal = GetTopMostPopupModal()
+		var hovered_window_above_modal = g.HoveredWindow != nil && IsWindowAbove(g.HoveredWindow, modal)
 
 		win := modal
 		if hovered_window_above_modal {
@@ -323,11 +323,11 @@ func UpdateMouseWheel() {
 	// FIXME-OBSOLETE: This is an old feature, it still works but pretty much nobody is using it and may be best redesigned.
 	if g.IO.MouseWheel != 0.0 && g.IO.KeyCtrl && g.IO.FontAllowUserScaling {
 		StartLockWheelingWindow(window)
-		var new_font_scale float = ImClamp(window.FontWindowScale+g.IO.MouseWheel*0.10, 0.50, 2.50)
-		var scale float = new_font_scale / window.FontWindowScale
+		var new_font_scale = ImClamp(window.FontWindowScale+g.IO.MouseWheel*0.10, 0.50, 2.50)
+		var scale = new_font_scale / window.FontWindowScale
 		window.FontWindowScale = new_font_scale
 		if window == window.RootWindow {
-			var offset ImVec2 = window.Size.Scale((1.0 - scale)).Mul(g.IO.MousePos.Sub(window.Pos)).Div(window.Size)
+			var offset = window.Size.Scale((1.0 - scale)).Mul(g.IO.MousePos.Sub(window.Pos)).Div(window.Size)
 			p := window.Pos.Add(offset)
 			setWindowPos(window, &p, 0)
 			scaled := window.Size.Scale(scale)
@@ -346,7 +346,7 @@ func UpdateMouseWheel() {
 
 	// As a standard behavior holding SHIFT while using Vertical Mouse Wheel triggers Horizontal scroll instead
 	// (we avoid doing it on OSX as it the OS input layer handles this already)
-	var swap_axis bool = g.IO.KeyShift && !g.IO.ConfigMacOSXBehaviors
+	var swap_axis = g.IO.KeyShift && !g.IO.ConfigMacOSXBehaviors
 
 	var wheel_y float
 	if !swap_axis {
@@ -366,8 +366,8 @@ func UpdateMouseWheel() {
 			window = window.ParentWindow
 		}
 		if (window.Flags&ImGuiWindowFlags_NoScrollWithMouse == 0) && (window.Flags&ImGuiWindowFlags_NoMouseInputs == 0) {
-			var max_step float = window.InnerRect.GetHeight() * 0.67
-			var scroll_step float = ImFloor(ImMin(5*window.CalcFontSize(), max_step))
+			var max_step = window.InnerRect.GetHeight() * 0.67
+			var scroll_step = ImFloor(ImMin(5*window.CalcFontSize(), max_step))
 			setScrollY(window, window.Scroll.y-wheel_y*scroll_step)
 		}
 	}
@@ -379,8 +379,8 @@ func UpdateMouseWheel() {
 			window = window.ParentWindow
 		}
 		if (window.Flags&ImGuiWindowFlags_NoScrollWithMouse == 0) && (window.Flags&ImGuiWindowFlags_NoMouseInputs == 0) {
-			var max_step float = window.InnerRect.GetWidth() * 0.67
-			var scroll_step float = ImFloor(ImMin(2*window.CalcFontSize(), max_step))
+			var max_step = window.InnerRect.GetWidth() * 0.67
+			var scroll_step = ImFloor(ImMin(2*window.CalcFontSize(), max_step))
 			setScrollX(window, window.Scroll.x-wheel_x*scroll_step)
 		}
 	}

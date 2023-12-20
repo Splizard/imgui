@@ -86,7 +86,7 @@ func ListBoxFunc(label string, current_item *int, items_getter func(data interfa
 	if height_in_items < 0 {
 		height_in_items = ImMinInt(items_count, 7)
 	}
-	var height_in_items_f float = float(height_in_items) + 0.25
+	var height_in_items_f = float(height_in_items) + 0.25
 	var size = ImVec2{0.0, ImFloor(GetTextLineHeightWithSpacing()*height_in_items_f + g.Style.FramePadding.y*2.0)}
 
 	if !BeginListBox(label, size) {

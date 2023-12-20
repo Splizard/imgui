@@ -5,7 +5,7 @@ const DRAG_MOUSE_THRESHOLD_FACTOR float = 0.50 // Multiplier for the default val
 
 func IsClippedEx(bb *ImRect, id ImGuiID, clip_even_when_logged bool) bool {
 	var g = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
+	var window = g.CurrentWindow
 	if !bb.Overlaps(window.ClipRect) {
 		if id == 0 || (id != g.ActiveId && id != g.NavId) {
 			if clip_even_when_logged || !g.LogEnabled {
@@ -57,7 +57,7 @@ func ItemHoverable(bb *ImRect, id ImGuiID) bool {
 	}
 
 	// When disabled we'll return false but still set HoveredId
-	var item_flags ImGuiItemFlags = g.CurrentItemFlags
+	var item_flags = g.CurrentItemFlags
 	if g.LastItemData.ID == id {
 		item_flags = g.LastItemData.InFlags
 	}
@@ -154,7 +154,7 @@ func ItemAdd(bb *ImRect, id ImGuiID, nav_bb_arg *ImRect, extra_flags ImGuiItemFl
 		}
 	}
 	// Clipping test
-	var is_clipped bool = IsClippedEx(bb, id, false)
+	var is_clipped = IsClippedEx(bb, id, false)
 	if is_clipped {
 		return false
 	}
@@ -190,7 +190,7 @@ func ItemSizeVec(size *ImVec2, text_baseline_y float) {
 	if text_baseline_y >= 0 {
 		offset_to_match_baseline_y = ImMax(0.0, window.DC.CurrLineTextBaseOffset-text_baseline_y)
 	}
-	var line_height float = ImMax(window.DC.CurrLineSize.y, size.y+offset_to_match_baseline_y)
+	var line_height = ImMax(window.DC.CurrLineSize.y, size.y+offset_to_match_baseline_y)
 
 	// Always align ourselves on pixel boundaries
 	//if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]

@@ -82,8 +82,8 @@ func IM_ROUND(val float32) float {
 }
 
 func ImHashData(ptr unsafe.Pointer, data_size uintptr, seed ImU32) ImGuiID {
-	var crc ImU32 = ^seed
-	var data *byte = (*byte)(ptr)
+	var crc = ^seed
+	var data = (*byte)(ptr)
 	var crc32_lut = &GCrc32LookupTable
 	for i := uintptr(0); i < data_size; i++ {
 		crc = (crc >> 8) ^ crc32_lut[(crc&0xFF)^uint(*data)]
@@ -263,7 +263,7 @@ func ImBitArraySetBit(arr []ImU32, n int) {
 func ImBitArraySetBitRange(arr []ImU32, n, n2 int) {
 	n2--
 	for n <= n2 {
-		var a_mod int = n & 31
+		var a_mod = n & 31
 		var b_mod int
 		if n2 > (n | 31) {
 			b_mod = 31
@@ -281,14 +281,14 @@ type ImBitVector []ImU32
 func (this ImBitVector) SetBitRange(n, n2 int) { // Works on range [n..n2)
 	n2--
 	for n <= n2 {
-		var a_mod int = (n & 31)
+		var a_mod = (n & 31)
 		var b_mod int
 		if n2 > (n | 31) {
 			b_mod = 31
 		} else {
 			b_mod = (n2 & 31) + 1
 		}
-		var mask ImU32 = (ImU32)(((ImU64)(1<<b_mod))-1) & ^(ImU32)(((ImU64)(1<<a_mod))-1)
+		var mask = (ImU32)(((ImU64)(1<<b_mod))-1) & ^(ImU32)(((ImU64)(1<<a_mod))-1)
 		this[n>>5] |= mask
 		n = (n + 32) & ^31
 	}
@@ -350,7 +350,7 @@ type ImDrawListSharedData struct {
 func NewImDrawListSharedData() ImDrawListSharedData {
 	var this ImDrawListSharedData
 	for i := range this.ArcFastVtx {
-		var a float = ((float)(i) * 2 * IM_PI) / (float)(len(this.ArcFastVtx))
+		var a = ((float)(i) * 2 * IM_PI) / (float)(len(this.ArcFastVtx))
 		this.ArcFastVtx[i] = ImVec2{ImCos(a), ImSin(a)}
 	}
 	this.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, this.CircleSegmentMaxError)
@@ -364,7 +364,7 @@ func (this *ImDrawListSharedData) SetCircleTessellationMaxError(max_error float)
 	IM_ASSERT(max_error > 0.0)
 	this.CircleSegmentMaxError = max_error
 	for i := range this.CircleSegmentCounts {
-		var radius float = (float)(i)
+		var radius = (float)(i)
 		if i > 0 {
 			this.CircleSegmentCounts[i] = uint8(IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, this.CircleSegmentMaxError))
 		}
@@ -390,7 +390,7 @@ func (this *ImDrawDataBuilder) GetDrawListCount() int {
 
 func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
 	var n = len(Layers[0])
-	var size int = int(n)
+	var size = int(n)
 	for i := 1; i < len(*Layers); i++ {
 		size += int(len(Layers[i]))
 	}
@@ -403,7 +403,7 @@ func (Layers *ImDrawDataBuilder) FlattenIntoSingleLayer() {
 	}
 
 	for layer_n := 1; layer_n < len(*Layers); layer_n++ {
-		var layer *[]*ImDrawList = &Layers[layer_n]
+		var layer = &Layers[layer_n]
 		if len(*layer) == 0 {
 			continue
 		}
@@ -755,8 +755,8 @@ func (this *ImGuiViewportP) GetWorkRect() ImRect {
 }
 
 func (this *ImGuiViewportP) GetBuildWorkRect() ImRect {
-	var pos ImVec2 = this.CalcWorkRectPos(&this.BuildWorkOffsetMin)
-	var size ImVec2 = this.CalcWorkRectSize(&this.BuildWorkOffsetMin, &this.BuildWorkOffsetMax)
+	var pos = this.CalcWorkRectPos(&this.BuildWorkOffsetMin)
+	var size = this.CalcWorkRectSize(&this.BuildWorkOffsetMin, &this.BuildWorkOffsetMax)
 	return ImRect{ImVec2{pos.x, pos.y}, ImVec2{pos.x + size.x, pos.y + size.y}}
 }
 
@@ -1025,8 +1025,8 @@ func NewImGuiWindow(context *ImGuiContext, name string) *ImGuiWindow {
 }
 
 func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
-	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
-	var id ImGuiID = ImHashStr(str, 0, seed)
+	var seed = this.IDStack[len(this.IDStack)-1]
+	var id = ImHashStr(str, 0, seed)
 	KeepAliveID(id)
 	return id
 }
@@ -1044,29 +1044,29 @@ func (this *ImGuiWindow) GetIDInterface(ptr interface{}) ImGuiID {
 		rvalue = reflect.ValueOf(&ptr).Elem()
 	}
 
-	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
-	var id ImGuiID = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
+	var seed = this.IDStack[len(this.IDStack)-1]
+	var id = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	KeepAliveID(id)
 	return id
 }
 
 func (this *ImGuiWindow) GetIDInt(n int) ImGuiID {
-	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
-	var id ImGuiID = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), seed)
+	var seed = this.IDStack[len(this.IDStack)-1]
+	var id = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), seed)
 	KeepAliveID(id)
 	return id
 }
 
 func (this *ImGuiWindow) GetIDNoKeepAlive(str string) ImGuiID {
-	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
-	var id ImGuiID = ImHashStr(str, 0, seed)
+	var seed = this.IDStack[len(this.IDStack)-1]
+	var id = ImHashStr(str, 0, seed)
 	return id
 }
 
 func (this *ImGuiWindow) GetIDNoKeepAliveInterface(ptr interface{}) ImGuiID {
 	rvalue := reflect.ValueOf(ptr).Elem()
-	var seed ImGuiID = this.IDStack[len(this.IDStack)-1]
-	var id ImGuiID = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
+	var seed = this.IDStack[len(this.IDStack)-1]
+	var id = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	return id
 }
 
@@ -1090,8 +1090,8 @@ func (this *ImGuiWindow) Rect() ImRect {
 }
 
 func (this *ImGuiWindow) CalcFontSize() float {
-	var g *ImGuiContext = GImGui
-	var scale float = g.FontBaseSize * this.FontWindowScale
+	var g = GImGui
+	var scale = g.FontBaseSize * this.FontWindowScale
 	if this.ParentWindow != nil {
 		scale *= this.ParentWindow.FontWindowScale
 	}
@@ -1100,7 +1100,7 @@ func (this *ImGuiWindow) CalcFontSize() float {
 }
 
 func (this *ImGuiWindow) TitleBarHeight() float {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	if this.Flags&ImGuiWindowFlags_NoTitleBar != 0 {
 		return 0.0
 	}
@@ -1112,7 +1112,7 @@ func (this *ImGuiWindow) TitleBarRect() ImRect {
 }
 
 func (this *ImGuiWindow) MenuBarHeight() float {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	if this.Flags&ImGuiWindowFlags_MenuBar != 0 {
 		return this.DC.MenuBarOffset.y + this.CalcFontSize() + g.Style.FramePadding.y*2.0
 	}
@@ -1120,7 +1120,7 @@ func (this *ImGuiWindow) MenuBarHeight() float {
 }
 
 func (this *ImGuiWindow) MenuBarRect() ImRect {
-	var y1 float = this.Pos.y + this.TitleBarHeight()
+	var y1 = this.Pos.y + this.TitleBarHeight()
 	return ImRect{ImVec2{this.Pos.x, y1}, ImVec2{this.Pos.x + this.SizeFull.x, y1 + this.MenuBarHeight()}}
 }
 

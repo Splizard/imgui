@@ -292,7 +292,7 @@ func ShowDemoWindow(p_open *bool) {
 					"Here we expose them as read-only fields to avoid breaking interactions with your backend.")
 
 			// Make a local copy to avoid modifying actual backend flags.
-			var backend_flags ImGuiBackendFlags = io.BackendFlags
+			var backend_flags = io.BackendFlags
 			CheckboxFlagsInt("io.BackendFlags: HasGamepad", (*int32)(&backend_flags), int32(ImGuiBackendFlags_HasGamepad))
 			CheckboxFlagsInt("io.BackendFlags: HasMouseCursors", (*int32)(&backend_flags), int32(ImGuiBackendFlags_HasMouseCursors))
 			CheckboxFlagsInt("io.BackendFlags: HasSetMousePos", (*int32)(&backend_flags), int32(ImGuiBackendFlags_HasSetMousePos))

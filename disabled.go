@@ -5,7 +5,7 @@ package imgui
 // - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
 // - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can a calling BeginDisabled(False)/EndDisabled() best to a it.
 
-// BeginDisabled()/EndDisabled()
+// BeginDisabled BeginDisabled()/EndDisabled()
 // - Those can be nested but it cannot be used to enable an already disabled section (a single BeginDisabled(true) in the stack is enough to keep everything disabled)
 // - Visually this is currently altering alpha, but it is expected that in a future styling system this would work differently.
 // - Feedback welcome at https://github.com/ocornut/imgui/issues/211

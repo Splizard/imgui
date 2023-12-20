@@ -3,11 +3,10 @@ package renderers
 import (
 	_ "embed" // using embed for the shader sources
 	"fmt"
+	"github.com/Splizard/imgui"
+	"github.com/go-gl/gl/v3.2-core/gl"
 	"strings"
 	"unsafe"
-
-	"github.com/go-gl/gl/v3.2-core/gl"
-	"github.com/Splizard/imgui"
 )
 
 //go:embed shader/main.vert

@@ -37,7 +37,7 @@ func STB_TEXTEDIT_STRINGLEN(obj *STB_TEXTEDIT_STRING) int {
 func STB_TEXTEDIT_LAYOUTROW(r *StbTexteditRow, obj *STB_TEXTEDIT_STRING, line_start_idx int) {
 	var text = obj.TextW
 	var text_remaining []ImWchar
-	var size ImVec2 = InputTextCalcTextSizeW(text[line_start_idx:obj.CurLenW], &text_remaining, nil, true)
+	var size = InputTextCalcTextSizeW(text[line_start_idx:obj.CurLenW], &text_remaining, nil, true)
 	r.x0 = 0.0
 	r.x1 = size.x
 	r.baseline_y_delta = size.y
@@ -47,7 +47,7 @@ func STB_TEXTEDIT_LAYOUTROW(r *StbTexteditRow, obj *STB_TEXTEDIT_STRING, line_st
 }
 
 func STB_TEXTEDIT_GETWIDTH(obj *STB_TEXTEDIT_STRING, line_start_idx, char_idx int) float {
-	var c ImWchar = obj.TextW[line_start_idx+char_idx]
+	var c = obj.TextW[line_start_idx+char_idx]
 	if c == '\n' {
 		return STB_TEXTEDIT_GETWIDTH_NEWLINE
 	}
@@ -74,7 +74,7 @@ func STB_TEXTEDIT_DELETECHARS(obj *STB_TEXTEDIT_STRING, pos, n int) {
 
 func STB_TEXTEDIT_INSERTCHARS(obj *STB_TEXTEDIT_STRING, pos int, new_text []STB_TEXTEDIT_CHARTYPE, new_text_len int) bool {
 	var is_resizable = (obj.Flags & ImGuiInputTextFlags_CallbackResize) != 0
-	var text_len int = obj.CurLenW
+	var text_len = obj.CurLenW
 	IM_ASSERT(pos <= text_len)
 
 	var new_text_len_utf8 = ImTextCountUtf8BytesFromStr(new_text, new_text[new_text_len:])
@@ -136,7 +136,7 @@ func STB_TEXTEDIT_MOVEWORDLEFT(obj *STB_TEXTEDIT_STRING, idx int) int {
 
 func STB_TEXTEDIT_MOVEWORDRIGHT(obj *STB_TEXTEDIT_STRING, idx int) int {
 	idx++
-	var len int = obj.CurLenW
+	var len = obj.CurLenW
 	for idx < len && !is_word_boundary_from_right(obj, idx) {
 		idx++
 	}
@@ -251,7 +251,7 @@ type StbTexteditRow struct {
 // traverse the layout to locate the nearest character to a display position
 func stb_text_locate_coord(str *STB_TEXTEDIT_STRING, x, y float) int {
 	var r StbTexteditRow
-	var n int = STB_TEXTEDIT_STRINGLEN(str)
+	var n = STB_TEXTEDIT_STRINGLEN(str)
 	var base_y, prev_x float
 	var i, k int
 
@@ -295,7 +295,7 @@ func stb_text_locate_coord(str *STB_TEXTEDIT_STRING, x, y float) int {
 		// search characters in row for one that straddles 'x'
 		prev_x = r.x0
 		for k = 0; k < r.num_chars; k++ {
-			var w float = STB_TEXTEDIT_GETWIDTH(str, i, k)
+			var w = STB_TEXTEDIT_GETWIDTH(str, i, k)
 			if x < prev_x+w {
 				if x < prev_x+w/2 {
 					return k + i
@@ -354,7 +354,7 @@ func stb_textedit_drag(str *STB_TEXTEDIT_STRING, state *STB_TexteditState, x, y 
 }
 
 func stb_text_undo(str *STB_TEXTEDIT_STRING, state *STB_TexteditState) {
-	var s *StbUndoState = &state.undostate
+	var s = &state.undostate
 	var u StbUndoRecord
 	var r *StbUndoRecord
 	if s.undo_point == 0 {
@@ -424,7 +424,7 @@ func stb_text_undo(str *STB_TEXTEDIT_STRING, state *STB_TexteditState) {
 	s.redo_point--
 }
 func stb_text_redo(str *STB_TEXTEDIT_STRING, state *STB_TexteditState) {
-	var s *StbUndoState = &state.undostate
+	var s = &state.undostate
 	var u *StbUndoRecord
 	var r StbUndoRecord
 	if s.redo_point == STB_TEXTEDIT_UNDOSTATECOUNT {
@@ -477,7 +477,7 @@ func stb_text_redo(str *STB_TEXTEDIT_STRING, state *STB_TexteditState) {
 }
 func stb_text_makeundo_delete(str *STB_TEXTEDIT_STRING, state *STB_TexteditState, where, length int) {
 	var i int
-	var p []STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&state.undostate, where, length, 0)
+	var p = stb_text_createundo(&state.undostate, where, length, 0)
 	if p != nil {
 		for i = 0; i < length; i++ {
 			p[i] = STB_TEXTEDIT_GETCHAR(str, where+i)
@@ -489,7 +489,7 @@ func stb_text_makeundo_insert(state *STB_TexteditState, where, length int) {
 }
 func stb_text_makeundo_replace(str *STB_TEXTEDIT_STRING, state *STB_TexteditState, where, old_length, new_length int) {
 	var i int
-	var p []STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&state.undostate, where, old_length, new_length)
+	var p = stb_text_createundo(&state.undostate, where, old_length, new_length)
 	if p != nil {
 		for i = 0; i < old_length; i++ {
 			p[i] = STB_TEXTEDIT_GETCHAR(str, where+i)
@@ -509,7 +509,7 @@ type StbFindState struct {
 func stb_textedit_find_charpos(find *StbFindState, str *STB_TEXTEDIT_STRING, n, single_line int) {
 	var r StbTexteditRow
 	var prev_start int = 0
-	var z int = STB_TEXTEDIT_STRINGLEN(str)
+	var z = STB_TEXTEDIT_STRINGLEN(str)
 	var i, first int
 
 	if n == z {
@@ -570,7 +570,7 @@ func STB_TEXT_HAS_SELECTION(s *STB_TexteditState) bool {
 
 // make the selection/cursor state valid if client altered the string
 func stb_textedit_clamp(str *STB_TEXTEDIT_STRING, state *STB_TexteditState) {
-	var n int = STB_TEXTEDIT_STRINGLEN(str)
+	var n = STB_TEXTEDIT_STRINGLEN(str)
 	if STB_TEXT_HAS_SELECTION(state) {
 		if state.select_start > n {
 			state.select_start = n
@@ -615,7 +615,7 @@ func stb_textedit_delete_selection(str *STB_TEXTEDIT_STRING, state *STB_Textedit
 // canoncialize the selection so start <= end
 func stb_textedit_sortselection(state *STB_TexteditState) {
 	if state.select_end < state.select_start {
-		var temp int = state.select_end
+		var temp = state.select_end
 		state.select_end = state.select_start
 		state.select_start = temp
 	}
@@ -663,7 +663,7 @@ func stb_textedit_move_to_word_previous(str *STB_TEXTEDIT_STRING, c int) int {
 }
 
 func stb_textedit_move_to_word_next(str *STB_TEXTEDIT_STRING, c int) int {
-	var len int = STB_TEXTEDIT_STRINGLEN(str)
+	var len = STB_TEXTEDIT_STRINGLEN(str)
 	c++ // always move at least one character
 	for c < len && is_word_boundary(str, c) == 0 {
 		c++
@@ -724,9 +724,9 @@ retry:
 	switch key {
 	default:
 		{
-			var c int = int(STB_TEXTEDIT_KEYTOTEXT(key))
+			var c = int(STB_TEXTEDIT_KEYTOTEXT(key))
 			if c > 0 {
-				var ch [1]STB_TEXTEDIT_CHARTYPE = [1]STB_TEXTEDIT_CHARTYPE{(STB_TEXTEDIT_CHARTYPE)(c)}
+				var ch = [1]STB_TEXTEDIT_CHARTYPE{(STB_TEXTEDIT_CHARTYPE)(c)}
 
 				// can't add newline in single-line mode
 				if c == '\n' && state.single_line != 0 {
@@ -838,7 +838,7 @@ retry:
 			var find StbFindState
 			var row StbTexteditRow
 			var i, j, sel int = 0, 0, bool2int(key&STB_TEXTEDIT_K_SHIFT != 0)
-			var is_page int = bool2int((key & ^STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGDOWN)
+			var is_page = bool2int((key & ^STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGDOWN)
 			var row_count int
 			if is_page != 0 {
 				row_count = state.row_count_per_page
@@ -869,7 +869,7 @@ retry:
 				} else {
 					goal_x = find.x
 				}
-				var start int = find.first_char + find.length
+				var start = find.first_char + find.length
 
 				if find.length == 0 {
 					break
@@ -886,7 +886,7 @@ retry:
 				STB_TEXTEDIT_LAYOUTROW(&row, str, state.cursor)
 				x = row.x0
 				for i = 0; i < row.num_chars; i++ {
-					var dx float = STB_TEXTEDIT_GETWIDTH(str, start, i)
+					var dx = STB_TEXTEDIT_GETWIDTH(str, start, i)
 					if dx == STB_TEXTEDIT_GETWIDTH_NEWLINE {
 						break
 					}
@@ -923,7 +923,7 @@ retry:
 			var find StbFindState
 			var row StbTexteditRow
 			var i, j, prev_scan, sel int = 0, 0, 0, bool2int(key&STB_TEXTEDIT_K_SHIFT != 0)
-			var is_page int = bool2int((key & ^STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGUP)
+			var is_page = bool2int((key & ^STB_TEXTEDIT_K_SHIFT) == STB_TEXTEDIT_K_PGUP)
 			var row_count int
 			if is_page != 0 {
 				row_count = state.row_count_per_page
@@ -965,7 +965,7 @@ retry:
 				STB_TEXTEDIT_LAYOUTROW(&row, str, state.cursor)
 				x = row.x0
 				for i = 0; i < row.num_chars; i++ {
-					var dx float = STB_TEXTEDIT_GETWIDTH(str, find.prev_first, i)
+					var dx = STB_TEXTEDIT_GETWIDTH(str, find.prev_first, i)
 					if dx == STB_TEXTEDIT_GETWIDTH_NEWLINE {
 						break
 					}
@@ -1006,7 +1006,7 @@ retry:
 		if STB_TEXT_HAS_SELECTION(state) {
 			stb_textedit_delete_selection(str, state)
 		} else {
-			var n int = STB_TEXTEDIT_STRINGLEN(str)
+			var n = STB_TEXTEDIT_STRINGLEN(str)
 			if state.cursor < n {
 				stb_textedit_delete(str, state, state.cursor, 1)
 			}
@@ -1070,7 +1070,7 @@ retry:
 		fallthrough
 	case STB_TEXTEDIT_K_LINEEND:
 		{
-			var n int = STB_TEXTEDIT_STRINGLEN(str)
+			var n = STB_TEXTEDIT_STRINGLEN(str)
 			stb_textedit_clamp(str, state)
 			stb_textedit_move_to_first(state)
 			if state.single_line != 0 {
@@ -1102,7 +1102,7 @@ retry:
 		fallthrough
 	case STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT:
 		{
-			var n int = STB_TEXTEDIT_STRINGLEN(str)
+			var n = STB_TEXTEDIT_STRINGLEN(str)
 			stb_textedit_clamp(str, state)
 			stb_textedit_prep_selection_at_cursor(state)
 			if state.single_line != 0 {
@@ -1167,7 +1167,7 @@ func stb_textedit_discard_redo(state *StbUndoState) {
 		}
 		// now move all the redo records towards the end of the buffer; the first one is at 'redo_point'
 		// [DEAR IMGUI]
-		var move_size uintptr = (uintptr)((STB_TEXTEDIT_UNDOSTATECOUNT - state.redo_point - 1))
+		var move_size = (uintptr)((STB_TEXTEDIT_UNDOSTATECOUNT - state.redo_point - 1))
 		//var buf_begin []byte = state.undo_rec[:]
 		//var buf_end []byte = state.undo_rec[len(state.undo_rec):]
 		//IM_ASSERT(((char*)(state.undo_rec + state.redo_point)) >= buf_begin); TODO/FIXME
@@ -1207,7 +1207,7 @@ func stb_text_create_undo_record(state *StbUndoState, numchars int) *StbUndoReco
 }
 
 func stb_text_createundo(state *StbUndoState, pos, insert_len, delete_len int) []STB_TEXTEDIT_CHARTYPE {
-	var r *StbUndoRecord = stb_text_create_undo_record(state, insert_len)
+	var r = stb_text_create_undo_record(state, insert_len)
 	if r == nil {
 		return nil
 	}

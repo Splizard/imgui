@@ -41,7 +41,7 @@ func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_
 		g.Style.FrameBorderSize = backup_border_size
 	} else {
 		// Window background
-		if flags & ImGuiWindowFlags_NoBackground == 0 {
+		if flags&ImGuiWindowFlags_NoBackground == 0 {
 			var bg_col ImU32 = GetColorU32FromID(GetWindowBgColorIdxFromFlags(flags), 1)
 
 			var override_alpha bool = false
@@ -63,7 +63,7 @@ func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_
 		}
 
 		// Title bar
-		if flags & ImGuiWindowFlags_NoTitleBar == 0 {
+		if flags&ImGuiWindowFlags_NoTitleBar == 0 {
 			var title_bar_col ImU32 = GetColorU32FromID(ImGuiCol_TitleBg, 1)
 			if title_bar_is_highlight {
 				title_bar_col = GetColorU32FromID(ImGuiCol_TitleBgActive, 1)
@@ -98,7 +98,7 @@ func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_
 		}
 
 		// Render resize grips (after their input handling so we don't have a frame of latency)
-		if flags & ImGuiWindowFlags_NoResize == 0 {
+		if flags&ImGuiWindowFlags_NoResize == 0 {
 			for resize_grip_n := int(0); resize_grip_n < resize_grip_count; resize_grip_n++ {
 				var grip *ImGuiResizeGripDef = &resize_grip_def[resize_grip_n]
 

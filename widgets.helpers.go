@@ -21,7 +21,7 @@ func ItemInputable(window *ImGuiWindow, id ImGuiID) {
 
 	// Increment counters
 	// FIXME: ImGuiItemFlags_Disabled should disable more.
-	var is_tab_stop bool = (g.LastItemData.InFlags & (ImGuiItemFlags_NoTabStop | ImGuiItemFlags_Disabled)) == 0
+	var is_tab_stop = (g.LastItemData.InFlags & (ImGuiItemFlags_NoTabStop | ImGuiItemFlags_Disabled)) == 0
 	window.DC.FocusCounterRegular++
 	if is_tab_stop {
 		window.DC.FocusCounterTabStop++
@@ -115,14 +115,14 @@ func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
 		for count_same_width < count && items[0].Width <= items[count_same_width].Width {
 			count_same_width++
 		}
-		var max_width_to_remove_per_item float = (items[0].Width - 1.0)
+		var max_width_to_remove_per_item = (items[0].Width - 1.0)
 		if count_same_width < count && items[count_same_width].Width >= 0.0 {
 			max_width_to_remove_per_item = (items[0].Width - items[count_same_width].Width)
 		}
 		if max_width_to_remove_per_item <= 0.0 {
 			break
 		}
-		var width_to_remove_per_item float = ImMin(width_excess/float(count_same_width), max_width_to_remove_per_item)
+		var width_to_remove_per_item = ImMin(width_excess/float(count_same_width), max_width_to_remove_per_item)
 		for item_n := int(0); item_n < count_same_width; item_n++ {
 			items[item_n].Width -= width_to_remove_per_item
 		}
@@ -133,7 +133,7 @@ func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
 	// Ensure that e.g. the right-most tab of a shrunk tab-bar always reaches exactly at the same distance from the right-most edge of the tab bar separator.
 	width_excess = 0.0
 	for n := int(0); n < count; n++ {
-		var width_rounded float = ImFloor(items[n].Width)
+		var width_rounded = ImFloor(items[n].Width)
 		width_excess += items[n].Width - width_rounded
 		items[n].Width = width_rounded
 	}
@@ -150,7 +150,7 @@ func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
 // FIXME: Eventually we should aim to move e.g. IsActiveIdUsingKey() into IsKeyXXX functions.
 func SetItemUsingMouseWheel() {
 	var g = GImGui
-	var id ImGuiID = g.LastItemData.ID
+	var id = g.LastItemData.ID
 	if g.HoveredId == id {
 		g.HoveredIdUsingMouseWheel = true
 	}

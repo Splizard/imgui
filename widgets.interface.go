@@ -146,7 +146,7 @@ func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImG
 	}
 
 	// Copy the value in an opaque buffer so we can compare at the end of the function if it changed at all.
-	var type_info *ImGuiDataTypeInfo = DataTypeGetInfo(data_type)
+	var type_info = DataTypeGetInfo(data_type)
 
 	if format == "" {
 		format = type_info.ScanFmt

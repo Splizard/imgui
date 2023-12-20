@@ -28,7 +28,7 @@ func (this *ImGuiTextFilter) Draw(label string /*= "Filter (inc,-exc)"*/, width 
 	if width != 0.0 {
 		SetNextItemWidth(width)
 	}
-	var value_changed bool = InputText(label, &this.InputBuf, 0, nil, nil)
+	var value_changed = InputText(label, &this.InputBuf, 0, nil, nil)
 	if value_changed {
 		this.Build()
 	}
