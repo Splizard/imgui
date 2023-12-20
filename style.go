@@ -220,7 +220,7 @@ func (style *ImGuiStyle) ScaleAllSizes(scale_factor float) {
 // modify a style variable float. always use this if you modify the style after NewFrame().
 func PushStyleFloat(idx ImGuiStyleVar, val float) {
 	var g = GImGui
-	var pvar *float = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*float)
+	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*float)
 	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModFloat(idx, *pvar))
 	*pvar = val
 }
@@ -228,7 +228,7 @@ func PushStyleFloat(idx ImGuiStyleVar, val float) {
 // modify a style variable ImVec2. always use this if you modify the style after NewFrame().
 func PushStyleVec(idx ImGuiStyleVar, val ImVec2) {
 	var g = GImGui
-	var pvar *ImVec2 = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*ImVec2)
+	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*ImVec2)
 	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModVec(idx, *pvar))
 	*pvar = val
 }
@@ -237,7 +237,7 @@ func PopStyleVar(count int /*= 1*/) {
 	var g = GImGui
 	for count > 0 {
 		// We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info.Type] * info.Count), the overhead in Debug is not worth it.
-		var backup *ImGuiStyleMod = &g.StyleVarStack[len(g.StyleVarStack)-1]
+		var backup = &g.StyleVarStack[len(g.StyleVarStack)-1]
 
 		field := reflect.ValueOf(&g.Style).Elem().Field(golang.Int(backup.VarIdx))
 		switch field.Type() {
@@ -256,7 +256,7 @@ func PopStyleVar(count int /*= 1*/) {
 // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
 	var style = GImGui.Style
-	var c ImVec4 = style.Colors[idx]
+	var c = style.Colors[idx]
 	c.w *= style.Alpha * alpha_mul
 	return ColorConvertFloat4ToU32(c)
 }
@@ -264,7 +264,7 @@ func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromVec(col ImVec4) ImU32 {
 	var style = GImGui.Style
-	var c ImVec4 = col
+	var c = col
 	c.w *= style.Alpha
 	return ColorConvertFloat4ToU32(c)
 }
@@ -275,7 +275,7 @@ func GetColorU32FromInt(col ImU32) ImU32 {
 	if style.Alpha >= 1.0 {
 		return col
 	}
-	var a ImU32 = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT
+	var a = (col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT
 	a = (ImU32)(float(a) * style.Alpha) // We don't need to clamp 0..255 because Style.Alpha is in 0..1 range.
 	return (col &^ IM_COL32_A_MASK) | (a << IM_COL32_A_SHIFT)
 }
@@ -308,7 +308,7 @@ func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
 func PopStyleColor(count int /*= 1*/) {
 	var g = GImGui
 	for count > 0 {
-		var backup *ImGuiColorMod = &g.ColorStack[len(g.ColorStack)-1]
+		var backup = &g.ColorStack[len(g.ColorStack)-1]
 		g.Style.Colors[backup.Col] = backup.BackupValue
 		g.ColorStack = g.ColorStack[:len(g.ColorStack)-1]
 		count--
