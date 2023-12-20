@@ -384,10 +384,10 @@ func ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last *ImVec2, p_clos
 }
 
 func ImBezierQuadraticCalc(p1, p2, p3 *ImVec2, t float32) ImVec2 {
-	var u = 1.0 - t
-	var w1 = u * u
-	var w2 = 2 * u * t
-	var w3 = t * t
+	u := 1.0 - t
+	w1 := u * u
+	w2 := 2 * u * t
+	w3 := t * t
 	return ImVec2{w1*p1.x + w2*p2.x + w3*p3.x, w1*p1.y + w2*p2.y + w3*p3.y}
 }
 
