@@ -3,10 +3,9 @@ package imgui
 import (
 	_ "embed"
 	"fmt"
-	"unsafe"
-
 	"github.com/Splizard/imgui/stb/stbrp"
 	"github.com/Splizard/imgui/stb/stbtt"
+	"unsafe"
 )
 
 // -----------------------------------------------------------------------------
@@ -25,7 +24,7 @@ import (
 //go:embed proggy.ttf
 var proggy_clean_ttf_decompressed_data_base85 []byte
 
-// A work of art lies ahead! (. = white layer, X = black layer, others are blank)
+// FONT_ATLAS_DEFAULT_TEX_DATA_W A work of art lies ahead! (. = white layer, X = black layer, others are blank)
 // The 2x2 white texels on the top left are the ones we'll use everywhere in Dear ImGui to render filled shapes.
 const FONT_ATLAS_DEFAULT_TEX_DATA_W int = 108 // Actual texture will be 2 times that + 1 spacing.
 const FONT_ATLAS_DEFAULT_TEX_DATA_H int = 27
@@ -58,7 +57,7 @@ const FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS = "" +
 	"                                                      -   X.X           X.X   -                             " +
 	"                                                      -    XX           XX    -                             "
 
-// Temporary data for one source font           u tiple source fonts can be merged into one destination ImFont)
+// ImFontBuildSrcData Temporary data for one source font           u tiple source fonts can be merged into one destination ImFont)
 // (C doesn't allow instancing ImVectr>wth function-local types so we declare the type here.)
 type ImFontBuildSrcData struct {
 	FontInfo      stbtt.FontInfo
@@ -73,7 +72,7 @@ type ImFontBuildSrcData struct {
 	GlyphsList    []int              // Glyph codepoints list (flattened version of GlyphsMap)
 }
 
-// Temporary data for one destination ImFont* (multiple source fonts can be merged into one destination ImFont)
+// ImFontBuildDstData Temporary data for one destination ImFont* (multiple source fonts can be merged into one destination ImFont)
 type ImFontBuildDstData struct {
 	SrcCount      int // Number of source fonts targeting this destination font.
 	GlyphsHighest int
@@ -100,7 +99,7 @@ func IM_ASSERT(x bool) {
 	}
 }
 
-// 1 byte per-pixel
+// GetTexDataAsAlpha8 1 byte per-pixel
 func (atlas *ImFontAtlas) GetTexDataAsAlpha8(out_pixels *[]byte, out_width, out_height, out_bytes_per_pixel *int) {
 	// Build atlas on demand
 	if atlas.TexPixelsAlpha8 == nil {
@@ -119,7 +118,7 @@ func (atlas *ImFontAtlas) GetTexDataAsAlpha8(out_pixels *[]byte, out_width, out_
 	}
 }
 
-// Load embedded ProggyClean.ttf at size 13, disable oversampling
+// AddFontDefault Load embedded ProggyClean.ttf at size 13, disable oversampling
 func (atlas *ImFontAtlas) AddFontDefault(font_cfg_template *ImFontConfig) *ImFont {
 	var font_cfg ImFontConfig
 	if font_cfg_template != nil {
@@ -182,7 +181,7 @@ func (atlas *ImFontAtlas) Build() bool {
 	return builder_io.FontBuilder_Build(atlas)
 }
 
-// Retrieve list of range (2 int per range, values are inclusive)
+// GetGlyphRangesDefault Retrieve list of range (2 int per range, values are inclusive)
 func (atlas *ImFontAtlas) GetGlyphRangesDefault() []ImWchar {
 	return []ImWchar{
 		0x0020, 0x00FF, // Basic Latin + Latin Supplement
@@ -215,7 +214,7 @@ func ImFontAtlasGetBuilderForStbTruetype() *ImFontBuilderIO {
 	return &io
 }
 
-// Note: this is called / shared by both the stb_truetype and the FreeType builder
+// ImFontAtlasBuildInit Note: this is called / shared by both the stb_truetype and the FreeType builder
 func ImFontAtlasBuildInit(atlas *ImFontAtlas) {
 	// Register texture region for mouse cursors or standard white pixels
 	if atlas.PackIdMouseCursors < 0 {
@@ -391,7 +390,7 @@ func ImFontAtlasBuildRenderLinesTexData(atlas *ImFontAtlas) {
 	}
 }
 
-// This is called/shared by both the stb_truetype and the FreeType builder.
+// ImFontAtlasBuildFinish This is called/shared by both the stb_truetype and the FreeType builder.
 func ImFontAtlasBuildFinish(atlas *ImFontAtlas) {
 	// Render into our custom data blocks
 	IM_ASSERT(atlas.TexPixelsAlpha8 != nil || atlas.TexPixelsRGBA32 != nil)

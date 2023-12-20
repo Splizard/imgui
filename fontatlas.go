@@ -2,7 +2,7 @@ package imgui
 
 import "fmt"
 
-// See ImFontAtlas::AddCustomRectXXX functions.
+// ImFontAtlasCustomRect See ImFontAtlas::AddCustomRectXXX functions.
 type ImFontAtlasCustomRect struct {
 	Width, Height uint16  // Input    // Desired rectangle dimension
 	X, Y          uint16  // Output   // Packed position in Atlas
@@ -25,11 +25,11 @@ func NewImFontAtlasCustomRect() ImFontAtlasCustomRect {
 	}
 }
 
-func (this ImFontAtlasCustomRect) IsPacked() bool {
-	return this.X != 0xFFFF
+func (r ImFontAtlasCustomRect) IsPacked() bool {
+	return r.X != 0xFFFF
 }
 
-// Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
+// ImFontAtlas Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
 //   - One or more fonts.
 //   - Custom graphics data needed to render the shapes needed by Dear ImGui.
 //   - Mouse cursor shapes for software cursor rendering (unless setting 'Flags |= ImFontAtlasFlags_NoMouseCursors' in the font atlas).
@@ -168,7 +168,7 @@ func (atlas *ImFontAtlas) AddFontFromMemoryTTF(ttf_data []byte, ttf_size int, si
 	return atlas.AddFont(&font_cfg)
 }
 
-// Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
+// ClearInputData Note: Transfer ownership of 'ttf_data' to ImFontAtlas! Will be deleted after destruction of the atlas. Set font_cfg->FontDataOwnedByAtlas=false to keep ownership of your data and it won't be freed.
 // 'compressed_font_data_base85' still owned by caller. Compress with binary_to_compressed_c.cpp with -base85 parameter.
 // Clear input data (all ImFontConfig structures including sizes, TTF data, glyph ranges, etc.) = all the data used to build the texture and fonts.
 func (atlas *ImFontAtlas) ClearInputData() {
@@ -193,7 +193,7 @@ func (atlas *ImFontAtlas) ClearTexData() {
 	atlas.TexPixelsUseColors = false
 }
 
-// Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
+// ClearFonts Clear output texture data (CPU side). Saves RAM once the texture has been copied to graphics memory.
 // Clear output font data (glyphs storage, UV coordinates).
 func (atlas *ImFontAtlas) ClearFonts() {
 	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!")
@@ -208,7 +208,7 @@ func (atlas *ImFontAtlas) Clear() {
 	atlas.ClearFonts()
 }
 
-// 4 bytes-per-pixel
+// GetTexDataAsRGBA32 4 bytes-per-pixel
 func (atlas *ImFontAtlas) GetTexDataAsRGBA32(out_pixels *[]uint32, out_width, out_height, out_bytes_per_pixel *int) {
 	// Convert to RGBA32 format on demand
 	// Although it is likely to be the most commonly used format, our font rendering is 1 channel / 8 bpp
@@ -263,7 +263,7 @@ func UnpackAccumulativeOffsetsIntoRanges(base_codepoint int, accumulative_offset
 // [BETA] Custom Rectangles/Glyphs API
 //-------------------------------------------
 
-// You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
+// AddCustomRectRegular You can request arbitrary rectangles to be packed into the atlas, for your own purposes.
 //   - After calling Build(), you can query the rectangle position and render your pixels.
 //   - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
 //   - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
@@ -300,7 +300,7 @@ func (atlas *ImFontAtlas) GetCustomRectByIndex(index int) *ImFontAtlasCustomRect
 	return &atlas.CustomRects[index]
 }
 
-// [Internal]
+// CalcCustomRectUV [Internal]
 func (atlas *ImFontAtlas) CalcCustomRectUV(rect *ImFontAtlasCustomRect, out_uv_min, out_uv_max *ImVec2) {
 	IM_ASSERT(atlas.TexWidth > 0 && atlas.TexHeight > 0) // Font atlas needs to be built before we can calculate UV coordinates
 	IM_ASSERT(rect.IsPacked())                           // Make sure the rectangle has been packed
