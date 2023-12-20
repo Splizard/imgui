@@ -223,7 +223,7 @@ func ImLengthSqrVec4(a ImVec4) float {
 }
 
 func ImInvLength(lhs ImVec2, fail_value float) float {
-	var d float = (lhs.x * lhs.x) + (lhs.y * lhs.y)
+	var d = (lhs.x * lhs.x) + (lhs.y * lhs.y)
 	if d > 0.0 {
 		return ImRsqrt(d)
 	}
@@ -388,14 +388,14 @@ func ImBezierCubicCalc(p1, p2, p3, p4 *ImVec2, t float32) ImVec2 {
 
 func ImBezierCubicClosestPoint(p1, p2, p3, p4 *ImVec2, p *ImVec2, num_segments int) ImVec2 {
 	IM_ASSERT(num_segments > 0) // Use ImBezierCubicClosestPointCasteljau()
-	var p_last ImVec2 = *p1
+	var p_last = *p1
 	var p_closest ImVec2
 	var p_closest_dist2 float = FLT_MAX
-	var t_step float = 1.0 / (float)(num_segments)
+	var t_step = 1.0 / (float)(num_segments)
 	for i_step := 1; int(i_step) <= num_segments; i_step++ {
-		var p_current ImVec2 = ImBezierCubicCalc(p1, p2, p3, p4, t_step*float(i_step))
-		var p_line ImVec2 = ImLineClosestPoint(&p_last, &p_current, p)
-		var dist2 float = ImLengthSqrVec2(p.Sub(p_line))
+		var p_current = ImBezierCubicCalc(p1, p2, p3, p4, t_step*float(i_step))
+		var p_line = ImLineClosestPoint(&p_last, &p_current, p)
+		var dist2 = ImLengthSqrVec2(p.Sub(p_line))
 		if dist2 < p_closest_dist2 {
 			p_closest = p_line
 			p_closest_dist2 = dist2
@@ -409,7 +409,7 @@ func ImBezierCubicClosestPoint(p1, p2, p3, p4 *ImVec2, p *ImVec2, num_segments i
 // Because those ImXXX functions are lower-level than ImGui:: we cannot access this value automatically.
 func ImBezierCubicClosestPointCasteljau(p1, p2, p3, p4 *ImVec2, p *ImVec2, tess_tol float32) ImVec2 {
 	IM_ASSERT(tess_tol > 0.0)
-	var p_last ImVec2 = *p1
+	var p_last = *p1
 	var p_closest ImVec2
 	var p_closest_dist2 float = FLT_MAX
 	ImBezierCubicClosestPointCasteljauStep(p, &p_closest, &p_last, p_closest_dist2, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, tess_tol, 0)
@@ -418,10 +418,10 @@ func ImBezierCubicClosestPointCasteljau(p1, p2, p3, p4 *ImVec2, p *ImVec2, tess_
 
 // Closely mimics PathBezierToCasteljau
 func ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last *ImVec2, p_closest_dist2, x1, y1, x2, y2, x3, y3, x4, y4, tess_tol float, level int) {
-	var dx float = x4 - x1
-	var dy float = y4 - y1
-	var d2 float = ((x2-x4)*dy - (y2-y4)*dx)
-	var d3 float = ((x3-x4)*dy - (y3-y4)*dx)
+	var dx = x4 - x1
+	var dy = y4 - y1
+	var d2 = (x2-x4)*dy - (y2-y4)*dx
+	var d3 = (x3-x4)*dy - (y3-y4)*dx
 	if d2 < 0 {
 		d2 = -d2
 	}
@@ -430,25 +430,25 @@ func ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last *ImVec2, p_clos
 	}
 	if (d2+d3)*(d2+d3) < tess_tol*(dx*dx+dy*dy) {
 		var p_current = ImVec2{x4, y4}
-		var p_line ImVec2 = ImLineClosestPoint(p_last, &p_current, p)
-		var dist2 float = ImLengthSqrVec2(p.Sub(p_line))
+		var p_line = ImLineClosestPoint(p_last, &p_current, p)
+		var dist2 = ImLengthSqrVec2(p.Sub(p_line))
 		if dist2 < p_closest_dist2 {
 			*p_closest = p_line
 			p_closest_dist2 = dist2
 		}
 		*p_last = p_current
 	} else if level < 10 {
-		var x12 float = (x1 + x2) * 0.5
-		var y12 float = (y1 + y2) * 0.5
-		var x23 float = (x2 + x3) * 0.5
-		var y23 float = (y2 + y3) * 0.5
-		var x34 float = (x3 + x4) * 0.5
-		var y34 float = (y3 + y4) * 0.5
-		var x123 float = (x12 + x23) * 0.5
-		var y123 float = (y12 + y23) * 0.5
-		var x234 float = (x23 + x34) * 0.5
-		var y234 float = (y23 + y34) * 0.5
-		var x1234 float = (x123 + x234) * 0.5
+		var x12 = (x1 + x2) * 0.5
+		var y12 = (y1 + y2) * 0.5
+		var x23 = (x2 + x3) * 0.5
+		var y23 = (y2 + y3) * 0.5
+		var x34 = (x3 + x4) * 0.5
+		var y34 = (y3 + y4) * 0.5
+		var x123 = (x12 + x23) * 0.5
+		var y123 = (y12 + y23) * 0.5
+		var x234 = (x23 + x34) * 0.5
+		var y234 = (y23 + y34) * 0.5
+		var x1234 = (x123 + x234) * 0.5
 		var y1234 = (y123 + y234) * 0.5
 		ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last, p_closest_dist2, x1, y1, x12, y12, x123, y123, x1234, y1234, tess_tol, level+1)
 		ImBezierCubicClosestPointCasteljauStep(p, p_closest, p_last, p_closest_dist2, x1234, y1234, x234, y234, x34, y34, x4, y4, tess_tol, level+1)
@@ -464,13 +464,13 @@ func ImBezierQuadraticCalc(p1, p2, p3 *ImVec2, t float32) ImVec2 {
 }
 
 func ImLineClosestPoint(a, b, p *ImVec2) ImVec2 {
-	var ap ImVec2 = p.Sub(*a)
-	var ab_dir ImVec2 = b.Sub(*a)
-	var dot float = ap.x*ab_dir.x + ap.y*ab_dir.y
+	var ap = p.Sub(*a)
+	var ab_dir = b.Sub(*a)
+	var dot = ap.x*ab_dir.x + ap.y*ab_dir.y
 	if dot < 0.0 {
 		return *a
 	}
-	var ab_len_sqr float = ab_dir.x*ab_dir.x + ab_dir.y*ab_dir.y
+	var ab_len_sqr = ab_dir.x*ab_dir.x + ab_dir.y*ab_dir.y
 	if dot > ab_len_sqr {
 		return *b
 	}
@@ -478,17 +478,17 @@ func ImLineClosestPoint(a, b, p *ImVec2) ImVec2 {
 }
 
 func ImTriangleContainsPoint(a, b, c, p *ImVec2) bool {
-	var b1 bool = ((p.x-b.x)*(a.y-b.y) - (p.y-b.y)*(a.x-b.x)) < 0.0
-	var b2 bool = ((p.x-c.x)*(b.y-c.y) - (p.y-c.y)*(b.x-c.x)) < 0.0
-	var b3 bool = ((p.x-a.x)*(c.y-a.y) - (p.y-a.y)*(c.x-a.x)) < 0.0
-	return ((b1 == b2) && (b2 == b3))
+	var b1 = ((p.x-b.x)*(a.y-b.y) - (p.y-b.y)*(a.x-b.x)) < 0.0
+	var b2 = ((p.x-c.x)*(b.y-c.y) - (p.y-c.y)*(b.x-c.x)) < 0.0
+	var b3 = ((p.x-a.x)*(c.y-a.y) - (p.y-a.y)*(c.x-a.x)) < 0.0
+	return (b1 == b2) && (b2 == b3)
 }
 
 func ImTriangleBarycentricCoords(a, b, c, p *ImVec2, out_u, out_v, out_w *float32) {
-	var v0 ImVec2 = b.Sub(*a)
-	var v1 ImVec2 = c.Sub(*a)
-	var v2 ImVec2 = p.Sub(*a)
-	var denom float = v0.x*v1.y - v1.x*v0.y
+	var v0 = b.Sub(*a)
+	var v1 = c.Sub(*a)
+	var v2 = p.Sub(*a)
+	var denom = v0.x*v1.y - v1.x*v0.y
 	*out_v = (v2.x*v1.y - v1.x*v2.y) / denom
 	*out_w = (v0.x*v2.y - v2.x*v0.y) / denom
 	*out_u = 1.0 - *out_v - *out_w
@@ -499,13 +499,13 @@ func ImTriangleArea(a, b, c *ImVec2) float32 {
 }
 
 func ImTriangleClosestPoint(a, b, c, p *ImVec2) ImVec2 {
-	var proj_ab ImVec2 = ImLineClosestPoint(a, b, p)
-	var proj_bc ImVec2 = ImLineClosestPoint(b, c, p)
-	var proj_ca ImVec2 = ImLineClosestPoint(c, a, p)
-	var dist2_ab float = ImLengthSqrVec2(p.Sub(proj_ab))
-	var dist2_bc float = ImLengthSqrVec2(p.Sub(proj_bc))
-	var dist2_ca float = ImLengthSqrVec2(p.Sub(proj_ca))
-	var m float = ImMin(dist2_ab, ImMin(dist2_bc, dist2_ca))
+	var proj_ab = ImLineClosestPoint(a, b, p)
+	var proj_bc = ImLineClosestPoint(b, c, p)
+	var proj_ca = ImLineClosestPoint(c, a, p)
+	var dist2_ab = ImLengthSqrVec2(p.Sub(proj_ab))
+	var dist2_bc = ImLengthSqrVec2(p.Sub(proj_bc))
+	var dist2_ca = ImLengthSqrVec2(p.Sub(proj_ca))
+	var m = ImMin(dist2_ab, ImMin(dist2_bc, dist2_ca))
 	if m == dist2_ab {
 		return proj_ab
 	}
@@ -693,7 +693,7 @@ func (this *ImRect) ToVec4() ImVec4 {
 // Rendering circles with an odd number of segments, while mathematically correct will produce
 // asymmetrical results on the raster grid. Therefore we're rounding N to next even number (7->8, 8->8, 9->10 etc.)
 func IM_ROUNDUP_TO_EVEN(V float) float {
-	return ((((V) + 1) / 2) * 2)
+	return (((V) + 1) / 2) * 2
 }
 
 const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN = 4
@@ -714,9 +714,9 @@ const IM_DRAWLIST_ARCFAST_TABLE_SIZE = 48
 const IM_DRAWLIST_ARCFAST_SAMPLE_MAX = IM_DRAWLIST_ARCFAST_TABLE_SIZE
 
 func IM_NORMALIZE2F_OVER_ZERO(VX, VY *float) {
-	var d2 float = *VX**VX + *VY**VY
+	var d2 = *VX**VX + *VY**VY
 	if d2 > 0.0 {
-		var inv_len float = ImRsqrt(d2)
+		var inv_len = ImRsqrt(d2)
 		*VX *= inv_len
 		*VY *= inv_len
 	}
@@ -725,9 +725,9 @@ func IM_NORMALIZE2F_OVER_ZERO(VX, VY *float) {
 const IM_FIXNORMAL2F_MAX_INVLEN2 float = 100
 
 func IM_FIXNORMAL2F(VX, VY *float) {
-	var d2 float = *VX**VX + *VY**VY
+	var d2 = *VX**VX + *VY**VY
 	if d2 > 0.000001 {
-		var inv_len2 float = 1.0 / d2
+		var inv_len2 = 1.0 / d2
 		if inv_len2 > IM_FIXNORMAL2F_MAX_INVLEN2 {
 			inv_len2 = IM_FIXNORMAL2F_MAX_INVLEN2
 		}

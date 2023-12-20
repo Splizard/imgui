@@ -87,7 +87,7 @@ func (io *ImGuiIO) ClearInputCharacters() {
 
 func GetMergedKeyModFlags() ImGuiKeyModFlags {
 	var g = GImGui
-	var key_mod_flags ImGuiKeyModFlags = ImGuiKeyModFlags_None
+	var key_mod_flags = ImGuiKeyModFlags_None
 	if g.IO.KeyCtrl {
 		key_mod_flags |= ImGuiKeyModFlags_Ctrl
 	}
@@ -109,7 +109,7 @@ func IsKeyPressed(user_key_index int, repeat bool /*= true*/) bool {
 		return false
 	}
 	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
-	var t float = g.IO.KeysDownDuration[user_key_index]
+	var t = g.IO.KeysDownDuration[user_key_index]
 	if t == 0.0 {
 		return true
 	}

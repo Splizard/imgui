@@ -6,7 +6,7 @@ func GetViewportDrawList(viewport *ImGuiViewportP, drawlist_no size_t, drawlist_
 	// Create the draw list on demand, because they are not frequently used for all viewports
 	var g = GImGui
 	IM_ASSERT(drawlist_no < size_t(len(viewport.DrawLists)))
-	var draw_list *ImDrawList = viewport.DrawLists[drawlist_no]
+	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {
 		l := NewImDrawList(&g.DrawListSharedData)
 		draw_list = &l

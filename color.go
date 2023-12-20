@@ -10,10 +10,10 @@ func ColorConvertFloat4ToU32(in ImVec4) ImU32 {
 }
 
 func ImAlphaBlendColors(col_a, col_b ImU32) ImU32 {
-	var t float = float((col_b>>IM_COL32_A_SHIFT)&0xFF) / 255
-	var r int = int(ImLerp(float((int)(col_a>>IM_COL32_R_SHIFT)&0xFF), float((int)(col_b>>IM_COL32_R_SHIFT)&0xFF), t))
-	var g int = int(ImLerp(float((int)(col_a>>IM_COL32_G_SHIFT)&0xFF), float((int)(col_b>>IM_COL32_G_SHIFT)&0xFF), t))
-	var b int = int(ImLerp(float((int)(col_a>>IM_COL32_B_SHIFT)&0xFF), float((int)(col_b>>IM_COL32_B_SHIFT)&0xFF), t))
+	var t = float((col_b>>IM_COL32_A_SHIFT)&0xFF) / 255
+	var r = int(ImLerp(float((int)(col_a>>IM_COL32_R_SHIFT)&0xFF), float((int)(col_b>>IM_COL32_R_SHIFT)&0xFF), t))
+	var g = int(ImLerp(float((int)(col_a>>IM_COL32_G_SHIFT)&0xFF), float((int)(col_b>>IM_COL32_G_SHIFT)&0xFF), t))
+	var b = int(ImLerp(float((int)(col_a>>IM_COL32_B_SHIFT)&0xFF), float((int)(col_b>>IM_COL32_B_SHIFT)&0xFF), t))
 	return IM_COL32(byte(r), byte(g), byte(b), 0xFF)
 }
 
@@ -40,7 +40,7 @@ func ColorConvertRGBtoHSV(r float, g float, b float, out_h, out_s, out_v *float)
 		K = float(-2)/float(6) - K
 	}
 
-	var chroma float = r
+	var chroma = r
 	if g < b {
 		chroma -= g
 	} else {
@@ -63,11 +63,11 @@ func ColorConvertHSVtoRGB(h float, s float, v float, out_r, out_g, out_b *float)
 	}
 
 	h = ImFmod(h, 1.0) / (60.0 / 360.0)
-	var i int = (int)(h)
-	var f float = h - (float)(i)
-	var p float = v * (1.0 - s)
-	var q float = v * (1.0 - s*f)
-	var t float = v * (1.0 - s*(1.0-f))
+	var i = (int)(h)
+	var f = h - (float)(i)
+	var p = v * (1.0 - s)
+	var q = v * (1.0 - s*f)
+	var t = v * (1.0 - s*(1.0-f))
 
 	switch i {
 	case 0:

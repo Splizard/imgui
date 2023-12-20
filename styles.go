@@ -119,7 +119,7 @@ func StyleColorsClassic(style *ImGuiStyle) {
 	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4{0.2, 0.2, 0.2, 0.3}
 }
 
-// Those light colors are better suited with a thicker font than the default one + FrameBorder
+// StyleColorsLight Those light colors are better suited with a thicker font than the default one + FrameBorder
 func StyleColorsLight(style *ImGuiStyle) {
 	if style == nil {
 		style = GetStyle()

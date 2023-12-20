@@ -30,7 +30,7 @@ func UpdateTabFocus() {
 	g.TabFocusRequestCurrCounterRegular = INT_MAX
 	g.TabFocusRequestCurrCounterTabStop = INT_MAX
 	if g.TabFocusRequestNextWindow != nil {
-		var window *ImGuiWindow = g.TabFocusRequestNextWindow
+		var window = g.TabFocusRequestNextWindow
 		g.TabFocusRequestCurrWindow = window
 		if g.TabFocusRequestNextCounterRegular != INT_MAX && window.DC.FocusCounterRegular != -1 {
 			g.TabFocusRequestCurrCounterRegular = ImModPositive(g.TabFocusRequestNextCounterRegular, window.DC.FocusCounterRegular+1)

@@ -9,7 +9,7 @@ import (
 	this is probably inefficient, but convinient for now - Quentin.
 */
 
-// [Internal]
+// ImGuiStoragePair [Internal]
 type ImGuiStoragePair struct {
 	key ImGuiID
 	val int
@@ -25,7 +25,7 @@ func (this *ImGuiStoragePair) SetFloat(key ImGuiID, val float) {
 	*(*float)(unsafe.Pointer(&this.val)) = val
 }
 
-// Helper: Key->Value storage
+// ImGuiStorage Helper: Key->Value storage
 // Typically you don't have to worry about this since a storage is held within each Window.
 // We use it to e.g. store collapse state for a tree (Int 0/1)
 // This is optimized for efficient lookup (dichotomy into a contiguous buffer) and rare insertion (typically tied to user interactions aka max once a frame)
@@ -94,7 +94,7 @@ func (this *ImGuiStorage) SetInterface(key ImGuiID, val interface{}) {
 	this.Pointers[key] = val
 }
 
-// Use on your own storage if you know only integer are being stored (open/close all tree nodes)
+// SetAllInt Use on your own storage if you know only integer are being stored (open/close all tree nodes)
 func (this *ImGuiStorage) SetAllInt(val int) {
 	for key := range this.Data {
 		this.Data[key] = val

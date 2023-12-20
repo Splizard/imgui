@@ -2,7 +2,7 @@ package imgui
 
 import "fmt"
 
-// Tooltips
+// BeginTooltip Tooltips
 // - Tooltip are windows following the mouse. They do not take focus away.
 // begin/append a tooltip window. to create full-featured tooltip (with any kind of items).
 func BeginTooltip() {
@@ -14,7 +14,7 @@ func EndTooltip() {
 	End()
 }
 
-// set a text-only tooltip, typically use with ImGui::IsItemHovered(). override any previous call to SetTooltip().
+// SetTooltip set a text-only tooltip, typically use with ImGui::IsItemHovered(). override any previous call to SetTooltip().
 func SetTooltip(format string, args ...interface{}) {
 	BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip)
 	Text(format, args...)

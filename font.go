@@ -70,11 +70,11 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 
 	var word_end int = 0
 	var prev_word_end int = -1
-	var inside_word bool = true
+	var inside_word = true
 
 	var i int
 	for i = 0; i < int(len(text)); {
-		var c rune = rune(text[i])
+		var c = rune(text[i])
 
 		var next_i int
 		if c < 0x80 {
@@ -102,7 +102,7 @@ func (this *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width f
 			}
 		}
 
-		var char_width float = this.FallbackAdvanceX
+		var char_width = this.FallbackAdvanceX
 		if (int)(c) < int(len(this.IndexAdvanceX)) {
 			char_width = this.IndexAdvanceX[c]
 		}
@@ -153,7 +153,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 	var line_height = size
 	var scale = size / this.FontSize
 
-	var text_size ImVec2 = ImVec2{}
+	var text_size = ImVec2{}
 	var line_width float = 0.0
 
 	var word_wrap_enabled = (wrap_width > 0.0)
@@ -197,7 +197,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 
 		// Decode and advance source
 		var prev_i = i
-		var c rune = rune(text[i])
+		var c = rune(text[i])
 		if c < 0x80 {
 			i += 1
 		} else {
@@ -219,7 +219,7 @@ func (this *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string
 			}
 		}
 
-		var char_width float = this.FallbackAdvanceX
+		var char_width = this.FallbackAdvanceX
 		if (int)(c) < int(len(this.IndexAdvanceX)) {
 			char_width = this.IndexAdvanceX[c]
 		}
@@ -262,7 +262,7 @@ func SetCurrentFont(font *ImFont) {
 		g.FontSize = 0
 	}
 
-	var atlas *ImFontAtlas = g.Font.ContainerAtlas
+	var atlas = g.Font.ContainerAtlas
 	g.DrawListSharedData.TexUvWhitePixel = atlas.TexUvWhitePixel
 	g.DrawListSharedData.TexUvLines = atlas.TexUvLines[:]
 	g.DrawListSharedData.Font = g.Font
@@ -270,7 +270,7 @@ func SetCurrentFont(font *ImFont) {
 }
 
 func GetDefaultFont() *ImFont {
-	var g *ImGuiContext = GImGui
+	var g = GImGui
 	if g.IO.FontDefault != nil {
 		return g.IO.FontDefault
 	}
@@ -295,7 +295,7 @@ func (this *ImFont) FindGlyph(c ImWchar) *ImFontGlyph {
 	if (size_t)(c) >= (size_t)(len(this.IndexLookup)) {
 		return this.FallbackGlyph
 	}
-	var i ImWchar = this.IndexLookup[c]
+	var i = this.IndexLookup[c]
 	if i == (ImWchar)(-1) {
 		return this.FallbackGlyph
 	}
@@ -318,7 +318,7 @@ func (this *ImFont) SetGlyphVisible(c ImWchar, visible bool) {
 func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y1, u0, v0, u1, v1, advance_x float) {
 	if cfg != nil {
 		// Clamp & recenter if needed
-		var advance_x_original float = advance_x
+		var advance_x_original = advance_x
 		advance_x = ImClamp(advance_x, cfg.GlyphMinAdvanceX, cfg.GlyphMaxAdvanceX)
 		if advance_x != advance_x_original {
 			var char_off_x float
@@ -341,7 +341,7 @@ func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y
 	}
 
 	this.Glyphs = append(this.Glyphs, ImFontGlyph{})
-	var glyph *ImFontGlyph = &this.Glyphs[len(this.Glyphs)-1]
+	var glyph = &this.Glyphs[len(this.Glyphs)-1]
 	glyph.Codepoint = (uint)(codepoint)
 	glyph.Visible = uint(bool2int((x0 != x1) && (y0 != y1)))
 	glyph.Colored = uint(bool2int(false))
@@ -357,7 +357,7 @@ func (this *ImFont) AddGlyph(cfg *ImFontConfig, codepoint ImWchar, x0, y0, x1, y
 
 	// Compute rough surface usage metrics (+1 to account for average padding, +0.99 to round)
 	// We use (U1-U0)*TexWidth instead of X1-X0 to account for oversampling.
-	var pad float = float(this.ContainerAtlas.TexGlyphPadding) + 0.99
+	var pad = float(this.ContainerAtlas.TexGlyphPadding) + 0.99
 	this.DirtyLookupTables = true
 	this.MetricsTotalSurface += (int)((glyph.U1-glyph.U0)*float(this.ContainerAtlas.TexWidth)+pad) * (int)((glyph.V1-glyph.V0)*float(this.ContainerAtlas.TexHeight)+pad)
 }
@@ -375,7 +375,7 @@ func (this *ImFont) FindGlyphNoFallback(c ImWchar) *ImFontGlyph {
 	if size_t(c) >= (size_t)(len(this.IndexLookup)) {
 		return nil
 	}
-	var i ImWchar = this.IndexLookup[c]
+	var i = this.IndexLookup[c]
 	if i == (ImWchar)(-1) {
 		return nil
 	}
@@ -409,12 +409,12 @@ func (this *ImFont) BuildLookupTable() {
 	this.Used4kPagesMap = [2]byte{}
 	this.GrowIndex(max_codepoint + 1)
 	for i := range this.Glyphs {
-		var codepoint int = (int)(this.Glyphs[i].Codepoint)
+		var codepoint = (int)(this.Glyphs[i].Codepoint)
 		this.IndexAdvanceX[codepoint] = this.Glyphs[i].AdvanceX
 		this.IndexLookup[codepoint] = (ImWchar)(i)
 
 		// Mark 4K page as used
-		var page_n int = codepoint / 4096
+		var page_n = codepoint / 4096
 		this.Used4kPagesMap[page_n>>3] |= 1 << (page_n & 7)
 	}
 
@@ -424,7 +424,7 @@ func (this *ImFont) BuildLookupTable() {
 		if this.Glyphs[len(this.Glyphs)-1].Codepoint != '\t' { // So we can call this function multiple times (FIXME: Flaky)
 			this.Glyphs = append(this.Glyphs, ImFontGlyph{})
 		}
-		var tab_glyph *ImFontGlyph = &this.Glyphs[len(this.Glyphs)-1]
+		var tab_glyph = &this.Glyphs[len(this.Glyphs)-1]
 		*tab_glyph = *this.FindGlyph((ImWchar)(' '))
 		tab_glyph.Codepoint = '\t'
 		tab_glyph.AdvanceX *= IM_TABSIZE
