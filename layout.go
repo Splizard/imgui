@@ -328,7 +328,7 @@ func GetContentRegionAvail() ImVec2 {
 func GetContentRegionMax() ImVec2 {
 	g := GImGui
 	window := g.CurrentWindow
-	var mx = window.ContentRegionRect.Max.Sub(window.Pos)
+	mx := window.ContentRegionRect.Max.Sub(window.Pos)
 	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
 		mx.x = window.WorkRect.Max.x - window.Pos.x
 	}
@@ -339,7 +339,7 @@ func GetContentRegionMax() ImVec2 {
 func GetContentRegionMaxAbs() ImVec2 {
 	g := GImGui
 	window := g.CurrentWindow
-	var mx = window.ContentRegionRect.Max
+	mx := window.ContentRegionRect.Max
 	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
 		mx.x = window.WorkRect.Max.x
 	}
