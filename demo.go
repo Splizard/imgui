@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-// Helper to display a little (?) mark which shows a tooltip when hovered.
+// HelpMarker Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 func HelpMarker(desc string) {
 	TextDisabled(" (?)")
@@ -19,7 +19,7 @@ func HelpMarker(desc string) {
 	}
 }
 
-// Helper to display basic user controls.
+// ShowUserGuide Helper to display basic user controls.
 func ShowUserGuide() {
 	var io = GetIO()
 	BulletText("Double-click on title bar to collapse window.")
@@ -69,7 +69,7 @@ var demoState struct {
 	no_bring_to_front, unsaved_document bool
 }
 
-// Demonstrate most Dear ImGui features (this is big function!)
+// ShowDemoWindow Demonstrate most Dear ImGui features (this is big function!)
 // You may execute this function to experiment with the UI and understand what it does.
 // You may then search for keywords in the code when you are interested by a specific feature.
 // create Demo window. demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
