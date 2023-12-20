@@ -1,6 +1,6 @@
 package imgui
 
-// Push a new Dear ImGui window to add widgets to.
+// Begin Push a new Dear ImGui window to add widgets to.
 //   - A default window called "Debug" is automatically stacked at the beginning of every frame so you can use widgets without explicitly calling a Begin/End pair.
 //   - Begin/End can be called multiple times during the frame with the same window name to append content.
 //   - The window name is used as a unique identifier to preserve window information across frames (and save rudimentary information to the .ini file).
@@ -8,8 +8,8 @@ package imgui
 //   - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 //   - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
 func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
-	var g = GImGui
-	var style = g.Style
+	g := GImGui
+	style := g.Style
 	IM_ASSERT(name != "")                        // Window name required
 	IM_ASSERT(g.WithinFrameScope)                // Forgot to call ImGui::NewFrame()
 	IM_ASSERT(g.FrameCountEnded != g.FrameCount) // Called ImGui::Render() or ImGui::EndFrame() and haven't called ImGui::NewFrame() again yet
@@ -104,9 +104,9 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 	// Process SetNextWindow***() calls
 	// (FIXME: Consider splitting the HasXXX flags into X/Y components
-	var window_pos_set_by_api = false
-	var window_size_x_set_by_api = false
-	var window_size_y_set_by_api = false
+	window_pos_set_by_api := false
+	window_size_x_set_by_api := false
+	window_size_y_set_by_api := false
 	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasPos != 0 {
 		window_pos_set_by_api = (window.SetWindowPosAllowFlags & g.NextWindowData.PosCond) != 0
 		if window_pos_set_by_api && ImLengthSqrVec2(g.NextWindowData.PosPivotVal) > 0.00001 {
@@ -345,11 +345,11 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Calculate the range of allowed position for that window (to be movable and visible past safe area padding)
 		// When clamping to stay visible, we will enforce that window.Pos stays inside of visibility_rect.
-		var viewport = GetMainViewport()
-		var viewport_rect = ImRect(viewport.GetMainRect())
-		var viewport_work_rect = ImRect(viewport.GetWorkRect())
-		var visibility_padding = ImMaxVec2(&style.DisplayWindowPadding, &style.DisplaySafeAreaPadding)
-		var visibility_rect = ImRect{viewport_work_rect.Min.Add(visibility_padding), viewport_work_rect.Max.Sub(visibility_padding)}
+		viewport := GetMainViewport()
+		viewport_rect := ImRect(viewport.GetMainRect())
+		viewport_work_rect := ImRect(viewport.GetWorkRect())
+		visibility_padding := ImMaxVec2(&style.DisplayWindowPadding, &style.DisplaySafeAreaPadding)
+		visibility_rect := ImRect{viewport_work_rect.Min.Add(visibility_padding), viewport_work_rect.Max.Sub(visibility_padding)}
 
 		// Clamp position/size so window stays visible within its viewport or monitor
 		// Ignore zero-sized display explicitly to avoid losing positions if a window manager reports zero-sized window when initializing or minimizing.
@@ -410,9 +410,9 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		if !window.Collapsed {
 			// When reading the current size we need to read it after size constraints have been applied.
 			// When we use InnerRect here we are intentionally reading last frame size, same for ScrollbarSizes values before we set them again.
-			var avail_size_from_current_frame = ImVec2{window.SizeFull.x, window.SizeFull.y - decoration_up_height}
-			var avail_size_from_last_frame = window.InnerRect.GetSize().Add(window.ScrollbarSizes)
-			var needed_size_from_last_frame ImVec2
+			avail_size_from_current_frame := ImVec2{window.SizeFull.x, window.SizeFull.y - decoration_up_height}
+			avail_size_from_last_frame := window.InnerRect.GetSize().Add(window.ScrollbarSizes)
+			needed_size_from_last_frame := ImVec2{}
 			if !window_just_created {
 				needed_size_from_last_frame = window.ContentSize.Add(window.WindowPadding.Scale(2.0))
 			}

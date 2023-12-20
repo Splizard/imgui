@@ -291,7 +291,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 	}
 }
 
-// Context creation and access
+// CreateContext Context creation and access
 //   - Each context create its own ImFontAtlas by default. You may instance one yourself and pass it to CreateContext() to share a font atlas between contexts.
 //   - DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
 //     for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
@@ -304,7 +304,7 @@ func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
 	return &ctx
 }
 
-// NULL = destroy current context
+// DestroyContext NULL = destroy current context
 func DestroyContext(ctx *ImGuiContext) {
 	if ctx == nil {
 		ctx = GImGui
@@ -315,15 +315,13 @@ func DestroyContext(ctx *ImGuiContext) {
 	}
 }
 
-// Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
+// GetCurrentContext Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
 // Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end up using will point to the static data within its module
 func GetCurrentContext() *ImGuiContext { return GImGui }
 
-func SetCurrentContext(ctx *ImGuiContext) {
-	GImGui = ctx
-}
+func SetCurrentContext(ctx *ImGuiContext) { GImGui = ctx }
 
-// Generic context hooks
+// AddContextHook Generic context hooks
 // No specific ordering/dependency support, will see as needed
 func AddContextHook(context *ImGuiContext, hook *ImGuiContextHook) ImGuiID {
 	var g = context
@@ -334,7 +332,7 @@ func AddContextHook(context *ImGuiContext, hook *ImGuiContextHook) ImGuiID {
 	return g.HookIdNext
 }
 
-// Deferred removal, avoiding issue with changing vector while iterating it
+// RemoveContextHook Deferred removal, avoiding issue with changing vector while iterating it
 func RemoveContextHook(context *ImGuiContext, hook_to_remove ImGuiID) {
 	var g = context
 	IM_ASSERT(hook_to_remove != 0)
@@ -345,7 +343,7 @@ func RemoveContextHook(context *ImGuiContext, hook_to_remove ImGuiID) {
 	}
 }
 
-// Init
+// Initialize Init
 func Initialize(context *ImGuiContext) {
 	var g = context
 	IM_ASSERT(!g.Initialized && !g.SettingsLoaded)
@@ -373,7 +371,7 @@ func Initialize(context *ImGuiContext) {
 	g.Initialized = true
 }
 
-// Since 1.60 this is a _private_ function. You can call DestroyContext() to destroy the context created by CreateContext().
+// Shutdown Since 1.60 this is a _private_ function. You can call DestroyContext() to destroy the context created by CreateContext().
 func Shutdown(context *ImGuiContext) {
 	// The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
 	var g = context

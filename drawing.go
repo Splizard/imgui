@@ -11,9 +11,8 @@ func GetDrawData() *ImDrawData {
 
 	if viewport.DrawDataP.Valid {
 		return &viewport.DrawDataP
-	} else {
-		return nil
 	}
+	return nil
 } // valid after Render() and until the next call to NewFrame(). this is what you have to render.
 
 // ImDrawData All draw data to render a Dear ImGui frame

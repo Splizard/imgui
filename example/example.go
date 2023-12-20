@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/Splizard/imgui"
-
 	platforms "github.com/Splizard/imgui/example/platforms/glfw"
 	"github.com/Splizard/imgui/example/renderers"
+	"os"
 )
 
 // Renderer covers rendering imgui draw data.
@@ -52,7 +50,7 @@ func main() {
 	*/
 	clearColor := [3]float32{0.45, 0.55, 0.60}
 	sliderValue := float32(0)
-	inputText := []byte{}
+	var inputText []byte
 
 	for !p.ShouldStop() {
 		p.ProcessEvents()

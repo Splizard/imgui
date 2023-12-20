@@ -5,22 +5,11 @@ import (
 	"strconv"
 )
 
-type ImVec2 struct {
-	x, y float
-}
+type ImVec2 struct{ x, y float }
 
-func NewImVec2(x, y float) *ImVec2 {
-	return &ImVec2{x, y}
-}
-
-func (v ImVec2) X() float {
-	return v.x
-}
-
-func (v ImVec2) Y() float {
-	return v.y
-}
-
+func NewImVec2(x, y float) *ImVec2 { return &ImVec2{x, y} }
+func (v ImVec2) X() float          { return v.x }
+func (v ImVec2) Y() float          { return v.y }
 func (v ImVec2) Axis(axis ImGuiAxis) float {
 	if axis == ImGuiAxis_X {
 		return v.x
@@ -28,25 +17,11 @@ func (v ImVec2) Axis(axis ImGuiAxis) float {
 	return v.y
 }
 
-func (v ImVec2) Add(b ImVec2) ImVec2 {
-	return ImVec2{v.x + b.x, v.y + b.y}
-}
-
-func (v ImVec2) Sub(b ImVec2) ImVec2 {
-	return ImVec2{v.x - b.x, v.y - b.y}
-}
-
-func (v ImVec2) Mul(b ImVec2) ImVec2 {
-	return ImVec2{v.x * b.x, v.y * b.y}
-}
-
-func (v ImVec2) Div(b ImVec2) ImVec2 {
-	return ImVec2{v.x / b.x, v.y / b.y}
-}
-
-func (v ImVec2) Scale(f float) ImVec2 {
-	return ImVec2{v.x * f, v.y * f}
-}
+func (v ImVec2) Add(b ImVec2) ImVec2  { return ImVec2{v.x + b.x, v.y + b.y} }
+func (v ImVec2) Sub(b ImVec2) ImVec2  { return ImVec2{v.x - b.x, v.y - b.y} }
+func (v ImVec2) Mul(b ImVec2) ImVec2  { return ImVec2{v.x * b.x, v.y * b.y} }
+func (v ImVec2) Div(b ImVec2) ImVec2  { return ImVec2{v.x / b.x, v.y / b.y} }
+func (v ImVec2) Scale(f float) ImVec2 { return ImVec2{v.x * f, v.y * f} }
 
 // ImVec4 4D vector used to store clipping rectangles, colors etc. [Compile-time configurable type]
 type ImVec4 struct{ x, y, z, w float }
