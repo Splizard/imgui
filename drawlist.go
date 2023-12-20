@@ -39,7 +39,7 @@ func NewImDrawList(shared_data *ImDrawListSharedData) ImDrawList {
 func (l *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_current_clip_rect bool) {
 	var cr = ImVec4{cr_min.x, cr_min.y, cr_max.x, cr_max.y}
 	if intersect_with_current_clip_rect {
-		var current = l._CmdHeader.ClipRect
+		current := l._CmdHeader.ClipRect
 		if cr.x < current.x {
 			cr.x = current.x
 		}
@@ -194,7 +194,7 @@ func (l *ImDrawList) AddNgon(center ImVec2, radius float, col ImU32, num_segment
 	}
 
 	// Because we are filling a closed shape we remove 1 from the count of segments/points
-	var a_max = (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
+	a_max := (IM_PI * 2.0) * ((float)(num_segments) - 1.0) / (float)(num_segments)
 	l.PathArcTo(center, radius-0.5, 0.0, a_max, num_segments-1)
 	l.PathStroke(col, ImDrawFlags_Closed, thickness)
 }
@@ -259,7 +259,7 @@ func (l *ImDrawList) PathStroke(col ImU32, flags ImDrawFlags, thickness float /*
 
 // PathBezierCubicCurveTo Cubic Bezier (4 control points)
 func (l *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2, num_segments int) {
-	var p1 = l._Path[len(l._Path)-1]
+	p1 := l._Path[len(l._Path)-1]
 	if num_segments == 0 {
 		PathBezierCubicCurveToCasteljau(&l._Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, l._Data.CurveTessellationTol, 0) // Auto-tessellated
 	} else {
@@ -272,7 +272,7 @@ func (l *ImDrawList) PathBezierCubicCurveTo(p2 *ImVec2, p3 ImVec2, p4 ImVec2, nu
 
 // PathBezierQuadraticCurveTo Quadratic Bezier (3 control points)
 func (l *ImDrawList) PathBezierQuadraticCurveTo(p2 *ImVec2, p3 ImVec2, num_segments int) {
-	var p1 = l._Path[len(l._Path)-1]
+	p1 := l._Path[len(l._Path)-1]
 	if num_segments == 0 {
 		PathBezierQuadraticCurveToCasteljau(&l._Path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, l._Data.CurveTessellationTol, 0) // Auto-tessellated
 	} else {
@@ -338,7 +338,7 @@ func (l *ImDrawList) PathRect(a, b *ImVec2, rounding float, flags ImDrawFlags) {
 // AddCallback Advanced
 // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
 func (l *ImDrawList) AddCallback(callback ImDrawCallback, callback_data any) {
-	var curr_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
+	curr_cmd := &l.CmdBuffer[len(l.CmdBuffer)-1]
 	IM_ASSERT(curr_cmd.UserCallback == nil)
 	if curr_cmd.ElemCount != 0 {
 		l.AddDrawCmd()
@@ -365,7 +365,7 @@ func (l *ImDrawList) AddDrawCmd() {
 
 // CloneOutput Create a clone of the CmdBuffer/IdxBuffer/VtxBuffer.
 func (l *ImDrawList) CloneOutput() *ImDrawList {
-	var dst = NewImDrawList(l._Data)
+	dst := NewImDrawList(l._Data)
 	dst.CmdBuffer = l.CmdBuffer
 	dst.IdxBuffer = l.IdxBuffer
 	dst.VtxBuffer = l.VtxBuffer
@@ -465,8 +465,8 @@ func (l *ImDrawList) _PopUnusedDrawCmd() {
 }
 
 func (l *ImDrawList) _TryMergeDrawCmds() {
-	var curr_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
-	var prev_cmd = &l.CmdBuffer[len(l.CmdBuffer)-2]
+	curr_cmd := &l.CmdBuffer[len(l.CmdBuffer)-1]
+	prev_cmd := &l.CmdBuffer[len(l.CmdBuffer)-2]
 	if curr_cmd.HeaderEquals(prev_cmd) && curr_cmd.UserCallback == nil && prev_cmd.UserCallback == nil {
 		prev_cmd.ElemCount += curr_cmd.ElemCount
 		l.CmdBuffer = l.CmdBuffer[:len(l.CmdBuffer)-1]
@@ -476,7 +476,7 @@ func (l *ImDrawList) _TryMergeDrawCmds() {
 func (l *ImDrawList) _OnChangedVtxOffset() {
 	// We don't need to compare curr_cmd.VtxOffset != _CmdHeader.VtxOffset because we know it'll be different at the time we call l.
 	l._VtxCurrentIdx = 0
-	var curr_cmd = &l.CmdBuffer[len(l.CmdBuffer)-1]
+	curr_cmd := &l.CmdBuffer[len(l.CmdBuffer)-1]
 	//IM_ASSERT(curr_cmd.VtxOffset != _CmdHeader.VtxOffset); // See #3349
 	if curr_cmd.ElemCount != 0 {
 		l.AddDrawCmd()
