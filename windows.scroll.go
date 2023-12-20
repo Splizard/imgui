@@ -3,43 +3,43 @@ package imgui
 // Scrolling
 // Windows Scrolling
 
-// get scrolling amount [0 .. GetScrollMaxX()]
+// GetScrollX get scrolling amount [0 .. GetScrollMaxX()]
 func GetScrollX() float {
 	var window = GImGui.CurrentWindow
 	return window.Scroll.x
 }
 
-// get scrolling amount [0 .. GetScrollMaxY()]
+// GetScrollY get scrolling amount [0 .. GetScrollMaxY()]
 func GetScrollY() float {
 	var window = GImGui.CurrentWindow
 	return window.Scroll.y
 }
 
-// set scrolling amount [0 .. GetScrollMaxX()]
+// SetScrollX set scrolling amount [0 .. GetScrollMaxX()]
 func SetScrollX(scroll_x float) {
 	var g = GImGui
 	setScrollX(g.CurrentWindow, scroll_x)
 }
 
-// set scrolling amount [0 .. GetScrollMaxY()]
+// SetScrollY set scrolling amount [0 .. GetScrollMaxY()]
 func SetScrollY(scroll_y float) {
 	var g = GImGui
 	setScrollY(g.CurrentWindow, scroll_y)
 }
 
-// get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
+// GetScrollMaxX get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x
 func GetScrollMaxX() float {
 	var window = GImGui.CurrentWindow
 	return window.ScrollMax.x
 }
 
-// get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
+// GetScrollMaxY get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y
 func GetScrollMaxY() float {
 	var window = GImGui.CurrentWindow
 	return window.ScrollMax.y
 }
 
-// adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+// SetScrollHereX adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
 // center_x_ratio: 0.0f left of last item, 0.5f horizontal center of last item, 1.0f right of last item.
 func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 	var g = GImGui
@@ -52,7 +52,7 @@ func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 	window.ScrollTargetEdgeSnapDist.x = ImMax(0.0, window.WindowPadding.x-spacing_x)
 }
 
-// adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+// SetScrollHereY adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
 // center_y_ratio: 0.0f top of last item, 0.5f vertical center of last item, 1.0f bottom of last item.
 func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
 	var g = GImGui
@@ -65,19 +65,19 @@ func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
 	window.ScrollTargetEdgeSnapDist.y = ImMax(0.0, window.WindowPadding.y-spacing_y)
 }
 
-// adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position
+// SetScrollFromPosX adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position
 func SetScrollFromPosX(local_x, center_x_ratio float /*= 0.5*/) {
 	var g = GImGui
 	setScrollFromPosX(g.CurrentWindow, local_x, center_x_ratio)
 }
 
-// adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+// SetScrollFromPosY adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 func SetScrollFromPosY(local_y, center_y_ratio float /*= 0.5*/) {
 	var g = GImGui
 	setScrollFromPosY(g.CurrentWindow, local_y, center_y_ratio)
 }
 
-// Use -1.0f on one axis to leave as-is
+// SetNextWindowScroll Use -1.0f on one axis to leave as-is
 func SetNextWindowScroll(scroll *ImVec2) {
 	var g = GImGui
 	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasScroll
@@ -155,7 +155,7 @@ func ScrollToBringRectIntoView(window *ImGuiWindow, item_rect *ImRect) ImVec2 {
 	return delta_scroll
 }
 
-// Helper to snap on edges when aiming at an item very close to the edge,
+// CalcScrollEdgeSnap Helper to snap on edges when aiming at an item very close to the edge,
 // So the difference between WindowPadding and ItemSpacing will be in the visible area after scrolling.
 // When we refactor the scrolling API this may be configurable with a flag?
 // Note that the effect for this won't be visible on X axis with default Style settings as WindowPadding.x == ItemSpacing.x by default.
