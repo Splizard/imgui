@@ -1,3 +1,4 @@
 /.vscode/settings.json
 example/imgui.ini
 **/imgui.ini
+.idea
