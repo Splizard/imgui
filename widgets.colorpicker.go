@@ -30,7 +30,7 @@ func ColorEdit3(label string, col *[3]float, flags ImGuiColorEditFlags) bool {
 // See enum ImGuiColorEditFlags_ for available options. e.g. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
 func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -345,7 +345,7 @@ func ColorPicker3(label string, col *[3]float, flags ImGuiColorEditFlags) bool {
 // FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
 func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_col []float) bool {
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -774,7 +774,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 // 'desc_id' is not called 'label' because we don't display it next to the button, but only in the tooltip.
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
 func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImVec2) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

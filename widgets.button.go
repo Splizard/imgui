@@ -24,7 +24,7 @@ func SmallButton(label string) bool {
 }
 
 func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -141,7 +141,7 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, flags ImGuiButtonFlags) bool {
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 
 	// Default only reacts to left mouse button
 	if (flags & ImGuiButtonFlags_MouseButtonMask_) == 0 {
@@ -374,7 +374,7 @@ func CollapseButton(id ImGuiID, pos *ImVec2) bool {
 // Tip: use ImGui::PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
 func InvisibleButton(str_id string, size_arg ImVec2, flags ImGuiButtonFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -404,7 +404,7 @@ func ArrowButton(str_id string, dir ImGuiDir) bool {
 
 // use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1 bool {panic("not implemented")} }
 func RadioButtonBool(label string, active bool) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -535,7 +535,7 @@ func CloseButton(id ImGuiID, pos *ImVec2) bool {
 }
 
 func ArrowButtonEx(str_id string, dir ImGuiDir, size ImVec2, flags ImGuiButtonFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

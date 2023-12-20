@@ -140,7 +140,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 
 // Text formatted text
 func Text(format string, args ...any) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -148,7 +148,7 @@ func Text(format string, args ...any) {
 }
 
 func TextEx(text string, flags ImGuiTextFlags) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}

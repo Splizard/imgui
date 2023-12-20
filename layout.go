@@ -10,7 +10,7 @@ package imgui
 
 // NewLine undo a SameLine() or force a new line when in an horizontal-layout context.
 func NewLine() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -28,7 +28,7 @@ func NewLine() {
 
 // Spacing add vertical spacing.
 func Spacing() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -37,7 +37,7 @@ func Spacing() {
 
 // Dummy add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.
 func Dummy(size ImVec2) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -169,19 +169,19 @@ func GetCursorPosY() float {
 }
 
 func SetCursorPos(local_pos *ImVec2) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	window.DC.CursorPos = window.Pos.Sub(window.Scroll).Add(*local_pos)
 	window.DC.CursorMaxPos = ImMaxVec2(&window.DC.CursorMaxPos, &window.DC.CursorPos)
 }
 
 func SetCursorPosX(local_x float) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	window.DC.CursorPos.x = window.Pos.x - window.Scroll.x + local_x
 	window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPos.x)
 }
 
 func SetCursorPosY(local_y float) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	window.DC.CursorPos.y = window.Pos.y - window.Scroll.y + local_y
 	window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y)
 }
@@ -200,14 +200,14 @@ func GetCursorScreenPos() ImVec2 {
 
 // SetCursorScreenPos cursor position in absolute coordinates
 func SetCursorScreenPos(pos ImVec2) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	window.DC.CursorPos = pos
 	window.DC.CursorMaxPos = ImMaxVec2(&window.DC.CursorMaxPos, &window.DC.CursorPos)
 }
 
 // AlignTextToFramePadding vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)
 func AlignTextToFramePadding() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -278,7 +278,7 @@ func PushMultiItemsWidths(components int, width_full float) {
 }
 
 func PopItemWidth() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	window.DC.ItemWidth = window.DC.ItemWidthStack[len(window.DC.ItemWidthStack)-1]
 	window.DC.ItemWidthStack = window.DC.ItemWidthStack[:len(window.DC.ItemWidthStack)-1]
 }

@@ -12,7 +12,7 @@ package imgui
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
 func BeginListBox(label string, size_arg ImVec2) bool {
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

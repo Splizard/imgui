@@ -73,7 +73,7 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 //     BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function
 //     returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
 func BeginChild(str_id string, size ImVec2, border bool, flags ImGuiWindowFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	return BeginChildEx(str_id, window.GetIDs(str_id), &size, border, flags)
 }
 

@@ -54,7 +54,7 @@ func SliderInt4(label string, v [4]int, v_min int, v_max int, format string /*= 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, p_max any, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -167,7 +167,7 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 
 // Add multiple sliders on 1 line for compact edition of multiple components
 func SliderScalarN(label string, data_type ImGuiDataType, p_data []float, p_min float, p_max float, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -204,7 +204,7 @@ func VSliderInt(label string, size ImVec2, v *int, v_min int, v_max int, format 
 }
 
 func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data any, p_min any, p_max any, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

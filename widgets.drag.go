@@ -36,7 +36,7 @@ func DragFloat4(label string, v *[4]float, v_speed float /*= 0*/, v_min float /*
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
 func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v_speed float /*= 0*/, v_min float /*= 0*/, v_max float /*= 0*/, format string /*= "*/, format_max string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -99,7 +99,7 @@ func DragInt4(label string, v [4]int, v_speed float /*= 0*/, v_min int /*= 0*/, 
 	return DragScalarInts(label, ImGuiDataType_S32, v[:], v_speed, &v_min, &v_max, format, flags)
 }
 func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed float /*= 0*/, v_min int /*= 0*/, v_max int /*= 0*/, format string /*= "*/, format_max string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -163,7 +163,7 @@ func GetMinimumStepAtDecimalPrecision(decimal_precision int) float {
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float /*= 0*/, p_min any /*= L*/, p_max any /*= L*/, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -273,7 +273,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float
 }
 
 func DragScalarFloat(label string, data_type ImGuiDataType, p_data *float, v_speed float /*= 0*/, p_min *float /*= L*/, p_max *float /*= L*/, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -295,7 +295,7 @@ func DragScalarFloat(label string, data_type ImGuiDataType, p_data *float, v_spe
 }
 
 func DragScalarFloats(label string, data_type ImGuiDataType, p_data []float, v_speed float /*= 0*/, p_min *float /*= L*/, p_max *float /*= L*/, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -324,7 +324,7 @@ func DragScalarFloats(label string, data_type ImGuiDataType, p_data []float, v_s
 }
 
 func DragScalarInt(label string, data_type ImGuiDataType, p_data *int, v_speed float /*= 0*/, p_min *int /*= L*/, p_max *int /*= L*/, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -346,7 +346,7 @@ func DragScalarInt(label string, data_type ImGuiDataType, p_data *int, v_speed f
 }
 
 func DragScalarInts(label string, data_type ImGuiDataType, p_data []int, v_speed float /*= 0*/, p_min *int /*= L*/, p_max *int /*= L*/, format string, flags ImGuiSliderFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

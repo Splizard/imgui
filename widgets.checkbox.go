@@ -49,7 +49,7 @@ func CheckboxFlagsUint(label string, flags *uint, flags_value uint) bool {
 }
 
 func Checkbox(label string, v *bool) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

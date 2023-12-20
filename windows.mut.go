@@ -90,7 +90,7 @@ func SetWindowFocus() {
 func SetWindowFontScale(scale float) {
 	IM_ASSERT(scale > 0.0)
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	window.FontWindowScale = scale
 	calculated := window.CalcFontSize()
 	g.FontSize = calculated

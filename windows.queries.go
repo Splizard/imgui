@@ -84,7 +84,7 @@ func IsWindowHovered(flags ImGuiHoveredFlags) bool {
 
 // get draw list associated to the current window, to append your own drawing primitives
 func GetWindowDrawList() *ImDrawList {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	return window.DrawList
 }
 

@@ -385,7 +385,7 @@ func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find 
 //
 //	doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
 func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags ImGuiInputTextFlags, callback ImGuiInputTextCallback, callback_user_data any) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

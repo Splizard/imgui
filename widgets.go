@@ -220,7 +220,7 @@ func ItemSizeVec(size *ImVec2, text_baseline_y float) {
 //	spacing_w < 0            : use default spacing if pos_x == 0, no spacing if pos_x != 0
 //	spacing_w >= 0           : enforce spacing amount
 func SameLine(offset_from_start_x, spacing_w float) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}

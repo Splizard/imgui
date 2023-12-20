@@ -32,7 +32,7 @@ func SetWindowClipRectBeforeSetChannel(window *ImGuiWindow, clip_rect *ImRect) {
 // setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
 func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 
 	IM_ASSERT(columns_count >= 1)
 	IM_ASSERT(window.DC.CurrentColumns == nil) // Nested columns are currently not supported
@@ -106,7 +106,7 @@ func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 // close columns
 func EndColumns() {
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	var columns = window.DC.CurrentColumns
 	IM_ASSERT(columns != nil)
 
@@ -212,7 +212,7 @@ func PopColumnsBackground() {
 }
 
 func GetColumnsID(str_id string, columns_count int) ImGuiID {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 
 	var id ImGuiID
 	// Differentiate column ID with an arbitrary prefix for cases where users name their columns set the same as another widget.
@@ -255,7 +255,7 @@ func GetColumnNormFromOffset(columns *ImGuiOldColumns, offset float) float {
 // - You can also use SameLine(pos_x) to mimic simplified columns.
 
 func Columns(columns_count int /*= 1*/, id string /*= L*/, border bool /*= true*/) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	IM_ASSERT(columns_count >= 1)
 
 	var flags = ImGuiOldColumnFlags_NoBorder
@@ -279,7 +279,7 @@ func Columns(columns_count int /*= 1*/, id string /*= L*/, border bool /*= true*
 
 // next column, defaults to current row or next row if the current row is finished
 func NextColumn() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems || window.DC.CurrentColumns == nil {
 		return
 	}

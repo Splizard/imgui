@@ -39,7 +39,7 @@ func TextWrapped(format string, args ...any) {
 
 // display text+label aligned the same way as value+label widgets
 func LabelText(label string, format string, args ...any) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -77,7 +77,7 @@ func LabelText(label string, format string, args ...any) {
 // Text with a little bullet aligned to the typical tree node.
 // shortcut for Bullet()+Text()
 func BulletText(format string, args ...any) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -110,7 +110,7 @@ func BulletText(format string, args ...any) {
 
 // draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
 func Bullet() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}

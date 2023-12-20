@@ -22,7 +22,7 @@ func Separator() {
 
 // Horizontal/vertical separating line
 func SeparatorEx(flags ImGuiSeparatorFlags) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}

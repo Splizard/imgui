@@ -8,7 +8,7 @@ import "fmt"
 
 func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool {
 	g := GImGui
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 
 	var backup_next_window_data_flags = g.NextWindowData.Flags
 	g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values

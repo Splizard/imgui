@@ -12,7 +12,7 @@ package imgui
 // Ideally we also want this to be responsible for claiming space out of the main window scrolling rectangle, in which case ImGuiWindowFlags_MenuBar will become unnecessary.
 // Then later the same system could be used for multiple menu-bars, scrollbars, side-bars.
 func BeginMenuBar() bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -52,7 +52,7 @@ func BeginMenuBar() bool {
 
 // only call EndMenuBar() if BeginMenuBar() returns true!
 func EndMenuBar() {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return
 	}
@@ -235,7 +235,7 @@ func BeginViewportSideBar(name string, viewport_p *ImGuiViewport, dir ImGuiDir, 
 
 // Menus
 func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -431,7 +431,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 }
 
 func MenuItemEx(label string, icon string, shortcut string, selected *bool, enabled bool /*= true*/) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

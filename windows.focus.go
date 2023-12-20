@@ -18,7 +18,7 @@ func SelectablePointer(label string, p_selected *bool, flags ImGuiSelectableFlag
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
 func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_arg ImVec2) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

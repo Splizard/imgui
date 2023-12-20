@@ -7,7 +7,7 @@ import "fmt"
 func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_S64
 
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -88,7 +88,7 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 }
 
 func InputScalarInt64s(label string, p_data []int64, p_step, p_step_fast *int64, format string, flags ImGuiInputTextFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -124,7 +124,7 @@ func InputScalarInt64s(label string, p_data []int64, p_step, p_step_fast *int64,
 func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_S32
 
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -205,7 +205,7 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 }
 
 func InputScalarInt32s(label string, p_data []int32, p_step, p_step_fast *int32, format string, flags ImGuiInputTextFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -241,7 +241,7 @@ func InputScalarInt32s(label string, p_data []int32, p_step, p_step_fast *int32,
 func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_Double
 
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -322,7 +322,7 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 }
 
 func InputScalarFloat64s(label string, p_data []float64, p_step, p_step_fast *float64, format string, flags ImGuiInputTextFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -358,7 +358,7 @@ func InputScalarFloat64s(label string, p_data []float64, p_step, p_step_fast *fl
 func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_Double
 
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -439,7 +439,7 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 }
 
 func InputScalarFloat32s(label string, p_data []float32, p_step, p_step_fast *float32, format string, flags ImGuiInputTextFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}

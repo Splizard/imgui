@@ -7,7 +7,7 @@ import "fmt"
 
 // helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet().
 func TreeNodeF(str_id string, format string, args ...any) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -16,7 +16,7 @@ func TreeNodeF(str_id string, format string, args ...any) bool {
 }
 
 func TreeNodeInterface(ptr_id any, format string, args ...any) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -25,7 +25,7 @@ func TreeNodeInterface(ptr_id any, format string, args ...any) bool {
 }
 
 func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...any) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -34,7 +34,7 @@ func TreeNodeEx(str_id string, flags ImGuiTreeNodeFlags, format string, args ...
 }
 
 func TreeNodeInterfaceEx(ptr_id any, flags ImGuiTreeNodeFlags, format string, args ...any) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -44,7 +44,7 @@ func TreeNodeInterfaceEx(ptr_id any, flags ImGuiTreeNodeFlags, format string, ar
 
 // ~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.
 func TreePush(str_id string) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	Indent(0)
 	window.DC.TreeDepth++
 	if str_id != "" {
@@ -55,7 +55,7 @@ func TreePush(str_id string) {
 }
 
 func TreePushInterface(ptr_id any) {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	Indent(0)
 	window.DC.TreeDepth++
 	if ptr_id != nil {
@@ -75,7 +75,7 @@ func GetTreeNodeToLabelSpacing() float {
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
 // if returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
 func CollapsingHeader(label string, flags ImGuiTreeNodeFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -89,7 +89,7 @@ func CollapsingHeader(label string, flags ImGuiTreeNodeFlags) bool {
 // p_visible != nil && *p_visible == false : do not show the header at all
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
 func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeFlags) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -139,7 +139,7 @@ func SetNextItemOpen(is_open bool, cond ImGuiCond) {
 }
 
 func TreeNode(label string) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
@@ -220,7 +220,7 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 }
 
 func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
-	var window = GetCurrentWindow()
+	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
