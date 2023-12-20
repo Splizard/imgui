@@ -75,24 +75,24 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 		// min   max   ellipsis_max
 		//          <. this is generally some padding value
 
-		var font = draw_list._Data.Font
-		var font_size = draw_list._Data.FontSize
+		font := draw_list._Data.Font
+		font_size := draw_list._Data.FontSize
 		var text_end_ellipsis int
 
-		var ellipsis_char = font.EllipsisChar
+		ellipsis_char := font.EllipsisChar
 		var ellipsis_char_count int = 1
 		if ellipsis_char == (ImWchar)(-1) {
 			ellipsis_char = font.DotChar
 			ellipsis_char_count = 3
 		}
-		var glyph = font.FindGlyph(ellipsis_char)
+		glyph := font.FindGlyph(ellipsis_char)
 
-		var ellipsis_glyph_width = glyph.X1             // Width of the glyph with no padding on either side
-		var ellipsis_total_width = ellipsis_glyph_width // Full width of entire ellipsis
+		ellipsis_glyph_width := glyph.X1             // Width of the glyph with no padding on either side
+		ellipsis_total_width := ellipsis_glyph_width // Full width of entire ellipsis
 
 		if ellipsis_char_count > 1 {
 			// Full ellipsis size without free spacing after it.
-			var spacing_between_dots = 1.0 * (draw_list._Data.FontSize / font.FontSize)
+			spacing_between_dots := 1.0 * (draw_list._Data.FontSize / font.FontSize)
 			ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots
 			ellipsis_total_width = ellipsis_glyph_width*(float)(ellipsis_char_count) - spacing_between_dots
 		}

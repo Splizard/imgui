@@ -1048,7 +1048,7 @@ func ShowMetricsWindow(p_open *bool) {
 							continue
 						}
 						for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
-							var r = GetTableRect(table, rect_n, column_n)
+							r := GetTableRect(table, rect_n, column_n)
 							buf = fmt.Sprintf("(%6.1f,%6.1f) (%6.1f,%6.1f) Size (%6.1f,%6.1f) Col %d %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n])
 							Selectable(buf, false, 0, ImVec2{})
 							if IsItemHovered(0) {
@@ -1056,7 +1056,7 @@ func ShowMetricsWindow(p_open *bool) {
 							}
 						}
 					} else {
-						var r = GetTableRect(table, rect_n, -1)
+						r := GetTableRect(table, rect_n, -1)
 						buf = fmt.Sprintf("(%6.1f,%6.1f) (%6.1f,%6.1f) Size (%6.1f,%6.1f) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n])
 						Selectable(buf, false, 0, ImVec2{})
 						if IsItemHovered(0) {
