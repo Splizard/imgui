@@ -19,7 +19,7 @@ type ImGuiPlotArrayGetterData struct {
 }
 
 func Plot_ArrayGetter(data interface{}, idx int) float {
-	var plot_data *ImGuiPlotArrayGetterData = (data).(*ImGuiPlotArrayGetterData)
+	var plot_data = (data).(*ImGuiPlotArrayGetterData)
 	return plot_data.Values[idx*plot_data.Stride]
 }
 
@@ -80,7 +80,7 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data inter
 		var v_min float = FLT_MAX
 		var v_max float = -FLT_MAX
 		for i := int(0); i < values_count; i++ {
-			var v float = values_getter(data, i)
+			var v = values_getter(data, i)
 			if v != v { // Ignore NaN values
 				continue
 			}
@@ -107,13 +107,13 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data inter
 		if plot_type == ImGuiPlotType_Lines {
 			b = -1
 		}
-		var res_w int = ImMinInt((int)(frame_size.x), values_count) + b
-		var item_count int = values_count + b
+		var res_w = ImMinInt((int)(frame_size.x), values_count) + b
+		var item_count = values_count + b
 
 		// Tooltip on hover
 		if hovered && inner_bb.ContainsVec(g.IO.MousePos) {
-			var t float = ImClamp((g.IO.MousePos.x-inner_bb.Min.x)/(inner_bb.Max.x-inner_bb.Min.x), 0.0, 0.9999)
-			var v_idx int = (int)(t * float(item_count))
+			var t = ImClamp((g.IO.MousePos.x-inner_bb.Min.x)/(inner_bb.Max.x-inner_bb.Min.x), 0.0, 0.9999)
+			var v_idx = (int)(t * float(item_count))
 			IM_ASSERT(v_idx >= 0 && v_idx < values_count)
 
 			var v0 = values_getter(data, (v_idx+values_offset)%values_count)
@@ -168,14 +168,14 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data inter
 			var tp1 = ImVec2{t1, 1.0 - ImSaturate((v1-scale_min)*inv_scale)}
 
 			// NB: Draw calls are merged together by the DrawList system. Still, we should render our batch are lower level to save a bit of CPU.
-			var pos0 ImVec2 = ImLerpVec2WithVec2(&inner_bb.Min, &inner_bb.Max, tp0)
+			var pos0 = ImLerpVec2WithVec2(&inner_bb.Min, &inner_bb.Max, tp0)
 
-			var t ImVec2 = ImVec2{tp1.x, histogram_zero_line_t}
+			var t = ImVec2{tp1.x, histogram_zero_line_t}
 			if plot_type == ImGuiPlotType_Lines {
 				t = tp1
 			}
 
-			var pos1 ImVec2 = ImLerpVec2WithVec2(&inner_bb.Min, &inner_bb.Max, t)
+			var pos1 = ImLerpVec2WithVec2(&inner_bb.Min, &inner_bb.Max, t)
 			if plot_type == ImGuiPlotType_Lines {
 				c := col_base
 				if idx_hovered == v1_idx {

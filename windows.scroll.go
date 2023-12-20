@@ -44,8 +44,8 @@ func GetScrollMaxY() float {
 func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 	var g = GImGui
 	var window = g.CurrentWindow
-	var spacing_x float = ImMax(window.WindowPadding.x, g.Style.ItemSpacing.x)
-	var target_pos_x float = ImLerp(g.LastItemData.Rect.Min.x-spacing_x, g.LastItemData.Rect.Max.x+spacing_x, center_x_ratio)
+	var spacing_x = ImMax(window.WindowPadding.x, g.Style.ItemSpacing.x)
+	var target_pos_x = ImLerp(g.LastItemData.Rect.Min.x-spacing_x, g.LastItemData.Rect.Max.x+spacing_x, center_x_ratio)
 	setScrollFromPosX(window, target_pos_x-window.Pos.x, center_x_ratio) // Convert from absolute to local pos
 
 	// Tweak: snap on edges when aiming at an item very close to the edge
@@ -57,8 +57,8 @@ func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
 	var g = GImGui
 	var window = g.CurrentWindow
-	var spacing_y float = ImMax(window.WindowPadding.y, g.Style.ItemSpacing.y)
-	var target_pos_y float = ImLerp(window.DC.CursorPosPrevLine.y-spacing_y, window.DC.CursorPosPrevLine.y+window.DC.PrevLineSize.y+spacing_y, center_y_ratio)
+	var spacing_y = ImMax(window.WindowPadding.y, g.Style.ItemSpacing.y)
+	var target_pos_y = ImLerp(window.DC.CursorPosPrevLine.y-spacing_y, window.DC.CursorPosPrevLine.y+window.DC.PrevLineSize.y+spacing_y, center_y_ratio)
 	setScrollFromPosY(window, target_pos_y-window.Pos.y, center_y_ratio) // Convert from absolute to local pos
 
 	// Tweak: snap on edges when aiming at an item very close to the edge
@@ -117,7 +117,7 @@ func setScrollFromPosX(window *ImGuiWindow, local_x float, center_x_ratio float)
 
 func setScrollFromPosY(window *ImGuiWindow, local_y float, center_y_ratio float) {
 	IM_ASSERT(center_y_ratio >= 0.0 && center_y_ratio <= 1.0)
-	var decoration_up_height float = window.TitleBarHeight() + window.MenuBarHeight() // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;
+	var decoration_up_height = window.TitleBarHeight() + window.MenuBarHeight() // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;
 	local_y -= decoration_up_height
 	window.ScrollTarget.y = IM_FLOOR(local_y + window.Scroll.y) // Convert local position to scroll offset
 	window.ScrollTargetCenterRatio.y = center_y_ratio
@@ -142,7 +142,7 @@ func ScrollToBringRectIntoView(window *ImGuiWindow, item_rect *ImRect) ImVec2 {
 			setScrollFromPosY(window, item_rect.Max.y-window.Pos.y+g.Style.ItemSpacing.y, 1.0)
 		}
 
-		var next_scroll ImVec2 = CalcNextScrollFromScrollTargetAndClamp(window)
+		var next_scroll = CalcNextScrollFromScrollTargetAndClamp(window)
 		delta_scroll = next_scroll.Sub(window.Scroll)
 	}
 
@@ -170,22 +170,22 @@ func CalcScrollEdgeSnap(target, snap_min, snap_max, snap_threshold, center_ratio
 }
 
 func CalcNextScrollFromScrollTargetAndClamp(window *ImGuiWindow) ImVec2 {
-	var scroll ImVec2 = window.Scroll
+	var scroll = window.Scroll
 	if window.ScrollTarget.x < FLT_MAX {
-		var decoration_total_width float = window.ScrollbarSizes.x
-		var center_x_ratio float = window.ScrollTargetCenterRatio.x
-		var scroll_target_x float = window.ScrollTarget.x
+		var decoration_total_width = window.ScrollbarSizes.x
+		var center_x_ratio = window.ScrollTargetCenterRatio.x
+		var scroll_target_x = window.ScrollTarget.x
 		if window.ScrollTargetEdgeSnapDist.x > 0.0 {
 			var snap_x_min float = 0.0
-			var snap_x_max float = window.ScrollMax.x + window.SizeFull.x - decoration_total_width
+			var snap_x_max = window.ScrollMax.x + window.SizeFull.x - decoration_total_width
 			scroll_target_x = CalcScrollEdgeSnap(scroll_target_x, snap_x_min, snap_x_max, window.ScrollTargetEdgeSnapDist.x, center_x_ratio)
 		}
 		scroll.x = scroll_target_x - center_x_ratio*(window.SizeFull.x-decoration_total_width)
 	}
 	if window.ScrollTarget.y < FLT_MAX {
-		var decoration_total_height float = window.TitleBarHeight() + window.MenuBarHeight() + window.ScrollbarSizes.y
-		var center_y_ratio float = window.ScrollTargetCenterRatio.y
-		var scroll_target_y float = window.ScrollTarget.y
+		var decoration_total_height = window.TitleBarHeight() + window.MenuBarHeight() + window.ScrollbarSizes.y
+		var center_y_ratio = window.ScrollTargetCenterRatio.y
+		var scroll_target_y = window.ScrollTarget.y
 		if window.ScrollTargetEdgeSnapDist.y > 0.0 {
 			var snap_y_min float = 0.0
 			var snap_y_max = window.ScrollMax.y + window.SizeFull.y - decoration_total_height

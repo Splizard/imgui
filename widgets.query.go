@@ -19,7 +19,7 @@ func IsItemHovered(flags ImGuiHoveredFlags) bool {
 	}
 
 	// Test for bounding box overlap, as updated as ItemAdd()
-	var status_flags ImGuiItemStatusFlags = g.LastItemData.StatusFlags
+	var status_flags = g.LastItemData.StatusFlags
 	if status_flags&ImGuiItemStatusFlags_HoveredRect == 0 {
 		return false
 	}

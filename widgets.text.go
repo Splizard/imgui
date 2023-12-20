@@ -23,7 +23,7 @@ func TextDisabled(format string, args ...interface{}) {
 // shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
 func TextWrapped(format string, args ...interface{}) {
 	var g = GImGui
-	var need_backup bool = (g.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
+	var need_backup = (g.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
 	if need_backup {
 		PushTextWrapPos(0.0)
 	}
@@ -49,10 +49,10 @@ func LabelText(label string, format string, args ...interface{}) {
 	var w = CalcItemWidth()
 
 	var value = fmt.Sprintf(format, args...)
-	var value_size ImVec2 = CalcTextSize(value, false, -1)
+	var value_size = CalcTextSize(value, false, -1)
 	var label_size = CalcTextSize(label, true, -1)
 
-	var pos ImVec2 = window.DC.CursorPos
+	var pos = window.DC.CursorPos
 	var value_bb = ImRect{pos, pos.Add(ImVec2{w, value_size.y + style.FramePadding.y*2})}
 
 	var padding float
@@ -94,7 +94,7 @@ func BulletText(format string, args ...interface{}) {
 	}
 
 	var total_size = ImVec2{g.FontSize + padding, label_size.y}
-	var pos ImVec2 = window.DC.CursorPos
+	var pos = window.DC.CursorPos
 	pos.y += window.DC.CurrLineTextBaseOffset
 	ItemSizeVec(&total_size, 0.0)
 	var bb = ImRect{pos, pos.Add(total_size)}
@@ -103,7 +103,7 @@ func BulletText(format string, args ...interface{}) {
 	}
 
 	// Render
-	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
+	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
 	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + g.FontSize*0.5, g.FontSize * 0.5}), text_col)
 	RenderText(bb.Min.Add(ImVec2{g.FontSize + style.FramePadding.x*2, 0.0}), text, false)
 }
@@ -117,7 +117,7 @@ func Bullet() {
 
 	var g = GImGui
 	var style = g.Style
-	var line_height float = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
+	var line_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{g.FontSize, line_height})}
 	ItemSizeRect(&bb, 0)
 	if !ItemAdd(&bb, 0, nil, 0) {
@@ -126,7 +126,7 @@ func Bullet() {
 	}
 
 	// Render and stay on same line
-	var text_col ImU32 = GetColorU32FromID(ImGuiCol_Text, 1)
+	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
 	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + g.FontSize*0.5, line_height * 0.5}), text_col)
 	SameLine(0, style.FramePadding.x*2.0)
 }

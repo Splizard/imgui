@@ -41,11 +41,11 @@ func GetFallbackWindowNameForWindowingList(window *ImGuiWindow) string {
 
 func AddWindowToDrawData(window *ImGuiWindow, layer int) {
 	var g = GImGui
-	var viewport *ImGuiViewportP = g.Viewports[0]
+	var viewport = g.Viewports[0]
 	g.IO.MetricsRenderWindows++
 	AddDrawListToDrawData(&viewport.DrawDataBuilder[layer], window.DrawList)
 	for i := range window.DC.ChildWindows {
-		var child *ImGuiWindow = window.DC.ChildWindows[i]
+		var child = window.DC.ChildWindows[i]
 		if IsWindowActiveAndVisible(child) { // Clipped children may have been marked not active
 			AddWindowToDrawData(child, layer)
 		}
@@ -66,14 +66,14 @@ func ChildWindowComparer(a, b *ImGuiWindow) int {
 func AddWindowToSortBuffer(out_sorted_windows *[]*ImGuiWindow, window *ImGuiWindow) {
 	*out_sorted_windows = append(*out_sorted_windows, window)
 	if window.Active {
-		var count int = int(len(window.DC.ChildWindows))
+		var count = int(len(window.DC.ChildWindows))
 		if count > 1 {
 			sort.Slice(window.DC.ChildWindows, func(i, j golang.Int) bool {
 				return ChildWindowComparer(window.DC.ChildWindows[i], window.DC.ChildWindows[j]) < 0
 			})
 		}
 		for i := int(0); i < count; i++ {
-			var child *ImGuiWindow = window.DC.ChildWindows[i]
+			var child = window.DC.ChildWindows[i]
 			if child.Active {
 				AddWindowToSortBuffer(out_sorted_windows, child)
 			}
@@ -91,7 +91,7 @@ func FindWindowByID(id ImGuiID) *ImGuiWindow {
 }
 
 func FindWindowByName(e string) *ImGuiWindow {
-	var id ImGuiID = ImHashStr(e, 0, 0)
+	var id = ImHashStr(e, 0, 0)
 	return FindWindowByID(id)
 }
 
@@ -120,9 +120,9 @@ func setWindowPos(window *ImGuiWindow, pos *ImVec2, cond ImGuiCond) {
 	window.SetWindowPosVal = ImVec2{FLT_MAX, FLT_MAX}
 
 	// Set
-	var old_pos ImVec2 = window.Pos
+	var old_pos = window.Pos
 	window.Pos = *ImFloorVec(pos)
-	var offset ImVec2 = window.Pos.Sub(old_pos)
+	var offset = window.Pos.Sub(old_pos)
 	window.DC.CursorPos = window.DC.CursorPos.Add(offset)       // As we happen to move the window while it is being appended to (which is a bad idea - will smear) let's at least offset the cursor
 	window.DC.CursorMaxPos = window.DC.CursorMaxPos.Add(offset) // And more importantly we need to offset CursorMaxPos/CursorStartPos this so ContentSize calculation doesn't get affected.
 	window.DC.IdealMaxPos = window.DC.IdealMaxPos.Add(offset)
@@ -184,12 +184,12 @@ func CreateNewWindow(name string, flags ImGuiWindowFlags) *ImGuiWindow {
 	var g = GImGui
 
 	// Create window the first time
-	var window *ImGuiWindow = NewImGuiWindow(g, name)
+	var window = NewImGuiWindow(g, name)
 	window.Flags = flags
 	g.WindowsById.SetInterface(window.ID, window)
 
 	// Default/arbitrary window position. Use SetNextWindowPos() with the appropriate condition flag to change the initial position of a window.
-	var main_viewport *ImGuiViewport = GetMainViewport()
+	var main_viewport = GetMainViewport()
 	window.Pos = main_viewport.Pos.Add(ImVec2{60, 60})
 
 	// User can disable loading and saving of settings. Tooltip and child windows also don't store settings.
@@ -250,31 +250,31 @@ func GetWindowBgColorIdxFromFlags(flags ImGuiWindowFlags) ImGuiCol {
 func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 	var g = GImGui
 	var style = g.Style
-	var decoration_up_height float = window.TitleBarHeight() + window.MenuBarHeight()
-	var size_pad ImVec2 = window.WindowPadding.Scale(2)
-	var size_desired ImVec2 = size_contents.Add(size_pad).Add(ImVec2{0.0, decoration_up_height})
+	var decoration_up_height = window.TitleBarHeight() + window.MenuBarHeight()
+	var size_pad = window.WindowPadding.Scale(2)
+	var size_desired = size_contents.Add(size_pad).Add(ImVec2{0.0, decoration_up_height})
 	if window.Flags&ImGuiWindowFlags_Tooltip != 0 {
 		// Tooltip always resize
 		return size_desired
 	} else {
 		// Maximum window size is determined by the viewport size or monitor size
-		var is_popup bool = (window.Flags & ImGuiWindowFlags_Popup) != 0
-		var is_menu bool = (window.Flags & ImGuiWindowFlags_ChildMenu) != 0
-		var size_min ImVec2 = style.WindowMinSize
+		var is_popup = (window.Flags & ImGuiWindowFlags_Popup) != 0
+		var is_menu = (window.Flags & ImGuiWindowFlags_ChildMenu) != 0
+		var size_min = style.WindowMinSize
 		if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
 			size_min = ImMinVec2(&size_min, &ImVec2{4.0, 4.0})
 		}
 
 		// FIXME-VIEWPORT-WORKAREA: May want to use GetWorkSize() instead of Size depending on the type of windows?
-		var avail_size ImVec2 = GetMainViewport().Size
+		var avail_size = GetMainViewport().Size
 		var s = avail_size.Sub(style.DisplaySafeAreaPadding.Scale(2.0))
-		var size_auto_fit ImVec2 = ImClampVec2(&size_desired, &size_min, ImMaxVec2(&size_min, &s))
+		var size_auto_fit = ImClampVec2(&size_desired, &size_min, ImMaxVec2(&size_min, &s))
 
 		// When the window cannot fit all contents (either because of constraints, either because screen is too small),
 		// we are growing the size on the other axis to compensate for expected scrollbar. FIXME: Might turn bigger than ViewportSize-WindowPadding.
-		var size_auto_fit_after_constraint ImVec2 = CalcWindowSizeAfterConstraint(window, &size_auto_fit)
-		var will_have_scrollbar_x bool = (size_auto_fit_after_constraint.x-size_pad.x-0.0 < size_contents.x && (window.Flags&ImGuiWindowFlags_NoScrollbar == 0) && (window.Flags&ImGuiWindowFlags_HorizontalScrollbar != 0)) || (window.Flags&ImGuiWindowFlags_AlwaysHorizontalScrollbar != 0)
-		var will_have_scrollbar_y bool = (size_auto_fit_after_constraint.y-size_pad.y-decoration_up_height < size_contents.y && (window.Flags&ImGuiWindowFlags_NoScrollbar == 0) || (window.Flags&ImGuiWindowFlags_AlwaysVerticalScrollbar != 0))
+		var size_auto_fit_after_constraint = CalcWindowSizeAfterConstraint(window, &size_auto_fit)
+		var will_have_scrollbar_x = (size_auto_fit_after_constraint.x-size_pad.x-0.0 < size_contents.x && (window.Flags&ImGuiWindowFlags_NoScrollbar == 0) && (window.Flags&ImGuiWindowFlags_HorizontalScrollbar != 0)) || (window.Flags&ImGuiWindowFlags_AlwaysHorizontalScrollbar != 0)
+		var will_have_scrollbar_y = (size_auto_fit_after_constraint.y-size_pad.y-decoration_up_height < size_contents.y && (window.Flags&ImGuiWindowFlags_NoScrollbar == 0) || (window.Flags&ImGuiWindowFlags_AlwaysVerticalScrollbar != 0))
 		if will_have_scrollbar_x {
 			size_auto_fit.y += style.ScrollbarSize
 		}
@@ -287,7 +287,7 @@ func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 
 func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
 	var g = GImGui
-	var size_for_clamping ImVec2 = window.Size
+	var size_for_clamping = window.Size
 	if g.IO.ConfigWindowsMoveFromTitleBarOnly && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 		size_for_clamping.y = window.TitleBarHeight()
 	}
@@ -297,10 +297,10 @@ func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
 
 func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) ImVec2 {
 	var g = GImGui
-	var new_size ImVec2 = *size_desired
+	var new_size = *size_desired
 	if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint) != 0 {
 		// Using -1,-1 on either X/Y axis to preserve the current size.
-		var cr ImRect = g.NextWindowData.SizeConstraintRect
+		var cr = g.NextWindowData.SizeConstraintRect
 		if cr.Min.x >= 0 && cr.Max.x >= 0 {
 			new_size.x = ImClamp(new_size.x, cr.Min.x, cr.Max.x)
 		} else {
@@ -326,8 +326,8 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 
 	// Minimum size
 	if window.Flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_AlwaysAutoResize) == 0 {
-		var window_for_height *ImGuiWindow = window
-		var decoration_up_height float = window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight()
+		var window_for_height = window
+		var decoration_up_height = window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight()
 		new_size = ImMaxVec2(&new_size, &g.Style.WindowMinSize)
 		new_size.y = ImMax(new_size.y, decoration_up_height+ImMax(0.0, g.Style.WindowRounding-1.0)) // Reduce artifacts with very small windows
 	}
@@ -335,7 +335,7 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 }
 
 func CalcWindowContentSizes(window *ImGuiWindow, content_size_current, content_size_ideal *ImVec2) {
-	var preserve_old_content_sizes bool = false
+	var preserve_old_content_sizes = false
 	if window.Collapsed && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 {
 		preserve_old_content_sizes = true
 	} else if window.Hidden && window.HiddenFramesCannotSkipItems == 0 && window.HiddenFramesCanSkipItems > 0 {
@@ -429,7 +429,7 @@ func FindHoveredWindow() {
 		hovered_window = g.MovingWindow
 	}
 
-	var padding_regular ImVec2 = g.Style.TouchExtraPadding
+	var padding_regular = g.Style.TouchExtraPadding
 	var padding_for_resize ImVec2
 	if g.IO.ConfigWindowsResizeFromEdges {
 		padding_for_resize = g.WindowsHoverPadding
@@ -438,7 +438,7 @@ func FindHoveredWindow() {
 	}
 
 	for i := len(g.Windows) - 1; i >= 0; i-- {
-		var window *ImGuiWindow = g.Windows[i]
+		var window = g.Windows[i]
 
 		if !window.Active || window.Hidden {
 			continue
@@ -493,11 +493,11 @@ func UpdateHoveredWindowAndCaptureFlags() {
 	// - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from HoveredWindow.
 	// - When moving a window we can skip the search, which also conveniently bypasses the fact that window.WindowRectClipped is lagging as this point of the frame.
 	// - We also support the moved window toggling the NoInputs flag after moving has started in order to be able to detect windows below it, which is useful for e.g. docking mechanisms.
-	var clear_hovered_windows bool = false
+	var clear_hovered_windows = false
 	FindHoveredWindow()
 
 	// Modal windows prevents mouse from hovering behind them.
-	var modal_window *ImGuiWindow = GetTopMostPopupModal()
+	var modal_window = GetTopMostPopupModal()
 	if modal_window != nil && g.HoveredWindow != nil && !IsWindowChildOf(g.HoveredWindow.RootWindow, modal_window) {
 		clear_hovered_windows = true
 	}
@@ -509,10 +509,10 @@ func UpdateHoveredWindowAndCaptureFlags() {
 
 	// We track click ownership. When clicked outside of a window the click is owned by the application and
 	// won't report hovering nor request capture even while dragging over our windows afterward.
-	var has_open_popup bool = (len(g.OpenPopupStack) > 0)
-	var has_open_modal bool = (modal_window != nil)
+	var has_open_popup = (len(g.OpenPopupStack) > 0)
+	var has_open_modal = (modal_window != nil)
 	var mouse_earliest_down int = -1
-	var mouse_any_down bool = false
+	var mouse_any_down = false
 	for i := range io.MouseDown {
 		if io.MouseClicked[i] {
 			io.MouseDownOwned[i] = (g.HoveredWindow != nil) || has_open_popup
@@ -525,12 +525,12 @@ func UpdateHoveredWindowAndCaptureFlags() {
 			}
 		}
 	}
-	var mouse_avail bool = (mouse_earliest_down == -1) || io.MouseDownOwned[mouse_earliest_down]
-	var mouse_avail_unless_popup_close bool = (mouse_earliest_down == -1) || io.MouseDownOwnedUnlessPopupClose[mouse_earliest_down]
+	var mouse_avail = (mouse_earliest_down == -1) || io.MouseDownOwned[mouse_earliest_down]
+	var mouse_avail_unless_popup_close = (mouse_earliest_down == -1) || io.MouseDownOwnedUnlessPopupClose[mouse_earliest_down]
 
 	// If mouse was first clicked outside of ImGui bounds we also cancel out hovering.
 	// FIXME: For patterns of drag and drop across OS windows, we may need to rework/remove this test (first committed 311c0ca9 on 2015/02)
-	var mouse_dragging_extern_payload bool = g.DragDropActive && (g.DragDropSourceFlags&ImGuiDragDropFlags_SourceExtern) != 0
+	var mouse_dragging_extern_payload = g.DragDropActive && (g.DragDropSourceFlags&ImGuiDragDropFlags_SourceExtern) != 0
 	if !mouse_avail && !mouse_dragging_extern_payload {
 		clear_hovered_windows = true
 	}
@@ -580,9 +580,9 @@ func UpdateMouseMovingWindowNewFrame() {
 		// We track it to preserve Focus and so that generally ActiveIdWindow == MovingWindow and ActiveId == MovingWindow.MoveId for consistency.
 		KeepAliveID(g.ActiveId)
 		IM_ASSERT(g.MovingWindow != nil && g.MovingWindow.RootWindow != nil)
-		var moving_window *ImGuiWindow = g.MovingWindow.RootWindow
+		var moving_window = g.MovingWindow.RootWindow
 		if g.IO.MouseDown[0] && IsMousePosValid(&g.IO.MousePos) {
-			var pos ImVec2 = g.IO.MousePos.Sub(g.ActiveIdClickOffset)
+			var pos = g.IO.MousePos.Sub(g.ActiveIdClickOffset)
 			if moving_window.Pos.x != pos.x || moving_window.Pos.y != pos.y {
 				MarkIniSettingsDirtyWindow(moving_window)
 				setWindowPos(moving_window, &pos, ImGuiCond_Always)
