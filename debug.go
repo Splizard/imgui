@@ -1210,7 +1210,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Text("MovingWindow: '%s'", movingName)
 		Unindent(0)
 
-		var activeName = "nil"
+		activeName := "nil"
 		if g.ActiveIdWindow != nil {
 			activeName = g.ActiveIdWindow.Name
 		}
@@ -1224,7 +1224,7 @@ func ShowMetricsWindow(p_open *bool) {
 		Text("DragDrop: %d, SourceId = 0x%08X, Payload \"%s\" (%d bytes)", g.DragDropActive, g.DragDropPayload.SourceId, g.DragDropPayload.DataType, g.DragDropPayload.DataSize)
 		Unindent(0)
 
-		var navWindowName, navTargetName = "nil", "nil"
+		navWindowName, navTargetName := "nil", "nil"
 		if g.NavWindow != nil {
 			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
 		}
@@ -1253,11 +1253,11 @@ func ShowMetricsWindow(p_open *bool) {
 			}
 			var draw_list = getForegroundDrawList(window)
 			if cfg.ShowWindowsRects {
-				var r = GetWindowRect(window, cfg.ShowWindowsRectsType)
+				r := GetWindowRect(window, cfg.ShowWindowsRectsType)
 				draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255), 0, 0, 1)
 			}
 			if cfg.ShowWindowsBeginOrder && (window.Flags&ImGuiWindowFlags_ChildWindow == 0) {
-				var font_size = GetFontSize()
+				font_size := GetFontSize()
 				draw_list.AddRectFilled(window.Pos, window.Pos.Add(ImVec2{font_size, font_size}), IM_COL32(200, 100, 100, 255), 0, 0)
 				draw_list.AddText(window.Pos, IM_COL32(255, 255, 255, 255), fmt.Sprint(window.BeginOrderWithinContext))
 			}
@@ -1290,6 +1290,5 @@ func ShowMetricsWindow(p_open *bool) {
 			}
 		}
 	}
-
 	End()
 }
