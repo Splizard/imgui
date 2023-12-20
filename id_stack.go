@@ -32,7 +32,7 @@ func GetIDWithSeed(str string, seed ImGuiID) ImGuiID {
 func PushString(str_id string) {
 	g := GImGui
 	window := g.CurrentWindow
-	var id = window.GetIDNoKeepAlive(str_id)
+	id := window.GetIDNoKeepAlive(str_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
@@ -40,7 +40,7 @@ func PushString(str_id string) {
 func PushInterface(ptr_id any) {
 	g := GImGui
 	window := g.CurrentWindow
-	var id = window.GetIDNoKeepAliveInterface(ptr_id)
+	id := window.GetIDNoKeepAliveInterface(ptr_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
@@ -48,7 +48,7 @@ func PushInterface(ptr_id any) {
 func PushID(int_id int) {
 	g := GImGui
 	window := g.CurrentWindow
-	var id = window.GetIDNoKeepAliveInt(int_id)
+	id := window.GetIDNoKeepAliveInt(int_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
