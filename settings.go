@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Settings/.Ini Utilities
+// LoadIniSettingsFromDisk Settings/.Ini Utilities
 // - The disk functions are automatically called if io.IniFilename != NULL (default is "imgui.ini").
 // - Set io.IniFilename to NULL to load/save manually. Read io.WantSaveIniSettings description about handling .ini saving manually.
 // - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.g. same path as executables).
@@ -103,7 +103,7 @@ func SaveIniSettingsToMemory(out_size *uintptr) []byte {
 	return g.SettingsIniData
 } // return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
 
-// Settings
+// MarkIniSettingsDirty Settings
 func MarkIniSettingsDirty() {
 	var g = GImGui
 	if g.SettingsDirtyTimer <= 0.0 {
@@ -176,7 +176,7 @@ func FindSettingsHandler(name string) *ImGuiSettingsHandler {
 	return nil
 }
 
-// Called by NewFrame()
+// UpdateSettings Called by NewFrame()
 func UpdateSettings() {
 	// Load settings on first frame (if not explicitly loaded manually before)
 	var g *ImGuiContext = GImGui
@@ -202,7 +202,7 @@ func UpdateSettings() {
 	}
 }
 
-// Apply to existing windows (if any)
+// WindowSettingsHandler_ApplyAll Apply to existing windows (if any)
 func WindowSettingsHandler_ApplyAll(ctx *ImGuiContext, _ *ImGuiSettingsHandler) {
 	var g = ctx
 	for i := range g.SettingsWindows {

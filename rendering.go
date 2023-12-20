@@ -14,11 +14,11 @@ func RenderBullet(draw_list *ImDrawList, pos ImVec2, col ImU32) {
 	draw_list.AddCircleFilled(pos, draw_list._Data.FontSize*0.20, col, 8)
 }
 
-// Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
+// RenderArrow Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, scale float /*= 1.0f*/) {
 	var h = draw_list._Data.FontSize * 1.00
-	var r float = h * 0.40 * scale
-	var center ImVec2 = pos.Add(ImVec2{h * 0.50, h * 0.50 * scale})
+	var r = h * 0.40 * scale
+	var center = pos.Add(ImVec2{h * 0.50, h * 0.50 * scale})
 
 	var a, b, c ImVec2
 	switch dir {
@@ -50,7 +50,7 @@ func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, sca
 	draw_list.AddTriangleFilled(&p1, &p2, center.Add(c), col)
 }
 
-// ends the Dear ImGui frame, finalize the draw data. You can then get call GetDrawData()
+// Render ends the Dear ImGui frame, finalize the draw data. You can then get call GetDrawData()
 // Prepare the data for rendering so you can call GetDrawData()
 // (As with anything within the ImGui:: namspace this doesn't touch your GPU or graphics API at all:
 // it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend).
@@ -68,7 +68,7 @@ func Render() {
 
 	// Add background ImDrawList (for each active viewport)
 	for n := range g.Viewports {
-		var viewport *ImGuiViewportP = g.Viewports[n]
+		var viewport = g.Viewports[n]
 		viewport.DrawDataBuilder.Clear()
 		if viewport.DrawLists[0] != nil {
 			AddDrawListToDrawData(&viewport.DrawDataBuilder[0], getBackgroundDrawList(viewport))
@@ -100,7 +100,7 @@ func Render() {
 	g.IO.MetricsRenderVertices = 0
 	g.IO.MetricsRenderIndices = 0
 	for n := range g.Viewports {
-		var viewport *ImGuiViewportP = g.Viewports[n]
+		var viewport = g.Viewports[n]
 		viewport.DrawDataBuilder.FlattenIntoSingleLayer()
 
 		// Draw software mouse cursor if requested by io.MouseDrawCursor flag
@@ -114,7 +114,7 @@ func Render() {
 		}
 
 		SetupViewportDrawData(viewport, &viewport.DrawDataBuilder[0])
-		var draw_data *ImDrawData = &viewport.DrawDataP
+		var draw_data = &viewport.DrawDataP
 		g.IO.MetricsRenderVertices += draw_data.TotalVtxCount
 		g.IO.MetricsRenderIndices += draw_data.TotalIdxCount
 	}

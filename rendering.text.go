@@ -2,7 +2,7 @@ package imgui
 
 import "fmt"
 
-// read one character. return input UTF-8 bytes count
+// ImTextCharFromUtf8 read one character. return input UTF-8 bytes count
 func ImTextCharFromUtf8(out_char *rune, text string) int {
 	for i, c := range text {
 		*out_char = rune(c)
@@ -12,14 +12,14 @@ func ImTextCharFromUtf8(out_char *rune, text string) int {
 	return 0
 }
 
-// shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
+// TextColored shortcut for PushStyleColor(ImGuiCol_Text, col); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
 func TextColored(col *ImVec4, format string, args ...interface{}) {
 	PushStyleColorVec(ImGuiCol_Text, col)
 	Text(format, args...)
 	PopStyleColor(1)
 }
 
-// Render helpers
+// RenderText Render helpers
 // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
 // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
 func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
@@ -53,7 +53,7 @@ func RenderTextWrapped(pos ImVec2, text string, wrap_width float) {
 	}
 }
 
-// Another overly complex function until we reorganize everything into a nice all-in-one helper.
+// RenderTextEllipsis Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
 func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, clip_max_x float, ellipsis_max_x float, text string, text_size_if_known *ImVec2) {
@@ -75,34 +75,34 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 		// min   max   ellipsis_max
 		//          <. this is generally some padding value
 
-		var font *ImFont = draw_list._Data.Font
-		var font_size float = draw_list._Data.FontSize
+		var font = draw_list._Data.Font
+		var font_size = draw_list._Data.FontSize
 		var text_end_ellipsis int
 
-		var ellipsis_char ImWchar = font.EllipsisChar
+		var ellipsis_char = font.EllipsisChar
 		var ellipsis_char_count int = 1
 		if ellipsis_char == (ImWchar)(-1) {
 			ellipsis_char = font.DotChar
 			ellipsis_char_count = 3
 		}
-		var glyph *ImFontGlyph = font.FindGlyph(ellipsis_char)
+		var glyph = font.FindGlyph(ellipsis_char)
 
-		var ellipsis_glyph_width float = glyph.X1             // Width of the glyph with no padding on either side
-		var ellipsis_total_width float = ellipsis_glyph_width // Full width of entire ellipsis
+		var ellipsis_glyph_width = glyph.X1             // Width of the glyph with no padding on either side
+		var ellipsis_total_width = ellipsis_glyph_width // Full width of entire ellipsis
 
 		if ellipsis_char_count > 1 {
 			// Full ellipsis size without free spacing after it.
-			var spacing_between_dots float = 1.0 * (draw_list._Data.FontSize / font.FontSize)
+			var spacing_between_dots = 1.0 * (draw_list._Data.FontSize / font.FontSize)
 			ellipsis_glyph_width = glyph.X1 - glyph.X0 + spacing_between_dots
 			ellipsis_total_width = ellipsis_glyph_width*(float)(ellipsis_char_count) - spacing_between_dots
 		}
 
 		// We can now claim the space between pos_max.x and ellipsis_max.x
-		var text_avail_width float = ImMax((ImMax(pos_max.x, ellipsis_max_x)-ellipsis_total_width)-pos_min.x, 1.0)
+		var text_avail_width = ImMax((ImMax(pos_max.x, ellipsis_max_x)-ellipsis_total_width)-pos_min.x, 1.0)
 
 		s := text[text_end_ellipsis:]
 
-		var text_size_clipped_x float = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, &s).x
+		var text_size_clipped_x = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, &s).x
 		if text_end_ellipsis == 0 && text_end_ellipsis < int(len(text)) {
 			// Always display at least 1 character if there's no room for character + ellipsis
 			text_end_ellipsis = ImTextCountUtf8BytesFromChar([]char(text), nil)
@@ -122,7 +122,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 
 		// Render text, render ellipsis
 		RenderTextClippedEx(draw_list, pos_min, &ImVec2{clip_max_x, pos_max.y}, text, &text_size, &ImVec2{0.0, 0.0}, nil)
-		var ellipsis_x float = pos_min.x + text_size_clipped_x
+		var ellipsis_x = pos_min.x + text_size_clipped_x
 		if ellipsis_x+ellipsis_total_width <= ellipsis_max_x {
 			for i := 0; int(i) < ellipsis_char_count; i++ {
 				font.RenderChar(draw_list, font_size, ImVec2{ellipsis_x, pos_min.y}, GetColorU32FromID(ImGuiCol_Text, 1), ellipsis_char)
@@ -138,7 +138,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 	}
 }
 
-// formatted text
+// Text formatted text
 func Text(format string, args ...interface{}) {
 	var window = GetCurrentWindow()
 	if window.SkipItems {
@@ -156,8 +156,8 @@ func TextEx(text string, flags ImGuiTextFlags) {
 	var g = GImGui
 
 	var text_pos = ImVec2{window.DC.CursorPos.x, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset}
-	var wrap_pos_x float = window.DC.TextWrapPos
-	var wrap_enabled bool = (wrap_pos_x >= 0.0)
+	var wrap_pos_x = window.DC.TextWrapPos
+	var wrap_enabled = (wrap_pos_x >= 0.0)
 	if len(text) > 2000 && !wrap_enabled {
 		// Long text!
 		// Perform manual coarse clipping to optimize for long multi-line text
@@ -165,13 +165,13 @@ func TextEx(text string, flags ImGuiTextFlags) {
 		// - We also don't vertically center the text within the line full height, which is unlikely to matter because we are likely the biggest and only item on the line.
 		// - We use memchr(), pay attention that well optimized versions of those str/mem functions are much faster than a casually written loop.
 		var line int = 0
-		var line_height float = GetTextLineHeight()
+		var line_height = GetTextLineHeight()
 		var text_size ImVec2
 
 		// Lines to skip (can't skip when logging text)
-		var pos ImVec2 = text_pos
+		var pos = text_pos
 		if !g.LogEnabled {
-			var lines_skippable int = (int)((window.ClipRect.Min.y - text_pos.y) / line_height)
+			var lines_skippable = (int)((window.ClipRect.Min.y - text_pos.y) / line_height)
 			if lines_skippable > 0 {
 				var lines_skipped int = 0
 				for line < int(len(text)) && lines_skipped < lines_skippable {
@@ -231,7 +231,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 		if wrap_enabled {
 			wrap_width = CalcWrapWidthForPos(&window.DC.CursorPos, wrap_pos_x)
 		}
-		var text_size ImVec2 = CalcTextSize(text, false, wrap_width)
+		var text_size = CalcTextSize(text, false, wrap_width)
 
 		var bb = ImRect{text_pos, text_pos.Add(text_size)}
 		ItemSizeVec(&text_size, 0.0)
@@ -265,7 +265,7 @@ func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col 
 
 	IM_ASSERT(font.ContainerAtlas.TexID == this._CmdHeader.TextureId) // Use high-level ImGui::PushFont() or low-level ImDrawList::PushTextureId() to change font.
 
-	var clip_rect ImVec4 = this._CmdHeader.ClipRect
+	var clip_rect = this._CmdHeader.ClipRect
 	if cpu_fine_clip_rect != nil {
 		clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect.x)
 		clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect.y)
@@ -275,7 +275,7 @@ func (this *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col 
 	font.RenderText(this, font_size, pos, col, &clip_rect, text, wrap_width, cpu_fine_clip_rect != nil)
 }
 
-// Find the optional ## from which we stop displaying text.
+// FindRenderedTextEnd Find the optional ## from which we stop displaying text.
 func FindRenderedTextEnd(t string) string {
 	var i int = 0
 	for i < int(len(t)) {
@@ -289,7 +289,7 @@ func FindRenderedTextEnd(t string) string {
 	return t
 }
 
-// Text Utilities
+// CalcTextSize Text Utilities
 func CalcTextSize(text string, hide_text_after_double_hash bool /*= true*/, wrap_width float /*= -1.0*/) ImVec2 {
 	var g = GImGui
 
@@ -299,11 +299,11 @@ func CalcTextSize(text string, hide_text_after_double_hash bool /*= true*/, wrap
 	}
 
 	var font = g.Font
-	var font_size float = g.FontSize
+	var font_size = g.FontSize
 	if text == text_display_end {
 		return ImVec2{0.0, font_size}
 	}
-	var text_size ImVec2 = font.CalcTextSizeA(font_size, FLT_MAX, wrap_width, text, nil)
+	var text_size = font.CalcTextSizeA(font_size, FLT_MAX, wrap_width, text, nil)
 
 	// Round
 	// FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
@@ -315,7 +315,7 @@ func CalcTextSize(text string, hide_text_after_double_hash bool /*= true*/, wrap
 	return text_size
 }
 
-// Default clip_rect uses (pos_min,pos_max)
+// RenderTextClippedEx Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
 func RenderTextClippedEx(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2, text string, text_size_if_known *ImVec2, align *ImVec2, clip_rect *ImRect) {
 	if align == nil {
@@ -323,7 +323,7 @@ func RenderTextClippedEx(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2
 	}
 
 	// Perform CPU side clipping for single clipped element to avoid using scissor state
-	var pos ImVec2 = *pos_min
+	var pos = *pos_min
 	var text_size ImVec2
 	if text_size_if_known != nil {
 		text_size = *text_size_if_known
@@ -331,13 +331,13 @@ func RenderTextClippedEx(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2
 		text_size = CalcTextSize(text, false, 0.0)
 	}
 
-	var clip_min *ImVec2 = pos_min
-	var clip_max *ImVec2 = pos_max
+	var clip_min = pos_min
+	var clip_max = pos_max
 	if clip_rect != nil {
 		clip_min = &clip_rect.Min
 		clip_max = &clip_rect.Max
 	}
-	var need_clipping bool = (pos.x+text_size.x >= clip_max.x) || (pos.y+text_size.y >= clip_max.y)
+	var need_clipping = (pos.x+text_size.x >= clip_max.x) || (pos.y+text_size.y >= clip_max.y)
 	if clip_rect != nil { // If we had no explicit clipping rectangle then pos==clip_min
 		need_clipping = need_clipping || (pos.x < clip_min.x) || (pos.y < clip_min.y)
 	}
@@ -367,7 +367,7 @@ func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_size_
 	}
 
 	var g = GImGui
-	var window *ImGuiWindow = g.CurrentWindow
+	var window = g.CurrentWindow
 	RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_size_if_known, align, clip_rect)
 	if g.LogEnabled {
 		LogRenderedText(pos_min, text)
@@ -379,15 +379,15 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 	// Align to be pixel perfect
 	pos.x = IM_FLOOR(pos.x)
 	pos.y = IM_FLOOR(pos.y)
-	var x float = pos.x
-	var y float = pos.y
+	var x = pos.x
+	var y = pos.y
 	if y > clip_rect.w {
 		return
 	}
 
-	var scale float = size / this.FontSize
-	var line_height float = this.FontSize * scale
-	var word_wrap_enabled bool = (wrap_width > 0.0)
+	var scale = size / this.FontSize
+	var line_height = this.FontSize * scale
+	var word_wrap_enabled = (wrap_width > 0.0)
 	var word_wrap_eol int = -1
 
 	// Fast-forward to first visible line
@@ -405,7 +405,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 	// Note that very large horizontal line will still be affected by the issue (e.g. a one megabyte string buffer without a newline will likely crash atm)
 	if int(len(text))-i > 10000 && !word_wrap_enabled {
 		var i_end = i
-		var y_end float = y
+		var y_end = y
 		for y_end < clip_rect.w && i_end < int(len(text)) {
 			for ; i_end < int(len(text)) && text[i_end] != '\n'; i_end++ {
 			}
@@ -418,9 +418,9 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 	}
 
 	// Reserve vertices for remaining worse case (over-reserving is useful and easily amortized)
-	var vtx_count_max int = (int)(int(len(text))-i) * 4
-	var idx_count_max int = (int)(int(len(text))-i) * 6
-	var idx_expected_size int = int(len(draw_list.IdxBuffer)) + idx_count_max
+	var vtx_count_max = (int)(int(len(text))-i) * 4
+	var idx_count_max = (int)(int(len(text))-i) * 6
+	var idx_expected_size = int(len(draw_list.IdxBuffer)) + idx_count_max
 
 	//TODO/FIXME these can be negative?
 	if idx_count_max < 0 || vtx_count_max < 0 {
@@ -429,11 +429,11 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 
 	draw_list.PrimReserve(idx_count_max, vtx_count_max)
 
-	var vtx_write int = draw_list._VtxWritePtr
-	var idx_write int = draw_list._IdxWritePtr
-	var vtx_current_idx uint = draw_list._VtxCurrentIdx
+	var vtx_write = draw_list._VtxWritePtr
+	var idx_write = draw_list._IdxWritePtr
+	var vtx_current_idx = draw_list._VtxCurrentIdx
 
-	var col_untinted ImU32 = ImU32(uint64(col) | ^uint64(IM_COL32_A_MASK))
+	var col_untinted = ImU32(uint64(col) | ^uint64(IM_COL32_A_MASK))
 
 	for i < int(len(text)) {
 
@@ -468,7 +468,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 		}
 
 		// Decode and advance source
-		var c rune = (rune)(text[i])
+		var c = (rune)(text[i])
 		if c < 0x80 {
 			i += 1
 		} else {
@@ -492,24 +492,24 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 			}
 		}
 
-		var glyph *ImFontGlyph = this.FindGlyph((ImWchar)(c))
+		var glyph = this.FindGlyph((ImWchar)(c))
 		if glyph == nil {
 			continue
 		}
 
-		var char_width float = glyph.AdvanceX * scale
+		var char_width = glyph.AdvanceX * scale
 		if glyph.Visible != 0 {
 			// We don't do a second finer clipping test on the Y axis as we've already skipped anything before clip_rect.y and exit once we pass clip_rect.w
-			var x1 float = x + glyph.X0*scale
-			var x2 float = x + glyph.X1*scale
-			var y1 float = y + glyph.Y0*scale
-			var y2 float = y + glyph.Y1*scale
+			var x1 = x + glyph.X0*scale
+			var x2 = x + glyph.X1*scale
+			var y1 = y + glyph.Y0*scale
+			var y2 = y + glyph.Y1*scale
 			if x1 <= clip_rect.z && x2 >= clip_rect.x {
 				// Render a character
-				var u1 float = glyph.U0
-				var v1 float = glyph.V0
-				var u2 float = glyph.U1
-				var v2 float = glyph.V1
+				var u1 = glyph.U0
+				var v1 = glyph.V0
+				var u2 = glyph.U1
+				var v2 = glyph.V1
 
 				// CPU side clipping used to fit text in their frame when the frame is too small. Only does clipping for axis aligned quads.
 				if cpu_fine_clip {
@@ -536,7 +536,7 @@ func (this *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, co
 				}
 
 				// Support for untinted glyphs
-				var glyph_col ImU32 = col
+				var glyph_col = col
 				if glyph.Colored != 0 {
 					glyph_col = col_untinted
 				}
