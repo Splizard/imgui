@@ -42,7 +42,7 @@ func Dummy(size ImVec2) {
 		return
 	}
 
-	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)}
+	bb := ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)}
 	ItemSizeVec(&size, 0)
 	ItemAdd(&bb, 0, nil, 0)
 }
@@ -123,7 +123,7 @@ func EndGroup() {
 	g.LastItemData.Rect = group_bb
 
 	// Forward Hovered flag
-	var group_contains_curr_hovered_id = (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0
+	group_contains_curr_hovered_id := (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0
 	if group_contains_curr_hovered_id {
 		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow
 	}

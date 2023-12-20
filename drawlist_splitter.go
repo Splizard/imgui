@@ -6,7 +6,7 @@ package imgui
 // FIXME: This may be a little confusing, trying to be a little too low-level/optimal instead of just doing vector swap..
 //-----------------------------------------------------------------------------
 
-// Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order.
+// ImDrawListSplitter Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order.
 // This is used by the Columns/Tables API, so items of each column can be batched together in a same draw call.
 type ImDrawListSplitter struct {
 	_Current  int             // Current channel number (0)
@@ -14,53 +14,53 @@ type ImDrawListSplitter struct {
 	_Channels []ImDrawChannel // Draw channels (not resized down so _Count might be < Channels.Size)
 }
 
-func (this *ImDrawListSplitter) Clear() {
-	this._Current = 0
-	this._Count = 1 // Do not clear Channels[] so our allocations are reused next frame
+func (s *ImDrawListSplitter) Clear() {
+	s._Current = 0
+	s._Count = 1 // Do not clear Channels[] so our allocations are reused next frame
 }
 
-func (this *ImDrawListSplitter) ClearFreeMemory() {
-	for i := int(0); i < int(len(this._Channels)); i++ {
-		if i == this._Current {
-			this._Channels[i] = ImDrawChannel{} // Current channel is a copy of CmdBuffer/IdxBuffer, don't destruct again
+func (s *ImDrawListSplitter) ClearFreeMemory() {
+	for i := int(0); i < int(len(s._Channels)); i++ {
+		if i == s._Current {
+			s._Channels[i] = ImDrawChannel{} // Current channel is a copy of CmdBuffer/IdxBuffer, don't destruct again
 		}
-		this._Channels[i]._CmdBuffer = nil
-		this._Channels[i]._IdxBuffer = nil
+		s._Channels[i]._CmdBuffer = nil
+		s._Channels[i]._IdxBuffer = nil
 	}
-	this._Current = 0
-	this._Count = 1
-	this._Channels = nil
+	s._Current = 0
+	s._Count = 1
+	s._Channels = nil
 }
 
-func (this *ImDrawListSplitter) Split(draw_list *ImDrawList, channels_count int) {
-	IM_ASSERT_USER_ERROR(this._Current == 0 && this._Count <= 1, "Nested channel splitting is not supported. Please use separate instances of ImDrawListSplitter.")
-	var old_channels_count = int(len(this._Channels))
+func (s *ImDrawListSplitter) Split(draw_list *ImDrawList, channels_count int) {
+	IM_ASSERT_USER_ERROR(s._Current == 0 && s._Count <= 1, "Nested channel splitting is not supported. Please use separate instances of ImDrawListSplitter.")
+	var old_channels_count = int(len(s._Channels))
 	if old_channels_count < channels_count {
-		this._Channels = append(this._Channels, make([]ImDrawChannel, channels_count-old_channels_count)...)
+		s._Channels = append(s._Channels, make([]ImDrawChannel, channels_count-old_channels_count)...)
 	}
-	this._Count = channels_count
+	s._Count = channels_count
 
 	// Channels[] (24/32 bytes each) hold storage that we'll swap with draw_list._CmdBuffer/_IdxBuffer
-	// The content of Channels[0] at this point doesn't matter. We clear it to make state tidy in a debugger but we don't strictly need to.
+	// The content of Channels[0] at s point doesn't matter. We clear it to make state tidy in a debugger but we don't strictly need to.
 	// When we switch to the next channel, we'll copy draw_list._CmdBuffer/_IdxBuffer into Channels[0] and then Channels[1] into draw_list.CmdBuffer/_IdxBuffer
-	this._Channels[0] = ImDrawChannel{}
+	s._Channels[0] = ImDrawChannel{}
 	for i := int(1); i < channels_count; i++ {
 		if i >= old_channels_count {
-			this._Channels[i] = ImDrawChannel{}
+			s._Channels[i] = ImDrawChannel{}
 		} else {
-			this._Channels[i]._CmdBuffer = this._Channels[i]._CmdBuffer[:0]
-			this._Channels[i]._IdxBuffer = this._Channels[i]._IdxBuffer[:0]
+			s._Channels[i]._CmdBuffer = s._Channels[i]._CmdBuffer[:0]
+			s._Channels[i]._IdxBuffer = s._Channels[i]._IdxBuffer[:0]
 		}
 	}
 }
 
-func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
+func (s *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	// Note that we never use or rely on _Channels.Size because it is merely a buffer that we never shrink back to 0 to keep all sub-buffers ready for use.
-	if this._Count <= 1 {
+	if s._Count <= 1 {
 		return
 	}
 
-	this.SetCurrentChannel(draw_list, 0)
+	s.SetCurrentChannel(draw_list, 0)
 	draw_list._PopUnusedDrawCmd()
 
 	// Calculate our final buffer sizes. Also fix the incorrect IdxOffset values in each command.
@@ -68,7 +68,7 @@ func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	var new_idx_buffer_count int = 0
 
 	var last_cmd *ImDrawCmd
-	if this._Count > 0 && len(draw_list.CmdBuffer) > 0 {
+	if s._Count > 0 && len(draw_list.CmdBuffer) > 0 {
 		last_cmd = &draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1]
 	}
 
@@ -77,10 +77,10 @@ func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 		idx_offset = int(last_cmd.IdxOffset + last_cmd.ElemCount)
 	}
 
-	for i := int(1); i < this._Count; i++ {
-		var ch = &this._Channels[i]
+	for i := int(1); i < s._Count; i++ {
+		var ch = &s._Channels[i]
 
-		// Equivalent of PopUnusedDrawCmd() for this channel's cmdbuffer and except we don't need to test for UserCallback.
+		// Equivalent of PopUnusedDrawCmd() for s channel's cmdbuffer and except we don't need to test for UserCallback.
 		if len(ch._CmdBuffer) > 0 && ch._CmdBuffer[len(ch._CmdBuffer)-1].ElemCount == 0 {
 			ch._CmdBuffer = ch._CmdBuffer[:len(ch._CmdBuffer)-1]
 		}
@@ -110,8 +110,8 @@ func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	// Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
 	var cmd_write = draw_list.CmdBuffer[int(len(draw_list.CmdBuffer))-new_cmd_buffer_count:]
 	var idx_write = draw_list.IdxBuffer[int(len(draw_list.IdxBuffer))-new_idx_buffer_count:]
-	for i := int(1); i < this._Count; i++ {
-		var ch = this._Channels[i]
+	for i := int(1); i < s._Count; i++ {
+		var ch = s._Channels[i]
 		if sz := len(ch._CmdBuffer); sz != 0 {
 			copy(cmd_write, ch._CmdBuffer[sz:])
 			cmd_write = cmd_write[sz:]
@@ -136,21 +136,21 @@ func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 		draw_list.AddDrawCmd()
 	}
 
-	this._Count = 1
+	s._Count = 1
 }
 
-func (this *ImDrawListSplitter) SetCurrentChannel(draw_list *ImDrawList, idx int) {
-	IM_ASSERT(idx >= 0 && idx < this._Count)
-	if this._Current == idx {
+func (s *ImDrawListSplitter) SetCurrentChannel(draw_list *ImDrawList, idx int) {
+	IM_ASSERT(idx >= 0 && idx < s._Count)
+	if s._Current == idx {
 		return
 	}
 
 	// Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
-	copy(this._Channels[this._Current]._CmdBuffer, draw_list.CmdBuffer)
-	copy(this._Channels[this._Current]._IdxBuffer, draw_list.IdxBuffer)
-	this._Current = idx
-	copy(draw_list.CmdBuffer, this._Channels[idx]._CmdBuffer)
-	copy(draw_list.IdxBuffer, this._Channels[idx]._IdxBuffer)
+	copy(s._Channels[s._Current]._CmdBuffer, draw_list.CmdBuffer)
+	copy(s._Channels[s._Current]._IdxBuffer, draw_list.IdxBuffer)
+	s._Current = idx
+	copy(draw_list.CmdBuffer, s._Channels[idx]._CmdBuffer)
+	copy(draw_list.IdxBuffer, s._Channels[idx]._IdxBuffer)
 	draw_list._IdxWritePtr = int(len(draw_list.IdxBuffer))
 
 	// If current command is used with different settings we need to add a new command
