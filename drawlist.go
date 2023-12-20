@@ -540,8 +540,8 @@ func (l *ImDrawList) PopTextureID() {
 }
 
 func (l *ImDrawList) PrimRectUV(a, c, uv_a, uv_c *ImVec2, col ImU32) {
-	var b, d, uv_b, uv_d = ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, ImVec2{uv_c.x, uv_a.y}, ImVec2{uv_a.x, uv_c.y}
-	var idx = (ImDrawIdx)(l._VtxCurrentIdx)
+	b, d, uv_b, uv_d := ImVec2{c.x, a.y}, ImVec2{a.x, c.y}, ImVec2{uv_c.x, uv_a.y}, ImVec2{uv_a.x, uv_c.y}
+	idx := (ImDrawIdx)(l._VtxCurrentIdx)
 	l.IdxBuffer[l._IdxWritePtr+0] = idx
 	l.IdxBuffer[l._IdxWritePtr+1] = (ImDrawIdx)(idx + 1)
 	l.IdxBuffer[l._IdxWritePtr+2] = (ImDrawIdx)(idx + 2)
@@ -570,7 +570,7 @@ func (l *ImDrawList) AddImageQuad(user_texture_id ImTextureID, p1 *ImVec2, p2 *I
 		return
 	}
 
-	var push_texture_id = user_texture_id != l._CmdHeader.TextureId
+	push_texture_id := user_texture_id != l._CmdHeader.TextureId
 	if push_texture_id {
 		l.PushTextureID(user_texture_id)
 	}
@@ -594,12 +594,12 @@ func (l *ImDrawList) AddImageRounded(user_texture_id ImTextureID, p_min ImVec2, 
 		return
 	}
 
-	var push_texture_id = user_texture_id != l._CmdHeader.TextureId
+	push_texture_id := user_texture_id != l._CmdHeader.TextureId
 	if push_texture_id {
 		l.PushTextureID(user_texture_id)
 	}
 
-	var vert_start_idx = int(len(l.VtxBuffer))
+	vert_start_idx := int(len(l.VtxBuffer))
 	l.PathRect(&p_min, &p_max, rounding, flags)
 	l.PathFillConvex(col)
 	var vert_end_idx = int(len(l.VtxBuffer))
