@@ -12,19 +12,21 @@ const FLT_MIN = math.SmallestNonzeroFloat32
 const FLT_MAX = math.MaxFloat32
 const INT_MAX = math.MaxInt32
 
-// ImGuiLayoutType Use your programming IDE "Go to definition" facility on the names of the center columns to find the actual flags/enum lists.
-type ImGuiLayoutType int          // -> enum ImGuiLayoutType_         // Enum: Horizontal or vertical
-type ImGuiItemFlags int           // -> enum ImGuiItemFlags_          // Flags: for PushItemFlag()
-type ImGuiItemStatusFlags int     // -> enum ImGuiItemStatusFlags_    // Flags: for DC.LastItemStatusFlags
-type ImGuiOldColumnFlags int      // -> enum ImGuiOldColumnFlags_     // Flags: for BeginColumns()
-type ImGuiNavHighlightFlags int   // -> enum ImGuiNavHighlightFlags_  // Flags: for RenderNavHighlight()
-type ImGuiNavDirSourceFlags int   // -> enum ImGuiNavDirSourceFlags_  // Flags: for GetNavInputAmount2d()
-type ImGuiNavMoveFlags int        // -> enum ImGuiNavMoveFlags_       // Flags: for navigation requests
-type ImGuiNextItemDataFlags int   // -> enum ImGuiNextItemDataFlags_  // Flags: for SetNextItemXXX() functions
-type ImGuiNextWindowDataFlags int // -> enum ImGuiNextWindowDataFlags_// Flags: for SetNextWindowXXX() functions
-type ImGuiSeparatorFlags int      // -> enum ImGuiSeparatorFlags_     // Flags: for SeparatorEx()
-type ImGuiTextFlags int           // -> enum ImGuiTextFlags_          // Flags: for TextEx()
-type ImGuiTooltipFlags int        // -> enum ImGuiTooltipFlags_       // Flags: for BeginTooltipEx()
+type (
+	// ImGuiLayoutType Use your programming IDE "Go to definition" facility on the names of the center columns to find the actual flags/enum lists.
+	ImGuiLayoutType          int // -> enum ImGuiLayoutType_         // Enum: Horizontal or vertical
+	ImGuiItemFlags           int // -> enum ImGuiItemFlags_          // Flags: for PushItemFlag()
+	ImGuiItemStatusFlags     int // -> enum ImGuiItemStatusFlags_    // Flags: for DC.LastItemStatusFlags
+	ImGuiOldColumnFlags      int // -> enum ImGuiOldColumnFlags_     // Flags: for BeginColumns()
+	ImGuiNavHighlightFlags   int // -> enum ImGuiNavHighlightFlags_  // Flags: for RenderNavHighlight()
+	ImGuiNavDirSourceFlags   int // -> enum ImGuiNavDirSourceFlags_  // Flags: for GetNavInputAmount2d()
+	ImGuiNavMoveFlags        int // -> enum ImGuiNavMoveFlags_       // Flags: for navigation requests
+	ImGuiNextItemDataFlags   int // -> enum ImGuiNextItemDataFlags_  // Flags: for SetNextItemXXX() functions
+	ImGuiNextWindowDataFlags int // -> enum ImGuiNextWindowDataFlags_// Flags: for SetNextWindowXXX() functions
+	ImGuiSeparatorFlags      int // -> enum ImGuiSeparatorFlags_     // Flags: for SeparatorEx()
+	ImGuiTextFlags           int // -> enum ImGuiTextFlags_          // Flags: for TextEx()
+	ImGuiTooltipFlags        int // -> enum ImGuiTooltipFlags_       // Flags: for BeginTooltipEx()
+)
 
 type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 
@@ -612,8 +614,8 @@ type ImGuiNextWindowData struct {
 	MenuBarOffsetMinVal  ImVec2
 }
 
-func (this *ImGuiNextWindowData) ClearFlags() {
-	this.Flags = ImGuiNextWindowDataFlags_None
+func (d *ImGuiNextWindowData) ClearFlags() {
+	d.Flags = ImGuiNextWindowDataFlags_None
 }
 
 type ImGuiNextItemData struct {
@@ -624,8 +626,8 @@ type ImGuiNextItemData struct {
 	OpenVal      bool      // Set by SetNextItemOpen()
 }
 
-func (this *ImGuiNextItemData) ClearFlags() {
-	this.Flags = ImGuiNextItemDataFlags_None
+func (d *ImGuiNextItemData) ClearFlags() {
+	d.Flags = ImGuiNextItemDataFlags_None
 }
 
 type ImGuiLastItemData struct {
@@ -679,10 +681,10 @@ func NewImGuiNavItemData() ImGuiNavItemData {
 	}
 }
 
-func (this *ImGuiNavItemData) Clear() {
-	this.DistBox = FLT_MAX
-	this.DistCenter = FLT_MAX
-	this.DistAxial = FLT_MAX
+func (d *ImGuiNavItemData) Clear() {
+	d.DistBox = FLT_MAX
+	d.DistCenter = FLT_MAX
+	d.DistAxial = FLT_MAX
 }
 
 // ImGuiOldColumnData Storage data for a single column for legacy Columns() api
@@ -721,30 +723,30 @@ func NewImGuiViewportP() ImGuiViewportP {
 	}
 }
 
-func (this *ImGuiViewportP) CalcWorkRectPos(off_min *ImVec2) ImVec2 {
-	return ImVec2{this.Pos.x + off_min.x, this.Pos.y + off_min.y}
+func (p *ImGuiViewportP) CalcWorkRectPos(off_min *ImVec2) ImVec2 {
+	return ImVec2{p.Pos.x + off_min.x, p.Pos.y + off_min.y}
 }
 
-func (this *ImGuiViewportP) CalcWorkRectSize(off_min *ImVec2, off_max *ImVec2) ImVec2 {
-	return ImVec2{ImMax(0.0, this.Size.x-off_min.x+off_max.x), ImMax(0.0, this.Size.y-off_min.y+off_max.y)}
+func (p *ImGuiViewportP) CalcWorkRectSize(off_min *ImVec2, off_max *ImVec2) ImVec2 {
+	return ImVec2{ImMax(0.0, p.Size.x-off_min.x+off_max.x), ImMax(0.0, p.Size.y-off_min.y+off_max.y)}
 }
 
-func (this *ImGuiViewportP) UpdateWorkRect() {
-	this.WorkPos = this.CalcWorkRectPos(&this.WorkOffsetMin)
-	this.WorkSize = this.CalcWorkRectSize(&this.WorkOffsetMin, &this.WorkOffsetMax)
+func (p *ImGuiViewportP) UpdateWorkRect() {
+	p.WorkPos = p.CalcWorkRectPos(&p.WorkOffsetMin)
+	p.WorkSize = p.CalcWorkRectSize(&p.WorkOffsetMin, &p.WorkOffsetMax)
 }
 
-func (this *ImGuiViewportP) GetMainRect() ImRect {
-	return ImRect{ImVec2{this.Pos.x, this.Pos.y}, ImVec2{this.Pos.x + this.Size.x, this.Pos.y + this.Size.y}}
+func (p *ImGuiViewportP) GetMainRect() ImRect {
+	return ImRect{ImVec2{p.Pos.x, p.Pos.y}, ImVec2{p.Pos.x + p.Size.x, p.Pos.y + p.Size.y}}
 }
 
-func (this *ImGuiViewportP) GetWorkRect() ImRect {
-	return ImRect{ImVec2{this.WorkPos.x, this.WorkPos.y}, ImVec2{this.WorkPos.x + this.WorkSize.x, this.WorkPos.y + this.WorkSize.y}}
+func (p *ImGuiViewportP) GetWorkRect() ImRect {
+	return ImRect{ImVec2{p.WorkPos.x, p.WorkPos.y}, ImVec2{p.WorkPos.x + p.WorkSize.x, p.WorkPos.y + p.WorkSize.y}}
 }
 
-func (this *ImGuiViewportP) GetBuildWorkRect() ImRect {
-	var pos = this.CalcWorkRectPos(&this.BuildWorkOffsetMin)
-	var size = this.CalcWorkRectSize(&this.BuildWorkOffsetMin, &this.BuildWorkOffsetMax)
+func (p *ImGuiViewportP) GetBuildWorkRect() ImRect {
+	var pos = p.CalcWorkRectPos(&p.BuildWorkOffsetMin)
+	var size = p.CalcWorkRectSize(&p.BuildWorkOffsetMin, &p.BuildWorkOffsetMax)
 	return ImRect{ImVec2{pos.x, pos.y}, ImVec2{pos.x + size.x, pos.y + size.y}}
 }
 
@@ -760,8 +762,8 @@ type ImGuiWindowSettings struct {
 	name      string
 }
 
-func (this *ImGuiWindowSettings) GetName() string {
-	return this.name
+func (s *ImGuiWindowSettings) GetName() string {
+	return s.name
 }
 
 type ImGuiSettingsHandler struct {
@@ -805,34 +807,34 @@ type ImGuiStackSizes struct {
 	SizeOfBeginPopupStack short
 }
 
-func (this *ImGuiStackSizes) SetToCurrentState() {
+func (s *ImGuiStackSizes) SetToCurrentState() {
 	var g = GImGui
 	var window = g.CurrentWindow
-	this.SizeOfIDStack = (short)(len(window.IDStack))
-	this.SizeOfColorStack = (short)(len(g.ColorStack))
-	this.SizeOfStyleVarStack = (short)(len(g.StyleVarStack))
-	this.SizeOfFontStack = (short)(len(g.FontStack))
-	this.SizeOfFocusScopeStack = (short)(len(g.FocusScopeStack))
-	this.SizeOfGroupStack = (short)(len(g.GroupStack))
-	this.SizeOfBeginPopupStack = (short)(len(g.BeginPopupStack))
+	s.SizeOfIDStack = (short)(len(window.IDStack))
+	s.SizeOfColorStack = (short)(len(g.ColorStack))
+	s.SizeOfStyleVarStack = (short)(len(g.StyleVarStack))
+	s.SizeOfFontStack = (short)(len(g.FontStack))
+	s.SizeOfFocusScopeStack = (short)(len(g.FocusScopeStack))
+	s.SizeOfGroupStack = (short)(len(g.GroupStack))
+	s.SizeOfBeginPopupStack = (short)(len(g.BeginPopupStack))
 }
 
-func (this *ImGuiStackSizes) CompareWithCurrentState() {
+func (s *ImGuiStackSizes) CompareWithCurrentState() {
 	var g = GImGui
 	var window = g.CurrentWindow
 
 	// Window stacks
 	// NOT checking: DC.ItemWidth, DC.TextWrapPos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
-	IM_ASSERT_USER_ERROR(this.SizeOfIDStack == short(len(window.IDStack)), "PushID/PopID or TreeNode/TreePop Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfIDStack == short(len(window.IDStack)), "PushID/PopID or TreeNode/TreePop Mismatch!")
 
 	// Global stacks
 	// For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.
-	IM_ASSERT_USER_ERROR(this.SizeOfGroupStack == short(len(g.GroupStack)), "BeginGroup/EndGroup Mismatch!")
-	IM_ASSERT_USER_ERROR(this.SizeOfBeginPopupStack == short(len(g.BeginPopupStack)), "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!")
-	IM_ASSERT_USER_ERROR(this.SizeOfColorStack >= short(len(g.ColorStack)), "PushStyleColor/PopStyleColor Mismatch!")
-	IM_ASSERT_USER_ERROR(this.SizeOfStyleVarStack >= short(len(g.StyleVarStack)), "PushStyleVar/PopStyleVar Mismatch!")
-	IM_ASSERT_USER_ERROR(this.SizeOfFontStack >= short(len(g.FontStack)), "PushFont/PopFont Mismatch!")
-	IM_ASSERT_USER_ERROR(this.SizeOfFocusScopeStack == short(len(g.FocusScopeStack)), "PushFocusScope/PopFocusScope Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfGroupStack == short(len(g.GroupStack)), "BeginGroup/EndGroup Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfBeginPopupStack == short(len(g.BeginPopupStack)), "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfColorStack >= short(len(g.ColorStack)), "PushStyleColor/PopStyleColor Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfStyleVarStack >= short(len(g.StyleVarStack)), "PushStyleVar/PopStyleVar Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfFontStack >= short(len(g.FontStack)), "PushFont/PopFont Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfFocusScopeStack == short(len(g.FocusScopeStack)), "PushFocusScope/PopFocusScope Mismatch!")
 }
 
 type ImGuiContextHookCallback func(ctx *ImGuiContext, hook *ImGuiContextHook)
@@ -1012,14 +1014,14 @@ func NewImGuiWindow(context *ImGuiContext, name string) *ImGuiWindow {
 	return &window
 }
 
-func (this *ImGuiWindow) GetIDs(str string) ImGuiID {
-	var seed = this.IDStack[len(this.IDStack)-1]
+func (w *ImGuiWindow) GetIDs(str string) ImGuiID {
+	var seed = w.IDStack[len(w.IDStack)-1]
 	var id = ImHashStr(str, 0, seed)
 	KeepAliveID(id)
 	return id
 }
 
-func (this *ImGuiWindow) GetIDInterface(ptr any) ImGuiID {
+func (w *ImGuiWindow) GetIDInterface(ptr any) ImGuiID {
 	rvalue := reflect.ValueOf(ptr)
 
 	// .Elem() will panic if it's not an interface or a pointer
@@ -1032,84 +1034,84 @@ func (this *ImGuiWindow) GetIDInterface(ptr any) ImGuiID {
 		rvalue = reflect.ValueOf(&ptr).Elem()
 	}
 
-	var seed = this.IDStack[len(this.IDStack)-1]
+	var seed = w.IDStack[len(w.IDStack)-1]
 	var id = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	KeepAliveID(id)
 	return id
 }
 
-func (this *ImGuiWindow) GetIDInt(n int) ImGuiID {
-	var seed = this.IDStack[len(this.IDStack)-1]
+func (w *ImGuiWindow) GetIDInt(n int) ImGuiID {
+	var seed = w.IDStack[len(w.IDStack)-1]
 	var id = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), seed)
 	KeepAliveID(id)
 	return id
 }
 
-func (this *ImGuiWindow) GetIDNoKeepAlive(str string) ImGuiID {
-	var seed = this.IDStack[len(this.IDStack)-1]
+func (w *ImGuiWindow) GetIDNoKeepAlive(str string) ImGuiID {
+	var seed = w.IDStack[len(w.IDStack)-1]
 	var id = ImHashStr(str, 0, seed)
 	return id
 }
 
-func (this *ImGuiWindow) GetIDNoKeepAliveInterface(ptr any) ImGuiID {
+func (w *ImGuiWindow) GetIDNoKeepAliveInterface(ptr any) ImGuiID {
 	rvalue := reflect.ValueOf(ptr).Elem()
-	var seed = this.IDStack[len(this.IDStack)-1]
+	var seed = w.IDStack[len(w.IDStack)-1]
 	var id = ImHashData(unsafe.Pointer(rvalue.UnsafeAddr()), rvalue.Type().Size(), seed)
 	return id
 }
 
-func (this *ImGuiWindow) GetIDNoKeepAliveInt(n int) ImGuiID {
-	var seed = this.IDStack[len(this.IDStack)-1]
+func (w *ImGuiWindow) GetIDNoKeepAliveInt(n int) ImGuiID {
+	var seed = w.IDStack[len(w.IDStack)-1]
 	var id = ImHashData(unsafe.Pointer(&n), unsafe.Sizeof(n), seed)
 	return id
 }
 
 // GetIDFromRectangle This is only used in rare/specific situations to manufacture an ID out of nowhere.
-func (this *ImGuiWindow) GetIDFromRectangle(r_abs ImRect) ImGuiID {
-	var seed = this.IDStack[len(this.IDStack)-1]
-	var r_rel = [4]int{(int)(r_abs.Min.x - this.Pos.x), (int)(r_abs.Min.y - this.Pos.y), (int)(r_abs.Max.x - this.Pos.x), (int)(r_abs.Max.y - this.Pos.y)}
+func (w *ImGuiWindow) GetIDFromRectangle(r_abs ImRect) ImGuiID {
+	var seed = w.IDStack[len(w.IDStack)-1]
+	var r_rel = [4]int{(int)(r_abs.Min.x - w.Pos.x), (int)(r_abs.Min.y - w.Pos.y), (int)(r_abs.Max.x - w.Pos.x), (int)(r_abs.Max.y - w.Pos.y)}
 	var id = ImHashData(unsafe.Pointer(&r_rel), unsafe.Sizeof(r_rel), seed)
 	KeepAliveID(id)
 	return id
 }
 
-func (this *ImGuiWindow) Rect() ImRect {
-	return ImRect{ImVec2{this.Pos.x, this.Pos.y}, ImVec2{this.Pos.x + this.Size.x, this.Pos.y + this.Size.y}}
+func (w *ImGuiWindow) Rect() ImRect {
+	return ImRect{ImVec2{w.Pos.x, w.Pos.y}, ImVec2{w.Pos.x + w.Size.x, w.Pos.y + w.Size.y}}
 }
 
-func (this *ImGuiWindow) CalcFontSize() float {
+func (w *ImGuiWindow) CalcFontSize() float {
 	var g = GImGui
-	var scale = g.FontBaseSize * this.FontWindowScale
-	if this.ParentWindow != nil {
-		scale *= this.ParentWindow.FontWindowScale
+	var scale = g.FontBaseSize * w.FontWindowScale
+	if w.ParentWindow != nil {
+		scale *= w.ParentWindow.FontWindowScale
 	}
 	//return 20 //TODO/FIXME
 	return scale
 }
 
-func (this *ImGuiWindow) TitleBarHeight() float {
+func (w *ImGuiWindow) TitleBarHeight() float {
 	var g = GImGui
-	if this.Flags&ImGuiWindowFlags_NoTitleBar != 0 {
+	if w.Flags&ImGuiWindowFlags_NoTitleBar != 0 {
 		return 0.0
 	}
-	return this.CalcFontSize() + g.Style.FramePadding.y*2.0
+	return w.CalcFontSize() + g.Style.FramePadding.y*2.0
 }
 
-func (this *ImGuiWindow) TitleBarRect() ImRect {
-	return ImRect{ImVec2{this.Pos.x, this.Pos.y}, ImVec2{this.Pos.x + this.SizeFull.x, this.Pos.y + this.TitleBarHeight()}}
+func (w *ImGuiWindow) TitleBarRect() ImRect {
+	return ImRect{ImVec2{w.Pos.x, w.Pos.y}, ImVec2{w.Pos.x + w.SizeFull.x, w.Pos.y + w.TitleBarHeight()}}
 }
 
-func (this *ImGuiWindow) MenuBarHeight() float {
+func (w *ImGuiWindow) MenuBarHeight() float {
 	var g = GImGui
-	if this.Flags&ImGuiWindowFlags_MenuBar != 0 {
-		return this.DC.MenuBarOffset.y + this.CalcFontSize() + g.Style.FramePadding.y*2.0
+	if w.Flags&ImGuiWindowFlags_MenuBar != 0 {
+		return w.DC.MenuBarOffset.y + w.CalcFontSize() + g.Style.FramePadding.y*2.0
 	}
 	return 0
 }
 
-func (this *ImGuiWindow) MenuBarRect() ImRect {
-	var y1 = this.Pos.y + this.TitleBarHeight()
-	return ImRect{ImVec2{this.Pos.x, y1}, ImVec2{this.Pos.x + this.SizeFull.x, y1 + this.MenuBarHeight()}}
+func (w *ImGuiWindow) MenuBarRect() ImRect {
+	var y1 = w.Pos.y + w.TitleBarHeight()
+	return ImRect{ImVec2{w.Pos.x, y1}, ImVec2{w.Pos.x + w.SizeFull.x, y1 + w.MenuBarHeight()}}
 }
 
 var IM_COL32_DISABLE = IM_COL32(0, 0, 0, 1) // Special sentinel code which cannot be used as a regular color.

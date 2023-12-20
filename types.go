@@ -715,9 +715,9 @@ type ImGuiViewport struct {
 }
 
 // GetCenter Helpers
-func (this *ImGuiViewport) GetCenter() ImVec2 {
-	return ImVec2{this.Pos.x + this.Size.x*0.5, this.Pos.y + this.Size.y*0.5}
+func (p *ImGuiViewport) GetCenter() ImVec2 {
+	return ImVec2{p.Pos.x + p.Size.x*0.5, p.Pos.y + p.Size.y*0.5}
 }
-func (this *ImGuiViewport) GetWorkCenter() ImVec2 {
-	return ImVec2{this.WorkPos.x + this.WorkSize.x*0.5, this.WorkPos.y + this.WorkSize.y*0.5}
+func (p *ImGuiViewport) GetWorkCenter() ImVec2 {
+	return ImVec2{p.WorkPos.x + p.WorkSize.x*0.5, p.WorkPos.y + p.WorkSize.y*0.5}
 }
