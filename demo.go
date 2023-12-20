@@ -21,7 +21,7 @@ func HelpMarker(desc string) {
 
 // ShowUserGuide Helper to display basic user controls.
 func ShowUserGuide() {
-	var io = GetIO()
+	io := GetIO()
 	BulletText("Double-click on title bar to collapse window.")
 	BulletText(
 		"Click and drag on lower corner to resize window\n" +
@@ -242,7 +242,7 @@ func ShowDemoWindow(p_open *bool) {
 	}
 
 	if CollapsingHeader("Configuration", 0) {
-		var io = GetIO()
+		io := GetIO()
 
 		if TreeNode("Configuration##2") {
 			CheckboxFlagsInt("io.ConfigFlags: NavEnableKeyboard", (*int32)(&io.ConfigFlags), int32(ImGuiConfigFlags_NavEnableKeyboard))

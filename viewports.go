@@ -25,7 +25,7 @@ func UpdateViewportsNewFrame() {
 }
 
 func SetupViewportDrawData(viewport *ImGuiViewportP, draw_lists *[]*ImDrawList) {
-	var io = GetIO()
+	io := GetIO()
 	var draw_data = &viewport.DrawDataP
 	draw_data.Valid = true
 	if len(*draw_lists) > 0 {
