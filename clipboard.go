@@ -18,7 +18,7 @@ func SetClipboardText(text string) {
 	}
 }
 
-// Local Dear ImGui-only clipboard implementation, if user hasn't defined better clipboard handlers.
+// GetClipboardTextFn_DefaultImpl Local Dear ImGui-only clipboard implementation, if user hasn't defined better clipboard handlers.
 func GetClipboardTextFn_DefaultImpl(any) string {
 	var g = GImGui
 	if len(g.ClipboardHandlerData) == 0 {

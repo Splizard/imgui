@@ -17,7 +17,7 @@ func ImAlphaBlendColors(col_a, col_b ImU32) ImU32 {
 	return IM_COL32(byte(r), byte(g), byte(b), 0xFF)
 }
 
-// Color Utilities
+// ColorConvertU32ToFloat4 Color Utilities
 func ColorConvertU32ToFloat4(in ImU32) ImVec4 {
 	var s float = 1.0 / 255.0
 	return ImVec4{
@@ -27,7 +27,7 @@ func ColorConvertU32ToFloat4(in ImU32) ImVec4 {
 		float((in>>IM_COL32_A_SHIFT)&0xFF) * s}
 }
 
-// Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
+// ColorConvertRGBtoHSV Convert rgb floats ([0-1],[0-1],[0-1]) to hsv floats ([0-1],[0-1],[0-1]), from Foley & van Dam p592
 // Optimized http://lolengine.net/blog/2013/01/13/fast-rgb-to-hsv
 func ColorConvertRGBtoHSV(r float, g float, b float, out_h, out_s, out_v *float) {
 	var K float = 0
@@ -51,7 +51,7 @@ func ColorConvertRGBtoHSV(r float, g float, b float, out_h, out_s, out_v *float)
 	*out_v = r
 }
 
-// Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
+// ColorConvertHSVtoRGB Convert hsv floats ([0-1],[0-1],[0-1]) to rgb floats ([0-1],[0-1],[0-1]), from Foley & van Dam p593
 // also http://en.wikipedia.org/wiki/HSL_and_HSV
 func ColorConvertHSVtoRGB(h float, s float, v float, out_r, out_g, out_b *float) {
 	if s == 0.0 {
