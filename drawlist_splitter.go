@@ -34,7 +34,7 @@ func (s *ImDrawListSplitter) ClearFreeMemory() {
 
 func (s *ImDrawListSplitter) Split(draw_list *ImDrawList, channels_count int) {
 	IM_ASSERT_USER_ERROR(s._Current == 0 && s._Count <= 1, "Nested channel splitting is not supported. Please use separate instances of ImDrawListSplitter.")
-	var old_channels_count = int(len(s._Channels))
+	old_channels_count := int(len(s._Channels))
 	if old_channels_count < channels_count {
 		s._Channels = append(s._Channels, make([]ImDrawChannel, channels_count-old_channels_count)...)
 	}
@@ -86,7 +86,7 @@ func (s *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 		}
 
 		if len(ch._CmdBuffer) > 0 && last_cmd != nil {
-			var next_cmd = &ch._CmdBuffer[0]
+			next_cmd := &ch._CmdBuffer[0]
 			if last_cmd.HeaderEquals(next_cmd) && last_cmd.UserCallback == nil && next_cmd.UserCallback == nil {
 				// Merge previous channel last draw command with current channel first draw command if matching.
 				last_cmd.ElemCount += next_cmd.ElemCount
@@ -108,8 +108,8 @@ func (s *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	draw_list.IdxBuffer = append(draw_list.IdxBuffer, make([]ImDrawIdx, new_idx_buffer_count)...)
 
 	// Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
-	var cmd_write = draw_list.CmdBuffer[int(len(draw_list.CmdBuffer))-new_cmd_buffer_count:]
-	var idx_write = draw_list.IdxBuffer[int(len(draw_list.IdxBuffer))-new_idx_buffer_count:]
+	cmd_write := draw_list.CmdBuffer[int(len(draw_list.CmdBuffer))-new_cmd_buffer_count:]
+	idx_write := draw_list.IdxBuffer[int(len(draw_list.IdxBuffer))-new_idx_buffer_count:]
 	for i := int(1); i < s._Count; i++ {
 		var ch = s._Channels[i]
 		if sz := len(ch._CmdBuffer); sz != 0 {
@@ -129,7 +129,7 @@ func (s *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	}
 
 	// If current command is used with different settings we need to add a new command
-	var curr_cmd = &draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1]
+	curr_cmd := &draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1]
 	if curr_cmd.ElemCount == 0 {
 		curr_cmd.HeaderCopyFromHeader(draw_list._CmdHeader)
 	} else if curr_cmd.HeaderEqualsHeader(&draw_list._CmdHeader) {
