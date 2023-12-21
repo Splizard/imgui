@@ -416,110 +416,110 @@ type ImRect struct {
 }
 
 func ImRectFromVec4(v *ImVec4) ImRect { return ImRect{ImVec2{v.x, v.y}, ImVec2{v.z, v.w}} }
-func (this *ImRect) GetCenter() ImVec2 {
-	return ImVec2{(this.Min.x + this.Max.x) * 0.5, (this.Min.y + this.Max.y) * 0.5}
+func (re *ImRect) GetCenter() ImVec2 {
+	return ImVec2{(re.Min.x + re.Max.x) * 0.5, (re.Min.y + re.Max.y) * 0.5}
 }
-func (this *ImRect) GetSize() ImVec2  { return ImVec2{this.Max.x - this.Min.x, this.Max.y - this.Min.y} }
-func (this *ImRect) GetWidth() float  { return this.Max.x - this.Min.x }
-func (this *ImRect) GetHeight() float { return this.Max.y - this.Min.y }
-func (this *ImRect) GetArea() float   { return (this.Max.x - this.Min.x) * (this.Max.y - this.Min.y) }
-func (this *ImRect) GetTL() ImVec2    { return this.Min }
-func (this *ImRect) GetTR() ImVec2    { return ImVec2{this.Max.x, this.Min.y} }
-func (this *ImRect) GetBL() ImVec2    { return ImVec2{this.Min.x, this.Max.y} }
-func (this *ImRect) GetBR() ImVec2    { return this.Max }
-func (this *ImRect) ContainsVec(p ImVec2) bool {
-	return p.x >= this.Min.x && p.y >= this.Min.y && p.x < this.Max.x && p.y < this.Max.y
+func (re *ImRect) GetSize() ImVec2  { return ImVec2{re.Max.x - re.Min.x, re.Max.y - re.Min.y} }
+func (re *ImRect) GetWidth() float  { return re.Max.x - re.Min.x }
+func (re *ImRect) GetHeight() float { return re.Max.y - re.Min.y }
+func (re *ImRect) GetArea() float   { return (re.Max.x - re.Min.x) * (re.Max.y - re.Min.y) }
+func (re *ImRect) GetTL() ImVec2    { return re.Min }
+func (re *ImRect) GetTR() ImVec2    { return ImVec2{re.Max.x, re.Min.y} }
+func (re *ImRect) GetBL() ImVec2    { return ImVec2{re.Min.x, re.Max.y} }
+func (re *ImRect) GetBR() ImVec2    { return re.Max }
+func (re *ImRect) ContainsVec(p ImVec2) bool {
+	return p.x >= re.Min.x && p.y >= re.Min.y && p.x < re.Max.x && p.y < re.Max.y
 }
-func (this *ImRect) ContainsRect(r ImRect) bool {
-	return r.Min.x >= this.Min.x && r.Min.y >= this.Min.y && r.Max.x <= this.Max.x && r.Max.y <= this.Max.y
+func (re *ImRect) ContainsRect(r ImRect) bool {
+	return r.Min.x >= re.Min.x && r.Min.y >= re.Min.y && r.Max.x <= re.Max.x && r.Max.y <= re.Max.y
 }
-func (this *ImRect) Overlaps(r ImRect) bool {
-	return r.Min.y < this.Max.y && r.Max.y > this.Min.y && r.Min.x < this.Max.x && r.Max.x > this.Min.x
+func (re *ImRect) Overlaps(r ImRect) bool {
+	return r.Min.y < re.Max.y && r.Max.y > re.Min.y && r.Min.x < re.Max.x && r.Max.x > re.Min.x
 }
-func (this *ImRect) AddVec(p ImVec2) {
-	if this.Min.x > p.x {
-		this.Min.x = p.x
+func (re *ImRect) AddVec(p ImVec2) {
+	if re.Min.x > p.x {
+		re.Min.x = p.x
 	}
-	if this.Min.y > p.y {
-		this.Min.y = p.y
+	if re.Min.y > p.y {
+		re.Min.y = p.y
 	}
-	if this.Max.x < p.x {
-		this.Max.x = p.x
+	if re.Max.x < p.x {
+		re.Max.x = p.x
 	}
-	if this.Max.y < p.y {
-		this.Max.y = p.y
-	}
-}
-
-func (this *ImRect) AddRect(r ImRect) {
-	if this.Min.x > r.Min.x {
-		this.Min.x = r.Min.x
-	}
-	if this.Min.y > r.Min.y {
-		this.Min.y = r.Min.y
-	}
-	if this.Max.x < r.Max.x {
-		this.Max.x = r.Max.x
-	}
-	if this.Max.y < r.Max.y {
-		this.Max.y = r.Max.y
+	if re.Max.y < p.y {
+		re.Max.y = p.y
 	}
 }
 
-func (this *ImRect) Expand(amount float) {
-	this.Min.x -= amount
-	this.Min.y -= amount
-	this.Max.x += amount
-	this.Max.y += amount
+func (re *ImRect) AddRect(r ImRect) {
+	if re.Min.x > r.Min.x {
+		re.Min.x = r.Min.x
+	}
+	if re.Min.y > r.Min.y {
+		re.Min.y = r.Min.y
+	}
+	if re.Max.x < r.Max.x {
+		re.Max.x = r.Max.x
+	}
+	if re.Max.y < r.Max.y {
+		re.Max.y = r.Max.y
+	}
 }
 
-func (this *ImRect) ExpandVec(amount ImVec2) {
-	this.Min.x -= amount.x
-	this.Min.y -= amount.y
-	this.Max.x += amount.x
-	this.Max.y += amount.y
+func (re *ImRect) Expand(amount float) {
+	re.Min.x -= amount
+	re.Min.y -= amount
+	re.Max.x += amount
+	re.Max.y += amount
 }
 
-func (this *ImRect) Translate(d ImVec2) {
-	this.Min.x += d.x
-	this.Min.y += d.y
-	this.Max.x += d.x
-	this.Max.y += d.y
+func (re *ImRect) ExpandVec(amount ImVec2) {
+	re.Min.x -= amount.x
+	re.Min.y -= amount.y
+	re.Max.x += amount.x
+	re.Max.y += amount.y
 }
 
-func (this *ImRect) TranslateX(dx float) {
-	this.Min.x += dx
-	this.Max.x += dx
+func (re *ImRect) Translate(d ImVec2) {
+	re.Min.x += d.x
+	re.Min.y += d.y
+	re.Max.x += d.x
+	re.Max.y += d.y
 }
 
-func (this *ImRect) TranslateY(dy float) {
-	this.Min.y += dy
-	this.Max.y += dy
+func (re *ImRect) TranslateX(dx float) {
+	re.Min.x += dx
+	re.Max.x += dx
 }
 
-func (this *ImRect) ClipWith(r ImRect) {
-	this.Min = ImMaxVec2(&this.Min, &r.Min)
-	this.Max = ImMinVec2(&this.Max, &r.Max)
+func (re *ImRect) TranslateY(dy float) {
+	re.Min.y += dy
+	re.Max.y += dy
 }
 
-func (this *ImRect) ClipWithFull(r ImRect) {
-	this.Min = ImClampVec2(&this.Min, &r.Min, r.Max)
-	this.Max = ImClampVec2(&this.Max, &r.Min, r.Max)
+func (re *ImRect) ClipWith(r ImRect) {
+	re.Min = ImMaxVec2(&re.Min, &r.Min)
+	re.Max = ImMinVec2(&re.Max, &r.Max)
 }
 
-func (this *ImRect) Floor() {
-	this.Min.x = IM_FLOOR(this.Min.x)
-	this.Min.y = IM_FLOOR(this.Min.y)
-	this.Max.x = IM_FLOOR(this.Max.x)
-	this.Max.y = IM_FLOOR(this.Max.y)
+func (re *ImRect) ClipWithFull(r ImRect) {
+	re.Min = ImClampVec2(&re.Min, &r.Min, r.Max)
+	re.Max = ImClampVec2(&re.Max, &r.Min, r.Max)
 }
 
-func (this *ImRect) IsInverted() bool {
-	return this.Min.x > this.Max.x || this.Min.y > this.Max.y
+func (re *ImRect) Floor() {
+	re.Min.x = IM_FLOOR(re.Min.x)
+	re.Min.y = IM_FLOOR(re.Min.y)
+	re.Max.x = IM_FLOOR(re.Max.x)
+	re.Max.y = IM_FLOOR(re.Max.y)
 }
 
-func (this *ImRect) ToVec4() ImVec4 {
-	return ImVec4{this.Min.x, this.Min.y, this.Max.x, this.Max.y}
+func (re *ImRect) IsInverted() bool {
+	return re.Min.x > re.Max.x || re.Min.y > re.Max.y
+}
+
+func (re *ImRect) ToVec4() ImVec4 {
+	return ImVec4{re.Min.x, re.Min.y, re.Max.x, re.Max.y}
 }
 
 // IM_ROUNDUP_TO_EVEN ImDrawList: Helper function to calculate a circle's segment count given its radius and a "maximum error" value.
