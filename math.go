@@ -180,31 +180,35 @@ func ImLinearSweep(current, target, speed float) float {
 func ImMul(lhs, rhs *ImVec2) *ImVec2 { return &ImVec2{lhs.x * rhs.x, lhs.y * rhs.y} }
 
 func ImMin(a, b float) float {
-	if a < b {
-		return a
-	}
-	return b
+	return min(a, b)
+	//if a < b {
+	//	return a
+	//}
+	//return b
 }
 
 func ImMinInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+	return min(a, b)
+	//if a < b {
+	//	return a
+	//}
+	//return b
 }
 
 func ImMaxInt(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
+	return max(a, b)
+	//if a > b {
+	//	return a
+	//}
+	//return b
 }
 
 func ImMax(a, b float) float {
-	if a > b {
-		return a
-	}
-	return b
+	return max(a, b)
+	//if a > b {
+	//	return a
+	//}
+	//return b
 }
 
 func ImClamp(v, mn, mx float) float {
