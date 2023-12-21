@@ -44,12 +44,12 @@ func GetScrollMaxY() float {
 func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 	g := GImGui
 	window := g.CurrentWindow
-	var spacing_x = ImMax(window.WindowPadding.x, g.Style.ItemSpacing.x)
+	var spacing_x = max(window.WindowPadding.x, g.Style.ItemSpacing.x)
 	var target_pos_x = ImLerp(g.LastItemData.Rect.Min.x-spacing_x, g.LastItemData.Rect.Max.x+spacing_x, center_x_ratio)
 	setScrollFromPosX(window, target_pos_x-window.Pos.x, center_x_ratio) // Convert from absolute to local pos
 
 	// Tweak: snap on edges when aiming at an item very close to the edge
-	window.ScrollTargetEdgeSnapDist.x = ImMax(0.0, window.WindowPadding.x-spacing_x)
+	window.ScrollTargetEdgeSnapDist.x = max(0.0, window.WindowPadding.x-spacing_x)
 }
 
 // SetScrollHereY adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
@@ -57,12 +57,12 @@ func SetScrollHereX(center_x_ratio float /*= 0.5*/) {
 func SetScrollHereY(center_y_ratio float /*= 0.5*/) {
 	g := GImGui
 	window := g.CurrentWindow
-	var spacing_y = ImMax(window.WindowPadding.y, g.Style.ItemSpacing.y)
+	var spacing_y = max(window.WindowPadding.y, g.Style.ItemSpacing.y)
 	var target_pos_y = ImLerp(window.DC.CursorPosPrevLine.y-spacing_y, window.DC.CursorPosPrevLine.y+window.DC.PrevLineSize.y+spacing_y, center_y_ratio)
 	setScrollFromPosY(window, target_pos_y-window.Pos.y, center_y_ratio) // Convert from absolute to local pos
 
 	// Tweak: snap on edges when aiming at an item very close to the edge
-	window.ScrollTargetEdgeSnapDist.y = ImMax(0.0, window.WindowPadding.y-spacing_y)
+	window.ScrollTargetEdgeSnapDist.y = max(0.0, window.WindowPadding.y-spacing_y)
 }
 
 // SetScrollFromPosX adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position
@@ -193,11 +193,11 @@ func CalcNextScrollFromScrollTargetAndClamp(window *ImGuiWindow) ImVec2 {
 		}
 		scroll.y = scroll_target_y - center_y_ratio*(window.SizeFull.y-decoration_total_height)
 	}
-	scroll.x = IM_FLOOR(ImMax(scroll.x, 0.0))
-	scroll.y = IM_FLOOR(ImMax(scroll.y, 0.0))
+	scroll.x = IM_FLOOR(max(scroll.x, 0.0))
+	scroll.y = IM_FLOOR(max(scroll.y, 0.0))
 	if !window.Collapsed && !window.SkipItems {
-		scroll.x = ImMin(scroll.x, window.ScrollMax.x)
-		scroll.y = ImMin(scroll.y, window.ScrollMax.y)
+		scroll.x = min(scroll.x, window.ScrollMax.x)
+		scroll.y = min(scroll.y, window.ScrollMax.y)
 	}
 	return scroll
 }

@@ -253,7 +253,7 @@ func ImFontAtlasBuildPackCustomRects(atlas *ImFontAtlas, stbrp_context_opaque an
 			user_rects[i].X = uint16(pack_rects[i].X)
 			user_rects[i].Y = uint16(pack_rects[i].Y)
 			IM_ASSERT(uint16(pack_rects[i].W) == user_rects[i].Width && uint16(pack_rects[i].H) == user_rects[i].Height)
-			atlas.TexHeight = ImMaxInt(atlas.TexHeight, int(pack_rects[i].Y)+int(pack_rects[i].H))
+			atlas.TexHeight = max(atlas.TexHeight, int(pack_rects[i].Y)+int(pack_rects[i].H))
 		}
 	}
 }
@@ -471,10 +471,10 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 		}
 
 		for src_range := src_tmp.SrcRanges; src_range[0] != 0 && src_range[1] != 0; src_range = src_range[2:] {
-			src_tmp.GlyphsHighest = ImMaxInt(src_tmp.GlyphsHighest, (int)(src_range[1]))
+			src_tmp.GlyphsHighest = max(src_tmp.GlyphsHighest, (int)(src_range[1]))
 		}
 		dst_tmp.SrcCount++
-		dst_tmp.GlyphsHighest = ImMaxInt(dst_tmp.GlyphsHighest, src_tmp.GlyphsHighest)
+		dst_tmp.GlyphsHighest = max(dst_tmp.GlyphsHighest, src_tmp.GlyphsHighest)
 	}
 
 	// 2. For every requested codepoint, check for their presence in the font data, and handle redundancy or overlaps between source fonts to avoid unused glyphs.
@@ -612,7 +612,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 		// FIXME: We are not handling packing failure here (would happen if we got off TEX_HEIGHT_MAX or if a single if larger than TexWidth?)
 		for glyph_i := int(0); glyph_i < src_tmp.GlyphsCount; glyph_i++ {
 			if src_tmp.Rects[glyph_i].WasPacked != 0 {
-				atlas.TexHeight = ImMaxInt(atlas.TexHeight, int(src_tmp.Rects[glyph_i].Y)+int(src_tmp.Rects[glyph_i].H))
+				atlas.TexHeight = max(atlas.TexHeight, int(src_tmp.Rects[glyph_i].Y)+int(src_tmp.Rects[glyph_i].H))
 			}
 		}
 	}

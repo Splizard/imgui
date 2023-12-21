@@ -169,47 +169,15 @@ func ImRotate(v *ImVec2, cos_a, sin_a float) *ImVec2 {
 
 func ImLinearSweep(current, target, speed float) float {
 	if current < target {
-		return ImMin(current+speed, target)
+		return min(current+speed, target)
 	}
 	if current > target {
-		return ImMax(current-speed, target)
+		return max(current-speed, target)
 	}
 	return current
 }
 
 func ImMul(lhs, rhs *ImVec2) *ImVec2 { return &ImVec2{lhs.x * rhs.x, lhs.y * rhs.y} }
-
-func ImMin(a, b float) float {
-	return min(a, b)
-	//if a < b {
-	//	return a
-	//}
-	//return b
-}
-
-func ImMinInt(a, b int) int {
-	return min(a, b)
-	//if a < b {
-	//	return a
-	//}
-	//return b
-}
-
-func ImMaxInt(a, b int) int {
-	return max(a, b)
-	//if a > b {
-	//	return a
-	//}
-	//return b
-}
-
-func ImMax(a, b float) float {
-	return max(a, b)
-	//if a > b {
-	//	return a
-	//}
-	//return b
-}
 
 func ImClamp(v, mn, mx float) float {
 	if v < mn {
@@ -412,7 +380,7 @@ func ImTriangleClosestPoint(a, b, c, p *ImVec2) ImVec2 {
 	var dist2_ab = ImLengthSqrVec2(p.Sub(proj_ab))
 	var dist2_bc = ImLengthSqrVec2(p.Sub(proj_bc))
 	var dist2_ca = ImLengthSqrVec2(p.Sub(proj_ca))
-	var m = ImMin(dist2_ab, ImMin(dist2_bc, dist2_ca))
+	var m = min(dist2_ab, min(dist2_bc, dist2_ca))
 	if m == dist2_ab {
 		return proj_ab
 	}
@@ -572,14 +540,14 @@ const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN = 4
 const IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX = 512
 
 func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(RAD, MAXERROR float) float {
-	return ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(IM_PI/ImAcos(1-ImMin(MAXERROR, RAD)/RAD))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
+	return ImClamp(IM_ROUNDUP_TO_EVEN(ImCeil(IM_PI/ImAcos(1-min(MAXERROR, RAD)/RAD))), IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MIN, IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX)
 }
 
 func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(N, MAXERROR float) float {
-	return MAXERROR / (1 - ImCos(IM_PI/ImMax(N, IM_PI)))
+	return MAXERROR / (1 - ImCos(IM_PI/max(N, IM_PI)))
 }
 func IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_ERROR(N, RAD float) float {
-	return (1 - ImCos(IM_PI/ImMax(N, IM_PI))) / RAD
+	return (1 - ImCos(IM_PI/max(N, IM_PI))) / RAD
 }
 
 const IM_DRAWLIST_ARCFAST_TABLE_SIZE = 48

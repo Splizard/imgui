@@ -262,12 +262,12 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 
 		var yi int = 0
 		for y := p_min.y + grid_off.y; y < p_max.y; y, yi = y+grid_step, yi+1 {
-			var y1, y2 = ImClamp(y, p_min.y, p_max.y), ImMin(y+grid_step, p_max.y)
+			var y1, y2 = ImClamp(y, p_min.y, p_max.y), min(y+grid_step, p_max.y)
 			if y2 <= y1 {
 				continue
 			}
 			for x := p_min.x + grid_off.x + float(yi&1)*grid_step; x < p_max.x; x += grid_step * 2.0 {
-				var x1, x2 = ImClamp(x, p_min.x, p_max.x), ImMin(x+grid_step, p_max.x)
+				var x1, x2 = ImClamp(x, p_min.x, p_max.x), min(x+grid_step, p_max.x)
 				if x2 <= x1 {
 					continue
 				}
@@ -402,12 +402,12 @@ func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_st
 		return
 	}
 
-	rounding = ImClamp(ImMin((rect.Max.x-rect.Min.x)*0.5, (rect.Max.y-rect.Min.y)*0.5)-1.0, 0.0, rounding)
+	rounding = ImClamp(min((rect.Max.x-rect.Min.x)*0.5, (rect.Max.y-rect.Min.y)*0.5)-1.0, 0.0, rounding)
 	var inv_rounding = 1.0 / rounding
 	var arc0_b = ImAcos01(1.0 - (p0.x-rect.Min.x)*inv_rounding)
 	var arc0_e = ImAcos01(1.0 - (p1.x-rect.Min.x)*inv_rounding)
 	var half_pi float = IM_PI * 0.5 // We will == compare to this because we know this is the exact value ImAcos01 can return.
-	var x0 = ImMax(p0.x, rect.Min.x+rounding)
+	var x0 = max(p0.x, rect.Min.x+rounding)
 	if arc0_b == arc0_e {
 		draw_list.PathLineTo(ImVec2{x0, p1.y})
 		draw_list.PathLineTo(ImVec2{x0, p0.y})
@@ -421,7 +421,7 @@ func RenderRectFilledRangeH(draw_list *ImDrawList, rect *ImRect, col ImU32, x_st
 	if p1.x > rect.Min.x+rounding {
 		var arc1_b = ImAcos01(1.0 - (rect.Max.x-p1.x)*inv_rounding)
 		var arc1_e = ImAcos01(1.0 - (rect.Max.x-p0.x)*inv_rounding)
-		var x1 = ImMin(p1.x, rect.Max.x-rounding)
+		var x1 = min(p1.x, rect.Max.x-rounding)
 		if arc1_b == arc1_e {
 			draw_list.PathLineTo(ImVec2{x1, p0.y})
 			draw_list.PathLineTo(ImVec2{x1, p1.y})

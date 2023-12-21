@@ -111,7 +111,7 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 		g := GImGui
 		var last_item_backup = g.LastItemData
 		var button_size = g.FontSize
-		var button_x = ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x-g.Style.FramePadding.x*2.0-button_size)
+		var button_x = max(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x-g.Style.FramePadding.x*2.0-button_size)
 		var button_y = g.LastItemData.Rect.Min.y
 		var close_button_id = GetIDWithSeed("#CLOSE", id)
 		if CloseButton(close_button_id, &ImVec2{button_x, button_y}) {
@@ -232,14 +232,14 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	if display_frame || (flags&ImGuiTreeNodeFlags_FramePadding) != 0 {
 		padding = style.FramePadding
 	} else {
-		padding = ImVec2{style.FramePadding.x, ImMin(window.DC.CurrLineTextBaseOffset, style.FramePadding.y)}
+		padding = ImVec2{style.FramePadding.x, min(window.DC.CurrLineTextBaseOffset, style.FramePadding.y)}
 	}
 
 	label = FindRenderedTextEnd(label)
 	var label_size = CalcTextSize(label, false, 0)
 
 	// We vertically grow up to current line height up the typical widget height.
-	var frame_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+style.FramePadding.y*2), label_size.y+padding.y*2)
+	var frame_height = max(min(window.DC.CurrLineSize.y, g.FontSize+style.FramePadding.y*2), label_size.y+padding.y*2)
 	var frame_bb ImRect
 	if (flags & ImGuiTreeNodeFlags_SpanFullWidth) != 0 {
 		frame_bb.Min.x = window.WorkRect.Min.x
@@ -264,7 +264,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		text_offset_x += padding.x * 2
 	}
 
-	var text_offset_y = ImMax(padding.y, window.DC.CurrLineTextBaseOffset) // Latch before ItemSize changes it
+	var text_offset_y = max(padding.y, window.DC.CurrLineTextBaseOffset) // Latch before ItemSize changes it
 	var text_width = g.FontSize
 	if label_size.x > 0.0 { // Include collapser
 		text_width += padding.x * 2

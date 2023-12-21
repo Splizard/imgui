@@ -50,7 +50,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		max_x = window.ParentWorkRect.Max.x
 	}
 	if size_arg.x == 0.0 || (flags&ImGuiSelectableFlags_SpanAvailWidth != 0) {
-		size.x = ImMax(label_size.x, max_x-min_x)
+		size.x = max(label_size.x, max_x-min_x)
 	}
 
 	// Text stays at the submission position, but bounding box may be extended on both sides

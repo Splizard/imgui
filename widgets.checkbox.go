@@ -97,10 +97,10 @@ func Checkbox(label string, v *bool) bool {
 	if mixed_value {
 		// Undocumented tristate/mixed/indeterminate checkbox (#2644)
 		// This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
-		var pad = ImVec2{ImMax(1.0, IM_FLOOR(square_sz/3.6)), ImMax(1.0, IM_FLOOR(square_sz/3.6))}
+		var pad = ImVec2{max(1.0, IM_FLOOR(square_sz/3.6)), max(1.0, IM_FLOOR(square_sz/3.6))}
 		window.DrawList.AddRectFilled(check_bb.Min.Add(pad), check_bb.Max.Sub(pad), check_col, style.FrameRounding, 0)
 	} else if v != nil && *v {
-		var pad = ImMax(1.0, IM_FLOOR(square_sz/6.0))
+		var pad = max(1.0, IM_FLOOR(square_sz/6.0))
 		RenderCheckMark(window.DrawList, check_bb.Min.Add(ImVec2{pad, pad}), check_col, square_sz-pad*2.0)
 	}
 
@@ -122,7 +122,7 @@ func Checkbox(label string, v *bool) bool {
 }
 
 func RenderCheckMark(draw_list *ImDrawList, pos ImVec2, col ImU32, sz float) {
-	var thickness = ImMax(sz/5.0, 1.0)
+	var thickness = max(sz/5.0, 1.0)
 	sz -= thickness * 0.5
 	pos = pos.Add(ImVec2{thickness * 0.25, thickness * 0.25})
 

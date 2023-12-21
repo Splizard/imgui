@@ -500,7 +500,7 @@ func (l *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32, f
 		var col_trans = col &^ IM_COL32_A_MASK
 
 		// Thicknesses <1.0 should behave like thickness 1.0
-		thickness = ImMax(thickness, 1.0)
+		thickness = max(thickness, 1.0)
 		var integer_thickness = (int)(thickness)
 		var fractional_thickness = thickness - float(integer_thickness)
 
@@ -891,9 +891,9 @@ func (l *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_se
 
 		var a_mid_samples int
 		if a_is_reverse {
-			a_mid_samples = ImMaxInt(a_min_sample-a_max_sample, 0)
+			a_mid_samples = max(a_min_sample-a_max_sample, 0)
 		} else {
-			a_mid_samples = ImMaxInt(a_max_sample-a_min_sample, 0)
+			a_mid_samples = max(a_max_sample-a_min_sample, 0)
 		}
 
 		var a_min_segment_angle = float(a_min_sample) * IM_PI * 2.0 / IM_DRAWLIST_ARCFAST_SAMPLE_MAX
@@ -924,7 +924,7 @@ func (l *ImDrawList) PathArcTo(center ImVec2, radius, a_min, a_max float, num_se
 	} else {
 		var arc_length = ImAbs(a_max - a_min)
 		var circle_segment_count = l._CalcCircleAutoSegmentCount(radius)
-		var arc_segment_count = ImMaxInt((int)(ImCeil(float(circle_segment_count)*arc_length/(IM_PI*2.0))), (int)(2.0*IM_PI/arc_length))
+		var arc_segment_count = max((int)(ImCeil(float(circle_segment_count)*arc_length/(IM_PI*2.0))), (int)(2.0*IM_PI/arc_length))
 		l._PathArcToN(center, radius, a_min, a_max, arc_segment_count)
 	}
 }

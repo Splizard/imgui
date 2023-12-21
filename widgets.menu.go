@@ -33,7 +33,7 @@ func BeginMenuBar() bool {
 			IM_ROUND(bar_rect.Min.y + window.WindowBorderSize),
 		},
 		ImVec2{
-			IM_ROUND(ImMax(bar_rect.Min.x, bar_rect.Max.x-ImMax(window.WindowRounding, window.WindowBorderSize))),
+			IM_ROUND(max(bar_rect.Min.x, bar_rect.Max.x-max(window.WindowRounding, window.WindowBorderSize))),
 			IM_ROUND(bar_rect.Max.y),
 		},
 	}
@@ -99,7 +99,7 @@ func BeginMainMenuBar() bool {
 	// For the main menu bar, which cannot be moved, we honor g.Style.DisplaySafeAreaPadding to ensure text can be visible on a TV set.
 	// FIXME: This could be generalized as an opt-in way to clamp window.DC.CursorStartPos to avoid SafeArea?
 	// FIXME: Consider removing support for safe area down the line... it's messy. Nowadays consoles have support for TV calibration in OS settings.
-	g.NextWindowData.MenuBarOffsetMinVal = ImVec2{g.Style.DisplaySafeAreaPadding.x, ImMax(g.Style.DisplaySafeAreaPadding.y-g.Style.FramePadding.y, 0.0)}
+	g.NextWindowData.MenuBarOffsetMinVal = ImVec2{g.Style.DisplaySafeAreaPadding.x, max(g.Style.DisplaySafeAreaPadding.y-g.Style.FramePadding.y, 0.0)}
 	var window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar
 	var height = GetFrameHeight()
 	var is_open = BeginViewportSideBar("##MainMenuBar", viewport, ImGuiDir_Up, height, window_flags)
@@ -315,7 +315,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		}
 		var checkmark_w = IM_FLOOR(g.FontSize * 1.20)
 		var min_w = window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0.0, checkmark_w) // Feedback to next frame
-		var extra_w = ImMax(0.0, GetContentRegionAvail().x-min_w)
+		var extra_w = max(0.0, GetContentRegionAvail().x-min_w)
 		var text_pos = ImVec2{window.DC.CursorPos.x + float(offsets.OffsetLabel), window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset}
 		pressed = Selectable("", menu_is_open, ImGuiSelectableFlags_NoHoldingActiveID|ImGuiSelectableFlags_SelectOnClick|ImGuiSelectableFlags_DontClosePopups|ImGuiSelectableFlags_SpanAvailWidth, ImVec2{min_w, 0.0})
 		RenderText(text_pos, label, true)
@@ -362,8 +362,8 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 			} else { // to avoid numerical issues
 				ta.x += +0.5
 			}
-			tb.y = ta.y + ImMax((tb.y-extra)-ta.y, -100.0) // triangle is maximum 200 high to limit the slope and the bias toward large sub-menus // FIXME: Multiply by fb_scale?
-			tc.y = ta.y + ImMin((tc.y+extra)-ta.y, +100.0)
+			tb.y = ta.y + max((tb.y-extra)-ta.y, -100.0) // triangle is maximum 200 high to limit the slope and the bias toward large sub-menus // FIXME: Multiply by fb_scale?
+			tc.y = ta.y + min((tc.y+extra)-ta.y, +100.0)
 			moving_toward_other_child_menu = ImTriangleContainsPoint(&ta, &tb, &tc, &g.IO.MousePos)
 			//GetForegroundDrawList().AddTriangleFilled(ta, tb, tc, moving_within_opened_triangle ? IM_COL32(0,128,0,128) : IM_COL32(128,0,0,128)); // [DEBUG]
 		}
@@ -474,7 +474,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 		}
 		var checkmark_w = IM_FLOOR(g.FontSize * 1.20)
 		var min_w = window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w) // Feedback for next frame
-		var stretch_w = ImMax(0.0, GetContentRegionAvail().x-min_w)
+		var stretch_w = max(0.0, GetContentRegionAvail().x-min_w)
 		pressed = Selectable("", false, flags|ImGuiSelectableFlags_SpanAvailWidth, ImVec2{min_w, 0.0})
 		RenderText(pos.Add(ImVec2{float(offsets.OffsetLabel), 0.0}), label, true)
 		if icon_w > 0.0 {

@@ -50,7 +50,7 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 	if v_min >= v_max {
 		min_min = -FLT_MAX
 	}
-	var min_max = ImMin(v_max, *v_current_max)
+	var min_max = min(v_max, *v_current_max)
 	if v_min >= v_max {
 		min_max = *v_current_max
 	}
@@ -62,7 +62,7 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 	PopItemWidth()
 	SameLine(0, g.Style.ItemInnerSpacing.x)
 
-	var max_min = ImMax(v_min, *v_current_min)
+	var max_min = max(v_min, *v_current_min)
 	if v_min >= v_max {
 		max_min = *v_current_min
 	}
@@ -113,7 +113,7 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 	if v_min >= v_max {
 		min_min = math.MinInt32
 	}
-	var min_max = ImMinInt(v_max, *v_current_max)
+	var min_max = min(v_max, *v_current_max)
 	if v_min >= v_max {
 		min_max = *v_current_max
 	}
@@ -125,7 +125,7 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 	PopItemWidth()
 	SameLine(0, g.Style.ItemInnerSpacing.x)
 
-	var max_min = ImMaxInt(v_min, *v_current_min)
+	var max_min = max(v_min, *v_current_min)
 	if v_min >= v_max {
 		max_min = *v_current_min
 	}
@@ -500,7 +500,7 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 			}
 
 			if (v_min * v_max) < 0.0 { // Range crosses zero, so we have to do this in two parts
-				var zero_point_center = (-ImMin(v_min, v_max)) / ImAbs(v_max-v_min) // The zero point in parametric space
+				var zero_point_center = (-min(v_min, v_max)) / ImAbs(v_max-v_min) // The zero point in parametric space
 				var zero_point_snap_L = zero_point_center - zero_deadzone_halfsize
 				var zero_point_snap_R = zero_point_center + zero_deadzone_halfsize
 				if t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R {
@@ -586,7 +586,7 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		case ImGuiAxis_Y:
 			adjust_delta *= amount.y
 		}
-		v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision))
+		v_speed = max(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision))
 	}
 
 	adjust_delta *= v_speed

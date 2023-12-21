@@ -77,10 +77,10 @@ func EndTable() {
 	if inner_window != outer_window {
 		inner_window.DC.CursorMaxPos.y = inner_content_max_y
 	} else if (flags & ImGuiTableFlags_NoHostExtendY) == 0 {
-		table.OuterRect.Max.y = ImMax(table.OuterRect.Max.y, inner_content_max_y) // Patch OuterRect/InnerRect height
+		table.OuterRect.Max.y = max(table.OuterRect.Max.y, inner_content_max_y) // Patch OuterRect/InnerRect height
 		table.InnerRect.Max.y = table.OuterRect.Max.y
 	}
-	table.WorkRect.Max.y = ImMax(table.WorkRect.Max.y, table.OuterRect.Max.y)
+	table.WorkRect.Max.y = max(table.WorkRect.Max.y, table.OuterRect.Max.y)
 	table.LastOuterHeight = table.OuterRect.GetHeight()
 
 	// Setup inner scrolling range
@@ -93,10 +93,10 @@ func EndTable() {
 		}
 		var max_pos_x = table.InnerWindow.DC.CursorMaxPos.x
 		if table.RightMostEnabledColumn != -1 {
-			max_pos_x = ImMax(max_pos_x, table.Columns[table.RightMostEnabledColumn].WorkMaxX+table.CellPaddingX+table.OuterPaddingX-outer_padding_for_border)
+			max_pos_x = max(max_pos_x, table.Columns[table.RightMostEnabledColumn].WorkMaxX+table.CellPaddingX+table.OuterPaddingX-outer_padding_for_border)
 		}
 		if table.ResizedColumn != -1 {
-			max_pos_x = ImMax(max_pos_x, table.ResizeLockMinContentsX2)
+			max_pos_x = max(max_pos_x, table.ResizeLockMinContentsX2)
 		}
 		table.InnerWindow.DC.CursorMaxPos.x = max_pos_x
 	}
@@ -199,27 +199,27 @@ func EndTable() {
 		// FIXME-TABLE: Could we remove this section?
 		// ColumnsAutoFitWidth may be one frame ahead here since for Fixed+NoResize is calculated from latest contents
 		IM_ASSERT((table.Flags & ImGuiTableFlags_ScrollX) == 0)
-		outer_window.DC.CursorMaxPos.x = ImMax(backup_outer_max_pos.x, table.OuterRect.Min.x+table.ColumnsAutoFitWidth)
+		outer_window.DC.CursorMaxPos.x = max(backup_outer_max_pos.x, table.OuterRect.Min.x+table.ColumnsAutoFitWidth)
 	} else if temp_data.UserOuterSize.x <= 0.0 {
 		var decoration_size float = 0.0
 		if table.Flags&ImGuiTableFlags_ScrollX != 0 {
 			decoration_size = inner_window.ScrollbarSizes.x
 		}
-		outer_window.DC.IdealMaxPos.x = ImMax(outer_window.DC.IdealMaxPos.x, table.OuterRect.Min.x+table.ColumnsAutoFitWidth+decoration_size-temp_data.UserOuterSize.x)
-		outer_window.DC.CursorMaxPos.x = ImMax(backup_outer_max_pos.x, ImMin(table.OuterRect.Max.x, table.OuterRect.Min.x+table.ColumnsAutoFitWidth))
+		outer_window.DC.IdealMaxPos.x = max(outer_window.DC.IdealMaxPos.x, table.OuterRect.Min.x+table.ColumnsAutoFitWidth+decoration_size-temp_data.UserOuterSize.x)
+		outer_window.DC.CursorMaxPos.x = max(backup_outer_max_pos.x, min(table.OuterRect.Max.x, table.OuterRect.Min.x+table.ColumnsAutoFitWidth))
 	} else {
-		outer_window.DC.CursorMaxPos.x = ImMax(backup_outer_max_pos.x, table.OuterRect.Max.x)
+		outer_window.DC.CursorMaxPos.x = max(backup_outer_max_pos.x, table.OuterRect.Max.x)
 	}
 	if temp_data.UserOuterSize.y <= 0.0 {
 		var decoration_size float = 0.0
 		if (table.Flags & ImGuiTableFlags_ScrollY) != 0 {
 			decoration_size = inner_window.ScrollbarSizes.y
 		}
-		outer_window.DC.IdealMaxPos.y = ImMax(outer_window.DC.IdealMaxPos.y, inner_content_max_y+decoration_size-temp_data.UserOuterSize.y)
-		outer_window.DC.CursorMaxPos.y = ImMax(backup_outer_max_pos.y, ImMin(table.OuterRect.Max.y, inner_content_max_y))
+		outer_window.DC.IdealMaxPos.y = max(outer_window.DC.IdealMaxPos.y, inner_content_max_y+decoration_size-temp_data.UserOuterSize.y)
+		outer_window.DC.CursorMaxPos.y = max(backup_outer_max_pos.y, min(table.OuterRect.Max.y, inner_content_max_y))
 	} else {
 		// OuterRect.Max.y may already have been pushed downward from the initial value (unless ImGuiTableFlags_NoHostExtendY is set)
-		outer_window.DC.CursorMaxPos.y = ImMax(backup_outer_max_pos.y, table.OuterRect.Max.y)
+		outer_window.DC.CursorMaxPos.y = max(backup_outer_max_pos.y, table.OuterRect.Max.y)
 	}
 
 	// Save settings
@@ -277,7 +277,7 @@ func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
 	// We honor min_row_height requested by user, but cannot guarantee per-row maximum height,
 	// because that would essentially require a unique clipping rectangle per-cell.
 	table.RowPosY2 += table.CellPaddingY * 2.0
-	table.RowPosY2 = ImMax(table.RowPosY2, table.RowPosY1+row_min_height)
+	table.RowPosY2 = max(table.RowPosY2, table.RowPosY1+row_min_height)
 
 	// Disable output until user calls TableNextColumn()
 	table.InnerWindow.SkipItems = true
@@ -430,7 +430,7 @@ func TableSetupScrollFreeze(columns int, rows int) {
 	IM_ASSERT(rows >= 0 && rows < 128) // Arbitrary limit
 
 	if (table.Flags & ImGuiTableFlags_ScrollX) != 0 {
-		table.FreezeColumnsRequest = (ImGuiTableColumnIdx)(ImMinInt(columns, table.ColumnsCount))
+		table.FreezeColumnsRequest = (ImGuiTableColumnIdx)(min(columns, table.ColumnsCount))
 	} else {
 		table.FreezeColumnsRequest = 0
 	}
@@ -540,7 +540,7 @@ func TableHeader(label string) {
 	// If we already got a row height, there's use that.
 	// FIXME-TABLE: Padding problem if the correct outer-padding CellBgRect strays off our ClipRect?
 	var cell_r = TableGetCellBgRect(table, column_n)
-	var label_height = ImMax(label_size.y, table.RowMinHeight-table.CellPaddingY*2.0)
+	var label_height = max(label_size.y, table.RowMinHeight-table.CellPaddingY*2.0)
 
 	// Calculate ideal size for sort order arrow
 	var w_arrow float = 0.0
@@ -557,13 +557,13 @@ func TableHeader(label string) {
 
 	// We feed our unclipped width to the column without writing on CursorMaxPos, so that column is still considering for merging.
 	var max_pos_x = label_pos.x + label_size.x + w_sort_text + w_arrow
-	column.ContentMaxXHeadersUsed = ImMax(column.ContentMaxXHeadersUsed, column.WorkMaxX)
-	column.ContentMaxXHeadersIdeal = ImMax(column.ContentMaxXHeadersIdeal, max_pos_x)
+	column.ContentMaxXHeadersUsed = max(column.ContentMaxXHeadersUsed, column.WorkMaxX)
+	column.ContentMaxXHeadersIdeal = max(column.ContentMaxXHeadersIdeal, max_pos_x)
 
 	// Keep header highlighted when context menu is open.
 	var selected = (table.IsContextPopupOpen && int(table.ContextPopupColumn) == column_n && table.InstanceInteracted == table.InstanceCurrent)
 	var id = window.GetIDs(label)
-	var bb = ImRect{ImVec2{cell_r.Min.x, cell_r.Min.y}, ImVec2{cell_r.Max.x, ImMax(cell_r.Max.y, cell_r.Min.y+label_height+g.Style.CellPadding.y*2.0)}}
+	var bb = ImRect{ImVec2{cell_r.Min.x, cell_r.Min.y}, ImVec2{cell_r.Max.x, max(cell_r.Max.y, cell_r.Min.y+label_height+g.Style.CellPadding.y*2.0)}}
 	ItemSizeVec(&ImVec2{0.0, label_height}, 0) // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
 	if !ItemAdd(&bb, id, nil, 0) {
 		return
@@ -645,7 +645,7 @@ func TableHeader(label string) {
 	var ellipsis_max = cell_r.Max.x - w_arrow - w_sort_text
 	if (table.Flags&ImGuiTableFlags_Sortable) != 0 && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
 		if column.SortOrder != -1 {
-			var x = ImMax(cell_r.Min.x, cell_r.Max.x-w_arrow-w_sort_text)
+			var x = max(cell_r.Min.x, cell_r.Max.x-w_arrow-w_sort_text)
 			var y = label_pos.y
 			if column.SortOrder > 0 {
 				PushStyleColorInt(ImGuiCol_Text, GetColorU32FromID(ImGuiCol_Text, 0.70))

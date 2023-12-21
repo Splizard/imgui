@@ -18,9 +18,9 @@ func GetWindowScrollbarRect(window *ImGuiWindow, axis ImGuiAxis) ImRect {
 
 	IM_ASSERT(scrollbar_size > 0.0)
 	if axis == ImGuiAxis_X {
-		return ImRect{ImVec2{inner_rect.Min.x, ImMax(outer_rect.Min.y, outer_rect.Max.y-border_size-scrollbar_size)}, ImVec2{inner_rect.Max.x, outer_rect.Max.y}}
+		return ImRect{ImVec2{inner_rect.Min.x, max(outer_rect.Min.y, outer_rect.Max.y-border_size-scrollbar_size)}, ImVec2{inner_rect.Max.x, outer_rect.Max.y}}
 	} else {
-		return ImRect{ImVec2{ImMax(outer_rect.Min.x, outer_rect.Max.x-border_size-scrollbar_size), inner_rect.Min.y}, ImVec2{outer_rect.Max.x, inner_rect.Max.y}}
+		return ImRect{ImVec2{max(outer_rect.Min.x, outer_rect.Max.x-border_size-scrollbar_size), inner_rect.Min.y}, ImVec2{outer_rect.Max.x, inner_rect.Max.y}}
 	}
 }
 
@@ -126,8 +126,8 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 
 	// Calculate the height of our grabbable box. It generally represent the amount visible (vs the total scrollable amount)
 	// But we maintain a minimum size in pixel to allow for the user to still aim inside.
-	IM_ASSERT(ImMax(size_contents_v, size_avail_v) > 0.0) // Adding this assert to check if the ImMax(XXX,1.0f) is still needed. PLEASE CONTACT ME if this triggers.
-	var win_size_v = ImMax(ImMax(size_contents_v, size_avail_v), 1.0)
+	IM_ASSERT(max(size_contents_v, size_avail_v) > 0.0) // Adding this assert to check if the max(XXX,1.0f) is still needed. PLEASE CONTACT ME if this triggers.
+	var win_size_v = max(max(size_contents_v, size_avail_v), 1.0)
 	var grab_h_pixels = ImClamp(scrollbar_size_v*(size_avail_v/win_size_v), style.GrabMinSize, scrollbar_size_v)
 	var grab_h_norm = grab_h_pixels / scrollbar_size_v
 
@@ -136,7 +136,7 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 	var hovered = false
 	ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_NoNavFocus)
 
-	var scroll_max = ImMax(1.0, size_contents_v-size_avail_v)
+	var scroll_max = max(1.0, size_contents_v-size_avail_v)
 	var scroll_ratio = ImSaturate(*p_scroll_v / scroll_max)
 	var grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v // Grab position in normalized space
 	if held && allow_interaction && grab_h_norm < 1.0 {

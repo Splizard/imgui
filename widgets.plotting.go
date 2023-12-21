@@ -84,8 +84,8 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, 
 			if v != v { // Ignore NaN values
 				continue
 			}
-			v_min = ImMin(v_min, v)
-			v_max = ImMax(v_max, v)
+			v_min = min(v_min, v)
+			v_max = max(v_max, v)
 		}
 		if scale_min == FLT_MAX {
 			scale_min = v_min
@@ -107,7 +107,7 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, 
 		if plot_type == ImGuiPlotType_Lines {
 			b = -1
 		}
-		var res_w = ImMinInt((int)(frame_size.x), values_count) + b
+		var res_w = min((int)(frame_size.x), values_count) + b
 		var item_count = values_count + b
 
 		// Tooltip on hover

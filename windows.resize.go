@@ -85,7 +85,7 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 	if g.IO.ConfigWindowsResizeFromEdges {
 		resize_border_count = 4
 	}
-	var grip_draw_size = IM_FLOOR(ImMax(g.FontSize*1.35, window.WindowRounding+1.0+g.FontSize*0.2))
+	var grip_draw_size = IM_FLOOR(max(g.FontSize*1.35, window.WindowRounding+1.0+g.FontSize*0.2))
 	var grip_hover_inner_size = IM_FLOOR(grip_draw_size * 0.75)
 	var grip_hover_outer_size float
 	if g.IO.ConfigWindowsResizeFromEdges {
@@ -239,7 +239,7 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 		}
 		if nav_resize_delta.x != 0.0 || nav_resize_delta.y != 0.0 {
 			const NAV_RESIZE_SPEED float = 600
-			nav_resize_delta = nav_resize_delta.Scale(ImFloor(NAV_RESIZE_SPEED * g.IO.DeltaTime * ImMin(g.IO.DisplayFramebufferScale.x, g.IO.DisplayFramebufferScale.y)))
+			nav_resize_delta = nav_resize_delta.Scale(ImFloor(NAV_RESIZE_SPEED * g.IO.DeltaTime * min(g.IO.DisplayFramebufferScale.x, g.IO.DisplayFramebufferScale.y)))
 			yd := visibility_rect.Min.Sub(window.Pos).Sub(window.Size)
 			nav_resize_delta = ImMaxVec2(&nav_resize_delta, &yd)
 			g.NavWindowingToggleLayer = false

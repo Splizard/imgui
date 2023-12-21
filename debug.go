@@ -399,7 +399,7 @@ func DebugNodeTabBar(tab_bar *ImGuiTabBar, label string) {
 	}
 
 	p += fmt.Sprintf("%s 0x%08X (%d tabs)%s  { ", label, tab_bar.ID, len(tab_bar.Tabs), inactive)
-	for tab_n := int(0); tab_n < ImMinInt(int(len(tab_bar.Tabs)), 3); tab_n++ {
+	for tab_n := int(0); tab_n < min(int(len(tab_bar.Tabs)), 3); tab_n++ {
 		var tab = &tab_bar.Tabs[tab_n]
 		if tab_n > 0 {
 			p += ", "

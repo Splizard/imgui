@@ -98,7 +98,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 		}
 
 		// We can now claim the space between pos_max.x and ellipsis_max.x
-		var text_avail_width = ImMax((ImMax(pos_max.x, ellipsis_max_x)-ellipsis_total_width)-pos_min.x, 1.0)
+		var text_avail_width = max((max(pos_max.x, ellipsis_max_x)-ellipsis_total_width)-pos_min.x, 1.0)
 
 		s := text[text_end_ellipsis:]
 
@@ -179,7 +179,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 					for line_end = line; line_end < int(len(text)) && text[line_end] != '\n'; line_end++ {
 					}
 					if (flags & ImGuiTextFlags_NoWidthForLargeClippedText) == 0 {
-						text_size.x = ImMax(text_size.x, CalcTextSize(text[line:line_end], false, 0).x)
+						text_size.x = max(text_size.x, CalcTextSize(text[line:line_end], false, 0).x)
 					}
 					line = line_end + 1
 					lines_skipped++
@@ -199,7 +199,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 				var line_end int
 				for line_end = line; line_end < int(len(text)) && text[line_end] != '\n'; line_end++ {
 				}
-				text_size.x = ImMax(text_size.x, CalcTextSize(text[line:], false, 0).x)
+				text_size.x = max(text_size.x, CalcTextSize(text[line:], false, 0).x)
 				RenderText(pos, text[line:line_end], false)
 				line = line_end + 1
 				line_rect.Min.y += line_height
@@ -214,7 +214,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 				for line_end = line; line_end < int(len(text)) && text[line_end] != '\n'; line_end++ {
 				}
 				if (flags & ImGuiTextFlags_NoWidthForLargeClippedText) == 0 {
-					text_size.x = ImMax(text_size.x, CalcTextSize(text[line:line_end], false, 0).x)
+					text_size.x = max(text_size.x, CalcTextSize(text[line:line_end], false, 0).x)
 				}
 				line = line_end + 1
 				lines_skipped++
@@ -267,10 +267,10 @@ func (l *ImDrawList) AddTextV(font *ImFont, font_size float, pos ImVec2, col ImU
 
 	var clip_rect = l._CmdHeader.ClipRect
 	if cpu_fine_clip_rect != nil {
-		clip_rect.x = ImMax(clip_rect.x, cpu_fine_clip_rect.x)
-		clip_rect.y = ImMax(clip_rect.y, cpu_fine_clip_rect.y)
-		clip_rect.z = ImMin(clip_rect.z, cpu_fine_clip_rect.z)
-		clip_rect.w = ImMin(clip_rect.w, cpu_fine_clip_rect.w)
+		clip_rect.x = max(clip_rect.x, cpu_fine_clip_rect.x)
+		clip_rect.y = max(clip_rect.y, cpu_fine_clip_rect.y)
+		clip_rect.z = min(clip_rect.z, cpu_fine_clip_rect.z)
+		clip_rect.w = min(clip_rect.w, cpu_fine_clip_rect.w)
 	}
 	font.RenderText(l, font_size, pos, col, &clip_rect, text, wrap_width, cpu_fine_clip_rect != nil)
 }
@@ -344,10 +344,10 @@ func RenderTextClippedEx(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2
 
 	// Align whole block. We should defer that to the better rendering function when we'll have support for individual line alignment.
 	if align.x > 0.0 {
-		pos.x = ImMax(pos.x, pos.x+(pos_max.x-pos.x-text_size.x)*align.x)
+		pos.x = max(pos.x, pos.x+(pos_max.x-pos.x-text_size.x)*align.x)
 	}
 	if align.y > 0.0 {
-		pos.y = ImMax(pos.y, pos.y+(pos_max.y-pos.y-text_size.y)*align.y)
+		pos.y = max(pos.y, pos.y+(pos_max.y-pos.y-text_size.y)*align.y)
 	}
 
 	// Render

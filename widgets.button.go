@@ -451,7 +451,7 @@ func RadioButtonBool(label string, active bool) bool {
 
 	window.DrawList.AddCircleFilled(center, radius, GetColorU32FromID(c, 1), 16)
 	if active {
-		var pad = ImMax(1.0, IM_FLOOR(square_sz/6.0))
+		var pad = max(1.0, IM_FLOOR(square_sz/6.0))
 		window.DrawList.AddCircleFilled(center, radius-pad, GetColorU32FromID(ImGuiCol_CheckMark, 1), 16)
 	}
 
@@ -520,7 +520,7 @@ func CloseButton(id ImGuiID, pos *ImVec2) bool {
 	var col = GetColorU32FromID(c, 1)
 	var center = bb.GetCenter()
 	if hovered {
-		window.DrawList.AddCircleFilled(center, ImMax(2.0, g.FontSize*0.5+1.0), col, 12)
+		window.DrawList.AddCircleFilled(center, max(2.0, g.FontSize*0.5+1.0), col, 12)
 	}
 
 	var cross_extent = g.FontSize*0.5*0.7071 - 1.0
@@ -574,7 +574,7 @@ func ArrowButtonEx(str_id string, dir ImGuiDir, size ImVec2, flags ImGuiButtonFl
 	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
 	RenderNavHighlight(&bb, id, 0)
 	RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding)
-	RenderArrow(window.DrawList, bb.Min.Add(ImVec2{ImMax(0.0, (size.x-g.FontSize)*0.5), ImMax(0.0, (size.y-g.FontSize)*0.5)}), text_col, dir, 1)
+	RenderArrow(window.DrawList, bb.Min.Add(ImVec2{max(0.0, (size.x-g.FontSize)*0.5), max(0.0, (size.y-g.FontSize)*0.5)}), text_col, dir, 1)
 
 	return pressed
 }

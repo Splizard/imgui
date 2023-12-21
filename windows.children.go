@@ -23,10 +23,10 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 	}
 
 	if size.x <= 0.0 {
-		size.x = ImMax(content_avail.x+size.x, 4.0) // Arbitrary minimum child size (0.0f causing too much issues)
+		size.x = max(content_avail.x+size.x, 4.0) // Arbitrary minimum child size (0.0f causing too much issues)
 	}
 	if size.y <= 0.0 {
-		size.y = ImMax(content_avail.y+size.y, 4.0)
+		size.y = max(content_avail.y+size.y, 4.0)
 	}
 	SetNextWindowSize(&size, 0)
 
@@ -95,10 +95,10 @@ func EndChild() {
 	} else {
 		var sz = window.Size
 		if window.AutoFitChildAxises&(1<<ImGuiAxis_X) != 0 { // Arbitrary minimum zero-ish child size of 4.0f causes less trouble than a 0.0f
-			sz.x = ImMax(4.0, sz.x)
+			sz.x = max(4.0, sz.x)
 		}
 		if window.AutoFitChildAxises&(1<<ImGuiAxis_Y) != 0 {
-			sz.y = ImMax(4.0, sz.y)
+			sz.y = max(4.0, sz.y)
 		}
 		End()
 

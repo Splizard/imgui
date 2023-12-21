@@ -335,7 +335,7 @@ func (this *ImGuiInputTextCallbackData) InsertChars(pos int, new_text string) {
 		var edit_state = &g.InputTextState
 		IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID)
 		//IM_ASSERT(this.Buf == edit_state.TextA)
-		var new_buf_size = this.BufTextLen + ImClampInt(new_text_len*4, 32, ImMaxInt(256, new_text_len)) + 1
+		var new_buf_size = this.BufTextLen + ImClampInt(new_text_len*4, 32, max(256, new_text_len)) + 1
 		edit_state.TextA = append(edit_state.TextA, make([]byte, new_buf_size-int(len(edit_state.TextA)))...)
 
 		this.Buf = edit_state.TextA

@@ -141,7 +141,7 @@ func RenderWindowOuterBorders(window *ImGuiWindow) {
 		window.DrawList.PathArcTo(
 			ImLerpVec2WithVec2(&border_r.Min, &border_r.Max, def.SegmentN2).
 				Add(ImVec2{0.5, 0.5}).Add(def.InnerDir.Scale(rounding)), rounding, def.OuterAngle, def.OuterAngle+IM_PI*0.25, 0)
-		window.DrawList.PathStroke(GetColorU32FromID(ImGuiCol_SeparatorActive, 1), 0, ImMax(2.0, border_size)) // Thicker than usual
+		window.DrawList.PathStroke(GetColorU32FromID(ImGuiCol_SeparatorActive, 1), 0, max(2.0, border_size)) // Thicker than usual
 	}
 	if g.Style.FrameBorderSize > 0 && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 		var y = window.Pos.y + window.TitleBarHeight() - 1
@@ -218,20 +218,20 @@ func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, n
 	}
 	if style.WindowTitleAlign.x > 0.0 && style.WindowTitleAlign.x < 1.0 {
 		var centerness = ImSaturate(1.0 - ImFabs(style.WindowTitleAlign.x-0.5)*2.0) // 0.0f on either edges, 1.0f on center
-		var pad_extend = ImMin(ImMax(pad_l, pad_r), title_bar_rect.GetWidth()-pad_l-pad_r-text_size.x)
-		pad_l = ImMax(pad_l, pad_extend*centerness)
-		pad_r = ImMax(pad_r, pad_extend*centerness)
+		var pad_extend = min(max(pad_l, pad_r), title_bar_rect.GetWidth()-pad_l-pad_r-text_size.x)
+		pad_l = max(pad_l, pad_extend*centerness)
+		pad_r = max(pad_r, pad_extend*centerness)
 	}
 
 	var layout_r = ImRect{ImVec2{title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y}, ImVec2{title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y}}
-	var clip_r = ImRect{ImVec2{layout_r.Min.x, layout_r.Min.y}, ImVec2{ImMin(layout_r.Max.x+g.Style.ItemInnerSpacing.x, title_bar_rect.Max.x), layout_r.Max.y}}
+	var clip_r = ImRect{ImVec2{layout_r.Min.x, layout_r.Min.y}, ImVec2{min(layout_r.Max.x+g.Style.ItemInnerSpacing.x, title_bar_rect.Max.x), layout_r.Max.y}}
 	if flags&ImGuiWindowFlags_UnsavedDocument != 0 {
 		var marker_pos ImVec2
 		marker_pos.x = ImClamp(layout_r.Min.x+(layout_r.GetWidth()-text_size.x)*style.WindowTitleAlign.x+text_size.x, layout_r.Min.x, layout_r.Max.x)
 		marker_pos.y = (layout_r.Min.y + layout_r.Max.y) * 0.5
 		if marker_pos.x > layout_r.Min.x {
 			RenderBullet(window.DrawList, marker_pos, GetColorU32FromID(ImGuiCol_Text, 1))
-			clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x-float((int)(marker_size_x*0.5)))
+			clip_r.Max.x = min(clip_r.Max.x, marker_pos.x-float((int)(marker_size_x*0.5)))
 		}
 	}
 	//if (g.IO.KeyShift) window.DrawList.AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]

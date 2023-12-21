@@ -187,7 +187,7 @@ func InputTextCalcTextSizeW(text []ImWchar, remaining *[]ImWchar, out_offset *Im
 		var c = s[0]
 		s = s[1:]
 		if c == '\n' {
-			text_size.x = ImMax(text_size.x, line_width)
+			text_size.x = max(text_size.x, line_width)
 			text_size.y += line_height
 			line_width = 0.0
 			if stop_on_new_line {
@@ -705,7 +705,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		IM_ASSERT(state != nil)
 		IM_ASSERT_USER_ERROR(io.KeyMods == GetMergedKeyModFlags(), "Mismatching io.KeyCtrl/io.KeyShift/io.KeyAlt/io.KeySuper vs io.KeyMods") // We rarely do this check, but if anything let's do it here.
 
-		var row_count_per_page = ImMaxInt((int)((inner_size.y-style.FramePadding.y)/g.FontSize), 1)
+		var row_count_per_page = max((int)((inner_size.y-style.FramePadding.y)/g.FontSize), 1)
 		state.Stb.row_count_per_page = row_count_per_page
 
 		var k_mask int
@@ -757,7 +757,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			state.OnKeyPressed(k | k_mask)
 		} else if IsKeyPressedMap(ImGuiKey_UpArrow, true) && is_multiline {
 			if io.KeyCtrl {
-				setScrollY(draw_window, ImMax(draw_window.Scroll.y-g.FontSize, 0.0))
+				setScrollY(draw_window, max(draw_window.Scroll.y-g.FontSize, 0.0))
 			} else {
 				var k int = STB_TEXTEDIT_K_UP
 				if is_startend_key_down {
@@ -767,7 +767,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			}
 		} else if IsKeyPressedMap(ImGuiKey_DownArrow, true) && is_multiline {
 			if io.KeyCtrl {
-				setScrollY(draw_window, ImMin(draw_window.Scroll.y+g.FontSize, GetScrollMaxY()))
+				setScrollY(draw_window, min(draw_window.Scroll.y+g.FontSize, GetScrollMaxY()))
 			} else {
 				var k int = STB_TEXTEDIT_K_DOWN
 				if is_startend_key_down {
@@ -833,11 +833,11 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if io.SetClipboardTextFn != nil {
 				var ib int = 0
 				if state.HasSelection() {
-					ib = ImMinInt(state.Stb.select_start, state.Stb.select_end)
+					ib = min(state.Stb.select_start, state.Stb.select_end)
 				}
 				var ie int
 				if state.HasSelection() {
-					ie = ImMaxInt(state.Stb.select_start, state.Stb.select_end)
+					ie = max(state.Stb.select_start, state.Stb.select_end)
 				} else {
 					ie = state.CurLenW
 				}
@@ -1029,19 +1029,19 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				callback_data.Flags = flags
 				callback_data.Buf = *buf
 				callback_data.BufTextLen = apply_new_text_length
-				callback_data.BufSize = ImMaxInt(int(len(*buf)), apply_new_text_length+1)
+				callback_data.BufSize = max(int(len(*buf)), apply_new_text_length+1)
 				callback_data.UserData = callback_user_data
 				callback(&callback_data)
 				// *buf = callback_data.Buf[:callback_data.BufSize]
 				*buf = callback_data.Buf
 				buf_size = callback_data.BufSize
-				apply_new_text_length = ImMinInt(callback_data.BufTextLen, buf_size-1)
+				apply_new_text_length = min(callback_data.BufTextLen, buf_size-1)
 				IM_ASSERT(apply_new_text_length <= buf_size)
 			}
 			//IMGUI_DEBUG_LOG("InputText(\"%s\"): apply_new_text length %d\n", label, apply_new_text_length);
 
 			// If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
-			copy(*buf, apply_new_text[:ImMinInt(apply_new_text_length+1, buf_size)])
+			copy(*buf, apply_new_text[:min(apply_new_text_length+1, buf_size)])
 			value_changed = true
 		}
 
@@ -1114,7 +1114,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				searches_remaining++
 			}
 			if render_selection {
-				searches_input_ptr[1] = text_begin[ImMinInt(state.Stb.select_start, state.Stb.select_end):]
+				searches_input_ptr[1] = text_begin[min(state.Stb.select_start, state.Stb.select_end):]
 				searches_result_line_no[1] = -1
 				searches_remaining++
 			}
@@ -1175,7 +1175,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				var scroll_increment_x = inner_size.x * 0.25
 				var visible_width = inner_size.x - style.FramePadding.x
 				if cursor_offset.x < state.ScrollX {
-					state.ScrollX = IM_FLOOR(ImMax(0.0, cursor_offset.x-scroll_increment_x))
+					state.ScrollX = IM_FLOOR(max(0.0, cursor_offset.x-scroll_increment_x))
 				} else if cursor_offset.x-visible_width >= state.ScrollX {
 					state.ScrollX = IM_FLOOR(cursor_offset.x - visible_width + scroll_increment_x)
 				}
@@ -1187,11 +1187,11 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if is_multiline {
 				// Test if cursor is vertically visible
 				if cursor_offset.y-g.FontSize < scroll_y {
-					scroll_y = ImMax(0.0, cursor_offset.y-g.FontSize)
+					scroll_y = max(0.0, cursor_offset.y-g.FontSize)
 				} else if cursor_offset.y-inner_size.y >= scroll_y {
 					scroll_y = cursor_offset.y - inner_size.y + style.FramePadding.y*2.0
 				}
-				var scroll_max_y = ImMax((text_size.y+style.FramePadding.y*2.0)-inner_size.y, 0.0)
+				var scroll_max_y = max((text_size.y+style.FramePadding.y*2.0)-inner_size.y, 0.0)
 				scroll_y = ImClamp(scroll_y, 0.0, scroll_max_y)
 				draw_pos.y += (draw_window.Scroll.y - scroll_y) // Manipulate cursor pos immediately avoid a frame of lag
 				draw_window.Scroll.y = scroll_y
@@ -1203,8 +1203,8 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		// Draw selection
 		var draw_scroll = ImVec2{state.ScrollX, 0.0}
 		if render_selection {
-			var text_selected_begin = text_begin[ImMinInt(state.Stb.select_start, state.Stb.select_end):]
-			var text_selected_end = text_begin[ImMaxInt(state.Stb.select_start, state.Stb.select_end):]
+			var text_selected_begin = text_begin[min(state.Stb.select_start, state.Stb.select_end):]
+			var text_selected_end = text_begin[max(state.Stb.select_start, state.Stb.select_end):]
 
 			var t float = 0.6
 			if render_cursor {

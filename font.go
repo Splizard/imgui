@@ -209,7 +209,7 @@ func (f *ImFont) CalcTextSizeA(size, max_width, wrap_width float, text string, r
 
 		if c < 32 {
 			if c == '\n' {
-				text_size.x = ImMax(text_size.x, line_width)
+				text_size.x = max(text_size.x, line_width)
 				text_size.y += line_height
 				line_width = 0.0
 				continue
@@ -254,7 +254,7 @@ func SetCurrentFont(font *ImFont) {
 	IM_ASSERT(font.Scale > 0.0)
 
 	g.Font = font
-	g.FontBaseSize = ImMax(1.0, g.IO.FontGlobalScale*g.Font.FontSize*g.Font.Scale)
+	g.FontBaseSize = max(1.0, g.IO.FontGlobalScale*g.Font.FontSize*g.Font.Scale)
 
 	if g.CurrentWindow != nil {
 		g.FontSize = g.CurrentWindow.CalcFontSize()
@@ -398,7 +398,7 @@ func (f *ImFont) GrowIndex(new_size int) {
 func (f *ImFont) BuildLookupTable() {
 	var max_codepoint int = 0
 	for i := range f.Glyphs {
-		max_codepoint = ImMaxInt(max_codepoint, (int)(f.Glyphs[i].Codepoint))
+		max_codepoint = max(max_codepoint, (int)(f.Glyphs[i].Codepoint))
 	}
 
 	// Build lookup table

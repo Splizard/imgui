@@ -329,7 +329,7 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 		var window_for_height = window
 		var decoration_up_height = window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight()
 		new_size = ImMaxVec2(&new_size, &g.Style.WindowMinSize)
-		new_size.y = ImMax(new_size.y, decoration_up_height+ImMax(0.0, g.Style.WindowRounding-1.0)) // Reduce artifacts with very small windows
+		new_size.y = max(new_size.y, decoration_up_height+max(0.0, g.Style.WindowRounding-1.0)) // Reduce artifacts with very small windows
 	}
 	return new_size
 }
@@ -354,8 +354,8 @@ func CalcWindowContentSizes(window *ImGuiWindow, content_size_current, content_s
 	} else {
 		content_size_current.x = IM_FLOOR(window.DC.CursorMaxPos.x - window.DC.CursorStartPos.x)
 		content_size_current.y = IM_FLOOR(window.DC.CursorMaxPos.y - window.DC.CursorStartPos.y)
-		content_size_ideal.x = IM_FLOOR(ImMax(window.DC.CursorMaxPos.x, window.DC.IdealMaxPos.x) - window.DC.CursorStartPos.x)
-		content_size_ideal.y = IM_FLOOR(ImMax(window.DC.CursorMaxPos.y, window.DC.IdealMaxPos.y) - window.DC.CursorStartPos.y)
+		content_size_ideal.x = IM_FLOOR(max(window.DC.CursorMaxPos.x, window.DC.IdealMaxPos.x) - window.DC.CursorStartPos.x)
+		content_size_ideal.y = IM_FLOOR(max(window.DC.CursorMaxPos.y, window.DC.IdealMaxPos.y) - window.DC.CursorStartPos.y)
 	}
 }
 

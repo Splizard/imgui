@@ -104,7 +104,7 @@ func TableSetColumnWidth(column_n int, width float) {
 	// Compare both requested and actual given width to avoid overwriting requested width when column is stuck (minimum size, bounded)
 	IM_ASSERT(table.MinColumnWidth > 0.0)
 	var min_width = table.MinColumnWidth
-	var max_width = ImMax(min_width, TableGetMaxColumnWidth(table, column_n))
+	var max_width = max(min_width, TableGetMaxColumnWidth(table, column_n))
 	column_0_width = ImClamp(column_0_width, min_width, max_width)
 	if column_0.WidthGiven == column_0_width || column_0.WidthRequest == column_0_width {
 		return
@@ -170,7 +170,7 @@ func TableSetColumnWidth(column_n int, width float) {
 
 	// Resizing from right-side of a Stretch column before a Fixed column forward sizing to left-side of fixed column.
 	// (old_a + old_b == new_a + new_b) -. (new_a == old_a + old_b - new_b)
-	var column_1_width = ImMax(column_1.WidthRequest-(column_0_width-column_0.WidthRequest), min_width)
+	var column_1_width = max(column_1.WidthRequest-(column_0_width-column_0.WidthRequest), min_width)
 	column_0_width = column_0.WidthRequest + column_1.WidthRequest - column_1_width
 	IM_ASSERT(column_0_width > 0.0 && column_1_width > 0.0)
 	column_0.WidthRequest = column_0_width
@@ -197,7 +197,7 @@ func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection
 	var sort_order_max ImGuiTableColumnIdx = 0
 	if append_to_sort_specs {
 		for other_column_n := int(0); other_column_n < table.ColumnsCount; other_column_n++ {
-			sort_order_max = int8(ImMaxInt(int(sort_order_max), int(table.Columns[other_column_n].SortOrder)))
+			sort_order_max = int8(max(int(sort_order_max), int(table.Columns[other_column_n].SortOrder)))
 		}
 	}
 
@@ -245,7 +245,7 @@ func TableGetHeaderRowHeight() float {
 	for column_n := int(0); column_n < columns_count; column_n++ {
 		var flags = TableGetColumnFlags(column_n)
 		if (flags&ImGuiTableColumnFlags_IsEnabled) != 0 && (flags&ImGuiTableColumnFlags_NoHeaderLabel) == 0 {
-			row_height = ImMax(row_height, CalcTextSize(TableGetColumnName(column_n), true, -1).y)
+			row_height = max(row_height, CalcTextSize(TableGetColumnName(column_n), true, -1).y)
 		}
 	}
 	row_height += GetStyle().CellPadding.y * 2.0
@@ -303,10 +303,10 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 
 	var h float
 	if use_child_window {
-		h = ImMax(avail_size.y, 1.0)
+		h = max(avail_size.y, 1.0)
 	}
 
-	var actual_outer_size = CalcItemSize(*outer_size, ImMax(avail_size.x, 1.0), h)
+	var actual_outer_size = CalcItemSize(*outer_size, max(avail_size.x, 1.0), h)
 	var outer_rect = ImRect{outer_window.DC.CursorPos, outer_window.DC.CursorPos.Add(actual_outer_size)}
 	if use_child_window && IsClippedEx(&outer_rect, 0, false) {
 		ItemSizeRect(&outer_rect, 0)
@@ -489,7 +489,7 @@ func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFl
 	table.InnerClipRect.ClipWithFull(table.HostClipRect)
 	table.InnerClipRect.Max.y = inner_window.ClipRect.Max.y
 	if (flags & ImGuiTableFlags_NoHostExtendY) != 0 {
-		table.InnerClipRect.Max.y = ImMin(table.InnerClipRect.Max.y, inner_window.WorkRect.Max.y)
+		table.InnerClipRect.Max.y = min(table.InnerClipRect.Max.y, inner_window.WorkRect.Max.y)
 	}
 
 	table.RowPosY1 = table.WorkRect.Min.y
@@ -907,7 +907,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 	table.EnabledMaskByIndex = 0x00
 	table.EnabledMaskByDisplayOrder = 0x00
 	table.LeftMostEnabledColumn = -1
-	table.MinColumnWidth = ImMax(1.0, g.Style.FramePadding.x*1.0) // g.Style.ColumnsMinSpacing; // FIXME-TABLE
+	table.MinColumnWidth = max(1.0, g.Style.FramePadding.x*1.0) // g.Style.ColumnsMinSpacing; // FIXME-TABLE
 
 	// [Part 1] Apply/lock Enabled and Order states. Calculate auto/ideal width for columns. Count fixed/stretch columns.
 	// Process columns in their visible orders as we are building the Prev/Next indices.
@@ -1015,7 +1015,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 			stretch_sum_width_auto += column.WidthAuto
 			count_stretch++
 		} else {
-			fixed_max_width_auto = ImMax(fixed_max_width_auto, column.WidthAuto)
+			fixed_max_width_auto = max(fixed_max_width_auto, column.WidthAuto)
 			count_fixed++
 		}
 	}
@@ -1070,7 +1070,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 			// FIXME: Move this to .WidthGiven to avoid temporary lossyless?
 			// FIXME: This break IsPreserveWidthAuto from not flickering if the stored WidthAuto was smaller.
 			if column.AutoFitQueue > 0x01 && table.IsInitializing && !column.IsPreserveWidthAuto {
-				column.WidthRequest = ImMax(column.WidthRequest, table.MinColumnWidth*4.0) // FIXME-TABLE: Another constant/scale?
+				column.WidthRequest = max(column.WidthRequest, table.MinColumnWidth*4.0) // FIXME-TABLE: Another constant/scale?
 			}
 			sum_width_requests += column.WidthRequest
 		} else {
@@ -1122,7 +1122,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 		// Allocate width for stretched/weighted columns (StretchWeight gets converted into WidthRequest)
 		if column.Flags&ImGuiTableColumnFlags_WidthStretch != 0 {
 			var weight_ratio = column.StretchWeight / stretch_sum_weights
-			column.WidthRequest = IM_FLOOR(ImMax(width_avail_for_stretched_columns*weight_ratio, table.MinColumnWidth) + 0.01)
+			column.WidthRequest = IM_FLOOR(max(width_avail_for_stretched_columns*weight_ratio, table.MinColumnWidth) + 0.01)
 			width_remaining_for_stretched_columns -= column.WidthRequest
 		}
 
@@ -1133,7 +1133,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 		}
 
 		// Assign final width, record width in case we will need to shrink
-		column.WidthGiven = ImFloor(ImMax(column.WidthRequest, table.MinColumnWidth))
+		column.WidthGiven = ImFloor(max(column.WidthRequest, table.MinColumnWidth))
 		table.ColumnsGivenWidth += column.WidthGiven
 	}
 
@@ -1159,7 +1159,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 
 	table.HoveredColumnBody = -1
 	table.HoveredColumnBorder = -1
-	var mouse_hit_rect = ImRect{ImVec2{table.OuterRect.Min.x, table.OuterRect.Min.y}, ImVec2{table.OuterRect.Max.x, ImMax(table.OuterRect.Max.y, table.OuterRect.Min.y+table.LastOuterHeight)}}
+	var mouse_hit_rect = ImRect{ImVec2{table.OuterRect.Min.x, table.OuterRect.Min.y}, ImVec2{table.OuterRect.Max.x, max(table.OuterRect.Max.y, table.OuterRect.Min.y+table.LastOuterHeight)}}
 	var is_hovering_table = ItemHoverable(&mouse_hit_rect, 0)
 
 	// [Part 6] Setup final position, offset, skip/clip states and clipping rectangles, detect hovered column
@@ -1227,8 +1227,8 @@ func TableUpdateLayout(table *ImGuiTable) {
 
 		// Lock width based on start position and minimum/maximum width for this position
 		var max_width = TableGetMaxColumnWidth(table, int(column_n))
-		column.WidthGiven = ImMin(column.WidthGiven, max_width)
-		column.WidthGiven = ImMax(column.WidthGiven, ImMin(column.WidthRequest, table.MinColumnWidth))
+		column.WidthGiven = min(column.WidthGiven, max_width)
+		column.WidthGiven = max(column.WidthGiven, min(column.WidthRequest, table.MinColumnWidth))
 		column.MaxX = offset_x + column.WidthGiven + table.CellSpacingX1 + table.CellSpacingX2 + table.CellPaddingX*2.0
 
 		// Lock other positions
@@ -1288,9 +1288,9 @@ func TableUpdateLayout(table *ImGuiTable) {
 		// many cases (to be able to honor this we might be able to store a log of cells width, per row, for
 		// visible rows, but nav/programmatic scroll would have visible artifacts.)
 		//if (column.Flags & ImGuiTableColumnFlags_AlignRight)
-		//    column.WorkMinX = ImMax(column.WorkMinX, column.MaxX - column.ContentWidthRowsUnfrozen);
+		//    column.WorkMinX = max(column.WorkMinX, column.MaxX - column.ContentWidthRowsUnfrozen);
 		//else if (column.Flags & ImGuiTableColumnFlags_AlignCenter)
-		//    column.WorkMinX = ImLerp(column.WorkMinX, ImMax(column.StartX, column.MaxX - column.ContentWidthRowsUnfrozen), 0.5f);
+		//    column.WorkMinX = ImLerp(column.WorkMinX, max(column.StartX, column.MaxX - column.ContentWidthRowsUnfrozen), 0.5f);
 
 		// Reset content width variables
 		column.ContentMaxXFrozen = column.WorkMinX
@@ -1315,7 +1315,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 	// [Part 7] Detect/store when we are hovering the unused space after the right-most column (so e.g. context menus can react on it)
 	// Clear Resizable flag if none of our column are actually resizable (either via an explicit _NoResize flag, either
 	// because of using _WidthAuto/_WidthStretch). This will hide the resizing option from the context menu.
-	var unused_x1 = ImMax(table.WorkRect.Min.x, table.Columns[table.RightMostEnabledColumn].ClipRect.Max.x)
+	var unused_x1 = max(table.WorkRect.Min.x, table.Columns[table.RightMostEnabledColumn].ClipRect.Max.x)
 	if is_hovering_table && table.HoveredColumnBody == -1 {
 		if g.IO.MousePos.x >= unused_x1 {
 			table.HoveredColumnBody = (ImGuiTableColumnIdx)(table.ColumnsCount)
@@ -1334,7 +1334,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 	if table.Flags&ImGuiTableFlags_NoHostExtendX != 0 {
 		table.OuterRect.Max.x = unused_x1
 		table.WorkRect.Max.x = unused_x1
-		table.InnerClipRect.Max.x = ImMin(table.InnerClipRect.Max.x, unused_x1)
+		table.InnerClipRect.Max.x = min(table.InnerClipRect.Max.x, unused_x1)
 	}
 	table.InnerWindow.ParentWorkRect = table.WorkRect
 	table.BorderX1 = table.InnerClipRect.Min.x // +((table.Flags & ImGuiTableFlags_BordersOuter) ? 0.0f : -1.0f);
@@ -1391,7 +1391,7 @@ func TableUpdateBorders(table *ImGuiTable) {
 	// Actual columns highlight/render will be performed in EndTable() and not be affected.
 	var hit_half_width = TABLE_RESIZE_SEPARATOR_HALF_THICKNESS
 	var hit_y1 = table.OuterRect.Min.y
-	var hit_y2_body = ImMax(table.OuterRect.Max.y, hit_y1+table.LastOuterHeight)
+	var hit_y2_body = max(table.OuterRect.Max.y, hit_y1+table.LastOuterHeight)
 	var hit_y2_head = hit_y1 + table.LastFirstRowHeight
 
 	for order_n := int(0); order_n < table.ColumnsCount; order_n++ {
@@ -1502,7 +1502,7 @@ func TableDrawBorders(table *ImGuiTable) {
 		if table.FreezeRowsCount >= 1 {
 			count = table.InnerRect.Min.y
 		}
-		draw_y2_head = ImMin(table.InnerRect.Max.y, count+table.LastFirstRowHeight)
+		draw_y2_head = min(table.InnerRect.Max.y, count+table.LastFirstRowHeight)
 	}
 	if table.Flags&ImGuiTableFlags_BordersInnerV != 0 {
 		for order_n := int(0); order_n < table.ColumnsCount; order_n++ {
@@ -1763,9 +1763,9 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 			if (column.Flags & ImGuiTableColumnFlags_NoClip) == 0 {
 				var content_max_x float
 				if !has_freeze_v {
-					content_max_x = ImMax(column.ContentMaxXUnfrozen, column.ContentMaxXHeadersUsed) // No row freeze
+					content_max_x = max(column.ContentMaxXUnfrozen, column.ContentMaxXHeadersUsed) // No row freeze
 				} else if merge_group_sub_n == 0 {
-					content_max_x = ImMax(column.ContentMaxXFrozen, column.ContentMaxXHeadersUsed) // Row freeze: use width before freeze
+					content_max_x = max(column.ContentMaxXFrozen, column.ContentMaxXHeadersUsed) // Row freeze: use width before freeze
 				} else {
 					content_max_x = column.ContentMaxXUnfrozen // Row freeze: use width after freeze
 				}
@@ -1850,16 +1850,16 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 				// FIXME-TABLE FIXME-WORKRECT: We are wasting a merge opportunity on tables without scrolling if column doesn't fit
 				// within host clip rect, solely because of the half-padding difference between window.WorkRect and window.InnerClipRect.
 				if (merge_group_n&1) == 0 || !has_freeze_h {
-					merge_clip_rect.Min.x = ImMin(merge_clip_rect.Min.x, host_rect.Min.x)
+					merge_clip_rect.Min.x = min(merge_clip_rect.Min.x, host_rect.Min.x)
 				}
 				if (merge_group_n&2) == 0 || !has_freeze_v {
-					merge_clip_rect.Min.y = ImMin(merge_clip_rect.Min.y, host_rect.Min.y)
+					merge_clip_rect.Min.y = min(merge_clip_rect.Min.y, host_rect.Min.y)
 				}
 				if (merge_group_n & 1) != 0 {
-					merge_clip_rect.Max.x = ImMax(merge_clip_rect.Max.x, host_rect.Max.x)
+					merge_clip_rect.Max.x = max(merge_clip_rect.Max.x, host_rect.Max.x)
 				}
 				if (merge_group_n&2) != 0 && (table.Flags&ImGuiTableFlags_NoHostExtendY) == 0 {
-					merge_clip_rect.Max.y = ImMax(merge_clip_rect.Max.y, host_rect.Max.y)
+					merge_clip_rect.Max.y = max(merge_clip_rect.Max.y, host_rect.Max.y)
 				}
 				remaining_count -= merge_group.ChannelsCount
 				for n := 0; n < len(remaining_mask); n++ {
@@ -2048,11 +2048,11 @@ func TableFixColumnSortDirection(table *ImGuiTable, column *ImGuiTableColumn) {
 
 // Note this is meant to be stored in column.WidthAuto, please generally use the WidthAuto field
 func TableGetColumnWidthAuto(table *ImGuiTable, column *ImGuiTableColumn) float {
-	var content_width_body = ImMax(column.ContentMaxXFrozen, column.ContentMaxXUnfrozen) - column.WorkMinX
+	var content_width_body = max(column.ContentMaxXFrozen, column.ContentMaxXUnfrozen) - column.WorkMinX
 	var content_width_headers = column.ContentMaxXHeadersIdeal - column.WorkMinX
 	var width_auto = content_width_body
 	if (column.Flags & ImGuiTableColumnFlags_NoHeaderWidth) == 0 {
-		width_auto = ImMax(width_auto, content_width_headers)
+		width_auto = max(width_auto, content_width_headers)
 	}
 
 	// Non-resizable fixed columns preserve their requested width
@@ -2062,7 +2062,7 @@ func TableGetColumnWidthAuto(table *ImGuiTable, column *ImGuiTableColumn) float 
 		}
 	}
 
-	return ImMax(width_auto, table.MinColumnWidth)
+	return max(width_auto, table.MinColumnWidth)
 }
 
 // [Internal] Called by TableNextRow()
@@ -2192,8 +2192,8 @@ func TableEndRow(table *ImGuiTable) {
 				var column = &table.Columns[cell_data.Column]
 				var cell_bg_rect = TableGetCellBgRect(table, int(cell_data.Column))
 				cell_bg_rect.ClipWith(table.BgClipRect)
-				cell_bg_rect.Min.x = ImMax(cell_bg_rect.Min.x, column.ClipRect.Min.x) // So that first column after frozen one gets clipped
-				cell_bg_rect.Max.x = ImMin(cell_bg_rect.Max.x, column.MaxX)
+				cell_bg_rect.Min.x = max(cell_bg_rect.Min.x, column.ClipRect.Min.x) // So that first column after frozen one gets clipped
+				cell_bg_rect.Max.x = min(cell_bg_rect.Max.x, column.MaxX)
 				window.DrawList.AddRectFilled(cell_bg_rect.Min, cell_bg_rect.Max, cell_data.BgColor, 0, 0)
 			}
 		}
@@ -2228,8 +2228,8 @@ func TableEndRow(table *ImGuiTable) {
 		table.IsUnfrozenRows = true
 
 		// BgClipRect starts as table.InnerClipRect, reduce it now and make BgClipRectForDrawCmd == BgClipRect
-		var y0 = ImMax(table.RowPosY2+1, window.InnerClipRect.Min.y)
-		table.BgClipRect.Min.y = ImMin(y0, window.InnerClipRect.Max.y)
+		var y0 = max(table.RowPosY2+1, window.InnerClipRect.Min.y)
+		table.BgClipRect.Min.y = min(y0, window.InnerClipRect.Max.y)
 		table.Bg2ClipRectForDrawCmd.Min.y = table.BgClipRect.Min.y
 		table.BgClipRect.Max.y = window.InnerClipRect.Max.y
 		table.Bg2ClipRectForDrawCmd.Max.y = window.InnerClipRect.Max.y
@@ -2287,7 +2287,7 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 
 	// To allow ImGuiListClipper to function we propagate our row height
 	if !column.IsEnabled {
-		window.DC.CursorPos.y = ImMax(window.DC.CursorPos.y, table.RowPosY2)
+		window.DC.CursorPos.y = max(window.DC.CursorPos.y, table.RowPosY2)
 	}
 
 	window.SkipItems = column.IsSkipItems
@@ -2331,13 +2331,13 @@ func TableEndCell(table *ImGuiTable) {
 			p_max_pos_x = &column.ContentMaxXFrozen
 		}
 	}
-	*p_max_pos_x = ImMax(*p_max_pos_x, window.DC.CursorMaxPos.x)
-	table.RowPosY2 = ImMax(table.RowPosY2, window.DC.CursorMaxPos.y+table.CellPaddingY)
+	*p_max_pos_x = max(*p_max_pos_x, window.DC.CursorMaxPos.x)
+	table.RowPosY2 = max(table.RowPosY2, window.DC.CursorMaxPos.y+table.CellPaddingY)
 	column.ItemWidth = window.DC.ItemWidth
 
 	// Propagate text baseline for the entire row
 	// FIXME-TABLE: Here we propagate text baseline from the last line of the cell.. instead of the first one.
-	table.RowTextBaseline = ImMax(table.RowTextBaseline, window.DC.PrevLineTextBaseOffset)
+	table.RowTextBaseline = max(table.RowTextBaseline, window.DC.PrevLineTextBaseOffset)
 }
 
 // Return the cell rectangle based on currently known height.

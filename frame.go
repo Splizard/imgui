@@ -76,7 +76,7 @@ func NewFrame() {
 	g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx]
 	g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime
 	g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % int(len(g.FramerateSecPerFrame))
-	g.FramerateSecPerFrameCount = ImMinInt(g.FramerateSecPerFrameCount+1, int(len(g.FramerateSecPerFrame)))
+	g.FramerateSecPerFrameCount = min(g.FramerateSecPerFrameCount+1, int(len(g.FramerateSecPerFrame)))
 	if g.FramerateSecPerFrameAccum > 0.0 {
 		g.IO.Framerate = (1.0 / (g.FramerateSecPerFrameAccum / (float)(g.FramerateSecPerFrameCount)))
 	} else {
@@ -204,9 +204,9 @@ func NewFrame() {
 
 	// Background darkening/whitening
 	if GetTopMostPopupModal() != nil || (g.NavWindowingTarget != nil && g.NavWindowingHighlightAlpha > 0.0) {
-		g.DimBgRatio = ImMin(g.DimBgRatio+g.IO.DeltaTime*6.0, 1.0)
+		g.DimBgRatio = min(g.DimBgRatio+g.IO.DeltaTime*6.0, 1.0)
 	} else {
-		g.DimBgRatio = ImMax(g.DimBgRatio-g.IO.DeltaTime*10.0, 0.0)
+		g.DimBgRatio = max(g.DimBgRatio-g.IO.DeltaTime*10.0, 0.0)
 	}
 
 	g.MouseCursor = ImGuiMouseCursor_Arrow

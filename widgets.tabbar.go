@@ -166,7 +166,7 @@ func EndTabBar() {
 	// Restore the last visible height if no tab is visible, this reduce vertical flicker/movement when a tabs gets removed without calling SetTabItemClosed().
 	var tab_bar_appearing = (tab_bar.PrevFrameVisible+1 < g.FrameCount)
 	if tab_bar.VisibleTabWasSubmitted || tab_bar.VisibleTabId == 0 || tab_bar_appearing {
-		tab_bar.CurrTabsContentsHeight = ImMax(window.DC.CursorPos.y-tab_bar.BarRect.Max.y, tab_bar.CurrTabsContentsHeight)
+		tab_bar.CurrTabsContentsHeight = max(window.DC.CursorPos.y-tab_bar.BarRect.Max.y, tab_bar.CurrTabsContentsHeight)
 		window.DC.CursorPos.y = tab_bar.BarRect.Max.y + tab_bar.CurrTabsContentsHeight
 	} else {
 		window.DC.CursorPos.y = tab_bar.BarRect.Max.y + tab_bar.PrevTabsContentsHeight
@@ -624,7 +624,7 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 	// We don't have CPU clipping primitives to clip the CloseButton (until it becomes a texture), so need to add an extra draw call (temporary in the case of vertical animation)
 	var want_clip_rect = is_central_section && (bb.Min.x < tab_bar.ScrollingRectMinX || bb.Max.x > tab_bar.ScrollingRectMaxX)
 	if want_clip_rect {
-		PushClipRect(ImVec2{ImMax(bb.Min.x, tab_bar.ScrollingRectMinX), bb.Min.y - 1}, ImVec2{tab_bar.ScrollingRectMaxX, bb.Max.y}, true)
+		PushClipRect(ImVec2{max(bb.Min.x, tab_bar.ScrollingRectMinX), bb.Min.y - 1}, ImVec2{tab_bar.ScrollingRectMaxX, bb.Max.y}, true)
 	}
 
 	var backup_cursor_max_pos = window.DC.CursorMaxPos
@@ -756,7 +756,7 @@ func TabItemCalcSize(label string, has_close_button bool) ImVec2 {
 	} else {
 		size.x += g.Style.FramePadding.x + 1.0
 	}
-	return ImVec2{ImMin(size.x, TabBarCalcMaxTabWidth()), size.y}
+	return ImVec2{min(size.x, TabBarCalcMaxTabWidth()), size.y}
 }
 
 func TabItemBackground(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlags, col ImU32) {
@@ -770,7 +770,7 @@ func TabItemBackground(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlag
 		r = g.Style.FrameRounding
 	}
 
-	var rounding = ImMax(0.0, ImMin(r, width*0.5-1.0))
+	var rounding = max(0.0, min(r, width*0.5-1.0))
 	var y1 = bb.Min.y + 1.0
 	var y2 = bb.Max.y - 1.0
 	draw_list.PathLineTo(ImVec2{bb.Min.x, y2})
@@ -815,7 +815,7 @@ func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTa
 	}
 
 	var button_sz = g.FontSize
-	var button_pos = ImVec2{ImMax(bb.Min.x, bb.Max.x-frame_padding.x*2.0-button_sz), bb.Min.y}
+	var button_pos = ImVec2{max(bb.Min.x, bb.Max.x-frame_padding.x*2.0-button_sz), bb.Min.y}
 
 	// Close Button & Unsaved Marker
 	// We are relying on a subtle and confusing distinction between 'hovered' and 'g.HoveredId' which happens because we are using ImGuiButtonFlags_AllowOverlapMode + SetItemAllowOverlap()
@@ -825,7 +825,7 @@ func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTa
 	var close_button_pressed = false
 	var close_button_visible = false
 	if close_button_id != 0 {
-		if is_contents_visible || bb.GetWidth() >= ImMax(button_sz, g.Style.TabMinWidthForCloseButton) {
+		if is_contents_visible || bb.GetWidth() >= max(button_sz, g.Style.TabMinWidthForCloseButton) {
 			if g.HoveredId == tab_id || g.HoveredId == close_button_id || g.ActiveId == tab_id || g.ActiveId == close_button_id {
 				close_button_visible = true
 			}
@@ -906,11 +906,11 @@ func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTa
 	tab_bar.ScrollingTargetDistToVisibility = 0.0
 	if tab_bar.ScrollingTarget > tab_x1 || (tab_x2-tab_x1 >= scrollable_width) {
 		// Scroll to the left
-		tab_bar.ScrollingTargetDistToVisibility = ImMax(tab_bar.ScrollingAnim-tab_x2, 0.0)
+		tab_bar.ScrollingTargetDistToVisibility = max(tab_bar.ScrollingAnim-tab_x2, 0.0)
 		tab_bar.ScrollingTarget = tab_x1
 	} else if tab_bar.ScrollingTarget < tab_x2-scrollable_width {
 		// Scroll to the right
-		tab_bar.ScrollingTargetDistToVisibility = ImMax((tab_x1-scrollable_width)-tab_bar.ScrollingAnim, 0.0)
+		tab_bar.ScrollingTargetDistToVisibility = max((tab_x1-scrollable_width)-tab_bar.ScrollingAnim, 0.0)
 		tab_bar.ScrollingTarget = tab_x2 - scrollable_width
 	}
 }
@@ -953,8 +953,8 @@ func TabBarTabListPopupButton(tab_bar *ImGuiTabBar) *ImGuiTabItem {
 }
 
 func TabBarScrollClamp(tab_bar *ImGuiTabBar, scrolling float) float {
-	scrolling = ImMin(scrolling, tab_bar.WidthAllTabs-tab_bar.BarRect.GetWidth())
-	return ImMax(scrolling, 0.0)
+	scrolling = min(scrolling, tab_bar.WidthAllTabs-tab_bar.BarRect.GetWidth())
+	return max(scrolling, 0.0)
 }
 
 // Dockables uses Name/ID in the global namespace. Non-dockable items use the ID stack.
@@ -994,7 +994,7 @@ func TabBarScrollingButtons(tab_bar *ImGuiTabBar) *ImGuiTabItem {
 	var backup_repeat_rate = g.IO.KeyRepeatRate
 	g.IO.KeyRepeatDelay = 0.250
 	g.IO.KeyRepeatRate = 0.200
-	var x = ImMax(tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.x-scrolling_buttons_width)
+	var x = max(tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.x-scrolling_buttons_width)
 	window.DC.CursorPos = ImVec2{x, tab_bar.BarRect.Min.y}
 	if ArrowButtonEx("##<", ImGuiDir_Left, arrow_button_size, ImGuiButtonFlags_PressedOnClick|ImGuiButtonFlags_Repeat) {
 		select_dir = -1
@@ -1229,7 +1229,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	var central_section_is_visible = (section_0_w + section_2_w) < tab_bar.BarRect.GetWidth()
 	var width_excess float
 	if central_section_is_visible {
-		width_excess = ImMax(section_1_w-(tab_bar.BarRect.GetWidth()-section_0_w-section_2_w), 0.0) // Excess used to shrink central section
+		width_excess = max(section_1_w-(tab_bar.BarRect.GetWidth()-section_0_w-section_2_w), 0.0) // Excess used to shrink central section
 	} else {
 		width_excess = (section_0_w + section_2_w) - tab_bar.BarRect.GetWidth() // Excess used to shrink leading/trailing section
 	}
@@ -1267,7 +1267,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	for section_n := int(0); section_n < 3; section_n++ {
 		var section = &sections[section_n]
 		if section_n == 2 {
-			tab_offset = ImMin(ImMax(0.0, tab_bar.BarRect.GetWidth()-section.Width), tab_offset)
+			tab_offset = min(max(0.0, tab_bar.BarRect.GetWidth()-section.Width), tab_offset)
 		}
 
 		for tab_n := int(0); tab_n < section.TabCount; tab_n++ {
@@ -1278,7 +1278,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 				tab_offset += g.Style.ItemInnerSpacing.x
 			}
 		}
-		tab_bar.WidthAllTabs += ImMax(section.Width+section.Spacing, 0.0)
+		tab_bar.WidthAllTabs += max(section.Width+section.Spacing, 0.0)
 		tab_offset += section.Spacing
 		section_tab_index += section.TabCount
 	}
@@ -1305,8 +1305,8 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	if tab_bar.ScrollingAnim != tab_bar.ScrollingTarget {
 		// Scrolling speed adjust itself so we can always reach our target in 1/3 seconds.
 		// Teleport if we are aiming far off the visible line
-		tab_bar.ScrollingSpeed = ImMax(tab_bar.ScrollingSpeed, 70.0*g.FontSize)
-		tab_bar.ScrollingSpeed = ImMax(tab_bar.ScrollingSpeed, ImFabs(tab_bar.ScrollingTarget-tab_bar.ScrollingAnim)/0.3)
+		tab_bar.ScrollingSpeed = max(tab_bar.ScrollingSpeed, 70.0*g.FontSize)
+		tab_bar.ScrollingSpeed = max(tab_bar.ScrollingSpeed, ImFabs(tab_bar.ScrollingTarget-tab_bar.ScrollingAnim)/0.3)
 		var teleport = (tab_bar.PrevFrameVisible+1 < g.FrameCount) || (tab_bar.ScrollingTargetDistToVisibility > 10.0*g.FontSize)
 		if teleport {
 			tab_bar.ScrollingAnim = tab_bar.ScrollingTarget
@@ -1328,5 +1328,5 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	window := g.CurrentWindow
 	window.DC.CursorPos = tab_bar.BarRect.Min
 	ItemSizeVec(&ImVec2{tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()}, tab_bar.FramePadding.y)
-	window.DC.IdealMaxPos.x = ImMax(window.DC.IdealMaxPos.x, tab_bar.BarRect.Min.x+tab_bar.WidthAllTabsIdeal)
+	window.DC.IdealMaxPos.x = max(window.DC.IdealMaxPos.x, tab_bar.BarRect.Min.x+tab_bar.WidthAllTabsIdeal)
 }

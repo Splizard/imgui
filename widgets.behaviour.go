@@ -44,8 +44,8 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 		}
 
 		// Minimum pane size
-		var size_1_maximum_delta = ImMax(0.0, *size1-min_size1)
-		var size_2_maximum_delta = ImMax(0.0, *size2-min_size2)
+		var size_1_maximum_delta = max(0.0, *size1-min_size1)
+		var size_2_maximum_delta = max(0.0, *size2-min_size2)
 		if mouse_delta < -size_1_maximum_delta {
 			mouse_delta = -size_1_maximum_delta
 		}
@@ -107,9 +107,9 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 		v_range = v_max - v_min
 	}
 	if !is_floating_point && v_range >= 0 { // v_range < 0 may happen on integer overflows
-		grab_sz = ImMax((float)(slider_sz/(v_range+1)), style.GrabMinSize) // For integer sliders: if possible have the grab size represent 1 unit
+		grab_sz = max((float)(slider_sz/(v_range+1)), style.GrabMinSize) // For integer sliders: if possible have the grab size represent 1 unit
 	}
-	grab_sz = ImMin(grab_sz, slider_sz)
+	grab_sz = min(grab_sz, slider_sz)
 	var slider_usable_sz = slider_sz - grab_sz
 	var slider_usable_pos_min = bb.Min.Axis(axis) + grab_padding + grab_sz*0.5
 	var slider_usable_pos_max = bb.Max.Axis(axis) - grab_padding - grab_sz*0.5
@@ -123,7 +123,7 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 			decimal_precision = 3
 		}
 		logarithmic_zero_epsilon = ImPow(0.1, (float)(decimal_precision))
-		zero_deadzone_halfsize = (style.LogSliderDeadzone * 0.5) / ImMax(slider_usable_sz, 1.0)
+		zero_deadzone_halfsize = (style.LogSliderDeadzone * 0.5) / max(slider_usable_sz, 1.0)
 	}
 
 	// Process interacting with the slider
@@ -208,9 +208,9 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 					var new_clicked_t = ScaleRatioFromValueT(v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 
 					if delta > 0 {
-						g.SliderCurrentAccum -= ImMin(new_clicked_t-old_clicked_t, delta)
+						g.SliderCurrentAccum -= min(new_clicked_t-old_clicked_t, delta)
 					} else {
-						g.SliderCurrentAccum -= ImMax(new_clicked_t-old_clicked_t, delta)
+						g.SliderCurrentAccum -= max(new_clicked_t-old_clicked_t, delta)
 					}
 				}
 

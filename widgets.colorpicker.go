@@ -121,8 +121,8 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 
 	if (flags&(ImGuiColorEditFlags_DisplayRGB|ImGuiColorEditFlags_DisplayHSV)) != 0 && (flags&ImGuiColorEditFlags_NoInputs) == 0 {
 		// RGB/HSV 0..255 Sliders
-		var w_item_one = ImMax(1.0, IM_FLOOR((w_inputs-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
-		var w_item_last = ImMax(1.0, IM_FLOOR(w_inputs-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
+		var w_item_one = max(1.0, IM_FLOOR((w_inputs-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
+		var w_item_last = max(1.0, IM_FLOOR(w_inputs-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
 
 		var mformat = "M:000"
 		if (flags & ImGuiColorEditFlags_Float) != 0 {
@@ -402,8 +402,8 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	}
 	var picker_pos = window.DC.CursorPos
 	var square_sz = GetFrameHeight()
-	var bars_width = square_sz                                                                // Arbitrary smallish width of Hue/Alpha picking bars
-	var sv_picker_size = ImMax(bars_width*1, width-bar*(bars_width+style.ItemInnerSpacing.x)) // Saturation/Value picking box
+	var bars_width = square_sz                                                              // Arbitrary smallish width of Hue/Alpha picking bars
+	var sv_picker_size = max(bars_width*1, width-bar*(bars_width+style.ItemInnerSpacing.x)) // Saturation/Value picking box
 	var bar0_pos_x = picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x
 	var bar1_pos_x = bar0_pos_x + bars_width + style.ItemInnerSpacing.x
 	var bars_triangles_half_sz = IM_FLOOR(bars_width * 0.20)
@@ -672,7 +672,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	if (flags & ImGuiColorEditFlags_PickerHueWheel) != 0 {
 		// Render Hue Wheel
 		var aeps = 0.5 / wheel_r_outer // Half a pixel arc length in radians (2pi cancels out).
-		var segment_per_arc = ImMaxInt(4, (int)(wheel_r_outer/12))
+		var segment_per_arc = max(4, (int)(wheel_r_outer/12))
 		for n := 0; n < 6; n++ {
 			var a0 = float(n)/6.0*2.0*IM_PI - aeps
 			var a1 = float(n+1.0)/6.0*2.0*IM_PI + aeps
@@ -813,8 +813,8 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 	}
 
 	var col_rgb_without_alpha = ImVec4{col_rgb.x, col_rgb.y, col_rgb.z, 1.0}
-	var grid_step = ImMin(size.x, size.y) / 2.99
-	var rounding = ImMin(g.Style.FrameRounding, grid_step*0.5)
+	var grid_step = min(size.x, size.y) / 2.99
+	var rounding = min(g.Style.FrameRounding, grid_step*0.5)
 	var bb_inner = bb
 	var off float
 	if (flags & ImGuiColorEditFlags_NoBorder) == 0 {
@@ -1014,7 +1014,7 @@ func ColorPickerOptionsPopup(ref_col *[4]float, flags ImGuiColorEditFlags) {
 	}
 	g := GImGui
 	if allow_opt_picker {
-		var picker_size = ImVec2{g.FontSize * 8, ImMax(g.FontSize*8-(GetFrameHeight()+g.Style.ItemInnerSpacing.x), 1.0)} // FIXME: Picker size copied from main picker function
+		var picker_size = ImVec2{g.FontSize * 8, max(g.FontSize*8-(GetFrameHeight()+g.Style.ItemInnerSpacing.x), 1.0)} // FIXME: Picker size copied from main picker function
 		PushItemWidth(picker_size.x)
 		for picker_type := 0; picker_type < 2; picker_type++ {
 			// Draw small/thumbnail version of each picker type (over an invisible button for selection)

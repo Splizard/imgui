@@ -60,7 +60,7 @@ func LabelText(label string, format string, args ...any) {
 		padding = style.ItemInnerSpacing.x + label_size.x
 	}
 
-	var total_bb = ImRect{pos, pos.Add(ImVec2{w + padding, ImMax(value_size.y, label_size.y) + style.FramePadding.y*2})}
+	var total_bb = ImRect{pos, pos.Add(ImVec2{w + padding, max(value_size.y, label_size.y) + style.FramePadding.y*2})}
 	ItemSizeRect(&total_bb, style.FramePadding.y)
 	if !ItemAdd(&total_bb, 0, nil, 0) {
 		return
@@ -117,7 +117,7 @@ func Bullet() {
 
 	g := GImGui
 	style := g.Style
-	var line_height = ImMax(ImMin(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
+	var line_height = max(min(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{g.FontSize, line_height})}
 	ItemSizeRect(&bb, 0)
 	if !ItemAdd(&bb, 0, nil, 0) {

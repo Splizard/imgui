@@ -427,8 +427,8 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 			}
 
 			// Clamp top-left corner of popup
-			pos.x = ImMax(pos.x, r_outer.Min.x)
-			pos.y = ImMax(pos.y, r_outer.Min.y)
+			pos.x = max(pos.x, r_outer.Min.x)
+			pos.y = max(pos.y, r_outer.Min.y)
 
 			*last_dir = dir
 			return pos
@@ -445,8 +445,8 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 
 	// Otherwise try to keep within display
 	var pos = *ref_pos
-	pos.x = ImMax(ImMin(pos.x+size.x, r_outer.Max.x)-size.x, r_outer.Min.x)
-	pos.y = ImMax(ImMin(pos.y+size.y, r_outer.Max.y)-size.y, r_outer.Min.y)
+	pos.x = max(min(pos.x+size.x, r_outer.Max.x)-size.x, r_outer.Min.x)
+	pos.y = max(min(pos.y+size.y, r_outer.Max.y)-size.y, r_outer.Min.y)
 	return pos
 }
 

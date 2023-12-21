@@ -103,7 +103,7 @@ func EndGroup() {
 		return
 	}
 
-	window.DC.CurrLineTextBaseOffset = ImMax(window.DC.PrevLineTextBaseOffset, group_data.BackupCurrLineTextBaseOffset) // FIXME: Incorrect, we should grab the base offset from the *first line* of the group but it is hard to obtain now.
+	window.DC.CurrLineTextBaseOffset = max(window.DC.PrevLineTextBaseOffset, group_data.BackupCurrLineTextBaseOffset) // FIXME: Incorrect, we should grab the base offset from the *first line* of the group but it is hard to obtain now.
 
 	size := group_bb.GetSize()
 	ItemSizeVec(&size, 0)
@@ -177,13 +177,13 @@ func SetCursorPos(local_pos *ImVec2) {
 func SetCursorPosX(local_x float) {
 	window := GetCurrentWindow()
 	window.DC.CursorPos.x = window.Pos.x - window.Scroll.x + local_x
-	window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPos.x)
+	window.DC.CursorMaxPos.x = max(window.DC.CursorMaxPos.x, window.DC.CursorPos.x)
 }
 
 func SetCursorPosY(local_y float) {
 	window := GetCurrentWindow()
 	window.DC.CursorPos.y = window.Pos.y - window.Scroll.y + local_y
-	window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y)
+	window.DC.CursorMaxPos.y = max(window.DC.CursorMaxPos.y, window.DC.CursorPos.y)
 }
 
 // GetCursorStartPos initial cursor position in window coordinates
@@ -213,8 +213,8 @@ func AlignTextToFramePadding() {
 	}
 
 	g := GImGui
-	window.DC.CurrLineSize.y = ImMax(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2)
-	window.DC.CurrLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, g.Style.FramePadding.y)
+	window.DC.CurrLineSize.y = max(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2)
+	window.DC.CurrLineTextBaseOffset = max(window.DC.CurrLineTextBaseOffset, g.Style.FramePadding.y)
 }
 
 // GetTextLineHeight ~ FontSize
@@ -262,8 +262,8 @@ func PushMultiItemsWidths(components int, width_full float) {
 	g := GImGui
 	window := g.CurrentWindow
 	style := g.Style
-	w_item_one := ImMax(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
-	w_item_last := ImMax(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
+	w_item_one := max(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
+	w_item_last := max(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, w_item_last)
 	for i := int(0); i < components-2; i++ {
@@ -305,7 +305,7 @@ func CalcItemWidth() float {
 	}
 	if w < 0.0 {
 		var region_max_x = GetContentRegionMaxAbs().x
-		w = ImMax(1.0, region_max_x-window.DC.CursorPos.x+w)
+		w = max(1.0, region_max_x-window.DC.CursorPos.x+w)
 	}
 	w = IM_FLOOR(w)
 	return w

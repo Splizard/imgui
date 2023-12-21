@@ -88,7 +88,7 @@ func STB_TEXTEDIT_INSERTCHARS(obj *STB_TEXTEDIT_STRING, pos int, new_text []STB_
 			return false
 		}
 		IM_ASSERT(text_len < int(len(obj.TextW)))
-		obj.TextW = append(obj.TextW, make([]rune, text_len+ImClampInt(new_text_len*4, 32, ImMaxInt(256, new_text_len))+1)...)
+		obj.TextW = append(obj.TextW, make([]rune, text_len+ImClampInt(new_text_len*4, 32, max(256, new_text_len))+1)...)
 	}
 
 	var text = obj.TextW

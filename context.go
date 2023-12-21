@@ -26,7 +26,7 @@ type ImGuiContext struct {
 	CurrentWindowStack             []ImGuiWindowStackData
 	WindowsById                    ImGuiStorage // Map window's ImGuiID to *ImGuiWindow
 	WindowsActiveCount             int          // Number of unique windows submitted by frame
-	WindowsHoverPadding            ImVec2       // Padding around resizable windows for which hovering on counts as hovering the window == ImMax(style.TouchExtraPadding, WINDOWS_HOVER_PADDING)
+	WindowsHoverPadding            ImVec2       // Padding around resizable windows for which hovering on counts as hovering the window == max(style.TouchExtraPadding, WINDOWS_HOVER_PADDING)
 	CurrentWindow                  *ImGuiWindow // Window being drawn into
 	HoveredWindow                  *ImGuiWindow // Window the mouse is hovering. Will typically catch mouse inputs.
 	HoveredWindowUnderMovingWindow *ImGuiWindow // Hovered window ignoring MovingWindow. Only set if MovingWindow is set.

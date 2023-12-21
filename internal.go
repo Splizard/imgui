@@ -472,12 +472,12 @@ func (c *ImGuiMenuColumns) Update(spacing float, window_reappearing bool) {
 }
 
 func (c *ImGuiMenuColumns) DeclColumns(w_icon float, w_label float, w_shortcut float, w_mark float) float {
-	c.Widths[0] = uint16(ImMaxInt(int(c.Widths[0]), ((int)(w_icon))))
-	c.Widths[1] = uint16(ImMaxInt(int(c.Widths[1]), (int)(w_label)))
-	c.Widths[2] = uint16(ImMaxInt(int(c.Widths[2]), (int)(w_shortcut)))
-	c.Widths[3] = uint16(ImMaxInt(int(c.Widths[3]), (int)(w_mark)))
+	c.Widths[0] = uint16(max(int(c.Widths[0]), ((int)(w_icon))))
+	c.Widths[1] = uint16(max(int(c.Widths[1]), (int)(w_label)))
+	c.Widths[2] = uint16(max(int(c.Widths[2]), (int)(w_shortcut)))
+	c.Widths[3] = uint16(max(int(c.Widths[3]), (int)(w_mark)))
 	c.CalcNextTotalWidth(false)
-	return (float)(ImMaxInt(int(c.TotalWidth), int(c.NextTotalWidth)))
+	return (float)(max(int(c.TotalWidth), int(c.NextTotalWidth)))
 }
 
 func (c *ImGuiMenuColumns) CalcNextTotalWidth(update_offsets bool) {
@@ -553,9 +553,9 @@ func (s *ImGuiInputTextState) CursorAnimReset() {
 }
 
 func (s *ImGuiInputTextState) CursorClamp() {
-	s.Stb.cursor = ImMinInt(s.Stb.cursor, s.CurLenW)
-	s.Stb.select_start = ImMinInt(s.Stb.select_start, s.CurLenW)
-	s.Stb.select_end = ImMinInt(s.Stb.select_end, s.CurLenW)
+	s.Stb.cursor = min(s.Stb.cursor, s.CurLenW)
+	s.Stb.select_start = min(s.Stb.select_start, s.CurLenW)
+	s.Stb.select_end = min(s.Stb.select_end, s.CurLenW)
 }
 
 func (s *ImGuiInputTextState) HasSelection() bool {
@@ -728,7 +728,7 @@ func (p *ImGuiViewportP) CalcWorkRectPos(off_min *ImVec2) ImVec2 {
 }
 
 func (p *ImGuiViewportP) CalcWorkRectSize(off_min *ImVec2, off_max *ImVec2) ImVec2 {
-	return ImVec2{ImMax(0.0, p.Size.x-off_min.x+off_max.x), ImMax(0.0, p.Size.y-off_min.y+off_max.y)}
+	return ImVec2{max(0.0, p.Size.x-off_min.x+off_max.x), max(0.0, p.Size.y-off_min.y+off_max.y)}
 }
 
 func (p *ImGuiViewportP) UpdateWorkRect() {

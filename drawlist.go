@@ -53,8 +53,8 @@ func (l *ImDrawList) PushClipRect(cr_min, cr_max ImVec2, intersect_with_current_
 			cr.w = current.w
 		}
 	}
-	cr.z = ImMax(cr.x, cr.z)
-	cr.w = ImMax(cr.y, cr.w)
+	cr.z = max(cr.x, cr.z)
+	cr.w = max(cr.y, cr.w)
 
 	l._ClipRectStack = append(l._ClipRectStack, cr)
 	l._CmdHeader.ClipRect = cr
@@ -306,8 +306,8 @@ func (l *ImDrawList) PathRect(a, b *ImVec2, rounding float, flags ImDrawFlags) {
 		yamount = 0.5
 	}
 
-	rounding = ImMin(rounding, ImFabs(b.x-a.x)*(xamount)-1.0)
-	rounding = ImMin(rounding, ImFabs(b.y-a.y)*(yamount)-1.0)
+	rounding = min(rounding, ImFabs(b.x-a.x)*(xamount)-1.0)
+	rounding = min(rounding, ImFabs(b.y-a.y)*(yamount)-1.0)
 
 	if rounding <= 0.0 || (flags&ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
 		l.PathLineTo(*a)

@@ -238,7 +238,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		}
 
 		// Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
-		window.DC.MenuBarOffset.x = ImMax(ImMax(window.WindowPadding.x, style.ItemSpacing.x), g.NextWindowData.MenuBarOffsetMinVal.x)
+		window.DC.MenuBarOffset.x = max(max(window.WindowPadding.x, style.ItemSpacing.x), g.NextWindowData.MenuBarOffsetMinVal.x)
 		window.DC.MenuBarOffset.y = g.NextWindowData.MenuBarOffsetMinVal.y
 
 		// Collapse window by double-clicking on title bar
@@ -282,7 +282,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			// We still process initial auto-fit on collapsed windows to get a window width, but otherwise don't honor ImGuiWindowFlags_AlwaysAutoResize when collapsed.
 			if !window_size_x_set_by_api && window.AutoFitFramesX > 0 {
 				if window.AutoFitOnlyGrows {
-					window.SizeFull.x = ImMax(window.SizeFull.x, size_auto_fit.x)
+					window.SizeFull.x = max(window.SizeFull.x, size_auto_fit.x)
 				} else {
 					window.SizeFull.x = size_auto_fit.x
 				}
@@ -290,7 +290,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			}
 			if !window_size_y_set_by_api && window.AutoFitFramesY > 0 {
 				if window.AutoFitOnlyGrows {
-					window.SizeFull.y = ImMax(window.SizeFull.y, size_auto_fit.y)
+					window.SizeFull.y = max(window.SizeFull.y, size_auto_fit.y)
 				} else {
 					window.SizeFull.y = size_auto_fit.y
 				}
@@ -374,7 +374,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.0f) to completely hide artifacts.
 		//if ((window.Flags & ImGuiWindowFlags_MenuBar) || !(window.Flags & ImGuiWindowFlags_NoTitleBar))
-		//    window.WindowRounding = ImMin(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.0f);
+		//    window.WindowRounding = min(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.0f);
 
 		// Apply window focus (new and reactivated windows are moved to front)
 		var want_focus = false
@@ -395,7 +395,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		if g.IO.ConfigWindowsResizeFromEdges {
 			resize_grip_count = 2
 		}
-		var resize_grip_draw_size = IM_FLOOR(ImMax(g.FontSize*1.10, window.WindowRounding+1.0+g.FontSize*0.2))
+		var resize_grip_draw_size = IM_FLOOR(max(g.FontSize*1.10, window.WindowRounding+1.0+g.FontSize*0.2))
 		if !window.Collapsed {
 			if UpdateWindowManualResize(window, &size_auto_fit, &border_held, resize_grip_count, &resize_grip_col, &visibility_rect) {
 				use_current_size_for_scrollbar_x = true
@@ -483,9 +483,9 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		if (flags&ImGuiWindowFlags_MenuBar != 0) || flags&ImGuiWindowFlags_NoTitleBar == 0 {
 			top_border_size = style.FrameBorderSize
 		}
-		window.InnerClipRect.Min.x = ImFloor(0.5 + window.InnerRect.Min.x + ImMax(ImFloor(window.WindowPadding.x*0.5), window.WindowBorderSize))
+		window.InnerClipRect.Min.x = ImFloor(0.5 + window.InnerRect.Min.x + max(ImFloor(window.WindowPadding.x*0.5), window.WindowBorderSize))
 		window.InnerClipRect.Min.y = ImFloor(0.5 + window.InnerRect.Min.y + top_border_size)
-		window.InnerClipRect.Max.x = ImFloor(0.5 + window.InnerRect.Max.x - ImMax(ImFloor(window.WindowPadding.x*0.5), window.WindowBorderSize))
+		window.InnerClipRect.Max.x = ImFloor(0.5 + window.InnerRect.Max.x - max(ImFloor(window.WindowPadding.x*0.5), window.WindowBorderSize))
 		window.InnerClipRect.Max.y = ImFloor(0.5 + window.InnerRect.Max.y - window.WindowBorderSize)
 		window.InnerClipRect.ClipWithFull(host_rect)
 
@@ -501,8 +501,8 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// Lock down maximum scrolling
 		// The value of ScrollMax are ahead from ScrollbarX/ScrollbarY which is intentionally using InnerRect from previous rect in order to accommodate
 		// for right/bottom aligned items without creating a scrollbar.
-		window.ScrollMax.x = ImMax(0.0, window.ContentSize.x+window.WindowPadding.x*2.0-window.InnerRect.GetWidth())
-		window.ScrollMax.y = ImMax(0.0, window.ContentSize.y+window.WindowPadding.y*2.0-window.InnerRect.GetHeight())
+		window.ScrollMax.x = max(0.0, window.ContentSize.x+window.WindowPadding.x*2.0-window.InnerRect.GetWidth())
+		window.ScrollMax.y = max(0.0, window.ContentSize.y+window.WindowPadding.y*2.0-window.InnerRect.GetHeight())
 
 		// Apply scrolling
 		window.Scroll = CalcNextScrollFromScrollTargetAndClamp(window)
@@ -582,7 +582,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Draw navigation selection/windowing rectangle border
 		if g.NavWindowingTargetAnim == window {
-			var rounding = ImMax(window.WindowRounding, g.Style.WindowRounding)
+			var rounding = max(window.WindowRounding, g.Style.WindowRounding)
 			var bb = window.Rect()
 			bb.Expand(g.FontSize)
 			if bb.ContainsRect(viewport_rect) { // If a window fits the entire viewport, adjust its highlight inward
@@ -610,7 +610,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			if allow_scrollbar_x {
 				a = window.ContentSize.x
 			}
-			work_rect_size_x = ImMax(a, window.Size.x-window.WindowPadding.x*2.0-window.ScrollbarSizes.x)
+			work_rect_size_x = max(a, window.Size.x-window.WindowPadding.x*2.0-window.ScrollbarSizes.x)
 		}
 
 		var work_rect_size_y float
@@ -621,11 +621,11 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			if allow_scrollbar_y {
 				a = window.ContentSize.y
 			}
-			work_rect_size_y = ImMax(a, window.Size.y-window.WindowPadding.y*2.0-window.ScrollbarSizes.y)
+			work_rect_size_y = max(a, window.Size.y-window.WindowPadding.y*2.0-window.ScrollbarSizes.y)
 		}
 
-		window.WorkRect.Min.x = ImFloor(window.InnerRect.Min.x - window.Scroll.x + ImMax(window.WindowPadding.x, window.WindowBorderSize))
-		window.WorkRect.Min.y = ImFloor(window.InnerRect.Min.y - window.Scroll.y + ImMax(window.WindowPadding.y, window.WindowBorderSize))
+		window.WorkRect.Min.x = ImFloor(window.InnerRect.Min.x - window.Scroll.x + max(window.WindowPadding.x, window.WindowBorderSize))
+		window.WorkRect.Min.y = ImFloor(window.InnerRect.Min.y - window.Scroll.y + max(window.WindowPadding.y, window.WindowBorderSize))
 		window.WorkRect.Max.x = window.WorkRect.Min.x + work_rect_size_x
 		window.WorkRect.Max.y = window.WorkRect.Min.y + work_rect_size_y
 		window.ParentWorkRect = window.WorkRect

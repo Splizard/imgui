@@ -367,7 +367,7 @@ func UpdateMouseWheel() {
 		}
 		if (window.Flags&ImGuiWindowFlags_NoScrollWithMouse == 0) && (window.Flags&ImGuiWindowFlags_NoMouseInputs == 0) {
 			var max_step = window.InnerRect.GetHeight() * 0.67
-			var scroll_step = ImFloor(ImMin(5*window.CalcFontSize(), max_step))
+			var scroll_step = ImFloor(min(5*window.CalcFontSize(), max_step))
 			setScrollY(window, window.Scroll.y-wheel_y*scroll_step)
 		}
 	}
@@ -380,7 +380,7 @@ func UpdateMouseWheel() {
 		}
 		if (window.Flags&ImGuiWindowFlags_NoScrollWithMouse == 0) && (window.Flags&ImGuiWindowFlags_NoMouseInputs == 0) {
 			var max_step = window.InnerRect.GetWidth() * 0.67
-			var scroll_step = ImFloor(ImMin(2*window.CalcFontSize(), max_step))
+			var scroll_step = ImFloor(min(2*window.CalcFontSize(), max_step))
 			setScrollX(window, window.Scroll.x-wheel_x*scroll_step)
 		}
 	}
@@ -445,7 +445,7 @@ func UpdateMouseInputs() {
 			if IsMousePosValid(&g.IO.MousePos) {
 				delta_from_click_pos = (g.IO.MousePos.Sub(g.IO.MouseClickedPos[i]))
 			}
-			g.IO.MouseDragMaxDistanceSqr[i] = ImMax(g.IO.MouseDragMaxDistanceSqr[i], ImLengthSqrVec2(delta_from_click_pos))
+			g.IO.MouseDragMaxDistanceSqr[i] = max(g.IO.MouseDragMaxDistanceSqr[i], ImLengthSqrVec2(delta_from_click_pos))
 
 			var dx, dy float
 			if delta_from_click_pos.x < 0 {
@@ -455,8 +455,8 @@ func UpdateMouseInputs() {
 				dy = -delta_from_click_pos.y
 			}
 
-			g.IO.MouseDragMaxDistanceAbs[i].x = ImMax(g.IO.MouseDragMaxDistanceAbs[i].x, dx)
-			g.IO.MouseDragMaxDistanceAbs[i].y = ImMax(g.IO.MouseDragMaxDistanceAbs[i].y, dy)
+			g.IO.MouseDragMaxDistanceAbs[i].x = max(g.IO.MouseDragMaxDistanceAbs[i].x, dx)
+			g.IO.MouseDragMaxDistanceAbs[i].y = max(g.IO.MouseDragMaxDistanceAbs[i].y, dy)
 		}
 		if !g.IO.MouseDown[i] && !g.IO.MouseReleased[i] {
 			g.IO.MouseDownWasDoubleClick[i] = false

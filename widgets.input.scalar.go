@@ -33,7 +33,7 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 
 		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
 		PushString(label)
-		SetNextItemWidth(ImMax(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
+		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
 			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
 		}
@@ -150,7 +150,7 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 
 		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
 		PushString(label)
-		SetNextItemWidth(ImMax(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
+		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
 			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
 		}
@@ -267,7 +267,7 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 
 		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
 		PushString(label)
-		SetNextItemWidth(ImMax(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
+		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
 			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
 		}
@@ -384,7 +384,7 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 
 		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
 		PushString(label)
-		SetNextItemWidth(ImMax(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
+		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
 			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
 		}

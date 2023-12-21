@@ -64,7 +64,7 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 
 	// Render shape
 	var frame_col = GetColorU32FromID(c, 1)
-	var value_x2 = ImMax(bb.Min.x, bb.Max.x-arrow_size)
+	var value_x2 = max(bb.Min.x, bb.Max.x-arrow_size)
 	RenderNavHighlight(&bb, id, 0)
 	if flags&ImGuiComboFlags_NoPreview == 0 {
 		window.DrawList.AddRectFilled(bb.Min, ImVec2{value_x2, bb.Max.y}, frame_col, style.FrameRounding, rounding)
@@ -179,7 +179,7 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 	// Set popup size
 	var w = bb.GetWidth()
 	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasSizeConstraint != 0 {
-		g.NextWindowData.SizeConstraintRect.Min.x = ImMax(g.NextWindowData.SizeConstraintRect.Min.x, w)
+		g.NextWindowData.SizeConstraintRect.Min.x = max(g.NextWindowData.SizeConstraintRect.Min.x, w)
 	} else {
 		if (flags & ImGuiComboFlags_HeightMask_) == 0 {
 			flags |= ImGuiComboFlags_HeightRegular

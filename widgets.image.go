@@ -50,7 +50,7 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 	}
 	var col = GetColorU32FromID(c, 1)
 	RenderNavHighlight(&bb, id, 0)
-	RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)(ImMin(padding.x, padding.y)), 0.0, g.Style.FrameRounding))
+	RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)(min(padding.x, padding.y)), 0.0, g.Style.FrameRounding))
 	if bg_col.w > 0.0 {
 		window.DrawList.AddRectFilled(bb.Min.Add(*padding), bb.Max.Sub(*padding), GetColorU32FromVec(*bg_col), 0, 0)
 	}

@@ -214,7 +214,7 @@ func NavUpdatePageUpPageDown() float {
 		}
 	} else {
 		var nav_rect_rel = &window.NavRectRel[g.NavLayer]
-		var page_offset_y = ImMax(0.0, window.InnerRect.GetHeight()-window.CalcFontSize()*1.0+nav_rect_rel.GetHeight())
+		var page_offset_y = max(0.0, window.InnerRect.GetHeight()-window.CalcFontSize()*1.0+nav_rect_rel.GetHeight())
 		var nav_scoring_rect_offset_y float = 0.0
 		if IsKeyPressed(io.KeyMap[ImGuiKey_PageUp], true) {
 			nav_scoring_rect_offset_y = -page_offset_y
@@ -319,7 +319,7 @@ func NavUpdateCreateMoveRequest() {
 		if !window_rect_rel.ContainsRect(window.NavRectRel[g.NavLayer]) {
 			//IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp NavRectRel\n")
 			var pad = window.CalcFontSize() * 0.5
-			window_rect_rel.ExpandVec(ImVec2{-ImMin(window_rect_rel.GetWidth(), pad), -ImMin(window_rect_rel.GetHeight(), pad)}) // Terrible approximation for the intent of starting navigation from first fully visible item
+			window_rect_rel.ExpandVec(ImVec2{-min(window_rect_rel.GetWidth(), pad), -min(window_rect_rel.GetHeight(), pad)}) // Terrible approximation for the intent of starting navigation from first fully visible item
 			window.NavRectRel[g.NavLayer].ClipWithFull(window_rect_rel)
 			g.NavId = 0
 			g.NavFocusScopeId = 0
@@ -335,7 +335,7 @@ func NavUpdateCreateMoveRequest() {
 		}
 		scoring_rect = ImRect{window.Pos.Add(nav_rect_rel.Min), window.Pos.Add(nav_rect_rel.Max)}
 		scoring_rect.TranslateY(scoring_rect_offset_y)
-		scoring_rect.Min.x = ImMin(scoring_rect.Min.x+1.0, scoring_rect.Max.x)
+		scoring_rect.Min.x = min(scoring_rect.Min.x+1.0, scoring_rect.Max.x)
 		scoring_rect.Max.x = scoring_rect.Min.x
 		IM_ASSERT(!scoring_rect.IsInverted()) // Ensure if we have a finite, non-inverted bounding box here will allows us to remove extraneous ImFabs() calls in NavScoreItem().
 		//GetForegroundDrawList().AddRect(scoring_rect.Min, scoring_rect.Max, IM_COL32(255,200,0,255)); // [DEBUG]
@@ -461,7 +461,7 @@ func NavCalcPreferredRefPos() ImVec2 {
 	} else {
 		// When navigation is active and mouse is disabled, decide on an arbitrary position around the bottom left of the currently navigated item.
 		var rect_rel = &g.NavWindow.NavRectRel[g.NavLayer]
-		var pos = g.NavWindow.Pos.Add(ImVec2{rect_rel.Min.x + ImMin(g.Style.FramePadding.x*4, rect_rel.GetWidth()), rect_rel.Max.y - ImMin(g.Style.FramePadding.y, rect_rel.GetHeight())})
+		var pos = g.NavWindow.Pos.Add(ImVec2{rect_rel.Min.x + min(g.Style.FramePadding.x*4, rect_rel.GetWidth()), rect_rel.Max.y - min(g.Style.FramePadding.y, rect_rel.GetHeight())})
 		var viewport = GetMainViewport()
 
 		clamped := ImClampVec2(&pos, &viewport.Pos, viewport.Pos.Add(viewport.Size))
@@ -499,7 +499,7 @@ func NavUpdateWindowing() {
 
 	// Fade out
 	if g.NavWindowingTargetAnim != nil && g.NavWindowingTarget == nil {
-		g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha-io.DeltaTime*10.0, 0.0)
+		g.NavWindowingHighlightAlpha = max(g.NavWindowingHighlightAlpha-io.DeltaTime*10.0, 0.0)
 		if g.DimBgRatio <= 0.0 && g.NavWindowingHighlightAlpha <= 0.0 {
 			g.NavWindowingTargetAnim = nil
 		}
@@ -537,7 +537,7 @@ func NavUpdateWindowing() {
 	g.NavWindowingTimer += io.DeltaTime
 	if g.NavWindowingTarget != nil && g.NavInputSource == ImGuiInputSource_Gamepad {
 		// Highlight only appears after a brief time holding the button, so that a fast tap on PadMenu (to toggle NavLayer) doesn't add visual noise
-		g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05))
+		g.NavWindowingHighlightAlpha = max(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05))
 
 		// Select window to focus
 		var focus_change_dir = bool2int(IsNavInputTest(ImGuiNavInput_FocusPrev, ImGuiInputReadMode_RepeatSlow)) - bool2int(IsNavInputTest(ImGuiNavInput_FocusNext, ImGuiInputReadMode_RepeatSlow))
@@ -561,7 +561,7 @@ func NavUpdateWindowing() {
 	// Keyboard: Focus
 	if g.NavWindowingTarget != nil && g.NavInputSource == ImGuiInputSource_Keyboard {
 		// Visuals only appears after a brief time after pressing TAB the first time, so that a fast CTRL+TAB doesn't add visual noise
-		g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05)) // 1.0f
+		g.NavWindowingHighlightAlpha = max(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05)) // 1.0f
 		if IsKeyPressedMap(ImGuiKey_Tab, true) {
 			if io.KeyShift {
 				NavUpdateWindowingHighlightWindow(+1)
@@ -615,7 +615,7 @@ func NavUpdateWindowing() {
 		}
 		if move_delta.x != 0.0 || move_delta.y != 0.0 {
 			const NAV_MOVE_SPEED float = 800.0
-			var move_speed = ImFloor(NAV_MOVE_SPEED * io.DeltaTime * ImMin(io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y)) // FIXME: Doesn't handle variable framerate very well
+			var move_speed = ImFloor(NAV_MOVE_SPEED * io.DeltaTime * min(io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y)) // FIXME: Doesn't handle variable framerate very well
 			var moving_window = g.NavWindowingTarget.RootWindow
 			p := moving_window.Pos.Add(move_delta.Scale(move_speed))
 			setWindowPos(moving_window, &p, ImGuiCond_Always)
@@ -1068,7 +1068,7 @@ func NavEndFrame() {
 		var bb_rel = window.NavRectRel[g.NavLayer]
 		var clip_dir = g.NavMoveDir
 		if g.NavMoveDir == ImGuiDir_Left && (move_flags&(ImGuiNavMoveFlags_WrapX|ImGuiNavMoveFlags_LoopX) != 0) {
-			m := ImMax(window.SizeFull.x, window.ContentSize.x+window.WindowPadding.x*2.0) - window.Scroll.x
+			m := max(window.SizeFull.x, window.ContentSize.x+window.WindowPadding.x*2.0) - window.Scroll.x
 			bb_rel.Min.x = m
 			bb_rel.Max.x = m
 
@@ -1088,7 +1088,7 @@ func NavEndFrame() {
 			do_forward = true
 		}
 		if g.NavMoveDir == ImGuiDir_Up && (move_flags&(ImGuiNavMoveFlags_WrapY|ImGuiNavMoveFlags_LoopY) != 0) {
-			m := ImMax(window.SizeFull.y, window.ContentSize.y+window.WindowPadding.y*2.0) - window.Scroll.y
+			m := max(window.SizeFull.y, window.ContentSize.y+window.WindowPadding.y*2.0) - window.Scroll.y
 			bb_rel.Min.y = m
 			bb_rel.Max.y = m
 			if move_flags&ImGuiNavMoveFlags_WrapY != 0 {

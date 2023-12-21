@@ -25,7 +25,7 @@ func BeginListBox(label string, size_arg ImVec2) bool {
 	// Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
 	var size_not_floored = CalcItemSize(size_arg, CalcItemWidth(), GetTextLineHeightWithSpacing()*7.25+style.FramePadding.y*2.0)
 	var size = ImFloorVec(&size_not_floored)
-	var frame_size = ImVec2{size.x, ImMax(size.y, label_size.y)}
+	var frame_size = ImVec2{size.x, max(size.y, label_size.y)}
 	var frame_bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(frame_size)}
 
 	var padding float = 0
@@ -84,7 +84,7 @@ func ListBoxFunc(label string, current_item *int, items_getter func(data any, id
 
 	// Calculate size from "height_in_items"
 	if height_in_items < 0 {
-		height_in_items = ImMinInt(items_count, 7)
+		height_in_items = min(items_count, 7)
 	}
 	var height_in_items_f = float(height_in_items) + 0.25
 	var size = ImVec2{0.0, ImFloor(GetTextLineHeightWithSpacing()*height_in_items_f + g.Style.FramePadding.y*2.0)}

@@ -77,14 +77,14 @@ func CalcWrapWidthForPos(pos *ImVec2, wrap_pos_x float) float {
 		// We could decide to setup a default wrapping max point for auto-resizing windows,
 		// or have auto-wrap (with unspecified wrapping pos) behave as a ContentSize extending function?
 		//if (window.Hidden && (window.Flags & ImGuiWindowFlags_AlwaysAutoResize))
-		//    wrap_pos_x = ImMax(window.WorkRect.Min.x + g.FontSize * 10.0f, window.WorkRect.Max.x);
+		//    wrap_pos_x = max(window.WorkRect.Min.x + g.FontSize * 10.0f, window.WorkRect.Max.x);
 		//else
 		wrap_pos_x = window.WorkRect.Max.x
 	} else if wrap_pos_x > 0.0 {
 		wrap_pos_x += window.Pos.x - window.Scroll.x // wrap_pos_x is provided is window local space
 	}
 
-	return ImMax(wrap_pos_x-pos.x, 1.0)
+	return max(wrap_pos_x-pos.x, 1.0)
 }
 
 // Was the last item selection toggled? (after Selectable(), TreeNode() etc. We only returns toggle _event_ in order to handle clipping correctly)
@@ -98,7 +98,7 @@ func IsItemToggledSelection() bool {
 func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
 	if count == 1 {
 		if items[0].Width >= 0.0 {
-			items[0].Width = ImMax(items[0].Width-width_excess, 1.0)
+			items[0].Width = max(items[0].Width-width_excess, 1.0)
 		}
 		return
 	}
@@ -122,7 +122,7 @@ func ShrinkWidths(items []ImGuiShrinkWidthItem, count int, width_excess float) {
 		if max_width_to_remove_per_item <= 0.0 {
 			break
 		}
-		var width_to_remove_per_item = ImMin(width_excess/float(count_same_width), max_width_to_remove_per_item)
+		var width_to_remove_per_item = min(width_excess/float(count_same_width), max_width_to_remove_per_item)
 		for item_n := int(0); item_n < count_same_width; item_n++ {
 			items[item_n].Width -= width_to_remove_per_item
 		}

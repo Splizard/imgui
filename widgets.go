@@ -102,13 +102,13 @@ func CalcItemSize(size ImVec2, default_w float, default_h float) ImVec2 {
 	if size.x == 0.0 {
 		size.x = default_w
 	} else if size.x < 0.0 {
-		size.x = ImMax(4.0, region_max.x-window.DC.CursorPos.x+size.x)
+		size.x = max(4.0, region_max.x-window.DC.CursorPos.x+size.x)
 	}
 
 	if size.y == 0.0 {
 		size.y = default_h
 	} else if size.y < 0.0 {
-		size.y = ImMax(4.0, region_max.y-window.DC.CursorPos.y+size.y)
+		size.y = max(4.0, region_max.y-window.DC.CursorPos.y+size.y)
 	}
 
 	return size
@@ -188,9 +188,9 @@ func ItemSizeVec(size *ImVec2, text_baseline_y float) {
 	// but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
 	var offset_to_match_baseline_y float
 	if text_baseline_y >= 0 {
-		offset_to_match_baseline_y = ImMax(0.0, window.DC.CurrLineTextBaseOffset-text_baseline_y)
+		offset_to_match_baseline_y = max(0.0, window.DC.CurrLineTextBaseOffset-text_baseline_y)
 	}
-	var line_height = ImMax(window.DC.CurrLineSize.y, size.y+offset_to_match_baseline_y)
+	var line_height = max(window.DC.CurrLineSize.y, size.y+offset_to_match_baseline_y)
 
 	// Always align ourselves on pixel boundaries
 	//if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
@@ -198,13 +198,13 @@ func ItemSizeVec(size *ImVec2, text_baseline_y float) {
 	window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y
 	window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x) // Next line
 	window.DC.CursorPos.y = IM_FLOOR(window.DC.CursorPos.y + line_height + g.Style.ItemSpacing.y)   // Next line
-	window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPosPrevLine.x)
-	window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y-g.Style.ItemSpacing.y)
+	window.DC.CursorMaxPos.x = max(window.DC.CursorMaxPos.x, window.DC.CursorPosPrevLine.x)
+	window.DC.CursorMaxPos.y = max(window.DC.CursorMaxPos.y, window.DC.CursorPos.y-g.Style.ItemSpacing.y)
 	//if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0f, IM_COL32(255,0,0,255), 4); // [DEBUG]
 
 	window.DC.PrevLineSize.y = line_height
 	window.DC.CurrLineSize.y = 0.0
-	window.DC.PrevLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, text_baseline_y)
+	window.DC.PrevLineTextBaseOffset = max(window.DC.CurrLineTextBaseOffset, text_baseline_y)
 	window.DC.CurrLineTextBaseOffset = 0.0
 
 	// Horizontal layout mode

@@ -55,11 +55,11 @@ func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 	// Set state for first column
 	// We aim so that the right-most column will have the same clipping width as other after being clipped by parent ClipRect
 	var column_padding = g.Style.ItemSpacing.x
-	var half_clip_extend_x = ImFloor(ImMax(window.WindowPadding.x*0.5, window.WindowBorderSize))
-	var max_1 = window.WorkRect.Max.x + column_padding - ImMax(column_padding-window.WindowPadding.x, 0.0)
+	var half_clip_extend_x = ImFloor(max(window.WindowPadding.x*0.5, window.WindowBorderSize))
+	var max_1 = window.WorkRect.Max.x + column_padding - max(column_padding-window.WindowPadding.x, 0.0)
 	var max_2 = window.WorkRect.Max.x + half_clip_extend_x
-	columns.OffMinX = window.DC.Indent.x - column_padding + ImMax(column_padding-window.WindowPadding.x, 0.0)
-	columns.OffMaxX = ImMax(ImMin(max_1, max_2)-window.Pos.x, columns.OffMinX+1.0)
+	columns.OffMinX = window.DC.Indent.x - column_padding + max(column_padding-window.WindowPadding.x, 0.0)
+	columns.OffMaxX = max(min(max_1, max_2)-window.Pos.x, columns.OffMinX+1.0)
 	columns.LineMinY = window.DC.CursorPos.y
 	columns.LineMaxY = window.DC.CursorPos.y
 
@@ -98,7 +98,7 @@ func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 	var offset_1 = GetColumnOffset(columns.Current + 1)
 	var width = offset_1 - offset_0
 	PushItemWidth(width * 0.65)
-	window.DC.ColumnsOffset.x = ImMax(column_padding-window.WindowPadding.x, 0.0)
+	window.DC.ColumnsOffset.x = max(column_padding-window.WindowPadding.x, 0.0)
 	window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x)
 	window.WorkRect.Max.x = window.Pos.x + offset_1 - column_padding
 }
@@ -117,7 +117,7 @@ func EndColumns() {
 	}
 
 	var flags = columns.Flags
-	columns.LineMaxY = ImMax(columns.LineMaxY, window.DC.CursorPos.y)
+	columns.LineMaxY = max(columns.LineMaxY, window.DC.CursorPos.y)
 	window.DC.CursorPos.y = columns.LineMaxY
 	if (flags & ImGuiOldColumnFlags_GrowParentContentsSize) == 0 {
 		window.DC.CursorMaxPos.x = columns.HostCursorMaxPosX // Restore cursor max pos, as columns don't grow parent
@@ -128,8 +128,8 @@ func EndColumns() {
 	var is_being_resized = false
 	if (flags&ImGuiOldColumnFlags_NoBorder) == 0 && !window.SkipItems {
 		// We clip Y boundaries CPU side because very long triangles are mishandled by some GPU drivers.
-		var y1 = ImMax(columns.HostCursorPosY, window.ClipRect.Min.y)
-		var y2 = ImMin(window.DC.CursorPos.y, window.ClipRect.Max.y)
+		var y1 = max(columns.HostCursorPosY, window.ClipRect.Min.y)
+		var y2 = min(window.DC.CursorPos.y, window.ClipRect.Max.y)
 		var dragging_column int = -1
 		for n := int(1); n < columns.Count; n++ {
 			var column = &columns.Columns[n]
@@ -308,14 +308,14 @@ func NextColumn() {
 	columns.Splitter.SetCurrentChannel(window.DrawList, columns.Current+1)
 
 	var column_padding = g.Style.ItemSpacing.x
-	columns.LineMaxY = ImMax(columns.LineMaxY, window.DC.CursorPos.y)
+	columns.LineMaxY = max(columns.LineMaxY, window.DC.CursorPos.y)
 	if columns.Current > 0 {
 		// Columns 1+ ignore IndentX (by canceling it out)
 		// FIXME-COLUMNS: Unnecessary, could be locked?
 		window.DC.ColumnsOffset.x = GetColumnOffset(columns.Current) - window.DC.Indent.x + column_padding
 	} else {
 		// New row/line: column 0 honor IndentX.
-		window.DC.ColumnsOffset.x = ImMax(column_padding-window.WindowPadding.x, 0.0)
+		window.DC.ColumnsOffset.x = max(column_padding-window.WindowPadding.x, 0.0)
 		columns.LineMinY = columns.LineMaxY
 	}
 	window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x)
@@ -404,12 +404,12 @@ func SetColumnOffset(column_index int, offset float) {
 	}
 
 	if (columns.Flags & ImGuiOldColumnFlags_NoForceWithinWindow) == 0 {
-		offset = ImMin(offset, columns.OffMaxX-g.Style.ColumnsMinSpacing*float(columns.Count-column_index))
+		offset = min(offset, columns.OffMaxX-g.Style.ColumnsMinSpacing*float(columns.Count-column_index))
 	}
 	columns.Columns[column_index].OffsetNorm = GetColumnNormFromOffset(columns, offset-columns.OffMinX)
 
 	if preserve_width {
-		SetColumnOffset(column_index+1, offset+ImMax(g.Style.ColumnsMinSpacing, width))
+		SetColumnOffset(column_index+1, offset+max(g.Style.ColumnsMinSpacing, width))
 	}
 }
 
@@ -430,9 +430,9 @@ func GetDraggedColumnOffset(columns *ImGuiOldColumns, column_index int) float {
 	IM_ASSERT(g.ActiveId == columns.ID+ImGuiID(column_index))
 
 	var x = g.IO.MousePos.x - g.ActiveIdClickOffset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.Pos.x
-	x = ImMax(x, GetColumnOffset(column_index-1)+g.Style.ColumnsMinSpacing)
+	x = max(x, GetColumnOffset(column_index-1)+g.Style.ColumnsMinSpacing)
 	if (columns.Flags & ImGuiOldColumnFlags_NoPreserveWidths) != 0 {
-		x = ImMin(x, GetColumnOffset(column_index+1)-g.Style.ColumnsMinSpacing)
+		x = min(x, GetColumnOffset(column_index+1)-g.Style.ColumnsMinSpacing)
 	}
 
 	return x
