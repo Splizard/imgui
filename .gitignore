@@ -3,3 +3,4 @@ example/imgui.ini
 **/imgui.ini
 .idea
 /example/todo/
+log.log
