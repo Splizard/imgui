@@ -42,10 +42,8 @@ const (
 
 // GLFW implements a platform based on github.com/go-gl/glfw (v3.2).
 type GLFW struct {
-	imguiIO *imgui.ImGuiIO
-
-	window *glfw.Window
-
+	imguiIO          *imgui.ImGuiIO
+	window           *glfw.Window
 	time             float64
 	mouseJustPressed [3]bool
 }

@@ -2,7 +2,7 @@ package imgui
 
 import "unsafe"
 
-// Windows
+// GetCurrentWindowRead Windows
 // We should always have a CurrentWindow in the stack (there is an implicit "Debug" window)
 // If this ever crash because g.CurrentWindow is NULL it means that either
 // - ImGui::NewFrame() has never been called, which is illegal.
@@ -91,7 +91,7 @@ func BringWindowToDisplayBack(window *ImGuiWindow) {
 	}
 }
 
-// 0..3: corners (Lower-right, Lower-left, Unused, Unused)
+// GetWindowResizeCornerID 0..3: corners (Lower-right, Lower-left, Unused, Unused)
 func GetWindowResizeCornerID(window *ImGuiWindow, n int) ImGuiID {
 	IM_ASSERT(n >= 0 && n < 4)
 	var id = window.ID
@@ -100,7 +100,7 @@ func GetWindowResizeCornerID(window *ImGuiWindow, n int) ImGuiID {
 	return id
 }
 
-// Borders (Left, Right, Up, Down)
+// GetWindowResizeBorderID Borders (Left, Right, Up, Down)
 func GetWindowResizeBorderID(window *ImGuiWindow, dir ImGuiDir) ImGuiID {
 	IM_ASSERT(dir >= 0 && dir < 4)
 	var n = (int)(dir) + 4
