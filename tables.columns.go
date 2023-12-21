@@ -2,7 +2,7 @@ package imgui
 
 const COLUMNS_HIT_RECT_HALF_WIDTH float = 4
 
-// Get into the columns background draw command (which is generally the same draw command as before we called BeginColumns)
+// PushColumnsBackground Get into the columns background draw command (which is generally the same draw command as before we called BeginColumns)
 func PushColumnsBackground() {
 	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
@@ -18,7 +18,7 @@ func PushColumnsBackground() {
 
 // Internal Columns API (this is not exposed because we will encourage transitioning to the Tables API)
 
-// [Internal] Small optimization to avoid calls to PopClipRect/SetCurrentChannel/PushClipRect in sequences,
+// SetWindowClipRectBeforeSetChannel [Internal] Small optimization to avoid calls to PopClipRect/SetCurrentChannel/PushClipRect in sequences,
 // they would meddle many times with the underlying ImDrawCmd.
 // Instead, we do a preemptive overwrite of clipping rectangle _without_ altering the command-buffer and let
 // the subsequent single call to SetCurrentChannel() does it things once.
@@ -29,7 +29,7 @@ func SetWindowClipRectBeforeSetChannel(window *ImGuiWindow, clip_rect *ImRect) {
 	window.DrawList._ClipRectStack[len(window.DrawList._ClipRectStack)-1] = clip_rect_vec4
 }
 
-// setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
+// BeginColumns setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
 func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 	g := GImGui
 	window := GetCurrentWindow()
@@ -103,7 +103,7 @@ func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 	window.WorkRect.Max.x = window.Pos.x + offset_1 - column_padding
 }
 
-// close columns
+// EndColumns close columns
 func EndColumns() {
 	g := GImGui
 	window := GetCurrentWindow()
@@ -277,7 +277,7 @@ func Columns(columns_count int /*= 1*/, id string /*= L*/, border bool /*= true*
 	}
 }
 
-// next column, defaults to current row or next row if the current row is finished
+// NextColumn next column, defaults to current row or next row if the current row is finished
 func NextColumn() {
 	window := GetCurrentWindow()
 	if window.SkipItems || window.DC.CurrentColumns == nil {
@@ -331,7 +331,7 @@ func NextColumn() {
 	window.WorkRect.Max.x = window.Pos.x + offset_1 - column_padding
 }
 
-// get current column index
+// GetColumnIndex get current column index
 func GetColumnIndex() int {
 	window := GetCurrentWindowRead()
 	if window.DC.CurrentColumns != nil {
@@ -340,7 +340,7 @@ func GetColumnIndex() int {
 	return 0
 }
 
-// get column width (in pixels). pass -1 to use current column
+// GetColumnWidth get column width (in pixels). pass -1 to use current column
 func GetColumnWidth(column_index int /*= -1*/) float {
 	g := GImGui
 	window := g.CurrentWindow
@@ -355,7 +355,7 @@ func GetColumnWidth(column_index int /*= -1*/) float {
 	return GetColumnOffsetFromNorm(columns, columns.Columns[column_index+1].OffsetNorm-columns.Columns[column_index].OffsetNorm)
 }
 
-// set column width (in pixels). pass -1 to use current column
+// SetColumnWidth set column width (in pixels). pass -1 to use current column
 func SetColumnWidth(column_index int, width float) {
 	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
@@ -367,7 +367,7 @@ func SetColumnWidth(column_index int, width float) {
 	SetColumnOffset(column_index+1, GetColumnOffset(column_index)+width)
 }
 
-// get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0.0
+// GetColumnOffset get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0.0
 func GetColumnOffset(column_index int /*= -1*/) float {
 	window := GetCurrentWindowRead()
 	var columns = window.DC.CurrentColumns
@@ -385,7 +385,7 @@ func GetColumnOffset(column_index int /*= -1*/) float {
 	return x_offset
 }
 
-// set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
+// SetColumnOffset set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
 func SetColumnOffset(column_index int, offset float) {
 	g := GImGui
 	window := g.CurrentWindow
