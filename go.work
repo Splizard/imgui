@@ -1,0 +1,31 @@
+go 1.21.4
+
+use (
+	.
+	example/todo/Compressed/PipeIt-master
+	example/todo/Compressed/SydneyQt-2
+	example/todo/Compressed/giu-0.7.0
+	example/todo/filetree-master
+	example/todo/goforms-main
+	example/todo/hexdunk-main
+	example/todo/imgui/imgui-go-master
+	example/todo/ux/go-com-main
+	example/todo/ux/go-excel-automation-main
+	example/todo/ux/go-gdiplus-main
+	example/todo/ux/go-tlbimp-main
+	example/todo/ux/go-webview2-main
+	example/todo/ux/go-win32api-main
+	example/todo/ux/go-winapi-gen-main
+	example/todo/ux/go-winmd-main
+	example/todo/ux/go-winrtapi-main
+	example/todo/ux/go-wmi-main
+	example/todo/ux/go-word-automation-main
+	example/todo/ux/json-to-struct-main
+	example/todo/ux_skia/gcs-5.16.0
+	example/todo/ux_skia/unison-0.63.0
+	example/todo/wui-main
+	example/todo/wui-main/v2
+	example/todo/新建文件夹/bili-fyne-explorer-master
+	example/todo/新建文件夹/fyne_explorer-master/src
+	example/todo/新建文件夹/poem-master
+)
