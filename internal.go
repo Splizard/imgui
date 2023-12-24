@@ -168,7 +168,7 @@ func ImTextStrToUtf8(out_buf []byte, out_buf_size int, in_text []ImWchar, in_tex
 		}
 	}
 
-	return int(final_buf_offset)
+	return final_buf_offset
 }
 
 func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, text string, in_remaining *string) int {
@@ -176,7 +176,7 @@ func ImTextStrFromUtf8(out_buf []ImWchar, out_buf_size int, text string, in_rema
 	for i, char := range text {
 		if count >= int(len(out_buf)) {
 			*in_remaining = text[i:]
-			return int(count)
+			return count
 		}
 		out_buf[i] = char
 		count++
