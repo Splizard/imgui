@@ -35,7 +35,6 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var square_sz = GetFrameHeight()
 	var w_full = CalcItemWidth()
@@ -344,7 +343,6 @@ func ColorPicker3(label string, col *[3]float, flags ImGuiColorEditFlags) bool {
 // FIXME: we adjust the big color square height based on item width, which may cause a flickering feedback loop (if automatic height makes a vertical scrollbar appears, affecting automatic width..)
 // FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
 func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_col []float) bool {
-	g := GImGui
 	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
@@ -779,7 +777,6 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 		return false
 	}
 
-	g := GImGui
 	var id = window.GetIDs(desc_id)
 	var default_size = GetFrameHeight()
 	if size.x == 0.0 {
@@ -871,7 +868,6 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 // initialize current options (generally on application startup) if you want to select a default format, picker type, etc.
 // User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
 func SetColorEditOptions(flags ImGuiColorEditFlags) {
-	g := GImGui
 	if (flags & ImGuiColorEditFlags_DisplayMask_) == 0 {
 		flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_DisplayMask_
 	}
@@ -894,7 +890,7 @@ func SetColorEditOptions(flags ImGuiColorEditFlags) {
 // Color
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 func ColorTooltip(text string, col [4]float, flags ImGuiColorEditFlags) {
-	g := GImGui
+	g := g
 
 	BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip)
 	if len(text) > 0 {
@@ -937,7 +933,6 @@ func ColorEditOptionsPopup(col [4]float, flags ImGuiColorEditFlags) {
 	if (!allow_opt_inputs && !allow_opt_datatype) || !BeginPopup("context", 0) {
 		return
 	}
-	g := GImGui
 	var opts = g.ColorEditOptions
 	if allow_opt_inputs {
 		if RadioButtonBool("RGB", (opts&ImGuiColorEditFlags_DisplayRGB) != 0) {
@@ -1012,7 +1007,6 @@ func ColorPickerOptionsPopup(ref_col *[4]float, flags ImGuiColorEditFlags) {
 	if (!allow_opt_picker && !allow_opt_alpha_bar) || !BeginPopup("context", 0) {
 		return
 	}
-	g := GImGui
 	if allow_opt_picker {
 		var picker_size = ImVec2{g.FontSize * 8, max(g.FontSize*8-(GetFrameHeight()+g.Style.ItemInnerSpacing.x), 1.0)} // FIXME: Picker size copied from main picker function
 		PushItemWidth(picker_size.x)

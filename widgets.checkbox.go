@@ -5,7 +5,6 @@ func CheckboxFlagsInt(label string, flags *int, flags_value int) bool {
 	var any_on = (*flags & flags_value) != 0
 	var pressed bool
 	if !all_on && any_on {
-		g := GImGui
 		var backup_item_flags = g.CurrentItemFlags
 		g.CurrentItemFlags |= ImGuiItemFlags_MixedValue
 		pressed = Checkbox(label, &all_on)
@@ -29,7 +28,6 @@ func CheckboxFlagsUint(label string, flags *uint, flags_value uint) bool {
 	var any_on = (*flags & flags_value) != 0
 	var pressed bool
 	if !all_on && any_on {
-		g := GImGui
 		var backup_item_flags = g.CurrentItemFlags
 		g.CurrentItemFlags |= ImGuiItemFlags_MixedValue
 		pressed = Checkbox(label, &all_on)
@@ -54,7 +52,6 @@ func Checkbox(label string, v *bool) bool {
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)

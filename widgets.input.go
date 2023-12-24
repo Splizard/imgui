@@ -12,7 +12,6 @@ import (
 func TempInputText(bb *ImRect, id ImGuiID, label string, buf *[]byte, flags ImGuiInputTextFlags) bool {
 	// On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
 	// We clear ActiveID on the first frame to allow the InputText() taking it back.
-	g := GImGui
 	var init = (g.TempInputId != id)
 	if init {
 		ClearActiveID()
@@ -33,7 +32,6 @@ func TempInputText(bb *ImRect, id ImGuiID, label string, buf *[]byte, flags ImGu
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
 func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataType, p_data any, format string, p_clamp_min any, p_clamp_max any) bool {
-	g := GImGui
 	p_data_val := reflect.ValueOf(p_data).Elem()
 	var data_buf = []byte(strings.TrimSpace(fmt.Sprintf(format, p_data_val)))
 
@@ -67,12 +65,10 @@ func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataTy
 }
 
 func TempInputIsActive(id ImGuiID) bool {
-	g := GImGui
 	return (g.ActiveId == id && g.TempInputId == id)
 }
 
 func GetInputTextState(id ImGuiID) *ImGuiInputTextState {
-	g := GImGui
 	if g.InputTextState.ID == id {
 		return &g.InputTextState
 	}
@@ -174,7 +170,6 @@ func InputTextCalcLineCount(text string) int {
 }
 
 func InputTextCalcTextSizeW(text []ImWchar, remaining *[]ImWchar, out_offset *ImVec2, stop_on_new_line bool) ImVec2 {
-	g := GImGui
 	var font = g.Font
 	var line_height = g.FontSize
 	var scale = line_height / font.FontSize
@@ -292,7 +287,6 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 		// We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
 		// Change the default decimal_point with:
 		//   ImGui::GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
-		g := GImGui
 		var c_decimal_point = (rune)(g.PlatformLocaleDecimalPoint)
 
 		// Allow 0-9 . - + * /
@@ -395,7 +389,6 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
 	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
 
-	g := GImGui
 	io := g.IO
 	style := g.Style
 

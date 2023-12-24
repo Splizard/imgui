@@ -8,7 +8,6 @@ package imgui
 //   - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 //   - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
 func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
-	g := GImGui
 	style := g.Style
 	IM_ASSERT(name != "")                        // Window name required
 	IM_ASSERT(g.WithinFrameScope)                // Forgot to call ImGui::NewFrame()

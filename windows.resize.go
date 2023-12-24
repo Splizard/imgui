@@ -70,7 +70,6 @@ func GetResizeBorderRect(window *ImGuiWindow, border_n int, perp_padding, thickn
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
 func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border_held *int, resize_grip_count int, resize_grip_col *[4]ImU32, visibility_rect *ImRect) bool {
-	g := GImGui
 	var flags = window.Flags
 
 	if (flags&ImGuiWindowFlags_NoResize != 0) || (flags&ImGuiWindowFlags_AlwaysAutoResize != 0) || window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0 {

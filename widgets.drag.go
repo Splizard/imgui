@@ -41,7 +41,6 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 		return false
 	}
 
-	g := GImGui
 	PushString(label)
 	BeginGroup()
 	PushMultiItemsWidths(2, CalcItemWidth())
@@ -104,7 +103,6 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 		return false
 	}
 
-	g := GImGui
 	PushString(label)
 	BeginGroup()
 	PushMultiItemsWidths(2, CalcItemWidth())
@@ -168,7 +166,6 @@ func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var id = window.GetIDs(label)
 	var w = CalcItemWidth()
@@ -278,7 +275,6 @@ func DragScalarFloat(label string, data_type ImGuiDataType, p_data *float, v_spe
 		return false
 	}
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -300,7 +296,6 @@ func DragScalarFloats(label string, data_type ImGuiDataType, p_data []float, v_s
 		return false
 	}
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -329,7 +324,6 @@ func DragScalarInt(label string, data_type ImGuiDataType, p_data *int, v_speed f
 		return false
 	}
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -351,7 +345,6 @@ func DragScalarInts(label string, data_type ImGuiDataType, p_data []int, v_speed
 		return false
 	}
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -549,7 +542,6 @@ func RoundScalarWithFormatT(format string, v float) float {
 }
 
 func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, flags ImGuiSliderFlags) bool {
-	g := GImGui
 	var axis = ImGuiAxis_X
 	if (flags & ImGuiSliderFlags_Vertical) != 0 {
 		axis = ImGuiAxis_Y
@@ -679,7 +671,6 @@ func DragBehavior(id ImGuiID, data_type ImGuiDataType, v any, v_speed float, n a
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 
-	g := GImGui
 	if g.ActiveId == id {
 		if g.ActiveIdSource == ImGuiInputSource_Mouse && !g.IO.MouseDown[0] {
 			ClearActiveID()

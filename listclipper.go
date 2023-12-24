@@ -45,7 +45,6 @@ func NewImGuiListClipper() ImGuiListClipper {
 // items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
 // items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
 func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f*/) {
-	g := GImGui
 	window := g.CurrentWindow
 
 	if table := g.CurrentTable; table != nil {
@@ -78,7 +77,6 @@ func (this ImGuiListClipper) End() {
 }
 
 func (this ImGuiListClipper) Step() bool {
-	g := GImGui
 	window := g.CurrentWindow
 
 	var table = g.CurrentTable
@@ -174,7 +172,6 @@ func (this ImGuiListClipper) Step() bool {
 // FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
 // The problem we have is that without a Begin/End scheme for rows using the clipper is ambiguous.
 func GetSkipItemForListClipping() bool {
-	g := GImGui
 	if g.CurrentTable != nil {
 		return g.CurrentTable.HostSkipItems
 	}
@@ -185,7 +182,6 @@ func GetSkipItemForListClipping() bool {
 // NB: Prefer using the ImGuiListClipper higher-level helper if you can! Read comments and instructions there on how those use this sort of pattern.
 // NB: 'items_count' is only used to clamp the result, if you don't know your count you can use INT_MAX
 func CalcListClipping(items_count int, items_height float, out_items_display_start *int, out_items_display_end *int) {
-	g := GImGui
 	window := g.CurrentWindow
 	if g.LogEnabled {
 		// If logging is active, do not perform any clipping
@@ -231,7 +227,6 @@ func SetCursorPosYAndSetupForPrevLine(pos_y, line_height float) {
 	// Set cursor position and a few other things so that SetScrollHereY() and Columns() can work when seeking cursor.
 	// FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
 	// The clipper should probably have a 4th step to display the last item in a regular manner.
-	g := GImGui
 	window := g.CurrentWindow
 	var off_y = pos_y - window.DC.CursorPos.y
 	window.DC.CursorPos.y = pos_y

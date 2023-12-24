@@ -8,7 +8,6 @@ import (
 // LogBegin Logging/Capture
 // . BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
 func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
-	g := GImGui
 	window := g.CurrentWindow
 	IM_ASSERT(!g.LogEnabled)
 	IM_ASSERT(g.LogFile == nil)
@@ -28,7 +27,6 @@ func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
 
 // LogToBuffer Start logging/capturing to internal buffer
 func LogToBuffer(auto_open_depth int /*= -1*/) {
-	g := GImGui
 	if g.LogEnabled {
 		return
 	}
@@ -44,7 +42,6 @@ func LogRenderedText(ref_pos *ImVec2, text string) {
 
 // LogSetNextTextDecoration Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
 func LogSetNextTextDecoration(prefix string, suffix string) {
-	g := GImGui
 	g.LogNextPrefix = prefix
 	g.LogNextSuffix = suffix
 }
@@ -54,7 +51,6 @@ func LogSetNextTextDecoration(prefix string, suffix string) {
 
 // LogToTTY start logging to tty (stdout)
 func LogToTTY(auto_open_depth int /*= -1*/) {
-	g := GImGui
 	if g.LogEnabled {
 		return
 	}
@@ -64,7 +60,6 @@ func LogToTTY(auto_open_depth int /*= -1*/) {
 
 // LogToFile Start logging/capturing text output to given file
 func LogToFile(auto_open_depth int /*= 1*/, filename string) {
-	g := GImGui
 	if g.LogEnabled {
 		return
 	}
@@ -90,7 +85,6 @@ func LogToFile(auto_open_depth int /*= 1*/, filename string) {
 
 // LogToClipboard start logging to OS clipboard
 func LogToClipboard(auto_open_depth int /*= -1*/) {
-	g := GImGui
 	if g.LogEnabled {
 		return
 	}
@@ -98,7 +92,6 @@ func LogToClipboard(auto_open_depth int /*= -1*/) {
 }
 
 func LogFinish() {
-	g := GImGui
 	if !g.LogEnabled {
 		return
 	}
@@ -126,7 +119,7 @@ func LogFinish() {
 
 // LogButtons helper to display buttons for logging to tty/file/clipboard
 func LogButtons() {
-	g := GImGui
+	g := g
 
 	PushString("LogButtons")
 	var log_to_tty = Button("Log To TTY")
@@ -155,7 +148,6 @@ func LogButtons() {
 
 // LogText pass text data straight to log (without being displayed)
 func LogText(format string, args ...any) {
-	g := GImGui
 	if !g.LogEnabled {
 		return
 	}

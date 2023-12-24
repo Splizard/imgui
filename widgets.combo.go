@@ -7,7 +7,6 @@ import "fmt"
 // - The old Combo() api are helpers over BeginCombo()/EndCombo() which are kept available for convenience purpose. This is analogous to how ListBox are created.
 
 func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool {
-	g := GImGui
 	window := GetCurrentWindow()
 
 	var backup_next_window_data_flags = g.NextWindowData.Flags
@@ -120,7 +119,6 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 // Call directly after the BeginCombo/EndCombo block. The preview is designed to only host non-interactive elements
 // (Experimental, see GitHub issues: #1658, #4168)
 func BeginComboPreview() bool {
-	g := GImGui
 	window := g.CurrentWindow
 	var preview_data = &g.ComboPreviewData
 
@@ -147,7 +145,6 @@ func BeginComboPreview() bool {
 }
 
 func EndComboPreview() {
-	g := GImGui
 	window := g.CurrentWindow
 	var preview_data = &g.ComboPreviewData
 
@@ -170,7 +167,6 @@ func EndComboPreview() {
 }
 
 func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
-	g := GImGui
 	if !isPopupOpen(popup_id, ImGuiPopupFlags_None) {
 		g.NextWindowData.ClearFlags()
 		return false
@@ -239,7 +235,6 @@ func EndCombo() {
 }
 
 func CalcMaxPopupHeightFromItemCount(items_count int) float32 {
-	g := GImGui
 	if items_count <= 0 {
 		return FLT_MAX
 	}
@@ -257,7 +252,7 @@ func Combo(label string, current_item *int, items []string, items_count int, pop
 
 // Old API, prefer using BeginCombo() nowadays if you can.
 func ComboFunc(label string, current_item *int, items_getter func(data any, idx int, out_text *string) bool, data any, items_count, popup_max_height_in_items int /*= -1*/) bool {
-	g := GImGui
+	g := g
 
 	// Call the getter to obtain the preview string which is a parameter to BeginCombo()
 	var preview_value string

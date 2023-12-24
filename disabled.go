@@ -12,7 +12,6 @@ package imgui
 // - BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(False)/EndDisabled() best to avoid it.
 // - Optimized shortcuts instead of PushStyleVar() + PushItemFlag()
 func BeginDisabled(disabled bool /*= true*/) {
-	g := GImGui
 	var was_disabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
 	if !was_disabled && disabled {
 		g.DisabledAlphaBackup = g.Style.Alpha
@@ -25,7 +24,6 @@ func BeginDisabled(disabled bool /*= true*/) {
 }
 
 func EndDisabled() {
-	g := GImGui
 	var was_disabled = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
 	//PopItemFlag();
 	g.ItemFlagsStack = g.ItemFlagsStack[:len(g.ItemFlagsStack)-1]

@@ -14,7 +14,6 @@ package imgui
 
 // PushOverrideID Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
 func PushOverrideID(id ImGuiID) {
-	g := GImGui
 	window := g.CurrentWindow
 	window.IDStack = append(window.IDStack, id)
 }
@@ -30,7 +29,6 @@ func GetIDWithSeed(str string, seed ImGuiID) ImGuiID {
 }
 
 func PushString(str_id string) {
-	g := GImGui
 	window := g.CurrentWindow
 	id := window.GetIDNoKeepAlive(str_id)
 	window.IDStack = append(window.IDStack, id)
@@ -38,7 +36,6 @@ func PushString(str_id string) {
 
 // PushInterface push pointer into the ID stack (will hash pointer).
 func PushInterface(ptr_id any) {
-	g := GImGui
 	window := g.CurrentWindow
 	id := window.GetIDNoKeepAliveInterface(ptr_id)
 	window.IDStack = append(window.IDStack, id)
@@ -46,28 +43,27 @@ func PushInterface(ptr_id any) {
 
 // PushID push integer into the ID stack (will hash integer).
 func PushID(int_id int) {
-	g := GImGui
 	window := g.CurrentWindow
 	id := window.GetIDNoKeepAliveInt(int_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
 func PopID() {
-	window := GImGui.CurrentWindow
+	window := g.CurrentWindow
 	IM_ASSERT(len(window.IDStack) > 1) // Too many PopID(), or could be popping in a wrong/different window?
 	window.IDStack = window.IDStack[:len(window.IDStack)-1]
 } // pop from the ID stack.
 
 func GetIDFromString(str_id string) ImGuiID {
-	return GImGui.CurrentWindow.GetIDs(str_id)
+	return g.CurrentWindow.GetIDs(str_id)
 
 } // calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
 
 func GetIDs(str_id_begin string) ImGuiID {
-	return GImGui.CurrentWindow.GetIDs(str_id_begin)
+	return g.CurrentWindow.GetIDs(str_id_begin)
 }
 
 func GetIDFromInterface(ptr_id any) ImGuiID {
-	window := GImGui.CurrentWindow
+	window := g.CurrentWindow
 	return window.GetIDInterface(ptr_id)
 }

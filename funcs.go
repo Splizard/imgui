@@ -2,8 +2,8 @@ package imgui
 
 // GetIO access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
 func GetIO() *ImGuiIO {
-	IM_ASSERT_USER_ERROR(GImGui != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
-	return &GImGui.IO
+	IM_ASSERT_USER_ERROR(g != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
+	return &g.IO
 }
 
 // ShowAboutWindow Demo, Debug, Information
@@ -42,6 +42,5 @@ func PopClipRect() {
 // - In 'docking' branch with multi-viewport enabled, we extend this concept to have multiple active viewports.
 // - In the future we will extend this concept further to also represent Platform Monitor and support a "no main platform window" operation mode.
 func GetMainViewport() *ImGuiViewport {
-	g := GImGui
 	return g.Viewports[0]
 } // return primary/default viewport. This can never be NULL.

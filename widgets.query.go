@@ -9,7 +9,6 @@ package imgui
 // - we allow hovering to be true when ActiveId==window.MoveID, so that clicking on non-interactive items such as a Text() item still returns true with IsItemHovered()
 // - this should work even for non-interactive items that have no ID, so we cannot use LastItemId
 func IsItemHovered(flags ImGuiHoveredFlags) bool {
-	g := GImGui
 	window := g.CurrentWindow
 	if g.NavDisableMouseHover && !g.NavDisableHighlight {
 		if (g.LastItemData.InFlags&ImGuiItemFlags_Disabled != 0) && (flags&ImGuiHoveredFlags_AllowWhenDisabled == 0) {
@@ -62,7 +61,6 @@ func IsItemHovered(flags ImGuiHoveredFlags) bool {
 // IsItemFocused is the last item focused for keyboard/gamepad navigation?
 // == GetItemID() == GetFocusID()
 func IsItemFocused() bool {
-	g := GImGui
 	return !(g.NavId != g.LastItemData.ID || g.NavId == 0)
 }
 
@@ -75,19 +73,16 @@ func IsItemClicked(mouse_button ImGuiMouseButton) bool {
 
 // IsItemVisible is the last item visible? (items may be out of sight because of clipping/scrolling)
 func IsItemVisible() bool {
-	g := GImGui
 	return g.CurrentWindow.ClipRect.Overlaps(g.LastItemData.Rect)
 }
 
 // IsItemEdited did the last item modify its underlying value this frame? or was pressed? This is generally the same as the "bool" return value of many widgets.
 func IsItemEdited() bool {
-	g := GImGui
 	return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Edited) != 0
 }
 
 // IsItemActivated was the last item just made active (item was previously inactive).
 func IsItemActivated() bool {
-	g := GImGui
 	if g.ActiveId != 0 {
 		return g.ActiveId == g.LastItemData.ID && g.ActiveIdPreviousFrame != g.LastItemData.ID
 	}
@@ -96,7 +91,6 @@ func IsItemActivated() bool {
 
 // IsItemDeactivated was the last item just made inactive (item was previously active). Useful for Undo/Redo patterns with widgets that requires continuous editing.
 func IsItemDeactivated() bool {
-	g := GImGui
 	if g.LastItemData.StatusFlags&ImGuiItemStatusFlags_HasDeactivated != 0 {
 		return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Deactivated) != 0
 	}
@@ -105,49 +99,41 @@ func IsItemDeactivated() bool {
 
 // IsItemDeactivatedAfterEdit was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that requires continuous editing. Note that you may get false positives (some widgets such as Combo()/ListBox()/Selectable() will return true even when clicking an already selected item).
 func IsItemDeactivatedAfterEdit() bool {
-	g := GImGui
 	return IsItemDeactivated() && (g.ActiveIdPreviousFrameHasBeenEditedBefore || (g.ActiveId == 0 && g.ActiveIdHasBeenEditedBefore))
 }
 
 // IsItemToggledOpen was the last item open state toggled? set by TreeNode().
 func IsItemToggledOpen() bool {
-	g := GImGui
 	return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_ToggledOpen) != 0
 }
 
 // IsAnyItemHovered is any item hovered?
 func IsAnyItemHovered() bool {
-	g := GImGui
 	return g.HoveredId != 0 || g.HoveredIdPreviousFrame != 0
 }
 
 // IsAnyItemActive is any item active?
 func IsAnyItemActive() bool {
-	g := GImGui
 	return g.ActiveId != 0
 }
 
 // IsAnyItemFocused is any item focused?
 func IsAnyItemFocused() bool {
-	g := GImGui
 	return g.NavId != 0 && !g.NavDisableHighlight
 }
 
 // GetItemRectMin get upper-left bounding rectangle of the last item (screen space)
 func GetItemRectMin() ImVec2 {
-	g := GImGui
 	return g.LastItemData.Rect.Min
 }
 
 // GetItemRectMax get lower-right bounding rectangle of the last item (screen space)
 func GetItemRectMax() ImVec2 {
-	g := GImGui
 	return g.LastItemData.Rect.Max
 }
 
 // GetItemRectSize get size of last item
 func GetItemRectSize() ImVec2 {
-	g := GImGui
 	return g.LastItemData.Rect.GetSize()
 }
 
@@ -155,7 +141,6 @@ func GetItemRectSize() ImVec2 {
 // Allow last item to be overlapped by a subsequent item. Both may be activated during the same frame before the later one takes priority.
 // FIXME: Although this is exposed, its interaction and ideal idiom with using ImGuiButtonFlags_AllowItemOverlap flag are extremely confusing, need rework.
 func SetItemAllowOverlap() {
-	g := GImGui
 	var id = g.LastItemData.ID
 	if g.HoveredId == id {
 		g.HoveredIdAllowOverlap = true

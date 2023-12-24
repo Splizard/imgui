@@ -1,7 +1,6 @@
 package imgui
 
 func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size2 *float, min_size1 float, min_size2 float, hover_extend float, hover_visibility_delay float) bool {
-	g := GImGui
 	window := g.CurrentWindow
 
 	var item_flags_backup = g.CurrentItemFlags
@@ -88,7 +87,6 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 
 // FIXME: Move more of the code into SliderBehavior()
 func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
-	g := GImGui
 	style := g.Style
 
 	var axis = ImGuiAxis_X
@@ -260,7 +258,6 @@ func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v any, p_
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 
-	g := GImGui
 	if (g.LastItemData.InFlags&ImGuiItemFlags_ReadOnly != 0) || (flags&ImGuiSliderFlags_ReadOnly != 0) {
 		return false
 	}

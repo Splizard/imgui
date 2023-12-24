@@ -30,7 +30,7 @@ type (
 
 type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 
-// GImGui Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
+// g Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
 //   - ImGui::CreateContext() will automatically set this pointer if it is nil.
 //     Change to a different context by calling ImGui::SetCurrentContext().
 //   - Important: Dear ImGui functions are not thread-safe because of this pointer.
@@ -38,15 +38,15 @@ type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 //   - Change this variable to use thread local storage so each thread can refer to a different context, in your imconfig.h:
 //     struct ImGuiContext;
 //     extern thread_local ImGuiContext* MyImGuiTLS;
-//     #define GImGui MyImGuiTLS
+//     #define g MyImGuiTLS
 //     And then define MyImGuiTLS in one of your cpp files. Note that thread_local is a C++11 keyword, earlier C++ uses compiler-specific keyword.
 //   - Future development aims to make this context pointer explicit to all calls. Also read https://github.com/ocornut/imgui/issues/586
 //   - If you need a finite number of contexts, you may compile and use multiple instances of the ImGui code from a different namespace.
 //   - DLL users: read comments above.
-var GImGui *ImGuiContext
+var g *ImGuiContext
 
 func IMGUI_DEBUG_LOG(format string, args ...any) {
-	fmt.Printf(fmt.Sprintf("[%05d] ", GImGui.FrameCount)+format, args...)
+	fmt.Printf(fmt.Sprintf("[%05d] ", g.FrameCount)+format, args...)
 }
 
 func IM_ASSERT_USER_ERROR(x bool, msg string) {
@@ -808,7 +808,6 @@ type ImGuiStackSizes struct {
 }
 
 func (s *ImGuiStackSizes) SetToCurrentState() {
-	g := GImGui
 	window := g.CurrentWindow
 	s.SizeOfIDStack = (short)(len(window.IDStack))
 	s.SizeOfColorStack = (short)(len(g.ColorStack))
@@ -820,7 +819,6 @@ func (s *ImGuiStackSizes) SetToCurrentState() {
 }
 
 func (s *ImGuiStackSizes) CompareWithCurrentState() {
-	g := GImGui
 	window := g.CurrentWindow
 
 	// Window stacks
@@ -1080,7 +1078,6 @@ func (w *ImGuiWindow) Rect() ImRect {
 }
 
 func (w *ImGuiWindow) CalcFontSize() float {
-	g := GImGui
 	var scale = g.FontBaseSize * w.FontWindowScale
 	if w.ParentWindow != nil {
 		scale *= w.ParentWindow.FontWindowScale
@@ -1090,7 +1087,6 @@ func (w *ImGuiWindow) CalcFontSize() float {
 }
 
 func (w *ImGuiWindow) TitleBarHeight() float {
-	g := GImGui
 	if w.Flags&ImGuiWindowFlags_NoTitleBar != 0 {
 		return 0.0
 	}
@@ -1102,7 +1098,6 @@ func (w *ImGuiWindow) TitleBarRect() ImRect {
 }
 
 func (w *ImGuiWindow) MenuBarHeight() float {
-	g := GImGui
 	if w.Flags&ImGuiWindowFlags_MenuBar != 0 {
 		return w.DC.MenuBarOffset.y + w.CalcFontSize() + g.Style.FramePadding.y*2.0
 	}

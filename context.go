@@ -224,7 +224,7 @@ type ImGuiContext struct {
 	LogEnabled              bool         // Currently capturing
 	LogType                 ImGuiLogType // Capture target
 	LogFile                 ImFileHandle // If != NULL log to stdout/ file
-	LogBuffer               bytes.Buffer // Accumulation buffer when log to clipboard. This is pointer so our GImGui static constructor doesn't call heap allocators.
+	LogBuffer               bytes.Buffer // Accumulation buffer when log to clipboard. This is pointer so our g static constructor doesn't call heap allocators.
 	LogNextPrefix           string
 	LogNextSuffix           string
 	LogLinePosY             float
@@ -297,7 +297,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 //     for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
 	var ctx = NewImGuiContext(shared_font_atlas)
-	if GImGui == nil {
+	if g == nil {
 		SetCurrentContext(&ctx)
 	}
 	Initialize(&ctx)
@@ -307,19 +307,19 @@ func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
 // DestroyContext NULL = destroy current context
 func DestroyContext(ctx *ImGuiContext) {
 	if ctx == nil {
-		ctx = GImGui
+		ctx = g
 	}
 	Shutdown(ctx)
-	if GImGui == ctx {
+	if g == ctx {
 		SetCurrentContext(nil)
 	}
 }
 
 // GetCurrentContext Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
 // Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end up using will point to the static data within its module
-func GetCurrentContext() *ImGuiContext { return GImGui }
+func GetCurrentContext() *ImGuiContext { return g }
 
-func SetCurrentContext(ctx *ImGuiContext) { GImGui = ctx }
+func SetCurrentContext(ctx *ImGuiContext) { g = ctx }
 
 // AddContextHook Generic context hooks
 // No specific ordering/dependency support, will see as needed
@@ -388,7 +388,7 @@ func Shutdown(context *ImGuiContext) {
 
 	// Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
 	if g.SettingsLoaded && g.IO.IniFilename != "" {
-		var backup_context = GImGui
+		var backup_context = g
 		SetCurrentContext(g)
 		SaveIniSettingsToDisk(g.IO.IniFilename)
 		SetCurrentContext(backup_context)

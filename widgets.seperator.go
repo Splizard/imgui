@@ -2,7 +2,6 @@ package imgui
 
 // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
 func Separator() {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return
@@ -27,7 +26,6 @@ func SeparatorEx(flags ImGuiSeparatorFlags) {
 		return
 	}
 
-	g := GImGui
 	IM_ASSERT(ImIsPowerOfTwoInt(int(flags & (ImGuiSeparatorFlags_Horizontal | ImGuiSeparatorFlags_Vertical)))) // Check that only 1 option is selected
 
 	var thickness_draw float = 1.0

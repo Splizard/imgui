@@ -2,7 +2,6 @@ package imgui
 
 // GcCompactTransientMiscBuffers Garbage collection
 func GcCompactTransientMiscBuffers() {
-	g := GImGui
 	g.ItemFlagsStack = nil
 	g.GroupStack = nil
 	TableGcCompactSettings()

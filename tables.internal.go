@@ -73,7 +73,6 @@ func TableFixFlags(flags ImGuiTableFlags, outer_window *ImGuiWindow) ImGuiTableF
 
 // Tables: Candidates for public API
 func TableOpenContextMenu(column_n int /*= -1*/) {
-	g := GImGui
 	var table = g.CurrentTable
 	if column_n == -1 && table.CurrentColumn != -1 { // When called within a column automatically use this one (for consistency)
 		column_n = table.CurrentColumn
@@ -93,7 +92,6 @@ func TableOpenContextMenu(column_n int /*= -1*/) {
 
 // 'width' = inner column width, without padding
 func TableSetColumnWidth(column_n int, width float) {
-	g := GImGui
 	var table = g.CurrentTable
 	IM_ASSERT(table != nil && !table.IsLayoutLocked)
 	IM_ASSERT(column_n >= 0 && column_n < table.ColumnsCount)
@@ -184,7 +182,6 @@ func TableSetColumnWidth(column_n int, width float) {
 // Note that the NoSortAscending/NoSortDescending flags are processed in TableSortSpecsSanitize(), and they may change/revert
 // the value of SortDirection. We could technically also do it here but it would be unnecessary and duplicate code.
 func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection, append_to_sort_specs bool) {
-	g := GImGui
 	var table = g.CurrentTable
 
 	if (table.Flags & ImGuiTableFlags_SortMulti) == 0 {
@@ -227,7 +224,6 @@ func TableSetColumnSortDirection(column_n int, sort_direction ImGuiSortDirection
 // May use (TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered) instead. Return hovered column. return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
 // Return -1 when table is not hovered. return columns_count if the unused space at the right of visible columns is hovered.
 func TableGetHoveredColumn() int {
-	g := GImGui
 	var table = g.CurrentTable
 	if table == nil {
 		return -1
@@ -255,7 +251,6 @@ func TableGetHeaderRowHeight() float {
 // Bg2 is used by Selectable (and possibly other widgets) to render to the background.
 // Unlike our Bg0/1 channel which we uses for RowBg/CellBg/Borders and where we guarantee all shapes to be CPU-clipped, the Bg2 channel being widgets-facing will rely on regular ClipRect.
 func TablePushBackgroundChannel() {
-	g := GImGui
 	window := g.CurrentWindow
 	var table = g.CurrentTable
 
@@ -266,7 +261,6 @@ func TablePushBackgroundChannel() {
 }
 
 func TablePopBackgroundChannel() {
-	g := GImGui
 	window := g.CurrentWindow
 	var table = g.CurrentTable
 	var column = &table.Columns[table.CurrentColumn]
@@ -277,15 +271,13 @@ func TablePopBackgroundChannel() {
 }
 
 // Tables: Internals
-func GetCurrentTable() *ImGuiTable { g := GImGui; return g.CurrentTable }
+func GetCurrentTable() *ImGuiTable { g := g; return g.CurrentTable }
 
 func TableFindByID(id ImGuiID) *ImGuiTable {
-	g := GImGui
 	return g.Tables[id]
 }
 
 func BeginTableEx(name string, id ImGuiID, columns_count int, flags ImGuiTableFlags, outer_size *ImVec2, inner_width float) bool {
-	g := GImGui
 	var outer_window = GetCurrentWindow()
 	if outer_window.SkipItems { // Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
 		return false
@@ -898,7 +890,6 @@ func (table *ImGuiTable) spanColumns(column_n int) {
 // FIXME-TABLE: Our width (and therefore our WorkRect) will be minimal in the first frame for _WidthAuto columns.
 // Increase feedback side-effect with widgets relying on WorkRect.Max.x... Maybe provide a default distribution for _WidthAuto columns?
 func TableUpdateLayout(table *ImGuiTable) {
-	g := GImGui
 	IM_ASSERT(!table.IsLayoutLocked)
 
 	var table_sizing_policy = (table.Flags & ImGuiTableFlags_SizingMask_)
@@ -1382,7 +1373,6 @@ func TableUpdateLayout(table *ImGuiTable) {
 //   - Submit ahead of table contents and header, use ImGuiButtonFlags_AllowItemOverlap to prioritize widgets
 //     overlapping the same area.
 func TableUpdateBorders(table *ImGuiTable) {
-	g := GImGui
 	IM_ASSERT(table.Flags&ImGuiTableFlags_Resizable != 0)
 
 	// At this point OuterRect height may be zero or under actual final height, so we rely on temporal coherency and
@@ -1598,7 +1588,6 @@ func TableDrawBorders(table *ImGuiTable) {
 // Output context menu into current window (generally a popup)
 // FIXME-TABLE: Ideally this should be writable by the user. Full programmatic access to that data?
 func TableDrawContextMenu(table *ImGuiTable) {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return
@@ -1713,7 +1702,6 @@ func TableDrawContextMenu(table *ImGuiTable) {
 //
 // This function is particularly tricky to understand.. take a breath.
 func TableMergeDrawChannels(table *ImGuiTable) {
-	g := GImGui
 	var splitter = table.DrawSplitter
 	var has_freeze_v = (table.FreezeRowsCount > 0)
 	var has_freeze_h = (table.FreezeColumnsCount > 0)
@@ -2103,7 +2091,6 @@ func TableBeginRow(table *ImGuiTable) {
 
 // [Internal] Called by TableNextRow()
 func TableEndRow(table *ImGuiTable) {
-	g := GImGui
 	window := g.CurrentWindow
 	IM_ASSERT(window == table.InnerWindow)
 	IM_ASSERT(table.IsInsideRow)
@@ -2292,7 +2279,6 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 
 	window.SkipItems = column.IsSkipItems
 	if column.IsSkipItems {
-		g := GImGui
 		g.LastItemData.ID = 0
 		g.LastItemData.StatusFlags = 0
 	}
@@ -2308,7 +2294,6 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 	}
 
 	// Logging
-	g := GImGui
 	if g.LogEnabled && !column.IsSkipItems {
 		LogRenderedText(&window.DC.CursorPos, "|")
 		g.LogLinePosY = FLT_MAX
@@ -2430,7 +2415,6 @@ func TableSetColumnWidthAutoAll(table *ImGuiTable) {
 // Remove Table (currently only used by TestEngine)
 func TableRemove(table *ImGuiTable) {
 	//IMGUI_DEBUG_LOG("TableRemove() id=0x%08X\n", table.ID);
-	g := GImGui
 	var table_idx uint
 	for i := range g.Tables {
 		if g.Tables[i] == table {
@@ -2444,7 +2428,6 @@ func TableRemove(table *ImGuiTable) {
 // Free up/compact internal Table buffers for when it gets unused
 func TableGcCompactTransientBuffers(table *ImGuiTable) {
 	//IMGUI_DEBUG_LOG("TableGcCompactTransientBuffers() id=0x%08X\n", table.ID);
-	g := GImGui
 	IM_ASSERT(!table.MemoryCompacted)
 	table.SortSpecs.Specs = nil
 	table.SortSpecsMulti = nil
@@ -2472,7 +2455,6 @@ func TableGcCompactTransientBuffersTempData(temp_data *ImGuiTableTempData) {
 
 // Compact and remove unused settings data (currently only used by TestEngine)
 func TableGcCompactSettings() {
-	g := GImGui
 	var required_memory int = 0
 	for _, settings := range g.SettingsTables {
 		if settings.ID != 0 {
@@ -2494,7 +2476,6 @@ func TableGcCompactSettings() {
 
 // Tables: Settings
 func TableLoadSettings(table *ImGuiTable) {
-	g := GImGui
 	table.IsSettingsRequestLoad = false
 	if table.Flags&ImGuiTableFlags_NoSavedSettings != 0 {
 		return
@@ -2579,7 +2560,6 @@ func TableSaveSettings(table *ImGuiTable) {
 	}
 
 	// Bind or create settings data
-	g := GImGui
 	var settings = TableGetBoundSettings(table)
 	if settings == nil {
 		settings = TableSettingsCreate(table.ID, table.ColumnsCount)
@@ -2656,7 +2636,6 @@ func TableResetSettings(table *ImGuiTable) {
 // Get settings for a given table, NULL if none
 func TableGetBoundSettings(table *ImGuiTable) *ImGuiTableSettings {
 	if table.SettingsOffset != -1 {
-		g := GImGui
 		var settings = &g.SettingsTables[table.SettingsOffset]
 		IM_ASSERT(settings.ID == table.ID)
 		if int(settings.ColumnsCountMax) >= table.ColumnsCount {
@@ -2681,7 +2660,6 @@ func TableSettingsInstallHandler(context *ImGuiContext) {
 }
 
 func TableSettingsCreate(id ImGuiID, columns_count int) *ImGuiTableSettings {
-	g := GImGui
 	g.SettingsTables = append(g.SettingsTables, ImGuiTableSettings{})
 	var settings = &g.SettingsTables[len(g.SettingsTables)-1]
 	TableSettingsInit(settings, id, columns_count, columns_count)
@@ -2692,7 +2670,6 @@ func TableSettingsCreate(id ImGuiID, columns_count int) *ImGuiTableSettings {
 // Find existing settings
 func TableSettingsFindByID(id ImGuiID) *ImGuiTableSettings {
 	// FIXME-OPT: Might want to store a lookup map for this?
-	g := GImGui
 	for i, settings := range g.SettingsTables {
 		if settings.ID == id {
 			return &g.SettingsTables[i]

@@ -2,7 +2,6 @@ package imgui
 
 // move content position toward the right, by indent_w, or style.IndentSpacing if indent_w <= 0
 func Indent(indent_w float) {
-	g := GImGui
 	window := GetCurrentWindow()
 
 	if indent_w == 0 {
@@ -15,7 +14,6 @@ func Indent(indent_w float) {
 
 // move content position back to the left, by indent_w, or style.IndentSpacing if indent_w <= 0
 func Unindent(indent_w float) {
-	g := GImGui
 	window := GetCurrentWindow()
 
 	if indent_w == 0 {

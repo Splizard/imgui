@@ -7,7 +7,6 @@ func getBackgroundDrawList(t *ImGuiViewport) *ImDrawList    { panic("not impleme
 
 func getForegroundDrawListViewport(viewport *ImGuiViewport, drawlist_no int, drawlist_name string) *ImDrawList {
 	// Create the draw list on demand, because they are not frequently used for all viewports
-	g := GImGui
 	IM_ASSERT(drawlist_no < int(len(viewport.DrawLists)))
 	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {
@@ -44,17 +43,15 @@ func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 }
 
 // GetItemID Basic Accessors
-func GetItemID() ImGuiID { g := GImGui; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
+func GetItemID() ImGuiID { g := g; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
 func GetItemStatusFlags() ImGuiItemStatusFlags {
-	g := GImGui
 	return g.LastItemData.StatusFlags
 }
-func GetItemFlags() ImGuiItemFlags { g := GImGui; return g.LastItemData.InFlags }
-func GetActiveID() ImGuiID         { g := GImGui; return g.ActiveId }
-func GetFocusID() ImGuiID          { g := GImGui; return g.NavId }
+func GetItemFlags() ImGuiItemFlags { g := g; return g.LastItemData.InFlags }
+func GetActiveID() ImGuiID         { g := g; return g.ActiveId }
+func GetFocusID() ImGuiID          { g := g; return g.NavId }
 
 func SetActiveID(id ImGuiID, window *ImGuiWindow) {
-	g := GImGui
 	g.ActiveIdIsJustActivated = g.ActiveId != id
 	if g.ActiveIdIsJustActivated {
 		g.ActiveIdTimer = 0.0
@@ -89,7 +86,6 @@ func SetActiveID(id ImGuiID, window *ImGuiWindow) {
 }
 
 func SetFocusID(id ImGuiID, window *ImGuiWindow) {
-	g := GImGui
 	IM_ASSERT(id != 0)
 
 	// Assume that SetFocusID() is called in the context where its window.DC.NavLayerCurrent and window.DC.NavFocusScopeIdCurrent are valid.
@@ -119,7 +115,6 @@ func ClearActiveID() {
 }
 
 func GetHoveredID() ImGuiID {
-	g := GImGui
 	if g.HoveredId != 0 {
 		return g.HoveredId
 	}
@@ -127,7 +122,6 @@ func GetHoveredID() ImGuiID {
 }
 
 func SetHoveredID(id ImGuiID) {
-	g := GImGui
 	g.HoveredId = id
 	g.HoveredIdAllowOverlap = false
 	g.HoveredIdUsingMouseWheel = false
@@ -138,7 +132,6 @@ func SetHoveredID(id ImGuiID) {
 }
 
 func KeepAliveID(id ImGuiID) {
-	g := GImGui
 	if g.ActiveId == id {
 		g.ActiveIdIsAlive = id
 	}
@@ -151,7 +144,6 @@ func KeepAliveID(id ImGuiID) {
 func MarkItemEdited(id ImGuiID) {
 	// This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
 	// ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
-	g := GImGui
 	IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive)
 
 	//IM_ASSERT(g.CurrentWindow.DC.LastItemId == id);
@@ -162,7 +154,6 @@ func MarkItemEdited(id ImGuiID) {
 
 // PushItemFlag Parameter stacks
 func PushItemFlag(option ImGuiItemFlags, enabled bool) {
-	g := GImGui
 	var item_flags = g.CurrentItemFlags
 	IM_ASSERT(item_flags == g.ItemFlagsStack[len(g.ItemFlagsStack)-1])
 	if enabled {
@@ -175,7 +166,6 @@ func PushItemFlag(option ImGuiItemFlags, enabled bool) {
 }
 
 func PopItemFlag() {
-	g := GImGui
 	IM_ASSERT(len(g.ItemFlagsStack) > 1) // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
 	g.ItemFlagsStack = g.ItemFlagsStack[:len(g.ItemFlagsStack)-1]
 	g.CurrentItemFlags = g.ItemFlagsStack[len(g.ItemFlagsStack)-1]
@@ -209,7 +199,6 @@ func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
 }
 
 func SetActiveIdUsingNavAndKeys() {
-	g := GImGui
 	IM_ASSERT(g.ActiveId != 0)
 	g.ActiveIdUsingNavDirMask = ^(ImU32)(0)
 	g.ActiveIdUsingNavInputMask = ^(ImU32)(0)
@@ -218,21 +207,17 @@ func SetActiveIdUsingNavAndKeys() {
 }
 
 func IsActiveIdUsingNavDir(dir ImGuiDir) bool {
-	g := GImGui
 	return (g.ActiveIdUsingNavDirMask & (1 << dir)) != 0
 }
 func IsActiveIdUsingNavInput(input ImGuiNavInput) bool {
-	g := GImGui
 	return (g.ActiveIdUsingNavInputMask & (1 << input)) != 0
 }
 func IsActiveIdUsingKey(key ImGuiKey) bool {
-	g := GImGui
 	IM_ASSERT(key < 64)
 	return (g.ActiveIdUsingKeyInputMask & ((ImU64)(1) << key)) != 0
 }
 
 func IsKeyPressedMap(key ImGuiKey, repeat bool /*= true*/) bool {
-	g := GImGui
 	var key_index = g.IO.KeyMap[key]
 	if key_index >= 0 {
 		return IsKeyPressed(key_index, repeat)
@@ -240,7 +225,6 @@ func IsKeyPressedMap(key ImGuiKey, repeat bool /*= true*/) bool {
 	return false
 }
 func IsNavInputDown(n ImGuiNavInput) bool {
-	g := GImGui
 	return g.IO.NavInputs[n] > 0.0
 }
 func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
@@ -307,7 +291,6 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 
 // RenderNavHighlight Navigation highlight
 func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
-	g := GImGui
 	if id != g.NavId {
 		return
 	}

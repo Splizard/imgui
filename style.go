@@ -174,8 +174,8 @@ func NewImGuiStyle() ImGuiStyle {
 
 // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame!
 func GetStyle() *ImGuiStyle {
-	IM_ASSERT_USER_ERROR(GImGui != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
-	return &GImGui.Style
+	IM_ASSERT_USER_ERROR(g != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
+	return &g.Style
 }
 
 // To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
@@ -219,7 +219,6 @@ func (style *ImGuiStyle) ScaleAllSizes(scale_factor float) {
 
 // modify a style variable float. always use this if you modify the style after NewFrame().
 func PushStyleFloat(idx ImGuiStyleVar, val float) {
-	g := GImGui
 	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*float)
 	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModFloat(idx, *pvar))
 	*pvar = val
@@ -227,14 +226,12 @@ func PushStyleFloat(idx ImGuiStyleVar, val float) {
 
 // modify a style variable ImVec2. always use this if you modify the style after NewFrame().
 func PushStyleVec(idx ImGuiStyleVar, val ImVec2) {
-	g := GImGui
 	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*ImVec2)
 	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModVec(idx, *pvar))
 	*pvar = val
 }
 
 func PopStyleVar(count int /*= 1*/) {
-	g := GImGui
 	for count > 0 {
 		// We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info.Type] * info.Count), the overhead in Debug is not worth it.
 		var backup = &g.StyleVarStack[len(g.StyleVarStack)-1]
@@ -255,7 +252,7 @@ func PopStyleVar(count int /*= 1*/) {
 
 // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
-	var style = GImGui.Style
+	var style = g.Style
 	var c = style.Colors[idx]
 	c.w *= style.Alpha * alpha_mul
 	return ColorConvertFloat4ToU32(c)
@@ -263,7 +260,7 @@ func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
 
 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromVec(col ImVec4) ImU32 {
-	var style = GImGui.Style
+	var style = g.Style
 	var c = col
 	c.w *= style.Alpha
 	return ColorConvertFloat4ToU32(c)
@@ -271,7 +268,7 @@ func GetColorU32FromVec(col ImVec4) ImU32 {
 
 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromInt(col ImU32) ImU32 {
-	var style = GImGui.Style
+	var style = g.Style
 	if style.Alpha >= 1.0 {
 		return col
 	}
@@ -282,13 +279,12 @@ func GetColorU32FromInt(col ImU32) ImU32 {
 
 // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
 func GetStyleColorVec4(idx ImGuiCol) *ImVec4 {
-	var style = GImGui.Style
+	var style = g.Style
 	return &style.Colors[idx]
 }
 
 // FIXME: This may incur a round-trip (if the end user got their data from a float4) but eventually we aim to store the in-flight colors as ImU32
 func PushStyleColorInt(idx ImGuiCol, col ImU32) {
-	g := GImGui
 	var backup ImGuiColorMod
 	backup.Col = idx
 	backup.BackupValue = g.Style.Colors[idx]
@@ -297,7 +293,6 @@ func PushStyleColorInt(idx ImGuiCol, col ImU32) {
 }
 
 func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
-	g := GImGui
 	var backup ImGuiColorMod
 	backup.Col = idx
 	backup.BackupValue = g.Style.Colors[idx]
@@ -306,7 +301,6 @@ func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
 }
 
 func PopStyleColor(count int /*= 1*/) {
-	g := GImGui
 	for count > 0 {
 		var backup = &g.ColorStack[len(g.ColorStack)-1]
 		g.Style.Colors[backup.Col] = backup.BackupValue

@@ -15,7 +15,6 @@ func Button(label string) bool {
 // Small buttons fits within text without additional vertical spacing.
 // button with FramePadding=(0,0) to easily embed within text
 func SmallButton(label string) bool {
-	g := GImGui
 	var backup_padding_y = g.Style.FramePadding.y
 	g.Style.FramePadding.y = 0.0
 	var pressed = ButtonEx(label, &ImVec2{}, ImGuiButtonFlags_AlignTextBaseLine)
@@ -29,7 +28,6 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, 0)
@@ -140,7 +138,6 @@ func ButtonEx(label string, size_arg *ImVec2, flags ImGuiButtonFlags) bool {
 //
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, flags ImGuiButtonFlags) bool {
-	g := GImGui
 	window := GetCurrentWindow()
 
 	// Default only reacts to left mouse button
@@ -333,7 +330,6 @@ func ButtonBehavior(bb *ImRect, id ImGuiID, out_hovered *bool, out_held *bool, f
 }
 
 func CollapseButton(id ImGuiID, pos *ImVec2) bool {
-	g := GImGui
 	window := g.CurrentWindow
 
 	var bb = ImRect{*pos, pos.Add(ImVec2{g.FontSize, g.FontSize}).Add(g.Style.FramePadding.Scale(2.0))}
@@ -409,7 +405,6 @@ func RadioButtonBool(label string, active bool) bool {
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)
@@ -487,7 +482,6 @@ func RadioButtonInt(label string, v *int, v_button int) bool {
 
 // Button to close a window
 func CloseButton(id ImGuiID, pos *ImVec2) bool {
-	g := GImGui
 	window := g.CurrentWindow
 
 	// Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
@@ -540,7 +534,6 @@ func ArrowButtonEx(str_id string, dir ImGuiDir, size ImVec2, flags ImGuiButtonFl
 		return false
 	}
 
-	g := GImGui
 	var id = window.GetIDs(str_id)
 	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)}
 	var default_size = GetFrameHeight()

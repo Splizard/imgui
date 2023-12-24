@@ -23,7 +23,6 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 
 	// Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
@@ -210,7 +209,6 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 
 // make last item the default focused item of a window.
 func SetItemDefaultFocus() {
-	g := GImGui
 	window := g.CurrentWindow
 	if !window.Appearing {
 		return
@@ -229,7 +227,6 @@ func SetItemDefaultFocus() {
 // focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
 func SetKeyboardFocusHere(offset int) {
 	IM_ASSERT(offset >= -1) // -1 is allowed but not below
-	g := GImGui
 	window := g.CurrentWindow
 	g.TabFocusRequestNextWindow = window
 	g.TabFocusRequestNextCounterRegular = window.DC.FocusCounterRegular + 1 + offset
@@ -240,23 +237,20 @@ func SetKeyboardFocusHere(offset int) {
 // This is generally used to identify a selection set (multiple of which may be in the same window), as selection
 // patterns generally need to react (e.g. clear selection) when landing on an item of the set.
 func PushFocusScope(id ImGuiID) {
-	g := GImGui
 	window := g.CurrentWindow
 	g.FocusScopeStack = append(g.FocusScopeStack, window.DC.NavFocusScopeIdCurrent)
 	window.DC.NavFocusScopeIdCurrent = id
 }
 
 func PopFocusScope() {
-	g := GImGui
 	window := g.CurrentWindow
 	IM_ASSERT(len(g.FocusScopeStack) > 0) // Too many PopFocusScope() ?
 	window.DC.NavFocusScopeIdCurrent = g.FocusScopeStack[len(g.FocusScopeStack)-1]
 	g.FocusScopeStack = g.FocusScopeStack[:len(g.FocusScopeStack)-1]
 }
 
-func GetFocusedFocusScope() ImGuiID { g := GImGui; return g.NavFocusScopeId } // Focus scope which is actually active
+func GetFocusedFocusScope() ImGuiID { g := g; return g.NavFocusScopeId } // Focus scope which is actually active
 func GetFocusScope() ImGuiID {
-	g := GImGui
 	return g.CurrentWindow.DC.NavFocusScopeIdCurrent
 } // Focus scope we are outputting into, set by PushFocusScope()
 
@@ -287,7 +281,7 @@ func (io *ImGuiIO) AddFocusEvent(focused bool) {
 
 // Windows: Display Order and Focus Order
 func FocusWindow(window *ImGuiWindow) {
-	g := GImGui
+	g := g
 
 	if g.NavWindow != window {
 		g.NavWindow = window
@@ -344,7 +338,6 @@ func FocusWindow(window *ImGuiWindow) {
 }
 
 func BringWindowToFocusFront(window *ImGuiWindow) {
-	g := GImGui
 	IM_ASSERT(window == window.RootWindow)
 
 	var cur_order = window.FocusOrder
@@ -364,7 +357,6 @@ func BringWindowToFocusFront(window *ImGuiWindow) {
 }
 
 func BringWindowToDisplayFront(window *ImGuiWindow) {
-	g := GImGui
 	var current_front_window = g.Windows[len(g.Windows)-1]
 	if current_front_window == window || current_front_window.RootWindow == window { // Cheap early out (could be better)
 		return
@@ -380,7 +372,7 @@ func BringWindowToDisplayFront(window *ImGuiWindow) {
 }
 
 func FocusTopMostWindowUnderOne(under_this_window *ImGuiWindow, ignore_window *ImGuiWindow) {
-	g := GImGui
+	g := g
 
 	var start_idx int
 	if under_this_window != nil {

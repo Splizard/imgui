@@ -4,7 +4,6 @@ package imgui
 
 func GetViewportDrawList(viewport *ImGuiViewportP, drawlist_no size_t, drawlist_name string) *ImDrawList {
 	// Create the draw list on demand, because they are not frequently used for all viewports
-	g := GImGui
 	IM_ASSERT(drawlist_no < size_t(len(viewport.DrawLists)))
 	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {
@@ -26,22 +25,21 @@ func GetViewportDrawList(viewport *ImGuiViewportP, drawlist_no size_t, drawlist_
 
 // test if rectangle (of given size, starting from cursor position) is visible / not clipped.
 func IsRectVisible(size ImVec2) bool {
-	window := GImGui.CurrentWindow
+	window := g.CurrentWindow
 	return window.ClipRect.Overlaps(ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(size)})
 }
 
 // test if rectangle (in screen space) is visible / not clipped. to perform coarse clipping on user's side.
 func IsRectVisibleMinMax(rect_min, rect_max ImVec2) bool {
-	window := GImGui.CurrentWindow
+	window := g.CurrentWindow
 	return window.ClipRect.Overlaps(ImRect{rect_min, rect_max})
 }
 
-func GetTime() double    { return GImGui.Time }       // get global imgui time. incremented by io.DeltaTime every frame.
-func GetFrameCount() int { return GImGui.FrameCount } // get global imgui frame count. incremented by 1 every frame.
+func GetTime() double    { return g.Time }       // get global imgui time. incremented by io.DeltaTime every frame.
+func GetFrameCount() int { return g.FrameCount } // get global imgui frame count. incremented by 1 every frame.
 
 // this draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.
 func GetBackgroundDrawList(viewport *ImGuiViewport) *ImDrawList {
-	g := GImGui
 	if viewport == nil {
 		viewport = g.Viewports[0]
 	}
@@ -50,7 +48,6 @@ func GetBackgroundDrawList(viewport *ImGuiViewport) *ImDrawList {
 
 // this draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.
 func GetForegroundDrawList(viewport *ImGuiViewport) *ImDrawList {
-	g := GImGui
 	if viewport == nil {
 		viewport = g.Viewports[0]
 	}
@@ -59,12 +56,12 @@ func GetForegroundDrawList(viewport *ImGuiViewport) *ImDrawList {
 
 // you may use this when creating your own ImDrawList instances.
 func GetDrawListSharedData() *ImDrawListSharedData {
-	return &GImGui.DrawListSharedData
+	return &g.DrawListSharedData
 }
 
 // replace current window storage with our own (if you want to manipulate it yourself, typically clear subsection of it)
 func SetStateStorage(storage *ImGuiStorage) {
-	window := GImGui.CurrentWindow
+	window := g.CurrentWindow
 	if storage != nil {
 		window.DC.StateStorage = *storage
 	} else {
@@ -73,6 +70,6 @@ func SetStateStorage(storage *ImGuiStorage) {
 }
 
 func GetStateStorage() ImGuiStorage {
-	window := GImGui.CurrentWindow
+	window := g.CurrentWindow
 	return window.DC.StateStorage
 }

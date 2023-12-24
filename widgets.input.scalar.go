@@ -12,7 +12,6 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 
 	if format == "" {
@@ -95,7 +94,6 @@ func InputScalarInt64s(label string, p_data []int64, p_step, p_step_fast *int64,
 
 	components := int(len(p_data))
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -129,7 +127,6 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 
 	if format == "" {
@@ -212,7 +209,6 @@ func InputScalarInt32s(label string, p_data []int32, p_step, p_step_fast *int32,
 
 	components := int(len(p_data))
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -246,7 +242,6 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 
 	if format == "" {
@@ -329,7 +324,6 @@ func InputScalarFloat64s(label string, p_data []float64, p_step, p_step_fast *fl
 
 	components := int(len(p_data))
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -363,7 +357,6 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 
 	if format == "" {
@@ -446,7 +439,6 @@ func InputScalarFloat32s(label string, p_data []float32, p_step, p_step_fast *fl
 
 	components := int(len(p_data))
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)

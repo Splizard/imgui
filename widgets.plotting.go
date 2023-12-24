@@ -44,7 +44,6 @@ func PlotHistogramFunc(label string, values_getter func(data any, idx int) float
 }
 
 func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, idx int) float, data any, values_count int, values_offset int, overlay_text string, scale_min float, scale_max float, frame_size ImVec2) int {
-	g := GImGui
 	window := GetCurrentWindow()
 	if window.SkipItems {
 		return -1

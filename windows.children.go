@@ -4,7 +4,6 @@ import "fmt"
 
 // Popups, Modals, Tooltips
 func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags ImGuiWindowFlags) bool {
-	g := GImGui
 	var parent_window = g.CurrentWindow
 
 	flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ChildWindow
@@ -83,7 +82,6 @@ func BeginChildID(id ImGuiID, size ImVec2, border bool, flags ImGuiWindowFlags) 
 }
 
 func EndChild() {
-	g := GImGui
 	window := g.CurrentWindow
 
 	IM_ASSERT(!g.WithinEndChild)
@@ -128,7 +126,6 @@ func EndChild() {
 // calculate coarse clipping for large list of evenly sized items. Prefer using the ImGuiListClipper higher-level helper if you can.
 // helper to create a child window / scrolling region that looks like a normal widget frame
 func BeginChildFrame(id ImGuiID, size ImVec2, flags ImGuiWindowFlags) bool {
-	g := GImGui
 	style := g.Style
 	PushStyleColorVec(ImGuiCol_ChildBg, &style.Colors[ImGuiCol_FrameBg])
 	PushStyleFloat(ImGuiStyleVar_ChildRounding, style.FrameRounding)

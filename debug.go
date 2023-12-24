@@ -10,7 +10,6 @@ import "fmt"
 // FIXME: Can't recover from inside BeginTabItem/EndTabItem yet.
 // FIXME: Can't recover from interleaved BeginTabBar/Begin
 func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any) {
-	g := GImGui
 	for len(g.CurrentWindowStack) > 0 {
 		for g.CurrentTable != nil && (g.CurrentTable.OuterWindow == g.CurrentWindow || g.CurrentTable.InnerWindow == g.CurrentWindow) {
 			if log_callback != nil {
@@ -82,11 +81,10 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any
 }
 
 func DebugDrawItemRect(col ImU32 /*= IM_COL32(255,0,0,255)*/) {
-	g := GImGui
 	window := g.CurrentWindow
 	getForegroundDrawList(window).AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col, 0, 0, 1)
 }
-func DebugStartItemPicker() { g := GImGui; g.DebugItemPickerActive = true }
+func DebugStartItemPicker() { g := g; g.DebugItemPickerActive = true }
 
 // ShowFontAtlas [DEBUG] List fonts in a font atlas and display its texture
 func ShowFontAtlas(atlas *ImFontAtlas) {
@@ -116,7 +114,6 @@ func DebugNodeColumns(columns *ImGuiOldColumns) {
 }
 
 func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string) {
-	g := GImGui
 	cfg := &g.DebugMetricsConfig
 	var cmd_count = int(len(draw_list.CmdBuffer))
 	if cmd_count > 0 && draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].ElemCount == 0 && draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].UserCallback == nil {
@@ -602,7 +599,7 @@ func DebugNodeWindow(window *ImGuiWindow, label string) {
 		BulletText("%s: nil", label)
 		return
 	}
-	g := GImGui
+	g := g
 
 	var selected_flags = ImGuiTreeNodeFlags_None
 	if window == g.NavWindow {
@@ -771,7 +768,6 @@ func DebugNodeViewport(viewport *ImGuiViewportP) {
 }
 
 func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewportP, bb *ImRect) {
-	g := GImGui
 	window := g.CurrentWindow
 
 	var scale = bb.GetSize().Div(viewport.Size)
@@ -822,7 +818,6 @@ func MetricsHelpMarker(desc string) {
 }
 
 func RenderViewportsThumbnails() {
-	g := GImGui
 	window := g.CurrentWindow
 
 	// We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
@@ -881,7 +876,6 @@ var trt_rects_names = []string{
 
 // UpdateDebugToolItemPicker [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
 func UpdateDebugToolItemPicker() {
-	g := GImGui
 	g.DebugItemPickerBreakId = 0
 	if g.DebugItemPickerActive {
 		var hovered_id = g.HoveredIdPreviousFrame
@@ -915,7 +909,6 @@ func ShowMetricsWindow(p_open *bool) {
 		return
 	}
 
-	g := GImGui
 	io := g.IO
 	cfg := &g.DebugMetricsConfig
 

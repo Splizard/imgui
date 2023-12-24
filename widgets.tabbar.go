@@ -104,7 +104,6 @@ func TabItemGetSectionIdx(tab *ImGuiTabItem) int {
 }
 
 func GetTabBarFromTabBarRef(ref ImGuiPtrOrIndex) *ImGuiTabBar {
-	g := GImGui
 	if ref.Ptr != nil {
 		return ref.Ptr.(*ImGuiTabBar)
 	} else {
@@ -113,7 +112,6 @@ func GetTabBarFromTabBarRef(ref ImGuiPtrOrIndex) *ImGuiTabBar {
 }
 
 func GetTabBarRefFromTabBar(tab_bar *ImGuiTabBar) ImGuiPtrOrIndex {
-	g := GImGui
 	for idx, tab_bar_ref := range g.TabBars {
 		if tab_bar == tab_bar_ref {
 			return ImGuiPtrOrIndex{Index: int(idx)}
@@ -126,7 +124,6 @@ func GetTabBarRefFromTabBar(tab_bar *ImGuiTabBar) ImGuiPtrOrIndex {
 
 // create and append into a TabBar
 func BeginTabBar(str_id string, flags ImGuiTabBarFlags) bool {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
@@ -146,7 +143,6 @@ func BeginTabBar(str_id string, flags ImGuiTabBarFlags) bool {
 
 // only call EndTabBar() if BeginTabBar() returns true!
 func EndTabBar() {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return
@@ -188,7 +184,6 @@ func EndTabBar() {
 
 // create a Tab. Returns true if the Tab is selected.
 func BeginTabItem(label string, p_open *bool, flags ImGuiTabItemFlags) bool {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
@@ -211,7 +206,6 @@ func BeginTabItem(label string, p_open *bool, flags ImGuiTabItemFlags) bool {
 
 // only call EndTabItem() if BeginTabItem() returns true!
 func EndTabItem() {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return
@@ -231,7 +225,6 @@ func EndTabItem() {
 
 // create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 func TabItemButton(label string, flags ImGuiTabItemFlags) bool {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
@@ -251,7 +244,6 @@ func TabItemButton(label string, flags ImGuiTabItemFlags) bool {
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
 func SetTabItemClosed(tab_or_docked_window_label string) {
-	g := GImGui
 	var is_within_manual_tab_bar = g.CurrentTabBar != nil && (g.CurrentTabBar.Flags&ImGuiTabBarFlags_DockNode) == 0
 	if is_within_manual_tab_bar {
 		var tab_bar = g.CurrentTabBar
@@ -264,7 +256,6 @@ func SetTabItemClosed(tab_or_docked_window_label string) {
 
 // Tab Bars
 func BeginTabBarEx(tab_bar *ImGuiTabBar, tab_bar_bb *ImRect, flags ImGuiTabBarFlags) bool {
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
@@ -395,7 +386,6 @@ func TabBarQueueReorder(tab_bar *ImGuiTabBar, tab *ImGuiTabItem, offset int) {
 }
 
 func TabBarQueueReorderFromMousePos(tab_bar *ImGuiTabBar, src_tab *ImGuiTabItem, mouse_pos ImVec2) {
-	g := GImGui
 	IM_ASSERT(tab_bar.ReorderRequestTabId == 0)
 	if (tab_bar.Flags & ImGuiTabBarFlags_Reorderable) == 0 {
 		return
@@ -500,7 +490,6 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 		TabBarLayout(tab_bar)
 	}
 
-	g := GImGui
 	window := g.CurrentWindow
 	if window.SkipItems {
 		return false
@@ -748,7 +737,6 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 }
 
 func TabItemCalcSize(label string, has_close_button bool) ImVec2 {
-	g := GImGui
 	var label_size = CalcTextSize(label, true, -1)
 	var size = ImVec2{label_size.x + g.Style.FramePadding.x, label_size.y + g.Style.FramePadding.y*2.0}
 	if has_close_button {
@@ -761,7 +749,6 @@ func TabItemCalcSize(label string, has_close_button bool) ImVec2 {
 
 func TabItemBackground(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlags, col ImU32) {
 	// While rendering tabs, we trim 1 pixel off the top of our bounding box so they can fit within a regular frame height while looking "detached" from it.
-	g := GImGui
 	var width = bb.GetWidth()
 	IM_ASSERT(width > 0.0)
 
@@ -790,7 +777,6 @@ func TabItemBackground(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlag
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
 func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlags, frame_padding ImVec2, label string, tab_id ImGuiID, close_button_id ImGuiID, is_contents_visible bool, out_just_closed *bool, out_text_clipped *bool) {
-	g := GImGui
 	var label_size = CalcTextSize(label, true, -1)
 
 	if out_just_closed != nil {
@@ -886,7 +872,6 @@ func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTa
 		return
 	}
 
-	g := GImGui
 	var margin = g.FontSize * 1.0 // When to scroll to make Tab N+1 visible always make a bit of N visible to suggest more scrolling area (since we don't have a scrollbar)
 	var order = tab_bar.GetTabOrder(tab)
 
@@ -916,7 +901,6 @@ func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTa
 }
 
 func TabBarTabListPopupButton(tab_bar *ImGuiTabBar) *ImGuiTabItem {
-	g := GImGui
 	window := g.CurrentWindow
 
 	// We use g.Style.FramePadding.y to match the square ArrowButton size
@@ -964,18 +948,16 @@ func TabBarCalcTabID(tab_bar *ImGuiTabBar, label string) ImU32 {
 		KeepAliveID(id)
 		return id
 	} else {
-		window := GImGui.CurrentWindow
+		window := g.CurrentWindow
 		return window.GetIDs(label)
 	}
 }
 
 func TabBarCalcMaxTabWidth() float {
-	g := GImGui
 	return g.FontSize * 20.0
 }
 
 func TabBarScrollingButtons(tab_bar *ImGuiTabBar) *ImGuiTabItem {
-	g := GImGui
 	window := g.CurrentWindow
 
 	var arrow_button_size = ImVec2{g.FontSize - 2.0, g.FontSize + g.Style.FramePadding.y*2.0}
@@ -1043,7 +1025,6 @@ func TabBarScrollingButtons(tab_bar *ImGuiTabBar) *ImGuiTabItem {
 // This is called only once a frame before by the first call to ItemTab()
 // The reason we're not calling it in BeginTabBar() is to leave a chance to the user to call the SetTabItemClosed() functions.
 func TabBarLayout(tab_bar *ImGuiTabBar) {
-	g := GImGui
 	tab_bar.WantLayout = false
 
 	// Garbage collect by compacting list

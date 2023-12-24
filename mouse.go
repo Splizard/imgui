@@ -9,28 +9,24 @@ const WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER float = 2.00 // Lock scrolled window
 
 // IsMouseDown is mouse button held?
 func IsMouseDown(button ImGuiMouseButton) bool {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	return g.IO.MouseDown[button]
 }
 
 // IsMouseReleased did mouse button released? (went from Down to !Down)
 func IsMouseReleased(button ImGuiMouseButton) bool {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	return g.IO.MouseReleased[button]
 }
 
 // IsMouseDoubleClicked did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)
 func IsMouseDoubleClicked(button ImGuiMouseButton) bool {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	return g.IO.MouseDoubleClicked[button]
 }
 
 // IsAnyMouseDown is any mouse button held?
 func IsAnyMouseDown() bool {
-	g := GImGui
 	for n := range g.IO.MouseDown {
 		if g.IO.MouseDown[n] {
 			return true
@@ -41,13 +37,11 @@ func IsAnyMouseDown() bool {
 
 // GetMousePos shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
 func GetMousePos() ImVec2 {
-	g := GImGui
 	return g.IO.MousePos
 }
 
 // GetMousePosOnOpeningCurrentPopup retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to a user backing that value themselves)
 func GetMousePosOnOpeningCurrentPopup() ImVec2 {
-	g := GImGui
 	if len(g.BeginPopupStack) > 0 {
 		return g.OpenPopupStack[len(g.BeginPopupStack)-1].OpenMousePos
 	}
@@ -59,7 +53,6 @@ func GetMousePosOnOpeningCurrentPopup() ImVec2 {
 // NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
 // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
 func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*= -1.0*/) ImVec2 {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	if lock_threshold < 0.0 {
 		lock_threshold = g.IO.MouseDragThreshold
@@ -75,7 +68,6 @@ func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*=
 }
 
 func ResetMouseDragDelta(button ImGuiMouseButton) {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	// NB: We don't need to reset g.IO.MouseDragMaxDistanceSqr
 	g.IO.MouseClickedPos[button] = g.IO.MousePos
@@ -83,36 +75,35 @@ func ResetMouseDragDelta(button ImGuiMouseButton) {
 
 // GetMouseCursor get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
 func GetMouseCursor() ImGuiMouseCursor {
-	return GImGui.MouseCursor
+	return g.MouseCursor
 }
 
 // CaptureMouseFromApp attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value  {panic("not implemented")}" after the next NewFrame() call.
 func CaptureMouseFromApp(want_capture_mouse_value bool /*= true*/) {
 	if want_capture_mouse_value {
-		GImGui.WantCaptureMouseNextFrame = 1
+		g.WantCaptureMouseNextFrame = 1
 	} else {
-		GImGui.WantCaptureMouseNextFrame = 0
+		g.WantCaptureMouseNextFrame = 0
 	}
 }
 
 // IsMousePosValid We typically use ImVec2(-FLT_MAX,-FLT_MAX) to denote an invalid mouse position.
 func IsMousePosValid(mouse_pos *ImVec2) bool {
 	// The assert is only to silence a false-positive in XCode Static Analysis.
-	// Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be nil (which it doesn't for other functions).
-	IM_ASSERT(GImGui != nil)
+	// Because g is not dereferenced in every code path, the static analyzer assume that it may be nil (which it doesn't for other functions).
+	IM_ASSERT(g != nil)
 	var MOUSE_INVALID float = -256000.0
 	var p ImVec2
 	if mouse_pos != nil {
 		p = *mouse_pos
 	} else {
-		p = GImGui.IO.MousePos
+		p = g.IO.MousePos
 	}
 	return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID
 }
 
 // IsMouseClicked did mouse button clicked? (went from !Down to Down)
 func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	var t = g.IO.MouseDownDuration[button]
 	if t == 0.0 {
@@ -131,11 +122,10 @@ func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool {
 
 // SetMouseCursor set desired cursor type
 func SetMouseCursor(cursor_type ImGuiMouseCursor) {
-	GImGui.MouseCursor = cursor_type
+	g.MouseCursor = cursor_type
 }
 
 func StartLockWheelingWindow(window *ImGuiWindow) {
-	g := GImGui
 	if g.WheelingWindow == window {
 		return
 	}
@@ -146,7 +136,6 @@ func StartLockWheelingWindow(window *ImGuiWindow) {
 
 // IsMouseDragging is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
 func IsMouseDragging(button ImGuiMouseButton, lock_threshold float /*= -1.0*/) bool {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	if !g.IO.MouseDown[button] {
 		return false
@@ -157,7 +146,6 @@ func IsMouseDragging(button ImGuiMouseButton, lock_threshold float /*= -1.0*/) b
 // IsMouseDragPastThreshold Return if a mouse click/drag went past the given threshold. Valid to call during the MouseReleased frame.
 // [Internal] This doesn't test if the button is pressed
 func IsMouseDragPastThreshold(button ImGuiMouseButton, lock_threshold float /*= -1.0f*/) bool {
-	g := GImGui
 	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
 	if lock_threshold < 0.0 {
 		lock_threshold = g.IO.MouseDragThreshold
@@ -169,7 +157,6 @@ func StartMouseMovingWindow(window *ImGuiWindow) {
 	// Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
 	// We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
 	// This is because we want ActiveId to be set even when the window is not permitted to move.
-	g := GImGui
 	FocusWindow(window)
 	SetActiveID(window.MoveId, window)
 	g.NavDisableHighlight = true
@@ -191,7 +178,7 @@ func StartMouseMovingWindow(window *ImGuiWindow) {
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
 // is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
 func IsMouseHoveringRect(r_min, r_max ImVec2, clip bool /*= true*/) bool {
-	g := GImGui
+	g := g
 
 	// Clip
 	var rect_clipped = ImRect{r_min, r_max}
@@ -207,7 +194,6 @@ func IsMouseHoveringRect(r_min, r_max ImVec2, clip bool /*= true*/) bool {
 func IsWindowContentHoverable(window *ImGuiWindow, flags ImGuiHoveredFlags) bool {
 	// An active popup disable hovering on other windows (apart from its own children)
 	// FIXME-OPT: This could be cached/stored within the window.
-	g := GImGui
 	if g.NavWindow != nil {
 		if focused_root_window := g.NavWindow.RootWindow; focused_root_window != nil {
 			if focused_root_window.WasActive && focused_root_window != window.RootWindow {
@@ -226,7 +212,6 @@ func IsWindowContentHoverable(window *ImGuiWindow, flags ImGuiHoveredFlags) bool
 }
 
 func UpdateMouseMovingWindowEndFrame() {
-	g := GImGui
 	if g.ActiveId != 0 || g.HoveredId != 0 {
 		return
 	}
@@ -287,7 +272,7 @@ func UpdateMouseMovingWindowEndFrame() {
 }
 
 func UpdateMouseWheel() {
-	g := GImGui
+	g := g
 
 	// Reset the locked window if we move the mouse or after the timer elapses
 	if g.WheelingWindow != nil {
@@ -387,7 +372,7 @@ func UpdateMouseWheel() {
 }
 
 func UpdateMouseInputs() {
-	g := GImGui
+	g := g
 
 	// Round mouse position to avoid spreading non-rounded position (e.g. UpdateManualResize doesn't support them well)
 	if IsMousePosValid(&g.IO.MousePos) {

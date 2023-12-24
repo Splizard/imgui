@@ -22,7 +22,7 @@ func SetTooltip(format string, args ...any) {
 }
 
 func BeginTooltipEx(extra_flags ImGuiWindowFlags, tooltip_flags ImGuiTooltipFlags) {
-	g := GImGui
+	g := g
 
 	if g.DragDropWithinSource || g.DragDropWithinTarget {
 		// The default tooltip position is a little offset to give space to see the context menu (it's also clamped within the current viewport/monitor)

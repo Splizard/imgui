@@ -14,7 +14,6 @@ func IsWindowActiveAndVisible(window *ImGuiWindow) bool {
 
 // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
 func SetNextWindowBgAlpha(alpha float) {
-	g := GImGui
 	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasBgAlpha
 	g.NextWindowData.BgAlphaVal = alpha
 }
@@ -40,7 +39,6 @@ func GetFallbackWindowNameForWindowingList(window *ImGuiWindow) string {
 }
 
 func AddWindowToDrawData(window *ImGuiWindow, layer int) {
-	g := GImGui
 	var viewport = g.Viewports[0]
 	g.IO.MetricsRenderWindows++
 	AddDrawListToDrawData(&viewport.DrawDataBuilder[layer], window.DrawList)
@@ -82,7 +80,6 @@ func AddWindowToSortBuffer(out_sorted_windows *[]*ImGuiWindow, window *ImGuiWind
 }
 
 func FindWindowByID(id ImGuiID) *ImGuiWindow {
-	g := GImGui
 	ptr := g.WindowsById.GetInterface(id)
 	if ptr == nil {
 		return nil
@@ -96,7 +93,6 @@ func FindWindowByName(e string) *ImGuiWindow {
 }
 
 func SetCurrentWindow(window *ImGuiWindow) {
-	g := GImGui
 	g.CurrentWindow = window
 	if window != nil && window.DC.CurrentTableIdx != -1 {
 		g.CurrentTable = g.Tables[uint(window.DC.CurrentTableIdx)]
@@ -157,7 +153,6 @@ func setWindowSize(window *ImGuiWindow, size *ImVec2, cond ImGuiCond) {
 
 // set next window size. set axis to 0.0 to force an auto-fit on this axis. call before Begin()
 func SetNextWindowSize(size *ImVec2, cond ImGuiCond) {
-	g := GImGui
 	IM_ASSERT(cond == 0 || ImIsPowerOfTwoInt(int(cond))) // Make sure the user doesn't attempt to combine multiple condition flags.
 	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize
 	g.NextWindowData.SizeVal = *size
@@ -181,7 +176,7 @@ func SetWindowConditionAllowFlags(window *ImGuiWindow, flags ImGuiCond, enabled 
 }
 
 func CreateNewWindow(name string, flags ImGuiWindowFlags) *ImGuiWindow {
-	g := GImGui
+	g := g
 
 	// Create window the first time
 	var window = NewImGuiWindow(g, name)
@@ -248,7 +243,6 @@ func GetWindowBgColorIdxFromFlags(flags ImGuiWindowFlags) ImGuiCol {
 }
 
 func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
-	g := GImGui
 	style := g.Style
 	var decoration_up_height = window.TitleBarHeight() + window.MenuBarHeight()
 	var size_pad = window.WindowPadding.Scale(2)
@@ -286,7 +280,6 @@ func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 }
 
 func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
-	g := GImGui
 	var size_for_clamping = window.Size
 	if g.IO.ConfigWindowsMoveFromTitleBarOnly && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 		size_for_clamping.y = window.TitleBarHeight()
@@ -296,7 +289,6 @@ func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
 }
 
 func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) ImVec2 {
-	g := GImGui
 	var new_size = *size_desired
 	if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint) != 0 {
 		// Using -1,-1 on either X/Y axis to preserve the current size.
@@ -373,7 +365,6 @@ func CalcWindowContentSizes(window *ImGuiWindow, content_size_current, content_s
 // - Note that the bottom of window stack always contains a window called "Debug".
 
 func End() {
-	g := GImGui
 	window := g.CurrentWindow
 
 	window.StateStorage = window.DC.StateStorage
@@ -421,7 +412,7 @@ func End() {
 // with SetWindowPos() and not SetNextWindowPos() will have that rectangle lagging by a frame at the time FindHoveredWindow() is
 // called, aka before the next Begin(). Moving window isn't affected.
 func FindHoveredWindow() {
-	g := GImGui
+	g := g
 
 	var hovered_window *ImGuiWindow = nil
 	var hovered_window_ignoring_moving_window *ImGuiWindow = nil
@@ -485,7 +476,6 @@ func FindHoveredWindow() {
 
 // The reason this is exposed in imgui_internal.h is: on touch-based system that don't have hovering, we want to dispatch inputs to the right target (imgui vs imgui+app)
 func UpdateHoveredWindowAndCaptureFlags() {
-	g := GImGui
 	io := g.IO
 	g.WindowsHoverPadding = ImMaxVec2(&g.Style.TouchExtraPadding, &ImVec2{WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING})
 
@@ -574,7 +564,6 @@ func UpdateHoveredWindowAndCaptureFlags() {
 // This is currently enforced by the fact that BeginDragDropSource() is setting all g.ActiveIdUsingXXXX flags to inhibit navigation inputs,
 // but if we should more thoroughly test cases where g.ActiveId or g.MovingWindow gets changed and not the other.
 func UpdateMouseMovingWindowNewFrame() {
-	g := GImGui
 	if g.MovingWindow != nil {
 		// We actually want to move the root window. g.MovingWindow == window we clicked on (could be a child window).
 		// We track it to preserve Focus and so that generally ActiveIdWindow == MovingWindow and ActiveId == MovingWindow.MoveId for consistency.

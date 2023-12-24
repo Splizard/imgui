@@ -59,7 +59,6 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var id = window.GetIDs(label)
 	var w = CalcItemWidth()
@@ -172,7 +171,6 @@ func SliderScalarN(label string, data_type ImGuiDataType, p_data []float, p_min 
 		return false
 	}
 
-	g := GImGui
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
@@ -209,7 +207,6 @@ func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data an
 		return false
 	}
 
-	g := GImGui
 	style := g.Style
 	var id = window.GetIDs(label)
 

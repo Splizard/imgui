@@ -22,7 +22,6 @@ func LoadIniSettingsFromDisk(ini_filename string) {
 } // call after CreateContext() and before the first call to NewFrame(). NewFrame() automatically calls LoadIniSettingsFromDisk(io.IniFilename).
 
 func LoadIniSettingsFromMemory(buf []byte, ini_size uintptr) {
-	g := GImGui
 	IM_ASSERT(g.Initialized)
 	//IM_ASSERT(!g.WithinFrameScope && "Cannot be called between NewFrame() and EndFrame()");
 	//IM_ASSERT(g.SettingsLoaded == false && g.FrameCount == 0);
@@ -77,7 +76,6 @@ func LoadIniSettingsFromMemory(buf []byte, ini_size uintptr) {
 } // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
 
 func SaveIniSettingsToDisk(ini_filename string) {
-	g := GImGui
 	g.SettingsDirtyTimer = 0.0
 	if ini_filename == "" {
 		return
@@ -90,7 +88,6 @@ func SaveIniSettingsToDisk(ini_filename string) {
 } // this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
 
 func SaveIniSettingsToMemory(out_size *uintptr) []byte {
-	g := GImGui
 	g.SettingsDirtyTimer = 0.0
 	g.SettingsIniData = g.SettingsIniData[:0]
 	for handler_n := range g.SettingsHandlers {
@@ -105,14 +102,12 @@ func SaveIniSettingsToMemory(out_size *uintptr) []byte {
 
 // MarkIniSettingsDirty Settings
 func MarkIniSettingsDirty() {
-	g := GImGui
 	if g.SettingsDirtyTimer <= 0.0 {
 		g.SettingsDirtyTimer = g.IO.IniSavingRate
 	}
 }
 
 func MarkIniSettingsDirtyWindow(window *ImGuiWindow) {
-	g := GImGui
 	if window.Flags&ImGuiWindowFlags_NoSavedSettings == 0 {
 		if g.SettingsDirtyTimer <= 0.0 {
 			g.SettingsDirtyTimer = g.IO.IniSavingRate
@@ -121,7 +116,6 @@ func MarkIniSettingsDirtyWindow(window *ImGuiWindow) {
 }
 
 func ClearIniSettings() {
-	g := GImGui
 	g.SettingsIniData = g.SettingsIniData[:0]
 	for handler_n := range g.SettingsHandlers {
 		if g.SettingsHandlers[handler_n].ClearAllFn != nil {
@@ -131,7 +125,7 @@ func ClearIniSettings() {
 }
 
 func CreateNewWindowSettings(name string) *ImGuiWindowSettings {
-	g := GImGui
+	g := g
 
 	if index := strings.Index(name, "###"); index != -1 {
 		name = name[index:]
@@ -148,7 +142,6 @@ func CreateNewWindowSettings(name string) *ImGuiWindowSettings {
 }
 
 func FindWindowSettings(id ImGuiID) *ImGuiWindowSettings {
-	g := GImGui
 	for i := range g.SettingsWindows {
 		settings := &g.SettingsWindows[i]
 		if settings.ID == id {
@@ -166,7 +159,6 @@ func FindOrCreateWindowSettings(name string) *ImGuiWindowSettings {
 }
 
 func FindSettingsHandler(name string) *ImGuiSettingsHandler {
-	g := GImGui
 	var type_hash = ImHashStr(name, 0, 0)
 	for handler_n := range g.SettingsHandlers {
 		if g.SettingsHandlers[handler_n].TypeHash == type_hash {
@@ -179,7 +171,6 @@ func FindSettingsHandler(name string) *ImGuiSettingsHandler {
 // UpdateSettings Called by NewFrame()
 func UpdateSettings() {
 	// Load settings on first frame (if not explicitly loaded manually before)
-	g := GImGui
 	if !g.SettingsLoaded {
 		IM_ASSERT(len(g.SettingsWindows) == 0)
 		if g.IO.IniFilename != "" {
