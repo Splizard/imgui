@@ -349,19 +349,19 @@ func NewImDrawListSharedData() ImDrawListSharedData {
 	return this
 }
 
-func (this *ImDrawListSharedData) SetCircleTessellationMaxError(max_error float) {
-	if this.CircleSegmentMaxError == max_error {
+func (d *ImDrawListSharedData) SetCircleTessellationMaxError(max_error float) {
+	if d.CircleSegmentMaxError == max_error {
 		return
 	}
 	IM_ASSERT(max_error > 0.0)
-	this.CircleSegmentMaxError = max_error
-	for i := range this.CircleSegmentCounts {
+	d.CircleSegmentMaxError = max_error
+	for i := range d.CircleSegmentCounts {
 		var radius = (float)(i)
 		if i > 0 {
-			this.CircleSegmentCounts[i] = uint8(IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, this.CircleSegmentMaxError))
+			d.CircleSegmentCounts[i] = uint8(IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC(radius, d.CircleSegmentMaxError))
 		}
 	}
-	this.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, this.CircleSegmentMaxError)
+	d.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(IM_DRAWLIST_ARCFAST_SAMPLE_MAX, d.CircleSegmentMaxError)
 }
 
 type ImDrawDataBuilder [2][]*ImDrawList
