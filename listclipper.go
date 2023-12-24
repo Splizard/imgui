@@ -1,6 +1,6 @@
 package imgui
 
-// Helper: Manually clip large list of items.
+// ImGuiListClipper Helper: Manually clip large list of items.
 // If you are submitting lots of evenly spaced items and you have a random access to the list, you can perform coarse
 // clipping based on visibility to save yourself from processing those items at all.
 // The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
@@ -39,12 +39,12 @@ func NewImGuiListClipper() ImGuiListClipper {
 	}
 }
 
-// Use case A: Begin() called from constructor with items_height<0, then called again from Step() in StepNo 1
+// Begin Use case A: Begin() called from constructor with items_height<0, then called again from Step() in StepNo 1
 // Use case B: Begin() called from constructor with items_height>0
 // FIXME-LEGACY: Ideally we should remove the Begin/End functions but they are part of the legacy API we still support. This is why some of the code in Step() calling Begin() and reassign some fields, spaghetti style.
 // items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
 // items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
-func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f*/) {
+func (c ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f*/) {
 	window := guiContext.CurrentWindow
 
 	if table := guiContext.CurrentTable; table != nil {
@@ -53,30 +53,30 @@ func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f
 		}
 	}
 
-	this.StartPosY = window.DC.CursorPos.y
-	this.ItemsHeight = items_height
-	this.ItemsCount = items_count
-	this.ItemsFrozen = 0
-	this.StepNo = 0
-	this.DisplayStart = -1
-	this.DisplayEnd = 0
+	c.StartPosY = window.DC.CursorPos.y
+	c.ItemsHeight = items_height
+	c.ItemsCount = items_count
+	c.ItemsFrozen = 0
+	c.StepNo = 0
+	c.DisplayStart = -1
+	c.DisplayEnd = 0
 }
 
-// Automatically called on the last call of Step() that returns false.
-func (this ImGuiListClipper) End() {
-	if this.ItemsCount < 0 { // Already ended
+// End Automatically called on the last call of Step() that returns false.
+func (c ImGuiListClipper) End() {
+	if c.ItemsCount < 0 { // Already ended
 		return
 	}
 
 	// In theory here we should assert that ImGui::GetCursorPosY() == StartPosY + DisplayEnd * ItemsHeight, but it feels saner to just seek at the end and not assert/crash the user.
-	if this.ItemsCount < INT_MAX && this.DisplayStart >= 0 {
-		SetCursorPosYAndSetupForPrevLine(this.StartPosY+float(this.ItemsCount-this.ItemsFrozen)*this.ItemsHeight, this.ItemsHeight)
+	if c.ItemsCount < INT_MAX && c.DisplayStart >= 0 {
+		SetCursorPosYAndSetupForPrevLine(c.StartPosY+float(c.ItemsCount-c.ItemsFrozen)*c.ItemsHeight, c.ItemsHeight)
 	}
-	this.ItemsCount = -1
-	this.StepNo = 3
+	c.ItemsCount = -1
+	c.StepNo = 3
 }
 
-func (this ImGuiListClipper) Step() bool {
+func (c ImGuiListClipper) Step() bool {
 	window := guiContext.CurrentWindow
 
 	var table = guiContext.CurrentTable
@@ -85,83 +85,83 @@ func (this ImGuiListClipper) Step() bool {
 	}
 
 	// No items
-	if this.ItemsCount == 0 || GetSkipItemForListClipping() {
-		this.End()
+	if c.ItemsCount == 0 || GetSkipItemForListClipping() {
+		c.End()
 		return false
 	}
 
 	// Step 0: Let you process the first element (regardless of it being visible or not, so we can measure the element height)
-	if this.StepNo == 0 {
+	if c.StepNo == 0 {
 		// While we are in frozen row state, keep displaying items one by one, unclipped
 		// FIXME: Could be stored as a table-agnostic state.
 		if table != nil && !table.IsUnfrozenRows {
-			this.DisplayStart = this.ItemsFrozen
-			this.DisplayEnd = this.ItemsFrozen + 1
-			this.ItemsFrozen++
+			c.DisplayStart = c.ItemsFrozen
+			c.DisplayEnd = c.ItemsFrozen + 1
+			c.ItemsFrozen++
 			return true
 		}
 
-		this.StartPosY = window.DC.CursorPos.y
-		if this.ItemsHeight <= 0.0 {
+		c.StartPosY = window.DC.CursorPos.y
+		if c.ItemsHeight <= 0.0 {
 			// Submit the first item so we can measure its height (generally it is 0..1)
-			this.DisplayStart = this.ItemsFrozen
-			this.DisplayEnd = this.ItemsFrozen + 1
-			this.StepNo = 1
+			c.DisplayStart = c.ItemsFrozen
+			c.DisplayEnd = c.ItemsFrozen + 1
+			c.StepNo = 1
 			return true
 		}
 
 		// Already has item height (given by user in Begin): skip to calculating step
-		this.DisplayStart = this.DisplayEnd
-		this.StepNo = 2
+		c.DisplayStart = c.DisplayEnd
+		c.StepNo = 2
 	}
 
 	// Step 1: the clipper infer height from first element
-	if this.StepNo == 1 {
-		IM_ASSERT(this.ItemsHeight <= 0.0)
+	if c.StepNo == 1 {
+		IM_ASSERT(c.ItemsHeight <= 0.0)
 		if table != nil {
-			var pos_y1 = table.RowPosY1 // Using this instead of StartPosY to handle clipper straddling the frozen row
-			var pos_y2 = table.RowPosY2 // Using this instead of CursorPos.y to take account of tallest cell.
-			this.ItemsHeight = pos_y2 - pos_y1
+			var pos_y1 = table.RowPosY1 // Using c instead of StartPosY to handle clipper straddling the frozen row
+			var pos_y2 = table.RowPosY2 // Using c instead of CursorPos.y to take account of tallest cell.
+			c.ItemsHeight = pos_y2 - pos_y1
 			window.DC.CursorPos.y = pos_y2
 		} else {
-			this.ItemsHeight = window.DC.CursorPos.y - this.StartPosY
+			c.ItemsHeight = window.DC.CursorPos.y - c.StartPosY
 		}
-		IM_ASSERT_USER_ERROR(this.ItemsHeight > 0.0, "Unable to calculate item height! First item hasn't moved the cursor vertically!")
-		this.StepNo = 2
+		IM_ASSERT_USER_ERROR(c.ItemsHeight > 0.0, "Unable to calculate item height! First item hasn't moved the cursor vertically!")
+		c.StepNo = 2
 	}
 
 	// Reached end of list
-	if this.DisplayEnd >= this.ItemsCount {
-		this.End()
+	if c.DisplayEnd >= c.ItemsCount {
+		c.End()
 		return false
 	}
 
 	// Step 2: calculate the actual range of elements to display, and position the cursor before the first element
-	if this.StepNo == 2 {
-		IM_ASSERT(this.ItemsHeight > 0.0)
+	if c.StepNo == 2 {
+		IM_ASSERT(c.ItemsHeight > 0.0)
 
-		var already_submitted = this.DisplayEnd
-		CalcListClipping(this.ItemsCount-already_submitted, this.ItemsHeight, &this.DisplayStart, &this.DisplayEnd)
-		this.DisplayStart += already_submitted
-		this.DisplayEnd += already_submitted
+		var already_submitted = c.DisplayEnd
+		CalcListClipping(c.ItemsCount-already_submitted, c.ItemsHeight, &c.DisplayStart, &c.DisplayEnd)
+		c.DisplayStart += already_submitted
+		c.DisplayEnd += already_submitted
 
 		// Seek cursor
-		if this.DisplayStart > already_submitted {
-			SetCursorPosYAndSetupForPrevLine(this.StartPosY+float(this.DisplayStart-this.ItemsFrozen)*this.ItemsHeight, this.ItemsHeight)
+		if c.DisplayStart > already_submitted {
+			SetCursorPosYAndSetupForPrevLine(c.StartPosY+float(c.DisplayStart-c.ItemsFrozen)*c.ItemsHeight, c.ItemsHeight)
 		}
 
-		this.StepNo = 3
+		c.StepNo = 3
 		return true
 	}
 
 	// Step 3: the clipper validate that we have reached the expected Y position (corresponding to element DisplayEnd),
 	// Advance the cursor to the end of the list and then returns 'false' to end the loop.
-	if this.StepNo == 3 {
+	if c.StepNo == 3 {
 		// Seek cursor
-		if this.ItemsCount < INT_MAX {
-			SetCursorPosYAndSetupForPrevLine(this.StartPosY+float(this.ItemsCount-this.ItemsFrozen)*this.ItemsHeight, this.ItemsHeight) // advance cursor
+		if c.ItemsCount < INT_MAX {
+			SetCursorPosYAndSetupForPrevLine(c.StartPosY+float(c.ItemsCount-c.ItemsFrozen)*c.ItemsHeight, c.ItemsHeight) // advance cursor
 		}
-		this.ItemsCount = -1
+		c.ItemsCount = -1
 		return false
 	}
 
@@ -169,7 +169,7 @@ func (this ImGuiListClipper) Step() bool {
 	return false
 }
 
-// FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
+// GetSkipItemForListClipping FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
 // The problem we have is that without a Begin/End scheme for rows using the clipper is ambiguous.
 func GetSkipItemForListClipping() bool {
 	if guiContext.CurrentTable != nil {
@@ -178,7 +178,7 @@ func GetSkipItemForListClipping() bool {
 	return guiContext.CurrentWindow.SkipItems
 }
 
-// Helper to calculate coarse clipping of large list of evenly sized items.
+// CalcListClipping Helper to calculate coarse clipping of large list of evenly sized items.
 // NB: Prefer using the ImGuiListClipper higher-level helper if you can! Read comments and instructions there on how those use this sort of pattern.
 // NB: 'items_count' is only used to clamp the result, if you don't know your count you can use INT_MAX
 func CalcListClipping(items_count int, items_height float, out_items_display_start *int, out_items_display_end *int) {
