@@ -270,7 +270,7 @@ func ImBitArraySetBitRange(arr []ImU32, n, n2 int) {
 
 type ImBitVector []ImU32
 
-func (this ImBitVector) SetBitRange(n, n2 int) { // Works on range [n..n2)
+func (v ImBitVector) SetBitRange(n, n2 int) { // Works on range [n..n2)
 	n2--
 	for n <= n2 {
 		var a_mod = (n & 31)
@@ -281,29 +281,29 @@ func (this ImBitVector) SetBitRange(n, n2 int) { // Works on range [n..n2)
 			b_mod = (n2 & 31) + 1
 		}
 		var mask = (ImU32)(((ImU64)(1<<b_mod))-1) & ^(ImU32)(((ImU64)(1<<a_mod))-1)
-		this[n>>5] |= mask
+		v[n>>5] |= mask
 		n = (n + 32) & ^31
 	}
 }
 
-func (this *ImBitVector) Create(sz int) {
-	*this = make([]ImU32, (uint(sz)+31)>>5)
+func (v *ImBitVector) Create(sz int) {
+	*v = make([]ImU32, (uint(sz)+31)>>5)
 }
 
-func (this *ImBitVector) Clear() {
-	*this = (*this)[:0]
+func (v *ImBitVector) Clear() {
+	*v = (*v)[:0]
 }
 
-func (this *ImBitVector) TestBit(n int) bool {
-	return ImBitArrayTestBit(*this, n)
+func (v *ImBitVector) TestBit(n int) bool {
+	return ImBitArrayTestBit(*v, n)
 }
 
-func (this *ImBitVector) SetBit(n int) {
-	ImBitArraySetBit(*this, n)
+func (v *ImBitVector) SetBit(n int) {
+	ImBitArraySetBit(*v, n)
 }
 
-func (this *ImBitVector) ClearBit(n int) {
-	ImBitArrayClearBit(*this, n)
+func (v *ImBitVector) ClearBit(n int) {
+	ImBitArrayClearBit(*v, n)
 }
 
 type ImSpan struct {
