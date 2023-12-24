@@ -36,7 +36,7 @@ type ImGuiTabBar struct {
 	ID                              ImGuiID  // Zero for tab-bars used by docking
 	SelectedTabId                   ImGuiID  // Selected tab/window
 	NextSelectedTabId               ImGuiID  // Next selected tab/window. Will also trigger a scrolling animation
-	VisibleTabId                    ImGuiID  // Can occasionally be != SelectedTabId (e.g. when previewing contents for CTRL+TAB preview)
+	VisibleTabId                    ImGuiID  // Can occasionally be != SelectedTabId (e.guiContext. when previewing contents for CTRL+TAB preview)
 	CurrFrameVisible                int      //
 	PrevFrameVisible                int      //
 	BarRect                         ImRect   //
@@ -107,12 +107,12 @@ func GetTabBarFromTabBarRef(ref ImGuiPtrOrIndex) *ImGuiTabBar {
 	if ref.Ptr != nil {
 		return ref.Ptr.(*ImGuiTabBar)
 	} else {
-		return g.TabBars[uint(ref.Index)]
+		return guiContext.TabBars[uint(ref.Index)]
 	}
 }
 
 func GetTabBarRefFromTabBar(tab_bar *ImGuiTabBar) ImGuiPtrOrIndex {
-	for idx, tab_bar_ref := range g.TabBars {
+	for idx, tab_bar_ref := range guiContext.TabBars {
 		if tab_bar == tab_bar_ref {
 			return ImGuiPtrOrIndex{Index: int(idx)}
 		}
@@ -124,31 +124,31 @@ func GetTabBarRefFromTabBar(tab_bar *ImGuiTabBar) ImGuiPtrOrIndex {
 
 // create and append into a TabBar
 func BeginTabBar(str_id string, flags ImGuiTabBarFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
 
 	var id = window.GetIDs(str_id)
-	var tab_bar, ok = g.TabBars[id]
+	var tab_bar, ok = guiContext.TabBars[id]
 	if !ok {
 		tab_bar = new(ImGuiTabBar)
 		tab_bar.ID = id
-		g.TabBars[id] = tab_bar
+		guiContext.TabBars[id] = tab_bar
 	}
-	var tab_bar_bb = ImRect{ImVec2{window.DC.CursorPos.x, window.DC.CursorPos.y}, ImVec2{window.WorkRect.Max.x, window.DC.CursorPos.y + g.FontSize + g.Style.FramePadding.y*2}}
+	var tab_bar_bb = ImRect{ImVec2{window.DC.CursorPos.x, window.DC.CursorPos.y}, ImVec2{window.WorkRect.Max.x, window.DC.CursorPos.y + guiContext.FontSize + guiContext.Style.FramePadding.y*2}}
 	tab_bar.ID = id
 	return BeginTabBarEx(tab_bar, &tab_bar_bb, flags|ImGuiTabBarFlags_IsFocused)
 }
 
 // only call EndTabBar() if BeginTabBar() returns true!
 func EndTabBar() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return
 	}
 
-	var tab_bar = g.CurrentTabBar
+	var tab_bar = guiContext.CurrentTabBar
 	if tab_bar == nil {
 		IM_ASSERT_USER_ERROR(tab_bar != nil, "Mismatched BeginTabBar()/EndTabBar()!")
 		return
@@ -160,7 +160,7 @@ func EndTabBar() {
 	}
 
 	// Restore the last visible height if no tab is visible, this reduce vertical flicker/movement when a tabs gets removed without calling SetTabItemClosed().
-	var tab_bar_appearing = (tab_bar.PrevFrameVisible+1 < g.FrameCount)
+	var tab_bar_appearing = (tab_bar.PrevFrameVisible+1 < guiContext.FrameCount)
 	if tab_bar.VisibleTabWasSubmitted || tab_bar.VisibleTabId == 0 || tab_bar_appearing {
 		tab_bar.CurrTabsContentsHeight = max(window.DC.CursorPos.y-tab_bar.BarRect.Max.y, tab_bar.CurrTabsContentsHeight)
 		window.DC.CursorPos.y = tab_bar.BarRect.Max.y + tab_bar.CurrTabsContentsHeight
@@ -175,21 +175,21 @@ func EndTabBar() {
 		PopID()
 	}
 
-	g.CurrentTabBarStack = g.CurrentTabBarStack[:len(g.CurrentTabBarStack)-1]
-	g.CurrentTabBar = nil
-	if len(g.CurrentTabBarStack) > 0 {
-		g.CurrentTabBar = GetTabBarFromTabBarRef(g.CurrentTabBarStack[len(g.CurrentTabBarStack)-1])
+	guiContext.CurrentTabBarStack = guiContext.CurrentTabBarStack[:len(guiContext.CurrentTabBarStack)-1]
+	guiContext.CurrentTabBar = nil
+	if len(guiContext.CurrentTabBarStack) > 0 {
+		guiContext.CurrentTabBar = GetTabBarFromTabBarRef(guiContext.CurrentTabBarStack[len(guiContext.CurrentTabBarStack)-1])
 	}
 }
 
 // create a Tab. Returns true if the Tab is selected.
 func BeginTabItem(label string, p_open *bool, flags ImGuiTabItemFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
 
-	var tab_bar = g.CurrentTabBar
+	var tab_bar = guiContext.CurrentTabBar
 	if tab_bar == nil {
 		IM_ASSERT_USER_ERROR(tab_bar != nil, "Needs to be called between BeginTabBar() and EndTabBar()!")
 		return false
@@ -206,12 +206,12 @@ func BeginTabItem(label string, p_open *bool, flags ImGuiTabItemFlags) bool {
 
 // only call EndTabItem() if BeginTabItem() returns true!
 func EndTabItem() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return
 	}
 
-	var tab_bar = g.CurrentTabBar
+	var tab_bar = guiContext.CurrentTabBar
 	if tab_bar == nil {
 		IM_ASSERT_USER_ERROR(tab_bar != nil, "Needs to be called between BeginTabBar() and EndTabBar()!")
 		return
@@ -225,12 +225,12 @@ func EndTabItem() {
 
 // create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 func TabItemButton(label string, flags ImGuiTabItemFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
 
-	var tab_bar = g.CurrentTabBar
+	var tab_bar = guiContext.CurrentTabBar
 	if tab_bar == nil {
 		IM_ASSERT_USER_ERROR(tab_bar != nil, "Needs to be called between BeginTabBar() and EndTabBar()!")
 		return false
@@ -244,9 +244,9 @@ func TabItemButton(label string, flags ImGuiTabItemFlags) bool {
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
 func SetTabItemClosed(tab_or_docked_window_label string) {
-	var is_within_manual_tab_bar = g.CurrentTabBar != nil && (g.CurrentTabBar.Flags&ImGuiTabBarFlags_DockNode) == 0
+	var is_within_manual_tab_bar = guiContext.CurrentTabBar != nil && (guiContext.CurrentTabBar.Flags&ImGuiTabBarFlags_DockNode) == 0
 	if is_within_manual_tab_bar {
-		var tab_bar = g.CurrentTabBar
+		var tab_bar = guiContext.CurrentTabBar
 		var tab_id = TabBarCalcTabID(tab_bar, tab_or_docked_window_label)
 		if tab := TabBarFindTabByID(tab_bar, tab_id); tab != nil {
 			tab.WantClose = true // Will be processed by next call to TabBarLayout()
@@ -256,7 +256,7 @@ func SetTabItemClosed(tab_or_docked_window_label string) {
 
 // Tab Bars
 func BeginTabBarEx(tab_bar *ImGuiTabBar, tab_bar_bb *ImRect, flags ImGuiTabBarFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -266,12 +266,12 @@ func BeginTabBarEx(tab_bar *ImGuiTabBar, tab_bar_bb *ImRect, flags ImGuiTabBarFl
 	}
 
 	// Add to stack
-	g.CurrentTabBarStack = append(g.CurrentTabBarStack, GetTabBarRefFromTabBar(tab_bar))
-	g.CurrentTabBar = tab_bar
+	guiContext.CurrentTabBarStack = append(guiContext.CurrentTabBarStack, GetTabBarRefFromTabBar(tab_bar))
+	guiContext.CurrentTabBar = tab_bar
 
 	// Append with multiple BeginTabBar()/EndTabBar() pairs.
 	tab_bar.BackupCursorPos = window.DC.CursorPos
-	if tab_bar.CurrFrameVisible == g.FrameCount {
+	if tab_bar.CurrFrameVisible == guiContext.FrameCount {
 		window.DC.CursorPos = ImVec2{tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.y + tab_bar.ItemSpacingY}
 		tab_bar.BeginCount++
 		return true
@@ -298,11 +298,11 @@ func BeginTabBarEx(tab_bar *ImGuiTabBar, tab_bar_bb *ImRect, flags ImGuiTabBarFl
 	tab_bar.BarRect = *tab_bar_bb
 	tab_bar.WantLayout = true // Layout will be done on the first call to ItemTab()
 	tab_bar.PrevFrameVisible = tab_bar.CurrFrameVisible
-	tab_bar.CurrFrameVisible = g.FrameCount
+	tab_bar.CurrFrameVisible = guiContext.FrameCount
 	tab_bar.PrevTabsContentsHeight = tab_bar.CurrTabsContentsHeight
 	tab_bar.CurrTabsContentsHeight = 0.0
-	tab_bar.ItemSpacingY = g.Style.ItemSpacing.y
-	tab_bar.FramePadding = g.Style.FramePadding
+	tab_bar.ItemSpacingY = guiContext.Style.ItemSpacing.y
+	tab_bar.FramePadding = guiContext.Style.FramePadding
 	tab_bar.TabsActiveCount = 0
 	tab_bar.BeginCount = 1
 
@@ -371,7 +371,7 @@ func TabBarCloseTab(tab_bar *ImGuiTabBar, tab *ImGuiTabItem) {
 			tab_bar.NextSelectedTabId = 0
 		}
 	} else {
-		// Actually select before expecting closure attempt (on an UnsavedDocument tab user is expect to e.g. show a popup)
+		// Actually select before expecting closure attempt (on an UnsavedDocument tab user is expect to e.guiContext. show a popup)
 		if tab_bar.VisibleTabId != tab.ID {
 			tab_bar.NextSelectedTabId = tab.ID
 		}
@@ -422,8 +422,8 @@ func TabBarQueueReorderFromMousePos(tab_bar *ImGuiTabBar, src_tab *ImGuiTabItem,
 		dst_idx = i
 
 		// Include spacing after tab, so when mouse cursor is between tabs we would not continue checking further tabs that are not hovered.
-		var x1 = bar_offset + dst_tab.Offset - g.Style.ItemInnerSpacing.x
-		var x2 = bar_offset + dst_tab.Offset + dst_tab.Width + g.Style.ItemInnerSpacing.x
+		var x1 = bar_offset + dst_tab.Offset - guiContext.Style.ItemInnerSpacing.x
+		var x2 = bar_offset + dst_tab.Offset + dst_tab.Width + guiContext.Style.ItemInnerSpacing.x
 		//GetForegroundDrawList().AddRect(ImVec2(x1, tab_bar.BarRect.Min.y), ImVec2(x2, tab_bar.BarRect.Max.y), IM_COL32(255, 0, 0, 255));
 		if (dir < 0 && mouse_pos.x > x1) || (dir > 0 && mouse_pos.x < x2) {
 			break
@@ -490,12 +490,12 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 		TabBarLayout(tab_bar)
 	}
 
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = TabBarCalcTabID(tab_bar, label)
 
 	// If the user called us with *p_open == false, we early out and don't render.
@@ -541,11 +541,11 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 	tab.BeginOrder = tab_bar.TabsActiveCount
 	tab_bar.TabsActiveCount++
 
-	var tab_bar_appearing = (tab_bar.PrevFrameVisible+1 < g.FrameCount)
+	var tab_bar_appearing = (tab_bar.PrevFrameVisible+1 < guiContext.FrameCount)
 	var tab_bar_focused = (tab_bar.Flags & ImGuiTabBarFlags_IsFocused) != 0
-	var tab_appearing = (tab.LastFrameVisible+1 < g.FrameCount)
+	var tab_appearing = (tab.LastFrameVisible+1 < guiContext.FrameCount)
 	var is_tab_button = (flags & ImGuiTabItemFlags_Button) != 0
-	tab.LastFrameVisible = g.FrameCount
+	tab.LastFrameVisible = guiContext.FrameCount
 	tab.Flags = flags
 
 	// Append name with zero-terminator
@@ -593,7 +593,7 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 	}
 
 	if tab_bar.SelectedTabId == id {
-		tab.LastFrameSelected = g.FrameCount
+		tab.LastFrameSelected = guiContext.FrameCount
 	}
 
 	// Backup current layout position
@@ -636,7 +636,7 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 
 	// Click to Select a tab
 	var button_flags = f | ImGuiButtonFlags_AllowItemOverlap
-	if g.DragDropActive {
+	if guiContext.DragDropActive {
 		button_flags |= ImGuiButtonFlags_PressedOnDragDropHold
 	}
 	var hovered, held bool
@@ -646,18 +646,18 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 	}
 
 	// Allow the close button to overlap unless we are dragging (in which case we don't want any overlapping tabs to be hovered)
-	if g.ActiveId != id {
+	if guiContext.ActiveId != id {
 		SetItemAllowOverlap()
 	}
 
 	// Drag and drop: re-order tabs
 	if held && !tab_appearing && IsMouseDragging(0, -1) {
-		if !g.DragDropActive && (tab_bar.Flags&ImGuiTabBarFlags_Reorderable) != 0 {
+		if !guiContext.DragDropActive && (tab_bar.Flags&ImGuiTabBarFlags_Reorderable) != 0 {
 			// While moving a tab it will jump on the other side of the mouse, so we also test for MouseDelta.x
-			if g.IO.MouseDelta.x < 0.0 && g.IO.MousePos.x < bb.Min.x {
-				TabBarQueueReorderFromMousePos(tab_bar, tab, g.IO.MousePos)
-			} else if g.IO.MouseDelta.x > 0.0 && g.IO.MousePos.x > bb.Max.x {
-				TabBarQueueReorderFromMousePos(tab_bar, tab, g.IO.MousePos)
+			if guiContext.IO.MouseDelta.x < 0.0 && guiContext.IO.MousePos.x < bb.Min.x {
+				TabBarQueueReorderFromMousePos(tab_bar, tab, guiContext.IO.MousePos)
+			} else if guiContext.IO.MouseDelta.x > 0.0 && guiContext.IO.MousePos.x > bb.Max.x {
+				TabBarQueueReorderFromMousePos(tab_bar, tab, guiContext.IO.MousePos)
 			}
 		}
 	}
@@ -720,10 +720,10 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 
 	// Tooltip
 	// (Won't work over the close button because ItemOverlap systems messes up with HoveredIdTimer. seems ok)
-	// (We test IsItemHovered() to discard e.g. when another item is active or drag and drop over the tab bar, which g.HoveredId ignores)
+	// (We test IsItemHovered() to discard e.guiContext. when another item is active or drag and drop over the tab bar, which guiContext.HoveredId ignores)
 	// FIXME: This is a mess.
 	// FIXME: We may want disabled tab to still display the tooltip?
-	if text_clipped && g.HoveredId == id && !held && g.HoveredIdNotActiveTimer > g.TooltipSlowDelay && IsItemHovered(0) {
+	if text_clipped && guiContext.HoveredId == id && !held && guiContext.HoveredIdNotActiveTimer > guiContext.TooltipSlowDelay && IsItemHovered(0) {
 		if (tab_bar.Flags&ImGuiTabBarFlags_NoTooltip) == 0 && (tab.Flags&ImGuiTabItemFlags_NoTooltip) == 0 {
 			SetTooltip("%v", label)
 		}
@@ -738,11 +738,11 @@ func TabItemEx(tab_bar *ImGuiTabBar, label string, p_open *bool, flags ImGuiTabI
 
 func TabItemCalcSize(label string, has_close_button bool) ImVec2 {
 	var label_size = CalcTextSize(label, true, -1)
-	var size = ImVec2{label_size.x + g.Style.FramePadding.x, label_size.y + g.Style.FramePadding.y*2.0}
+	var size = ImVec2{label_size.x + guiContext.Style.FramePadding.x, label_size.y + guiContext.Style.FramePadding.y*2.0}
 	if has_close_button {
-		size.x += g.Style.FramePadding.x + (g.Style.ItemInnerSpacing.x + g.FontSize) // We use Y intentionally to fit the close button circle.
+		size.x += guiContext.Style.FramePadding.x + (guiContext.Style.ItemInnerSpacing.x + guiContext.FontSize) // We use Y intentionally to fit the close button circle.
 	} else {
-		size.x += g.Style.FramePadding.x + 1.0
+		size.x += guiContext.Style.FramePadding.x + 1.0
 	}
 	return ImVec2{min(size.x, TabBarCalcMaxTabWidth()), size.y}
 }
@@ -752,9 +752,9 @@ func TabItemBackground(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlag
 	var width = bb.GetWidth()
 	IM_ASSERT(width > 0.0)
 
-	var r = g.Style.TabRounding
+	var r = guiContext.Style.TabRounding
 	if (flags & ImGuiTabItemFlags_Button) != 0 {
-		r = g.Style.FrameRounding
+		r = guiContext.Style.FrameRounding
 	}
 
 	var rounding = max(0.0, min(r, width*0.5-1.0))
@@ -765,12 +765,12 @@ func TabItemBackground(draw_list *ImDrawList, bb *ImRect, flags ImGuiTabItemFlag
 	draw_list.PathArcToFast(ImVec2{bb.Max.x - rounding, y1 + rounding}, rounding, 9, 12)
 	draw_list.PathLineTo(ImVec2{bb.Max.x, y2})
 	draw_list.PathFillConvex(col)
-	if g.Style.TabBorderSize > 0.0 {
+	if guiContext.Style.TabBorderSize > 0.0 {
 		draw_list.PathLineTo(ImVec2{bb.Min.x + 0.5, y2})
 		draw_list.PathArcToFast(ImVec2{bb.Min.x + rounding + 0.5, y1 + rounding + 0.5}, rounding, 6, 9)
 		draw_list.PathArcToFast(ImVec2{bb.Max.x - rounding - 0.5, y1 + rounding + 0.5}, rounding, 9, 12)
 		draw_list.PathLineTo(ImVec2{bb.Max.x - 0.5, y2})
-		draw_list.PathStroke(GetColorU32FromID(ImGuiCol_Border, 1), 0, g.Style.TabBorderSize)
+		draw_list.PathStroke(GetColorU32FromID(ImGuiCol_Border, 1), 0, guiContext.Style.TabBorderSize)
 	}
 }
 
@@ -800,19 +800,19 @@ func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTa
 		//draw_list.AddCircle(text_ellipsis_clip_bb.Min, 3.0f, *out_text_clipped ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 0, 255));
 	}
 
-	var button_sz = g.FontSize
+	var button_sz = guiContext.FontSize
 	var button_pos = ImVec2{max(bb.Min.x, bb.Max.x-frame_padding.x*2.0-button_sz), bb.Min.y}
 
 	// Close Button & Unsaved Marker
-	// We are relying on a subtle and confusing distinction between 'hovered' and 'g.HoveredId' which happens because we are using ImGuiButtonFlags_AllowOverlapMode + SetItemAllowOverlap()
+	// We are relying on a subtle and confusing distinction between 'hovered' and 'guiContext.HoveredId' which happens because we are using ImGuiButtonFlags_AllowOverlapMode + SetItemAllowOverlap()
 	//  'hovered' will be true when hovering the Tab but NOT when hovering the close button
-	//  'g.HoveredId==id' will be true when hovering the Tab including when hovering the close button
-	//  'g.ActiveId==close_button_id' will be true when we are holding on the close button, in which case both hovered booleans are false
+	//  'guiContext.HoveredId==id' will be true when hovering the Tab including when hovering the close button
+	//  'guiContext.ActiveId==close_button_id' will be true when we are holding on the close button, in which case both hovered booleans are false
 	var close_button_pressed = false
 	var close_button_visible = false
 	if close_button_id != 0 {
-		if is_contents_visible || bb.GetWidth() >= max(button_sz, g.Style.TabMinWidthForCloseButton) {
-			if g.HoveredId == tab_id || g.HoveredId == close_button_id || g.ActiveId == tab_id || g.ActiveId == close_button_id {
+		if is_contents_visible || bb.GetWidth() >= max(button_sz, guiContext.Style.TabMinWidthForCloseButton) {
+			if guiContext.HoveredId == tab_id || guiContext.HoveredId == close_button_id || guiContext.ActiveId == tab_id || guiContext.ActiveId == close_button_id {
 				close_button_visible = true
 			}
 		}
@@ -820,26 +820,26 @@ func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTa
 	var unsaved_marker_visible = (flags&ImGuiTabItemFlags_UnsavedDocument) != 0 && (button_pos.x+button_sz <= bb.Max.x)
 
 	if close_button_visible {
-		var last_item_backup = g.LastItemData
+		var last_item_backup = guiContext.LastItemData
 		PushStyleVec(ImGuiStyleVar_FramePadding, frame_padding)
 		if CloseButton(close_button_id, &button_pos) {
 			close_button_pressed = true
 		}
 		PopStyleVar(1)
-		g.LastItemData = last_item_backup
+		guiContext.LastItemData = last_item_backup
 
 		// Close with middle mouse button
 		if flags&ImGuiTabItemFlags_NoCloseWithMiddleMouseButton == 0 && IsMouseClicked(2, false) {
 			close_button_pressed = true
 		}
 	} else if unsaved_marker_visible {
-		var bullet_bb = ImRect{button_pos, button_pos.Add(ImVec2{button_sz, button_sz}).Add(g.Style.FramePadding.Scale(2.0))}
+		var bullet_bb = ImRect{button_pos, button_pos.Add(ImVec2{button_sz, button_sz}).Add(guiContext.Style.FramePadding.Scale(2.0))}
 		RenderBullet(draw_list, bullet_bb.GetCenter(), GetColorU32FromID(ImGuiCol_Text, 1))
 	}
 
 	// This is all rather complicated
 	// (the main idea is that because the close button only appears on hover, we don't want it to alter the ellipsis position)
-	// FIXME: if FramePadding is noticeably large, ellipsis_max_x will be wrong here (e.g. #3497), maybe for consistency that parameter of RenderTextEllipsis() shouldn't exist..
+	// FIXME: if FramePadding is noticeably large, ellipsis_max_x will be wrong here (e.guiContext. #3497), maybe for consistency that parameter of RenderTextEllipsis() shouldn't exist..
 	var ellipsis_max_x = bb.Max.x - 1.0
 	if close_button_visible {
 		ellipsis_max_x = text_pixel_clip_bb.Max.x
@@ -862,7 +862,7 @@ func TabItemLabelAndCloseButton(draw_list *ImDrawList, bb *ImRect, flags ImGuiTa
 	}
 }
 
-// Note: we may scroll to tab that are not selected! e.g. using keyboard arrow keys
+// Note: we may scroll to tab that are not selected! e.guiContext. using keyboard arrow keys
 func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTabBarSection) {
 	var tab = TabBarFindTabByID(tab_bar, tab_id)
 	if tab == nil {
@@ -872,7 +872,7 @@ func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTa
 		return
 	}
 
-	var margin = g.FontSize * 1.0 // When to scroll to make Tab N+1 visible always make a bit of N visible to suggest more scrolling area (since we don't have a scrollbar)
+	var margin = guiContext.FontSize * 1.0 // When to scroll to make Tab N+1 visible always make a bit of N visible to suggest more scrolling area (since we don't have a scrollbar)
 	var order = tab_bar.GetTabOrder(tab)
 
 	// Scrolling happens only in the central section (leading/trailing sections are not scrolling)
@@ -901,15 +901,15 @@ func TabBarScrollToTab(tab_bar *ImGuiTabBar, tab_id ImGuiID, sections [3]ImGuiTa
 }
 
 func TabBarTabListPopupButton(tab_bar *ImGuiTabBar) *ImGuiTabItem {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	// We use g.Style.FramePadding.y to match the square ArrowButton size
-	var tab_list_popup_button_width = g.FontSize + g.Style.FramePadding.y
+	// We use guiContext.Style.FramePadding.y to match the square ArrowButton size
+	var tab_list_popup_button_width = guiContext.FontSize + guiContext.Style.FramePadding.y
 	var backup_cursor_pos = window.DC.CursorPos
-	window.DC.CursorPos = ImVec2{tab_bar.BarRect.Min.x - g.Style.FramePadding.y, tab_bar.BarRect.Min.y}
+	window.DC.CursorPos = ImVec2{tab_bar.BarRect.Min.x - guiContext.Style.FramePadding.y, tab_bar.BarRect.Min.y}
 	tab_bar.BarRect.Min.x += tab_list_popup_button_width
 
-	var arrow_col = g.Style.Colors[ImGuiCol_Text]
+	var arrow_col = guiContext.Style.Colors[ImGuiCol_Text]
 	arrow_col.w *= 0.5
 	PushStyleColorVec(ImGuiCol_Text, &arrow_col)
 	PushStyleColorVec(ImGuiCol_Button, &ImVec4{})
@@ -948,34 +948,34 @@ func TabBarCalcTabID(tab_bar *ImGuiTabBar, label string) ImU32 {
 		KeepAliveID(id)
 		return id
 	} else {
-		window := g.CurrentWindow
+		window := guiContext.CurrentWindow
 		return window.GetIDs(label)
 	}
 }
 
 func TabBarCalcMaxTabWidth() float {
-	return g.FontSize * 20.0
+	return guiContext.FontSize * 20.0
 }
 
 func TabBarScrollingButtons(tab_bar *ImGuiTabBar) *ImGuiTabItem {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	var arrow_button_size = ImVec2{g.FontSize - 2.0, g.FontSize + g.Style.FramePadding.y*2.0}
+	var arrow_button_size = ImVec2{guiContext.FontSize - 2.0, guiContext.FontSize + guiContext.Style.FramePadding.y*2.0}
 	var scrolling_buttons_width = arrow_button_size.x * 2.0
 
 	var backup_cursor_pos = window.DC.CursorPos
 	//window.DrawList.AddRect(ImVec2(tab_bar.BarRect.Max.x - scrolling_buttons_width, tab_bar.BarRect.Min.y), ImVec2(tab_bar.BarRect.Max.x, tab_bar.BarRect.Max.y), IM_COL32(255,0,0,255));
 
 	var select_dir int = 0
-	var arrow_col = g.Style.Colors[ImGuiCol_Text]
+	var arrow_col = guiContext.Style.Colors[ImGuiCol_Text]
 	arrow_col.w *= 0.5
 
 	PushStyleColorVec(ImGuiCol_Text, &arrow_col)
 	PushStyleColorVec(ImGuiCol_Button, &ImVec4{})
-	var backup_repeat_delay = g.IO.KeyRepeatDelay
-	var backup_repeat_rate = g.IO.KeyRepeatRate
-	g.IO.KeyRepeatDelay = 0.250
-	g.IO.KeyRepeatRate = 0.200
+	var backup_repeat_delay = guiContext.IO.KeyRepeatDelay
+	var backup_repeat_rate = guiContext.IO.KeyRepeatRate
+	guiContext.IO.KeyRepeatDelay = 0.250
+	guiContext.IO.KeyRepeatRate = 0.200
 	var x = max(tab_bar.BarRect.Min.x, tab_bar.BarRect.Max.x-scrolling_buttons_width)
 	window.DC.CursorPos = ImVec2{x, tab_bar.BarRect.Min.y}
 	if ArrowButtonEx("##<", ImGuiDir_Left, arrow_button_size, ImGuiButtonFlags_PressedOnClick|ImGuiButtonFlags_Repeat) {
@@ -986,8 +986,8 @@ func TabBarScrollingButtons(tab_bar *ImGuiTabBar) *ImGuiTabItem {
 		select_dir = +1
 	}
 	PopStyleColor(2)
-	g.IO.KeyRepeatRate = backup_repeat_rate
-	g.IO.KeyRepeatDelay = backup_repeat_delay
+	guiContext.IO.KeyRepeatRate = backup_repeat_rate
+	guiContext.IO.KeyRepeatDelay = backup_repeat_delay
 
 	var tab_to_scroll_to *ImGuiTabItem = nil
 	if select_dir != 0 {
@@ -1028,7 +1028,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	tab_bar.WantLayout = false
 
 	// Garbage collect by compacting list
-	// Detect if we need to sort out tab list (e.g. in rare case where a tab changed section)
+	// Detect if we need to sort out tab list (e.guiContext. in rare case where a tab changed section)
 	var tab_dst_n int = 0
 	var need_sort_by_section = false
 	var sections [3]ImGuiTabBarSection // Layout sections: Leading, Central, Trailing
@@ -1054,7 +1054,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 		tab = &tab_bar.Tabs[tab_dst_n]
 		tab.IndexDuringLayout = (int)(tab_dst_n)
 
-		// We will need sorting if tabs have changed section (e.g. moved from one of Leading/Central/Trailing to another)
+		// We will need sorting if tabs have changed section (e.guiContext. moved from one of Leading/Central/Trailing to another)
 		var curr_tab_section_n = TabItemGetSectionIdx(tab)
 		if tab_dst_n > 0 {
 			var prev_tab = &tab_bar.Tabs[tab_dst_n-1]
@@ -1095,11 +1095,11 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	// Calculate spacing between sections
 	sections[0].Spacing = 0
 	if sections[0].TabCount > 0 && (sections[1].TabCount+sections[2].TabCount) > 0 {
-		sections[0].Spacing = g.Style.ItemInnerSpacing.x
+		sections[0].Spacing = guiContext.Style.ItemInnerSpacing.x
 	}
 	sections[1].Spacing = 0
 	if sections[1].TabCount > 0 && sections[2].TabCount > 0 {
-		sections[1].Spacing = g.Style.ItemInnerSpacing.x
+		sections[1].Spacing = guiContext.Style.ItemInnerSpacing.x
 	}
 
 	// Setup next selected tab
@@ -1134,10 +1134,10 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	var shrink_buffer_indexes = [3]int{0, sections[0].TabCount + sections[2].TabCount, sections[0].TabCount}
 
 	//resize to tab_bar.Tabs.Size
-	if len(tab_bar.Tabs) > len(g.ShrinkWidthBuffer) {
-		g.ShrinkWidthBuffer = append(g.ShrinkWidthBuffer, make([]ImGuiShrinkWidthItem, len(tab_bar.Tabs)-len(g.ShrinkWidthBuffer))...)
+	if len(tab_bar.Tabs) > len(guiContext.ShrinkWidthBuffer) {
+		guiContext.ShrinkWidthBuffer = append(guiContext.ShrinkWidthBuffer, make([]ImGuiShrinkWidthItem, len(tab_bar.Tabs)-len(guiContext.ShrinkWidthBuffer))...)
 	} else {
-		g.ShrinkWidthBuffer = g.ShrinkWidthBuffer[:len(tab_bar.Tabs)]
+		guiContext.ShrinkWidthBuffer = guiContext.ShrinkWidthBuffer[:len(tab_bar.Tabs)]
 	}
 
 	// Compute ideal tabs widths + store them into shrink buffer
@@ -1154,11 +1154,11 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 		if tab.ID == tab_bar.SelectedTabId {
 			found_selected_tab_id = true
 		}
-		if scroll_to_tab_id == 0 && g.NavJustMovedToId == tab.ID {
+		if scroll_to_tab_id == 0 && guiContext.NavJustMovedToId == tab.ID {
 			scroll_to_tab_id = tab.ID
 		}
 
-		// Refresh tab width immediately, otherwise changes of style e.g. style.FramePadding.x would noticeably lag in the tab bar.
+		// Refresh tab width immediately, otherwise changes of style e.guiContext. style.FramePadding.x would noticeably lag in the tab bar.
 		// Additionally, when using TabBarAddTab() to manipulate tab bar order we occasionally insert new tabs that don't have a width yet,
 		// and we cannot wait for the next BeginTabItem() call. We cannot compute this width within TabBarAddTab() because font size depends on the active window.
 		var tab_name = tab_bar.GetTabName(tab)
@@ -1172,21 +1172,21 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 		var section = &sections[section_n]
 		section.Width += tab.ContentWidth
 		if section_n == curr_section_n {
-			section.Width += g.Style.ItemInnerSpacing.x
+			section.Width += guiContext.Style.ItemInnerSpacing.x
 		}
 		curr_section_n = section_n
 
 		// Store data so we can build an array sorted by width if we need to shrink tabs down
 		var shrink_buffer_index = shrink_buffer_indexes[section_n]
 		shrink_buffer_indexes[section_n]++
-		g.ShrinkWidthBuffer[shrink_buffer_index].Index = tab_n
-		g.ShrinkWidthBuffer[shrink_buffer_index].Width = tab.ContentWidth
+		guiContext.ShrinkWidthBuffer[shrink_buffer_index].Index = tab_n
+		guiContext.ShrinkWidthBuffer[shrink_buffer_index].Width = tab.ContentWidth
 
 		IM_ASSERT(tab.ContentWidth > 0.0)
 		tab.Width = tab.ContentWidth
 	}
 
-	// Compute total ideal width (used for e.g. auto-resizing a window)
+	// Compute total ideal width (used for e.guiContext. auto-resizing a window)
 	tab_bar.WidthAllTabsIdeal = 0.0
 	for section_n := 0; section_n < 3; section_n++ {
 		tab_bar.WidthAllTabsIdeal += sections[section_n].Width + sections[section_n].Spacing
@@ -1225,12 +1225,12 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 		} else {
 			shrink_data_count = sections[0].TabCount + sections[2].TabCount
 		}
-		ShrinkWidths(g.ShrinkWidthBuffer[shrink_data_offset:], shrink_data_count, width_excess)
+		ShrinkWidths(guiContext.ShrinkWidthBuffer[shrink_data_offset:], shrink_data_count, width_excess)
 
 		// Apply shrunk values into tabs and sections
 		for tab_n := shrink_data_offset; tab_n < shrink_data_offset+shrink_data_count; tab_n++ {
-			var tab = &tab_bar.Tabs[g.ShrinkWidthBuffer[tab_n].Index]
-			var shrinked_width = IM_FLOOR(g.ShrinkWidthBuffer[tab_n].Width)
+			var tab = &tab_bar.Tabs[guiContext.ShrinkWidthBuffer[tab_n].Index]
+			var shrinked_width = IM_FLOOR(guiContext.ShrinkWidthBuffer[tab_n].Width)
 			if shrinked_width < 0.0 {
 				continue
 			}
@@ -1256,7 +1256,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 			tab.Offset = tab_offset
 			tab_offset += tab.Width
 			if tab_n < section.TabCount-1 {
-				tab_offset += g.Style.ItemInnerSpacing.x
+				tab_offset += guiContext.Style.ItemInnerSpacing.x
 			}
 		}
 		tab_bar.WidthAllTabs += max(section.Width+section.Spacing, 0.0)
@@ -1286,13 +1286,13 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	if tab_bar.ScrollingAnim != tab_bar.ScrollingTarget {
 		// Scrolling speed adjust itself so we can always reach our target in 1/3 seconds.
 		// Teleport if we are aiming far off the visible line
-		tab_bar.ScrollingSpeed = max(tab_bar.ScrollingSpeed, 70.0*g.FontSize)
+		tab_bar.ScrollingSpeed = max(tab_bar.ScrollingSpeed, 70.0*guiContext.FontSize)
 		tab_bar.ScrollingSpeed = max(tab_bar.ScrollingSpeed, ImFabs(tab_bar.ScrollingTarget-tab_bar.ScrollingAnim)/0.3)
-		var teleport = (tab_bar.PrevFrameVisible+1 < g.FrameCount) || (tab_bar.ScrollingTargetDistToVisibility > 10.0*g.FontSize)
+		var teleport = (tab_bar.PrevFrameVisible+1 < guiContext.FrameCount) || (tab_bar.ScrollingTargetDistToVisibility > 10.0*guiContext.FontSize)
 		if teleport {
 			tab_bar.ScrollingAnim = tab_bar.ScrollingTarget
 		} else {
-			tab_bar.ScrollingAnim = ImLinearSweep(tab_bar.ScrollingAnim, tab_bar.ScrollingTarget, g.IO.DeltaTime*tab_bar.ScrollingSpeed)
+			tab_bar.ScrollingAnim = ImLinearSweep(tab_bar.ScrollingAnim, tab_bar.ScrollingTarget, guiContext.IO.DeltaTime*tab_bar.ScrollingSpeed)
 		}
 	} else {
 		tab_bar.ScrollingSpeed = 0.0
@@ -1306,7 +1306,7 @@ func TabBarLayout(tab_bar *ImGuiTabBar) {
 	}
 
 	// Actual layout in host window (we don't do it in BeginTabBar() so as not to waste an extra frame)
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	window.DC.CursorPos = tab_bar.BarRect.Min
 	ItemSizeVec(&ImVec2{tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()}, tab_bar.FramePadding.y)
 	window.DC.IdealMaxPos.x = max(window.DC.IdealMaxPos.x, tab_bar.BarRect.Min.x+tab_bar.WidthAllTabsIdeal)

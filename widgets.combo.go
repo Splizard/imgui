@@ -3,19 +3,19 @@ package imgui
 import "fmt"
 
 // Widgets: Combo Box
-// - The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
+// - The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.guiContext. Selectable() items.
 // - The old Combo() api are helpers over BeginCombo()/EndCombo() which are kept available for convenience purpose. This is analogous to how ListBox are created.
 
 func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool {
 	window := GetCurrentWindow()
 
-	var backup_next_window_data_flags = g.NextWindowData.Flags
-	g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
+	var backup_next_window_data_flags = guiContext.NextWindowData.Flags
+	guiContext.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 	if window.SkipItems {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 	IM_ASSERT((flags & (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) != (ImGuiComboFlags_NoArrowButton | ImGuiComboFlags_NoPreview)) // Can't use both flags together
 
@@ -46,7 +46,7 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 	var pressed = ButtonBehavior(&bb, id, &hovered, &held, 0)
 	var popup_id = ImHashStr("##ComboPopup", 0, id)
 	var popup_open = isPopupOpen(popup_id, ImGuiPopupFlags_None)
-	if (pressed || g.NavActivateId == id) && !popup_open {
+	if (pressed || guiContext.NavActivateId == id) && !popup_open {
 		OpenPopupEx(popup_id, ImGuiPopupFlags_None)
 		popup_open = true
 	}
@@ -91,14 +91,14 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 
 	// Custom preview
 	if flags&ImGuiComboFlags_CustomPreview != 0 {
-		g.ComboPreviewData.PreviewRect = ImRect{ImVec2{bb.Min.x, bb.Min.y}, ImVec2{value_x2, bb.Max.y}}
+		guiContext.ComboPreviewData.PreviewRect = ImRect{ImVec2{bb.Min.x, bb.Min.y}, ImVec2{value_x2, bb.Max.y}}
 		IM_ASSERT(preview_value == "" || preview_value[0] == 0)
 		preview_value = ""
 	}
 
 	// Render preview and label
 	if preview_value != "" && (flags&ImGuiComboFlags_NoPreview == 0) {
-		if g.LogEnabled {
+		if guiContext.LogEnabled {
 			LogSetNextTextDecoration("{", "}")
 		}
 		min := bb.Min.Add(style.FramePadding)
@@ -112,21 +112,21 @@ func BeginCombo(label string, preview_value string, flags ImGuiComboFlags) bool 
 		return false
 	}
 
-	g.NextWindowData.Flags = backup_next_window_data_flags
+	guiContext.NextWindowData.Flags = backup_next_window_data_flags
 	return BeginComboPopup(popup_id, &bb, flags)
 }
 
 // Call directly after the BeginCombo/EndCombo block. The preview is designed to only host non-interactive elements
 // (Experimental, see GitHub issues: #1658, #4168)
 func BeginComboPreview() bool {
-	window := g.CurrentWindow
-	var preview_data = &g.ComboPreviewData
+	window := guiContext.CurrentWindow
+	var preview_data = &guiContext.ComboPreviewData
 
-	if window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect) { // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
+	if window.SkipItems || !window.ClipRect.Overlaps(guiContext.LastItemData.Rect) { // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
 		return false
 	}
-	IM_ASSERT(g.LastItemData.Rect.Min.x == preview_data.PreviewRect.Min.x && g.LastItemData.Rect.Min.y == preview_data.PreviewRect.Min.y) // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
-	if !window.ClipRect.ContainsRect(preview_data.PreviewRect) {                                                                          // Narrower test (optional)
+	IM_ASSERT(guiContext.LastItemData.Rect.Min.x == preview_data.PreviewRect.Min.x && guiContext.LastItemData.Rect.Min.y == preview_data.PreviewRect.Min.y) // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
+	if !window.ClipRect.ContainsRect(preview_data.PreviewRect) {                                                                                            // Narrower test (optional)
 		return false
 	}
 
@@ -136,7 +136,7 @@ func BeginComboPreview() bool {
 	preview_data.BackupCursorPosPrevLine = window.DC.CursorPosPrevLine
 	preview_data.BackupPrevLineTextBaseOffset = window.DC.PrevLineTextBaseOffset
 	preview_data.BackupLayout = window.DC.LayoutType
-	window.DC.CursorPos = preview_data.PreviewRect.Min.Add(g.Style.FramePadding)
+	window.DC.CursorPos = preview_data.PreviewRect.Min.Add(guiContext.Style.FramePadding)
 	window.DC.CursorMaxPos = window.DC.CursorPos
 	window.DC.LayoutType = ImGuiLayoutType_Horizontal
 	PushClipRect(preview_data.PreviewRect.Min, preview_data.PreviewRect.Max, true)
@@ -145,8 +145,8 @@ func BeginComboPreview() bool {
 }
 
 func EndComboPreview() {
-	window := g.CurrentWindow
-	var preview_data = &g.ComboPreviewData
+	window := guiContext.CurrentWindow
+	var preview_data = &guiContext.ComboPreviewData
 
 	// FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
 	var draw_list = window.DrawList
@@ -168,14 +168,14 @@ func EndComboPreview() {
 
 func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 	if !isPopupOpen(popup_id, ImGuiPopupFlags_None) {
-		g.NextWindowData.ClearFlags()
+		guiContext.NextWindowData.ClearFlags()
 		return false
 	}
 
 	// Set popup size
 	var w = bb.GetWidth()
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasSizeConstraint != 0 {
-		g.NextWindowData.SizeConstraintRect.Min.x = max(g.NextWindowData.SizeConstraintRect.Min.x, w)
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasSizeConstraint != 0 {
+		guiContext.NextWindowData.SizeConstraintRect.Min.x = max(guiContext.NextWindowData.SizeConstraintRect.Min.x, w)
 	} else {
 		if (flags & ImGuiComboFlags_HeightMask_) == 0 {
 			flags |= ImGuiComboFlags_HeightRegular
@@ -193,7 +193,7 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 	}
 
 	// This is essentially a specialized version of BeginPopupEx()
-	var name = fmt.Sprintf("##Combo_%d", len(g.BeginPopupStack)) // Recycle windows based on depth
+	var name = fmt.Sprintf("##Combo_%d", len(guiContext.BeginPopupStack)) // Recycle windows based on depth
 
 	// Set position given a custom constraint (peak into expected window size so we can position it)
 	// FIXME: This might be easier to express with an hypothetical SetNextWindowPosConstraints() function?
@@ -218,7 +218,7 @@ func BeginComboPopup(popup_id ImGuiID, bb *ImRect, flags ImGuiComboFlags) bool {
 
 	// We don't use BeginPopupEx() solely because we have a custom name string, which we could make an argument to BeginPopupEx()
 	var window_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove
-	PushStyleVec(ImGuiStyleVar_WindowPadding, ImVec2{g.Style.FramePadding.x, g.Style.WindowPadding.y}) // Horizontally align ourselves with the framed text
+	PushStyleVec(ImGuiStyleVar_WindowPadding, ImVec2{guiContext.Style.FramePadding.x, guiContext.Style.WindowPadding.y}) // Horizontally align ourselves with the framed text
 	var ret = Begin(string(name[:]), nil, window_flags)
 	PopStyleVar(1)
 	if !ret {
@@ -238,7 +238,7 @@ func CalcMaxPopupHeightFromItemCount(items_count int) float32 {
 	if items_count <= 0 {
 		return FLT_MAX
 	}
-	return (g.FontSize+g.Style.ItemSpacing.y)*float(items_count) - g.Style.ItemSpacing.y + (g.Style.WindowPadding.y * 2)
+	return (guiContext.FontSize+guiContext.Style.ItemSpacing.y)*float(items_count) - guiContext.Style.ItemSpacing.y + (guiContext.Style.WindowPadding.y * 2)
 }
 
 // Combo box helper allowing to pass an array of strings.
@@ -252,7 +252,7 @@ func Combo(label string, current_item *int, items []string, items_count int, pop
 
 // Old API, prefer using BeginCombo() nowadays if you can.
 func ComboFunc(label string, current_item *int, items_getter func(data any, idx int, out_text *string) bool, data any, items_count, popup_max_height_in_items int /*= -1*/) bool {
-	g := g
+	g := guiContext
 
 	// Call the getter to obtain the preview string which is a parameter to BeginCombo()
 	var preview_value string

@@ -5,7 +5,7 @@ func Indent(indent_w float) {
 	window := GetCurrentWindow()
 
 	if indent_w == 0 {
-		indent_w = g.Style.IndentSpacing
+		indent_w = guiContext.Style.IndentSpacing
 	}
 
 	window.DC.Indent.x += indent_w
@@ -17,7 +17,7 @@ func Unindent(indent_w float) {
 	window := GetCurrentWindow()
 
 	if indent_w == 0 {
-		indent_w = g.Style.IndentSpacing
+		indent_w = guiContext.Style.IndentSpacing
 	}
 
 	window.DC.Indent.x -= indent_w

@@ -267,7 +267,7 @@ func UnpackAccumulativeOffsetsIntoRanges(base_codepoint int, accumulative_offset
 //   - After calling Build(), you can query the rectangle position and render your pixels.
 //   - If you render colored output, set 'atlas->TexPixelsUseColors = true' as this may help some backends decide of prefered texture format.
 //   - You can also request your rectangles to be mapped as font glyph (given a font + Unicode point),
-//     so you can render e.g. custom colorful icons and use them as regular glyphs.
+//     so you can render e.guiContext. custom colorful icons and use them as regular glyphs.
 //   - Read docs/FONTS.md for more details about using colorful icons.
 //   - Note: this API may be redesigned later in order to support multi-monitor varying DPI settings.
 func (atlas *ImFontAtlas) AddCustomRectRegular(width, height int) int {

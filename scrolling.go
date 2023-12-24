@@ -35,7 +35,7 @@ func GetWindowScrollbarID(window *ImGuiWindow, axis ImGuiAxis) ImGuiID {
 }
 
 func Scrollbar(axis ImGuiAxis) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	var id = GetWindowScrollbarID(window, axis)
 	KeepAliveID(id)
@@ -87,7 +87,7 @@ func Scrollbar(axis ImGuiAxis) {
 // - We handle both horizontal and vertical scrollbars, which makes the terminology not ideal.
 // Still, the code should probably be made simpler..
 func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float, size_avail_v float, size_contents_v float, flags ImDrawFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -100,14 +100,14 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 
 	// When we are too small, start hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
 	var alpha float = 1.0
-	if (axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize+g.Style.FramePadding.y*2.0 {
-		alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.Style.FramePadding.y * 2.0))
+	if (axis == ImGuiAxis_Y) && bb_frame_height < guiContext.FontSize+guiContext.Style.FramePadding.y*2.0 {
+		alpha = ImSaturate((bb_frame_height - guiContext.FontSize) / (guiContext.Style.FramePadding.y * 2.0))
 	}
 	if alpha <= 0.0 {
 		return false
 	}
 
-	var style = &g.Style
+	var style = &guiContext.Style
 	var allow_interaction = alpha >= 1.0
 
 	var bb = *bb_frame
@@ -143,10 +143,10 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 		switch axis {
 		case ImGuiAxis_X:
 			scrollbar_pos_v = bb.Min.x
-			mouse_pos_v = g.IO.MousePos.x
+			mouse_pos_v = guiContext.IO.MousePos.x
 		case ImGuiAxis_Y:
 			scrollbar_pos_v = bb.Min.y
-			mouse_pos_v = g.IO.MousePos.y
+			mouse_pos_v = guiContext.IO.MousePos.y
 		}
 
 		// Click position in scrollbar normalized space (0.0f.1.0f)
@@ -154,19 +154,19 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 		SetHoveredID(id)
 
 		var seek_absolute = false
-		if g.ActiveIdIsJustActivated {
+		if guiContext.ActiveIdIsJustActivated {
 			// On initial click calculate the distance between mouse and the center of the grab
 			seek_absolute = clicked_v_norm < grab_v_norm || clicked_v_norm > grab_v_norm+grab_h_norm
 			if seek_absolute {
-				g.ScrollbarClickDeltaToGrabCenter = 0.0
+				guiContext.ScrollbarClickDeltaToGrabCenter = 0.0
 			} else {
-				g.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm*0.5
+				guiContext.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm*0.5
 			}
 		}
 
 		// Apply scroll (p_scroll_v will generally point on one member of window.Scroll)
 		// It is ok to modify Scroll here because we are being called in Begin() after the calculation of ContentSize and before setting up our starting position
-		var scroll_v_norm = ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm*0.5) / (1.0 - grab_h_norm))
+		var scroll_v_norm = ImSaturate((clicked_v_norm - guiContext.ScrollbarClickDeltaToGrabCenter - grab_h_norm*0.5) / (1.0 - grab_h_norm))
 		*p_scroll_v = IM_ROUND(scroll_v_norm * scroll_max) //(win_size_contents_v - win_size_v));
 
 		// Update values for rendering
@@ -175,7 +175,7 @@ func ScrollbarEx(bb_frame *ImRect, id ImGuiID, axis ImGuiAxis, p_scroll_v *float
 
 		// Update distance to grab now that we have seeked and saturated
 		if seek_absolute {
-			g.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm*0.5
+			guiContext.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm*0.5
 		}
 	}
 

@@ -14,11 +14,11 @@ func IsWindowActiveAndVisible(window *ImGuiWindow) bool {
 
 // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
 func SetNextWindowBgAlpha(alpha float) {
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasBgAlpha
-	g.NextWindowData.BgAlphaVal = alpha
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasBgAlpha
+	guiContext.NextWindowData.BgAlphaVal = alpha
 }
 
-// Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
+// Layer is locked for the root window, however child windows may use a different viewport (e.guiContext. extruding menu)
 func AddRootWindowToDrawData(window *ImGuiWindow) {
 	var layer int
 	if window.Flags&ImGuiWindowFlags_Tooltip != 0 {
@@ -39,8 +39,8 @@ func GetFallbackWindowNameForWindowingList(window *ImGuiWindow) string {
 }
 
 func AddWindowToDrawData(window *ImGuiWindow, layer int) {
-	var viewport = g.Viewports[0]
-	g.IO.MetricsRenderWindows++
+	var viewport = guiContext.Viewports[0]
+	guiContext.IO.MetricsRenderWindows++
 	AddDrawListToDrawData(&viewport.DrawDataBuilder[layer], window.DrawList)
 	for i := range window.DC.ChildWindows {
 		var child = window.DC.ChildWindows[i]
@@ -80,7 +80,7 @@ func AddWindowToSortBuffer(out_sorted_windows *[]*ImGuiWindow, window *ImGuiWind
 }
 
 func FindWindowByID(id ImGuiID) *ImGuiWindow {
-	ptr := g.WindowsById.GetInterface(id)
+	ptr := guiContext.WindowsById.GetInterface(id)
 	if ptr == nil {
 		return nil
 	}
@@ -93,14 +93,14 @@ func FindWindowByName(e string) *ImGuiWindow {
 }
 
 func SetCurrentWindow(window *ImGuiWindow) {
-	g.CurrentWindow = window
+	guiContext.CurrentWindow = window
 	if window != nil && window.DC.CurrentTableIdx != -1 {
-		g.CurrentTable = g.Tables[uint(window.DC.CurrentTableIdx)]
+		guiContext.CurrentTable = guiContext.Tables[uint(window.DC.CurrentTableIdx)]
 	}
 	if window != nil {
 		size := window.CalcFontSize()
-		g.FontSize = size
-		g.DrawListSharedData.FontSize = size
+		guiContext.FontSize = size
+		guiContext.DrawListSharedData.FontSize = size
 	}
 
 }
@@ -154,12 +154,12 @@ func setWindowSize(window *ImGuiWindow, size *ImVec2, cond ImGuiCond) {
 // set next window size. set axis to 0.0 to force an auto-fit on this axis. call before Begin()
 func SetNextWindowSize(size *ImVec2, cond ImGuiCond) {
 	IM_ASSERT(cond == 0 || ImIsPowerOfTwoInt(int(cond))) // Make sure the user doesn't attempt to combine multiple condition flags.
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize
-	g.NextWindowData.SizeVal = *size
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize
+	guiContext.NextWindowData.SizeVal = *size
 	if cond != 0 {
-		g.NextWindowData.SizeCond = cond
+		guiContext.NextWindowData.SizeCond = cond
 	} else {
-		g.NextWindowData.SizeCond = ImGuiCond_Always
+		guiContext.NextWindowData.SizeCond = ImGuiCond_Always
 	}
 }
 
@@ -176,7 +176,7 @@ func SetWindowConditionAllowFlags(window *ImGuiWindow, flags ImGuiCond, enabled 
 }
 
 func CreateNewWindow(name string, flags ImGuiWindowFlags) *ImGuiWindow {
-	g := g
+	g := guiContext
 
 	// Create window the first time
 	var window = NewImGuiWindow(g, name)
@@ -243,7 +243,7 @@ func GetWindowBgColorIdxFromFlags(flags ImGuiWindowFlags) ImGuiCol {
 }
 
 func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
-	style := g.Style
+	style := guiContext.Style
 	var decoration_up_height = window.TitleBarHeight() + window.MenuBarHeight()
 	var size_pad = window.WindowPadding.Scale(2)
 	var size_desired = size_contents.Add(size_pad).Add(ImVec2{0.0, decoration_up_height})
@@ -255,7 +255,7 @@ func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 		var is_popup = (window.Flags & ImGuiWindowFlags_Popup) != 0
 		var is_menu = (window.Flags & ImGuiWindowFlags_ChildMenu) != 0
 		var size_min = style.WindowMinSize
-		if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
+		if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.guiContext. empty popups)
 			size_min = ImMinVec2(&size_min, &ImVec2{4.0, 4.0})
 		}
 
@@ -281,7 +281,7 @@ func CalcWindowAutoFitSize(window *ImGuiWindow, size_contents *ImVec2) ImVec2 {
 
 func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
 	var size_for_clamping = window.Size
-	if g.IO.ConfigWindowsMoveFromTitleBarOnly && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
+	if guiContext.IO.ConfigWindowsMoveFromTitleBarOnly && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 		size_for_clamping.y = window.TitleBarHeight()
 	}
 	sub := visibility_rect.Min.Sub(size_for_clamping)
@@ -290,9 +290,9 @@ func ClampWindowRect(window *ImGuiWindow, visibility_rect *ImRect) {
 
 func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) ImVec2 {
 	var new_size = *size_desired
-	if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint) != 0 {
+	if (guiContext.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint) != 0 {
 		// Using -1,-1 on either X/Y axis to preserve the current size.
-		var cr = g.NextWindowData.SizeConstraintRect
+		var cr = guiContext.NextWindowData.SizeConstraintRect
 		if cr.Min.x >= 0 && cr.Max.x >= 0 {
 			new_size.x = ImClamp(new_size.x, cr.Min.x, cr.Max.x)
 		} else {
@@ -303,13 +303,13 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 		} else {
 			new_size.y = window.SizeFull.y
 		}
-		if g.NextWindowData.SizeCallback != nil {
+		if guiContext.NextWindowData.SizeCallback != nil {
 			var data ImGuiSizeCallbackData
-			data.UserData = g.NextWindowData.SizeCallbackUserData
+			data.UserData = guiContext.NextWindowData.SizeCallbackUserData
 			data.Pos = window.Pos
 			data.CurrentSize = window.SizeFull
 			data.DesiredSize = new_size
-			g.NextWindowData.SizeCallback(&data)
+			guiContext.NextWindowData.SizeCallback(&data)
 			new_size = data.DesiredSize
 		}
 		new_size.x = IM_FLOOR(new_size.x)
@@ -320,8 +320,8 @@ func CalcWindowSizeAfterConstraint(window *ImGuiWindow, size_desired *ImVec2) Im
 	if window.Flags&(ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_AlwaysAutoResize) == 0 {
 		var window_for_height = window
 		var decoration_up_height = window_for_height.TitleBarHeight() + window_for_height.MenuBarHeight()
-		new_size = ImMaxVec2(&new_size, &g.Style.WindowMinSize)
-		new_size.y = max(new_size.y, decoration_up_height+max(0.0, g.Style.WindowRounding-1.0)) // Reduce artifacts with very small windows
+		new_size = ImMaxVec2(&new_size, &guiContext.Style.WindowMinSize)
+		new_size.y = max(new_size.y, decoration_up_height+max(0.0, guiContext.Style.WindowRounding-1.0)) // Reduce artifacts with very small windows
 	}
 	return new_size
 }
@@ -365,20 +365,20 @@ func CalcWindowContentSizes(window *ImGuiWindow, content_size_current, content_s
 // - Note that the bottom of window stack always contains a window called "Debug".
 
 func End() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	window.StateStorage = window.DC.StateStorage
 
 	// Error checking: verify that user hasn't called End() too many times!
-	if len(g.CurrentWindowStack) <= 1 && g.WithinFrameScopeWithImplicitWindow {
-		IM_ASSERT_USER_ERROR(len(g.CurrentWindowStack) > 1, "Calling End() too many times!")
+	if len(guiContext.CurrentWindowStack) <= 1 && guiContext.WithinFrameScopeWithImplicitWindow {
+		IM_ASSERT_USER_ERROR(len(guiContext.CurrentWindowStack) > 1, "Calling End() too many times!")
 		return
 	}
-	IM_ASSERT(len(g.CurrentWindowStack) > 0)
+	IM_ASSERT(len(guiContext.CurrentWindowStack) > 0)
 
 	// Error checking: verify that user doesn't directly call End() on a child window.
 	if window.Flags&ImGuiWindowFlags_ChildWindow != 0 {
-		IM_ASSERT_USER_ERROR(g.WithinEndChild, "Must call EndChild() and not End()!")
+		IM_ASSERT_USER_ERROR(guiContext.WithinEndChild, "Must call EndChild() and not End()!")
 	}
 
 	// Close anything that is open
@@ -393,16 +393,16 @@ func End() {
 	}
 
 	// Pop from window stack
-	g.LastItemData = g.CurrentWindowStack[len(g.CurrentWindowStack)-1].ParentLastItemDataBackup
-	g.CurrentWindowStack = g.CurrentWindowStack[:len(g.CurrentWindowStack)-1]
+	guiContext.LastItemData = guiContext.CurrentWindowStack[len(guiContext.CurrentWindowStack)-1].ParentLastItemDataBackup
+	guiContext.CurrentWindowStack = guiContext.CurrentWindowStack[:len(guiContext.CurrentWindowStack)-1]
 	if window.Flags&ImGuiWindowFlags_Popup != 0 {
-		g.BeginPopupStack = g.BeginPopupStack[:len(g.BeginPopupStack)-1]
+		guiContext.BeginPopupStack = guiContext.BeginPopupStack[:len(guiContext.BeginPopupStack)-1]
 	}
 	window.DC.StackSizesOnBegin.CompareWithCurrentState()
 
 	var current *ImGuiWindow
-	if len(g.CurrentWindowStack) > 0 {
-		current = g.CurrentWindowStack[len(g.CurrentWindowStack)-1].Window
+	if len(guiContext.CurrentWindowStack) > 0 {
+		current = guiContext.CurrentWindowStack[len(guiContext.CurrentWindowStack)-1].Window
 	}
 	SetCurrentWindow(current)
 }
@@ -412,7 +412,7 @@ func End() {
 // with SetWindowPos() and not SetNextWindowPos() will have that rectangle lagging by a frame at the time FindHoveredWindow() is
 // called, aka before the next Begin(). Moving window isn't affected.
 func FindHoveredWindow() {
-	g := g
+	g := guiContext
 
 	var hovered_window *ImGuiWindow = nil
 	var hovered_window_ignoring_moving_window *ImGuiWindow = nil
@@ -476,19 +476,19 @@ func FindHoveredWindow() {
 
 // The reason this is exposed in imgui_internal.h is: on touch-based system that don't have hovering, we want to dispatch inputs to the right target (imgui vs imgui+app)
 func UpdateHoveredWindowAndCaptureFlags() {
-	io := g.IO
-	g.WindowsHoverPadding = ImMaxVec2(&g.Style.TouchExtraPadding, &ImVec2{WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING})
+	io := guiContext.IO
+	guiContext.WindowsHoverPadding = ImMaxVec2(&guiContext.Style.TouchExtraPadding, &ImVec2{WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING})
 
 	// Find the window hovered by mouse:
 	// - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from HoveredWindow.
 	// - When moving a window we can skip the search, which also conveniently bypasses the fact that window.WindowRectClipped is lagging as this point of the frame.
-	// - We also support the moved window toggling the NoInputs flag after moving has started in order to be able to detect windows below it, which is useful for e.g. docking mechanisms.
+	// - We also support the moved window toggling the NoInputs flag after moving has started in order to be able to detect windows below it, which is useful for e.guiContext. docking mechanisms.
 	var clear_hovered_windows = false
 	FindHoveredWindow()
 
 	// Modal windows prevents mouse from hovering behind them.
 	var modal_window = GetTopMostPopupModal()
-	if modal_window != nil && g.HoveredWindow != nil && !IsWindowChildOf(g.HoveredWindow.RootWindow, modal_window) {
+	if modal_window != nil && guiContext.HoveredWindow != nil && !IsWindowChildOf(guiContext.HoveredWindow.RootWindow, modal_window) {
 		clear_hovered_windows = true
 	}
 
@@ -499,14 +499,14 @@ func UpdateHoveredWindowAndCaptureFlags() {
 
 	// We track click ownership. When clicked outside of a window the click is owned by the application and
 	// won't report hovering nor request capture even while dragging over our windows afterward.
-	var has_open_popup = (len(g.OpenPopupStack) > 0)
+	var has_open_popup = (len(guiContext.OpenPopupStack) > 0)
 	var has_open_modal = (modal_window != nil)
 	var mouse_earliest_down int = -1
 	var mouse_any_down = false
 	for i := range io.MouseDown {
 		if io.MouseClicked[i] {
-			io.MouseDownOwned[i] = (g.HoveredWindow != nil) || has_open_popup
-			io.MouseDownOwnedUnlessPopupClose[i] = (g.HoveredWindow != nil) || has_open_modal
+			io.MouseDownOwned[i] = (guiContext.HoveredWindow != nil) || has_open_popup
+			io.MouseDownOwnedUnlessPopupClose[i] = (guiContext.HoveredWindow != nil) || has_open_modal
 		}
 		mouse_any_down = mouse_any_down || io.MouseDown[i]
 		if io.MouseDown[i] {
@@ -520,39 +520,39 @@ func UpdateHoveredWindowAndCaptureFlags() {
 
 	// If mouse was first clicked outside of ImGui bounds we also cancel out hovering.
 	// FIXME: For patterns of drag and drop across OS windows, we may need to rework/remove this test (first committed 311c0ca9 on 2015/02)
-	var mouse_dragging_extern_payload = g.DragDropActive && (g.DragDropSourceFlags&ImGuiDragDropFlags_SourceExtern) != 0
+	var mouse_dragging_extern_payload = guiContext.DragDropActive && (guiContext.DragDropSourceFlags&ImGuiDragDropFlags_SourceExtern) != 0
 	if !mouse_avail && !mouse_dragging_extern_payload {
 		clear_hovered_windows = true
 	}
 
 	if clear_hovered_windows {
-		g.HoveredWindow = nil
-		g.HoveredWindowUnderMovingWindow = nil
+		guiContext.HoveredWindow = nil
+		guiContext.HoveredWindowUnderMovingWindow = nil
 	}
 
 	// Update io.WantCaptureMouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
 	// Update io.WantCaptureMouseAllowPopupClose (experimental) to give a chance for app to react to popup closure with a drag
-	if g.WantCaptureMouseNextFrame != -1 {
-		io.WantCaptureMouse = (g.WantCaptureMouseNextFrame != 0)
-		io.WantCaptureMouseUnlessPopupClose = (g.WantCaptureMouseNextFrame != 0)
+	if guiContext.WantCaptureMouseNextFrame != -1 {
+		io.WantCaptureMouse = (guiContext.WantCaptureMouseNextFrame != 0)
+		io.WantCaptureMouseUnlessPopupClose = (guiContext.WantCaptureMouseNextFrame != 0)
 	} else {
-		io.WantCaptureMouse = (mouse_avail && (g.HoveredWindow != nil || mouse_any_down)) || has_open_popup
-		io.WantCaptureMouseUnlessPopupClose = (mouse_avail_unless_popup_close && (g.HoveredWindow != nil || mouse_any_down)) || has_open_modal
+		io.WantCaptureMouse = (mouse_avail && (guiContext.HoveredWindow != nil || mouse_any_down)) || has_open_popup
+		io.WantCaptureMouseUnlessPopupClose = (mouse_avail_unless_popup_close && (guiContext.HoveredWindow != nil || mouse_any_down)) || has_open_modal
 	}
 
 	// Update io.WantCaptureKeyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)
-	if g.WantCaptureKeyboardNextFrame != -1 {
-		io.WantCaptureKeyboard = (g.WantCaptureKeyboardNextFrame != 0)
+	if guiContext.WantCaptureKeyboardNextFrame != -1 {
+		io.WantCaptureKeyboard = (guiContext.WantCaptureKeyboardNextFrame != 0)
 	} else {
-		io.WantCaptureKeyboard = (g.ActiveId != 0) || (modal_window != nil)
+		io.WantCaptureKeyboard = (guiContext.ActiveId != 0) || (modal_window != nil)
 	}
 	if io.NavActive && (io.ConfigFlags&ImGuiConfigFlags_NavEnableKeyboard != 0) && (io.ConfigFlags&ImGuiConfigFlags_NavNoCaptureKeyboard == 0) {
 		io.WantCaptureKeyboard = true
 	}
 
-	// Update io.WantTextInput flag, this is to allow systems without a keyboard (e.g. mobile, hand-held) to show a software keyboard if possible
-	if g.WantTextInputNextFrame != -1 {
-		io.WantTextInput = (g.WantTextInputNextFrame != 0)
+	// Update io.WantTextInput flag, this is to allow systems without a keyboard (e.guiContext. mobile, hand-held) to show a software keyboard if possible
+	if guiContext.WantTextInputNextFrame != -1 {
+		io.WantTextInput = (guiContext.WantTextInputNextFrame != 0)
 	} else {
 		io.WantTextInput = false
 	}
@@ -560,32 +560,32 @@ func UpdateHoveredWindowAndCaptureFlags() {
 
 // Handle mouse moving window
 // Note: moving window with the navigation keys (Square + d-pad / CTRL+TAB + Arrows) are processed in NavUpdateWindowing()
-// FIXME: We don't have strong guarantee that g.MovingWindow stay synched with g.ActiveId == g.MovingWindow.MoveId.
-// This is currently enforced by the fact that BeginDragDropSource() is setting all g.ActiveIdUsingXXXX flags to inhibit navigation inputs,
-// but if we should more thoroughly test cases where g.ActiveId or g.MovingWindow gets changed and not the other.
+// FIXME: We don't have strong guarantee that guiContext.MovingWindow stay synched with guiContext.ActiveId == guiContext.MovingWindow.MoveId.
+// This is currently enforced by the fact that BeginDragDropSource() is setting all guiContext.ActiveIdUsingXXXX flags to inhibit navigation inputs,
+// but if we should more thoroughly test cases where guiContext.ActiveId or guiContext.MovingWindow gets changed and not the other.
 func UpdateMouseMovingWindowNewFrame() {
-	if g.MovingWindow != nil {
-		// We actually want to move the root window. g.MovingWindow == window we clicked on (could be a child window).
+	if guiContext.MovingWindow != nil {
+		// We actually want to move the root window. guiContext.MovingWindow == window we clicked on (could be a child window).
 		// We track it to preserve Focus and so that generally ActiveIdWindow == MovingWindow and ActiveId == MovingWindow.MoveId for consistency.
-		KeepAliveID(g.ActiveId)
-		IM_ASSERT(g.MovingWindow != nil && g.MovingWindow.RootWindow != nil)
-		var moving_window = g.MovingWindow.RootWindow
-		if g.IO.MouseDown[0] && IsMousePosValid(&g.IO.MousePos) {
-			var pos = g.IO.MousePos.Sub(g.ActiveIdClickOffset)
+		KeepAliveID(guiContext.ActiveId)
+		IM_ASSERT(guiContext.MovingWindow != nil && guiContext.MovingWindow.RootWindow != nil)
+		var moving_window = guiContext.MovingWindow.RootWindow
+		if guiContext.IO.MouseDown[0] && IsMousePosValid(&guiContext.IO.MousePos) {
+			var pos = guiContext.IO.MousePos.Sub(guiContext.ActiveIdClickOffset)
 			if moving_window.Pos.x != pos.x || moving_window.Pos.y != pos.y {
 				MarkIniSettingsDirtyWindow(moving_window)
 				setWindowPos(moving_window, &pos, ImGuiCond_Always)
 			}
-			FocusWindow(g.MovingWindow)
+			FocusWindow(guiContext.MovingWindow)
 		} else {
-			g.MovingWindow = nil
+			guiContext.MovingWindow = nil
 			ClearActiveID()
 		}
 	} else {
 		// When clicking/dragging from a window that has the _NoMove flag, we still set the ActiveId in order to prevent hovering others.
-		if g.ActiveIdWindow != nil && g.ActiveIdWindow.MoveId == g.ActiveId {
-			KeepAliveID(g.ActiveId)
-			if !g.IO.MouseDown[0] {
+		if guiContext.ActiveIdWindow != nil && guiContext.ActiveIdWindow.MoveId == guiContext.ActiveId {
+			KeepAliveID(guiContext.ActiveId)
+			if !guiContext.IO.MouseDown[0] {
 				ClearActiveID()
 			}
 		}

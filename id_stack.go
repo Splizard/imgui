@@ -7,14 +7,14 @@ package imgui
 //   - "Q: How can I have widgets with an empty label?"
 //   - "Q: How can I have multiple widgets with the same label?"
 // - Short version: ID are hashes of the entire ID stack. If you are creating widgets in a loop you most likely
-//   want to push a unique identifier (e.g. object pointer, loop index) to uniquely differentiate them.
+//   want to push a unique identifier (e.guiContext. object pointer, loop index) to uniquely differentiate them.
 // - You can also use the "Label##foobar" syntax within widget label to distinguish them from each others.
 // - In this header file we use the "label"/"name" terminology to denote a string that will be displayed + used as an ID,
 //   whereas "str_id" denote a string that is only used as an ID and not normally displayed.
 
 // PushOverrideID Push given value as-is at the top of the ID stack (whereas PushID combines old and new hashes)
 func PushOverrideID(id ImGuiID) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	window.IDStack = append(window.IDStack, id)
 }
 
@@ -29,41 +29,41 @@ func GetIDWithSeed(str string, seed ImGuiID) ImGuiID {
 }
 
 func PushString(str_id string) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	id := window.GetIDNoKeepAlive(str_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
 // PushInterface push pointer into the ID stack (will hash pointer).
 func PushInterface(ptr_id any) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	id := window.GetIDNoKeepAliveInterface(ptr_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
 // PushID push integer into the ID stack (will hash integer).
 func PushID(int_id int) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	id := window.GetIDNoKeepAliveInt(int_id)
 	window.IDStack = append(window.IDStack, id)
 }
 
 func PopID() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	IM_ASSERT(len(window.IDStack) > 1) // Too many PopID(), or could be popping in a wrong/different window?
 	window.IDStack = window.IDStack[:len(window.IDStack)-1]
 } // pop from the ID stack.
 
 func GetIDFromString(str_id string) ImGuiID {
-	return g.CurrentWindow.GetIDs(str_id)
+	return guiContext.CurrentWindow.GetIDs(str_id)
 
-} // calculate unique ID (hash of whole ID stack + given parameter). e.g. if you want to query into ImGuiStorage yourself
+} // calculate unique ID (hash of whole ID stack + given parameter). e.guiContext. if you want to query into ImGuiStorage yourself
 
 func GetIDs(str_id_begin string) ImGuiID {
-	return g.CurrentWindow.GetIDs(str_id_begin)
+	return guiContext.CurrentWindow.GetIDs(str_id_begin)
 }
 
 func GetIDFromInterface(ptr_id any) ImGuiID {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return window.GetIDInterface(ptr_id)
 }

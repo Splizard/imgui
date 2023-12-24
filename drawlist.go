@@ -374,8 +374,8 @@ func (l *ImDrawList) CloneOutput() *ImDrawList {
 }
 
 // ChannelsSplit Advanced: Channels
-//   - Use to split render into layers. By switching channels to can render out-of-order (e.g. submit FG primitives before BG primitives)
-//   - Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
+//   - Use to split render into layers. By switching channels to can render out-of-order (e.guiContext. submit FG primitives before BG primitives)
+//   - Use to minimize draw calls (e.guiContext. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end)
 //   - FIXME-OBSOLETE: This API shouldn't have been in ImDrawList in the first place!
 //     Prefer using your own persistent instance of ImDrawListSplitter as you can stack them.
 //     Using the ImDrawList::ChannelsXXXX you cannot stack a split over another.

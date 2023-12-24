@@ -1,7 +1,7 @@
 package imgui
 
 func ErrorCheckNewFrameSanityChecks() {
-	g := g
+	g := guiContext
 
 	// Check user IM_ASSERT macro
 	// (IF YOU GET A WARNING OR COMPILE ERROR HERE: it means your assert macro is incorrectly defined!
@@ -44,8 +44,8 @@ func ErrorCheckNewFrameSanityChecks() {
 
 // start a new Dear ImGui frame, you can submit any command from this pountil int Render()/EndFrame().
 func NewFrame() {
-	IM_ASSERT_USER_ERROR(g != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
-	g := g
+	IM_ASSERT_USER_ERROR(guiContext != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
+	g := guiContext
 
 	// Remove pending delete hooks before frame start.
 	// This deferred removal avoid issues of removal while iterating the hook vector
@@ -196,7 +196,7 @@ func NewFrame() {
 	UpdateMouseInputs()
 
 	// Find hovered window
-	// (needs to be before UpdateMouseMovingWindowNewFrame so we fill g.HoveredWindowUnderMovingWindow on the mouse release frame)
+	// (needs to be before UpdateMouseMovingWindowNewFrame so we fill guiContext.HoveredWindowUnderMovingWindow on the mouse release frame)
 	UpdateHoveredWindowAndCaptureFlags()
 
 	// Handle user moving window with mouse (at the beginning of the frame to avoid input lag or sheering)
@@ -243,14 +243,14 @@ func NewFrame() {
 	}
 
 	// Garbage collect transient buffers of recently unused tables
-	/*for i := range g.TablesLastTimeActive {
-		if g.TablesLastTimeActive[i] >= 0.0 && g.TablesLastTimeActive[i] < memory_compact_start_time {
-			TableGcCompactTransientBuffers(g.Tables[i])
+	/*for i := range guiContext.TablesLastTimeActive {
+		if guiContext.TablesLastTimeActive[i] >= 0.0 && guiContext.TablesLastTimeActive[i] < memory_compact_start_time {
+			TableGcCompactTransientBuffers(guiContext.Tables[i])
 		}
 	}
-	for i := range g.TablesTempDataStack {
-		if g.TablesTempDataStack[i].LastTimeActive >= 0.0 && g.TablesTempDataStack[i].LastTimeActive < memory_compact_start_time {
-			TableGcCompactTransientBuffers(&g.TablesTempDataStack[i])
+	for i := range guiContext.TablesTempDataStack {
+		if guiContext.TablesTempDataStack[i].LastTimeActive >= 0.0 && guiContext.TablesTempDataStack[i].LastTimeActive < memory_compact_start_time {
+			TableGcCompactTransientBuffers(&guiContext.TablesTempDataStack[i])
 		}
 	}*/
 	if g.GcCompactAll {
@@ -286,7 +286,7 @@ func NewFrame() {
 }
 
 func ErrorCheckEndFrameSanityChecks() {
-	g := g
+	g := guiContext
 
 	// Verify that io.KeyXXX fields haven't been tampered with. Key mods should not be modified between NewFrame() and EndFrame()
 	// One possible reason leading to this assert is that your backends update inputs _AFTER_ NewFrame().
@@ -318,28 +318,28 @@ func ErrorCheckEndFrameSanityChecks() {
 
 // ends the Dear ImGui frame. automatically called by Render(). If you don't need to render data (skipping rendering) you may call EndFrame() without Render()... but you'll have wasted CPU already! If you don't need to render, better to not create any windows and not call NewFrame() at all!
 func EndFrame() {
-	IM_ASSERT(g.Initialized)
+	IM_ASSERT(guiContext.Initialized)
 
 	// Don't process EndFrame() multiple times.
-	if g.FrameCountEnded == g.FrameCount {
+	if guiContext.FrameCountEnded == guiContext.FrameCount {
 		return
 	}
-	IM_ASSERT_USER_ERROR(g.WithinFrameScope, "Forgot to call ImGui::NewFrame()?")
+	IM_ASSERT_USER_ERROR(guiContext.WithinFrameScope, "Forgot to call ImGui::NewFrame()?")
 
-	CallContextHooks(g, ImGuiContextHookType_EndFramePre)
+	CallContextHooks(guiContext, ImGuiContextHookType_EndFramePre)
 
 	ErrorCheckEndFrameSanityChecks()
 
-	// Notify OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
-	if g.IO.ImeSetInputScreenPosFn != nil && (g.PlatformImeLastPos.x == FLT_MAX || ImLengthSqrVec2(g.PlatformImeLastPos.Sub(g.PlatformImePos)) > 0.0001) {
-		g.IO.ImeSetInputScreenPosFn((int)(g.PlatformImePos.x), (int)(g.PlatformImePos.y))
-		g.PlatformImeLastPos = g.PlatformImePos
+	// Notify OS when our Input Method Editor cursor has moved (e.guiContext. CJK inputs using Microsoft IME)
+	if guiContext.IO.ImeSetInputScreenPosFn != nil && (guiContext.PlatformImeLastPos.x == FLT_MAX || ImLengthSqrVec2(guiContext.PlatformImeLastPos.Sub(guiContext.PlatformImePos)) > 0.0001) {
+		guiContext.IO.ImeSetInputScreenPosFn((int)(guiContext.PlatformImePos.x), (int)(guiContext.PlatformImePos.y))
+		guiContext.PlatformImeLastPos = guiContext.PlatformImePos
 	}
 
 	// Hide implicit/fallback "Debug" window if it hasn't been used
-	g.WithinFrameScopeWithImplicitWindow = false
-	if g.CurrentWindow != nil && !g.CurrentWindow.WriteAccessed {
-		g.CurrentWindow.Active = false
+	guiContext.WithinFrameScopeWithImplicitWindow = false
+	if guiContext.CurrentWindow != nil && !guiContext.CurrentWindow.WriteAccessed {
+		guiContext.CurrentWindow.Active = false
 	}
 	End()
 
@@ -347,54 +347,54 @@ func EndFrame() {
 	NavEndFrame()
 
 	// Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
-	if g.DragDropActive {
-		var is_delivered = g.DragDropPayload.Delivery
-		var is_elapsed = (g.DragDropPayload.DataFrameCount+1 < g.FrameCount) && ((g.DragDropSourceFlags&ImGuiDragDropFlags_SourceAutoExpirePayload != 0) || !IsMouseDown(g.DragDropMouseButton))
+	if guiContext.DragDropActive {
+		var is_delivered = guiContext.DragDropPayload.Delivery
+		var is_elapsed = (guiContext.DragDropPayload.DataFrameCount+1 < guiContext.FrameCount) && ((guiContext.DragDropSourceFlags&ImGuiDragDropFlags_SourceAutoExpirePayload != 0) || !IsMouseDown(guiContext.DragDropMouseButton))
 		if is_delivered || is_elapsed {
 			ClearDragDrop()
 		}
 	}
 
 	// Drag and Drop: Fallback for source tooltip. This is not ideal but better than nothing.
-	if g.DragDropActive && g.DragDropSourceFrameCount < g.FrameCount && g.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoPreviewTooltip == 0 {
-		g.DragDropWithinSource = true
+	if guiContext.DragDropActive && guiContext.DragDropSourceFrameCount < guiContext.FrameCount && guiContext.DragDropSourceFlags&ImGuiDragDropFlags_SourceNoPreviewTooltip == 0 {
+		guiContext.DragDropWithinSource = true
 		SetTooltip("...")
-		g.DragDropWithinSource = false
+		guiContext.DragDropWithinSource = false
 	}
 
 	// End frame
-	g.WithinFrameScope = false
-	g.FrameCountEnded = g.FrameCount
+	guiContext.WithinFrameScope = false
+	guiContext.FrameCountEnded = guiContext.FrameCount
 
 	// Initiate moving window + handle left-click and right-click focus
 	UpdateMouseMovingWindowEndFrame()
 
 	// Sort the window list so that all child windows are after their parent
 	// We cannot do that on FocusWindow() because children may not exist yet
-	g.WindowsTempSortBuffer = g.WindowsTempSortBuffer[:0]
-	g.WindowsTempSortBuffer = make([]*ImGuiWindow, 0, len(g.Windows))
-	for i := range g.Windows {
-		var window = g.Windows[i]
+	guiContext.WindowsTempSortBuffer = guiContext.WindowsTempSortBuffer[:0]
+	guiContext.WindowsTempSortBuffer = make([]*ImGuiWindow, 0, len(guiContext.Windows))
+	for i := range guiContext.Windows {
+		var window = guiContext.Windows[i]
 		if window.Active && (window.Flags&ImGuiWindowFlags_ChildWindow != 0) { // if a child is active its parent will add it
 			continue
 		}
-		AddWindowToSortBuffer(&g.WindowsTempSortBuffer, window)
+		AddWindowToSortBuffer(&guiContext.WindowsTempSortBuffer, window)
 	}
 
 	// This usually assert if there is a mismatch between the ImGuiWindowFlags_ChildWindow / ParentWindow values and DC.ChildWindows[] in parents, aka we've done something wrong.
-	IM_ASSERT(len(g.Windows) == len(g.WindowsTempSortBuffer))
-	g.Windows, g.WindowsTempSortBuffer = g.WindowsTempSortBuffer, g.Windows
-	g.IO.MetricsActiveWindows = g.WindowsActiveCount
+	IM_ASSERT(len(guiContext.Windows) == len(guiContext.WindowsTempSortBuffer))
+	guiContext.Windows, guiContext.WindowsTempSortBuffer = guiContext.WindowsTempSortBuffer, guiContext.Windows
+	guiContext.IO.MetricsActiveWindows = guiContext.WindowsActiveCount
 
 	// Unlock font atlas
-	g.IO.Fonts.Locked = false
+	guiContext.IO.Fonts.Locked = false
 
 	// Clear Input data for next frame
-	g.IO.MouseWheel = 0
-	g.IO.MouseWheelH = 0.0
-	g.IO.InputQueueCharacters = g.IO.InputQueueCharacters[:0]
-	g.IO.KeyModsPrev = g.IO.KeyMods // doing it here is better than in NewFrame() as we'll tolerate backend writing to KeyMods. If we want to firmly disallow it we should detect it.
-	g.IO.NavInputs = [20]float{}
+	guiContext.IO.MouseWheel = 0
+	guiContext.IO.MouseWheelH = 0.0
+	guiContext.IO.InputQueueCharacters = guiContext.IO.InputQueueCharacters[:0]
+	guiContext.IO.KeyModsPrev = guiContext.IO.KeyMods // doing it here is better than in NewFrame() as we'll tolerate backend writing to KeyMods. If we want to firmly disallow it we should detect it.
+	guiContext.IO.NavInputs = [20]float{}
 
-	CallContextHooks(g, ImGuiContextHookType_EndFramePost)
+	CallContextHooks(guiContext, ImGuiContextHookType_EndFramePost)
 }

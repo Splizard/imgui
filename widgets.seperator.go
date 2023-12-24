@@ -2,7 +2,7 @@ package imgui
 
 // separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.
 func Separator() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return
 	}
@@ -42,7 +42,7 @@ func SeparatorEx(flags ImGuiSeparatorFlags) {
 
 		// Draw
 		window.DrawList.AddLine(&ImVec2{bb.Min.x, bb.Min.y}, &ImVec2{bb.Min.x, bb.Max.y}, GetColorU32FromID(ImGuiCol_Separator, 1), 1)
-		if g.LogEnabled {
+		if guiContext.LogEnabled {
 			LogText(" |")
 		}
 	} else if flags&ImGuiSeparatorFlags_Horizontal != 0 {
@@ -51,7 +51,7 @@ func SeparatorEx(flags ImGuiSeparatorFlags) {
 		var x2 = window.Pos.x + window.Size.x
 
 		// FIXME-WORKRECT: old hack (#205) until we decide of consistent behavior with WorkRect/Indent and Separator
-		if len(g.GroupStack) > 0 && g.GroupStack[len(g.GroupStack)-1].WindowID == window.ID {
+		if len(guiContext.GroupStack) > 0 && guiContext.GroupStack[len(guiContext.GroupStack)-1].WindowID == window.ID {
 			x1 += window.DC.Indent.x
 		}
 
@@ -70,7 +70,7 @@ func SeparatorEx(flags ImGuiSeparatorFlags) {
 		if item_visible {
 			// Draw
 			window.DrawList.AddLine(&bb.Min, &ImVec2{bb.Max.x, bb.Min.y}, GetColorU32FromID(ImGuiCol_Separator, 1), 1)
-			if g.LogEnabled {
+			if guiContext.LogEnabled {
 				LogRenderedText(&bb.Min, "--------------------------------\n")
 			}
 		}

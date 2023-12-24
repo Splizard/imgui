@@ -180,10 +180,10 @@ func ShowDemoWindow(p_open *bool) {
 
 	// Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
 
-	// e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
+	// e.guiContext. Use 2/3 of the space for widgets and 1/3 for labels (right align)
 	//PushItemWidth(-GetWindowWidth() * 0.35f);
 
-	// e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
+	// e.guiContext. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
 	PushItemWidth(GetFontSize() * -12)
 
 	// Menu Bar
@@ -280,7 +280,7 @@ func ShowDemoWindow(p_open *bool) {
 			Checkbox("io.ConfigWindowsMoveFromTitleBarOnly", &io.ConfigWindowsMoveFromTitleBarOnly)
 			Checkbox("io.MouseDrawCursor", &io.MouseDrawCursor)
 			SameLine(0, 0)
-			HelpMarker("Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).")
+			HelpMarker("Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.guiContext. enable software cursor only when resizing/dragging something).")
 			Text("Also see Style->Rendering for rendering options.")
 			TreePop()
 			Separator()

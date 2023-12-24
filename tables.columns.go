@@ -53,7 +53,7 @@ func BeginColumns(str_id string, columns_count int, flags ImGuiOldColumnFlags) {
 
 	// Set state for first column
 	// We aim so that the right-most column will have the same clipping width as other after being clipped by parent ClipRect
-	var column_padding = g.Style.ItemSpacing.x
+	var column_padding = guiContext.Style.ItemSpacing.x
 	var half_clip_extend_x = ImFloor(max(window.WindowPadding.x*0.5, window.WindowBorderSize))
 	var max_1 = window.WorkRect.Max.x + column_padding - max(column_padding-window.WindowPadding.x, 0.0)
 	var max_2 = window.WorkRect.Max.x + half_clip_extend_x
@@ -144,7 +144,7 @@ func EndColumns() {
 			if (flags & ImGuiOldColumnFlags_NoResize) == 0 {
 				ButtonBehavior(&column_hit_rect, column_id, &hovered, &held, 0)
 				if hovered || held {
-					g.MouseCursor = ImGuiMouseCursor_ResizeEW
+					guiContext.MouseCursor = ImGuiMouseCursor_ResizeEW
 				}
 				if held && (column.Flags&ImGuiOldColumnFlags_NoResize) == 0 {
 					dragging_column = n
@@ -304,7 +304,7 @@ func NextColumn() {
 	SetWindowClipRectBeforeSetChannel(window, &column.ClipRect)
 	columns.Splitter.SetCurrentChannel(window.DrawList, columns.Current+1)
 
-	var column_padding = g.Style.ItemSpacing.x
+	var column_padding = guiContext.Style.ItemSpacing.x
 	columns.LineMaxY = max(columns.LineMaxY, window.DC.CursorPos.y)
 	if columns.Current > 0 {
 		// Columns 1+ ignore IndentX (by canceling it out)
@@ -339,7 +339,7 @@ func GetColumnIndex() int {
 
 // GetColumnWidth get column width (in pixels). pass -1 to use current column
 func GetColumnWidth(column_index int /*= -1*/) float {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var columns = window.DC.CurrentColumns
 	if columns == nil {
 		return GetContentRegionAvail().x
@@ -383,7 +383,7 @@ func GetColumnOffset(column_index int /*= -1*/) float {
 
 // SetColumnOffset set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
 func SetColumnOffset(column_index int, offset float) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var columns = window.DC.CurrentColumns
 	IM_ASSERT(columns != nil)
 
@@ -399,12 +399,12 @@ func SetColumnOffset(column_index int, offset float) {
 	}
 
 	if (columns.Flags & ImGuiOldColumnFlags_NoForceWithinWindow) == 0 {
-		offset = min(offset, columns.OffMaxX-g.Style.ColumnsMinSpacing*float(columns.Count-column_index))
+		offset = min(offset, columns.OffMaxX-guiContext.Style.ColumnsMinSpacing*float(columns.Count-column_index))
 	}
 	columns.Columns[column_index].OffsetNorm = GetColumnNormFromOffset(columns, offset-columns.OffMinX)
 
 	if preserve_width {
-		SetColumnOffset(column_index+1, offset+max(g.Style.ColumnsMinSpacing, width))
+		SetColumnOffset(column_index+1, offset+max(guiContext.Style.ColumnsMinSpacing, width))
 	}
 }
 
@@ -419,14 +419,14 @@ func GetColumnsCount() int {
 func GetDraggedColumnOffset(columns *ImGuiOldColumns, column_index int) float {
 	// Active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
 	// window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	IM_ASSERT(column_index > 0) // We are not supposed to drag column 0.
-	IM_ASSERT(g.ActiveId == columns.ID+ImGuiID(column_index))
+	IM_ASSERT(guiContext.ActiveId == columns.ID+ImGuiID(column_index))
 
-	var x = g.IO.MousePos.x - g.ActiveIdClickOffset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.Pos.x
-	x = max(x, GetColumnOffset(column_index-1)+g.Style.ColumnsMinSpacing)
+	var x = guiContext.IO.MousePos.x - guiContext.ActiveIdClickOffset.x + COLUMNS_HIT_RECT_HALF_WIDTH - window.Pos.x
+	x = max(x, GetColumnOffset(column_index-1)+guiContext.Style.ColumnsMinSpacing)
 	if (columns.Flags & ImGuiOldColumnFlags_NoPreserveWidths) != 0 {
-		x = min(x, GetColumnOffset(column_index+1)-g.Style.ColumnsMinSpacing)
+		x = min(x, GetColumnOffset(column_index+1)-guiContext.Style.ColumnsMinSpacing)
 	}
 
 	return x

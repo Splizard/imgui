@@ -7,23 +7,23 @@ import (
 	"strings"
 )
 
-// Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
+// Create text input in place of another active widget (e.guiContext. used when doing a CTRL+Click on drag/slider widgets)
 // FIXME: Facilitate using this in variety of other situations.
 func TempInputText(bb *ImRect, id ImGuiID, label string, buf *[]byte, flags ImGuiInputTextFlags) bool {
-	// On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
+	// On the first frame, guiContext.TempInputTextId == 0, then on subsequent frames it becomes == id.
 	// We clear ActiveID on the first frame to allow the InputText() taking it back.
-	var init = (g.TempInputId != id)
+	var init = (guiContext.TempInputId != id)
 	if init {
 		ClearActiveID()
 	}
 
-	g.CurrentWindow.DC.CursorPos = bb.Min
+	guiContext.CurrentWindow.DC.CursorPos = bb.Min
 	size := bb.GetSize()
 	var value_changed = InputTextEx(label, "", buf, &size, flags|ImGuiInputTextFlags_MergedItem, nil, nil)
 	if init {
 		// First frame we started displaying the InputText widget, we expect it to take the active id.
-		IM_ASSERT(g.ActiveId == id)
-		g.TempInputId = g.ActiveId
+		IM_ASSERT(guiContext.ActiveId == id)
+		guiContext.TempInputId = guiContext.ActiveId
 	}
 	return value_changed
 }
@@ -47,7 +47,7 @@ func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataTy
 		var data_backup = reflect.ValueOf(p_data).Elem().Interface()
 
 		// Apply new value (or operations) then clamp
-		DataTypeApplyOpFromText(string(data_buf), string(g.InputTextState.InitialTextA), data_type, p_data, "")
+		DataTypeApplyOpFromText(string(data_buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, "")
 		if p_clamp_min != nil || p_clamp_max != nil {
 			if p_clamp_min != nil && p_clamp_max != nil && DataTypeCompare(data_type, p_clamp_min, p_clamp_max) > 0 {
 				p_clamp_min, p_clamp_max = p_clamp_max, p_clamp_min
@@ -65,12 +65,12 @@ func TempInputScalar(bb *ImRect, id ImGuiID, label string, data_type ImGuiDataTy
 }
 
 func TempInputIsActive(id ImGuiID) bool {
-	return (g.ActiveId == id && g.TempInputId == id)
+	return (guiContext.ActiveId == id && guiContext.TempInputId == id)
 }
 
 func GetInputTextState(id ImGuiID) *ImGuiInputTextState {
-	if g.InputTextState.ID == id {
-		return &g.InputTextState
+	if guiContext.InputTextState.ID == id {
+		return &guiContext.InputTextState
 	}
 	return nil
 } // Get input text state if active
@@ -170,8 +170,8 @@ func InputTextCalcLineCount(text string) int {
 }
 
 func InputTextCalcTextSizeW(text []ImWchar, remaining *[]ImWchar, out_offset *ImVec2, stop_on_new_line bool) ImVec2 {
-	var font = g.Font
-	var line_height = g.FontSize
+	var font = guiContext.Font
+	var line_height = guiContext.FontSize
 	var scale = line_height / font.FontSize
 
 	var text_size ImVec2
@@ -282,12 +282,12 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 
 	// Generic named filters
 	if apply_named_filters && (flags&(ImGuiInputTextFlags_CharsDecimal|ImGuiInputTextFlags_CharsHexadecimal|ImGuiInputTextFlags_CharsUppercase|ImGuiInputTextFlags_CharsNoBlank|ImGuiInputTextFlags_CharsScientific) != 0) {
-		// The libc allows overriding locale, with e.g. 'setlocale(LC_NUMERIC, "de_DE.UTF-8");' which affect the output/input of printf/scanf.
+		// The libc allows overriding locale, with e.guiContext. 'setlocale(LC_NUMERIC, "de_DE.UTF-8");' which affect the output/input of printf/scanf.
 		// The standard mandate that programs starts in the "C" locale where the decimal point is '.'.
 		// We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
 		// Change the default decimal_point with:
 		//   ImGui::GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
-		var c_decimal_point = (rune)(g.PlatformLocaleDecimalPoint)
+		var c_decimal_point = (rune)(guiContext.PlatformLocaleDecimalPoint)
 
 		// Allow 0-9 . - + * /
 		if flags&ImGuiInputTextFlags_CharsDecimal != 0 {
@@ -389,8 +389,8 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
 	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
 
-	io := g.IO
-	style := g.Style
+	io := guiContext.IO
+	style := guiContext.Style
 
 	var RENDER_SELECTION_WHEN_INACTIVE = false
 	var is_multiline = (flags & ImGuiInputTextFlags_Multiline) != 0
@@ -416,7 +416,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 	fontsize := label_size.y
 	if is_multiline {
-		fontsize = g.FontSize * 8.0
+		fontsize = guiContext.FontSize * 8.0
 	}
 
 	var frame_size = CalcItemSize(*size_arg, CalcItemWidth(), fontsize+style.FramePadding.y*2.0) // Arbitrary default of 8 lines high for multi-line
@@ -435,7 +435,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			EndGroup()
 			return false
 		}
-		item_status_flags = g.LastItemData.StatusFlags
+		item_status_flags = guiContext.LastItemData.StatusFlags
 		window.DC.CursorPos = backup_pos
 
 		// We reproduce the contents of BeginChildFrame() in order to provide 'label' so our window internal data are easier to read/debug.
@@ -453,7 +453,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			EndGroup()
 			return false
 		}
-		draw_window = g.CurrentWindow                                                   // Child window
+		draw_window = guiContext.CurrentWindow                                          // Child window
 		draw_window.DC.NavLayersActiveMaskNext |= (1 << draw_window.DC.NavLayerCurrent) // This is to ensure that EndChild() will display a navigation highlight so we can "enter" into it.
 		draw_window.DC.CursorPos = draw_window.DC.CursorPos.Add(style.FramePadding)
 		inner_size.x -= draw_window.ScrollbarSizes.x
@@ -465,11 +465,11 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 				return false
 			}
 		}
-		item_status_flags = g.LastItemData.StatusFlags
+		item_status_flags = guiContext.LastItemData.StatusFlags
 	}
 	var hovered = ItemHoverable(&frame_bb, id)
 	if hovered {
-		g.MouseCursor = ImGuiMouseCursor_TextInput
+		guiContext.MouseCursor = ImGuiMouseCursor_TextInput
 	}
 
 	// We are only allowed to access the state if we are already the active widget.
@@ -479,12 +479,12 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	var focus_requested_by_tabbing = (item_status_flags & ImGuiItemStatusFlags_FocusedByTabbing) != 0
 
 	var user_clicked = hovered && io.MouseClicked[0]
-	var user_nav_input_start = (g.ActiveId != id) && ((g.NavInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard))
-	var user_scroll_finish = is_multiline && state != nil && g.ActiveId == 0 && g.ActiveIdPreviousFrame == GetWindowScrollbarID(draw_window, ImGuiAxis_Y)
-	var user_scroll_active = is_multiline && state != nil && g.ActiveId == GetWindowScrollbarID(draw_window, ImGuiAxis_Y)
+	var user_nav_input_start = (guiContext.ActiveId != id) && ((guiContext.NavInputId == id) || (guiContext.NavActivateId == id && guiContext.NavInputSource == ImGuiInputSource_Keyboard))
+	var user_scroll_finish = is_multiline && state != nil && guiContext.ActiveId == 0 && guiContext.ActiveIdPreviousFrame == GetWindowScrollbarID(draw_window, ImGuiAxis_Y)
+	var user_scroll_active = is_multiline && state != nil && guiContext.ActiveId == GetWindowScrollbarID(draw_window, ImGuiAxis_Y)
 
 	var clear_active_id = false
-	var select_all = (g.ActiveId != id) && ((flags&ImGuiInputTextFlags_AutoSelectAll) != 0 || user_nav_input_start) && (!is_multiline)
+	var select_all = (guiContext.ActiveId != id) && ((flags&ImGuiInputTextFlags_AutoSelectAll) != 0 || user_nav_input_start) && (!is_multiline)
 
 	var scroll_y float = FLT_MAX
 	if is_multiline {
@@ -494,9 +494,9 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	var init_changed_specs = (state != nil && (state.Stb.single_line != 0) != !is_multiline)
 	var init_make_active = (user_clicked || user_scroll_finish || user_nav_input_start || focus_requested_by_code || focus_requested_by_tabbing)
 	var init_state = (init_make_active || user_scroll_active)
-	if (init_state && g.ActiveId != id) || init_changed_specs {
+	if (init_state && guiContext.ActiveId != id) || init_changed_specs {
 		// Access state even if we don't own it yet.
-		state = &g.InputTextState
+		state = &guiContext.InputTextState
 		state.CursorAnimReset()
 
 		// Take a copy of the initial buffer value (both in original UTF-8 format and converted to wchar)
@@ -539,7 +539,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		}
 	}
 
-	if g.ActiveId != id && init_make_active {
+	if guiContext.ActiveId != id && init_make_active {
 		IM_ASSERT(state != nil && state.ID == id)
 		SetActiveID(id, window)
 		SetFocusID(id, window)
@@ -547,32 +547,32 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 		// Declare our inputs
 		IM_ASSERT(ImGuiNavInput_COUNT < 32)
-		g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right)
+		guiContext.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right)
 		if is_multiline || (flags&ImGuiInputTextFlags_CallbackHistory != 0) {
-			g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down)
+			guiContext.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down)
 		}
-		g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel)
-		g.ActiveIdUsingKeyInputMask |= ((ImU64)(1 << ImGuiKey_Home)) | ((ImU64)(1 << ImGuiKey_End))
+		guiContext.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel)
+		guiContext.ActiveIdUsingKeyInputMask |= ((ImU64)(1 << ImGuiKey_Home)) | ((ImU64)(1 << ImGuiKey_End))
 		if is_multiline {
-			g.ActiveIdUsingKeyInputMask |= ((ImU64)(1 << ImGuiKey_PageUp)) | ((ImU64)(1 << ImGuiKey_PageDown))
+			guiContext.ActiveIdUsingKeyInputMask |= ((ImU64)(1 << ImGuiKey_PageUp)) | ((ImU64)(1 << ImGuiKey_PageDown))
 		}
 		if flags&(ImGuiInputTextFlags_CallbackCompletion|ImGuiInputTextFlags_AllowTabInput) != 0 { // Disable keyboard tabbing out as we will use the \t character.
-			g.ActiveIdUsingKeyInputMask |= ((ImU64)(1 << ImGuiKey_Tab))
+			guiContext.ActiveIdUsingKeyInputMask |= ((ImU64)(1 << ImGuiKey_Tab))
 		}
 	}
 
-	// We have an edge case if ActiveId was set through another widget (e.g. widget being swapped), clear id immediately (don't wait until the end of the function)
-	if g.ActiveId == id && state == nil {
+	// We have an edge case if ActiveId was set through another widget (e.guiContext. widget being swapped), clear id immediately (don't wait until the end of the function)
+	if guiContext.ActiveId == id && state == nil {
 		ClearActiveID()
 	}
 
 	// Release focus when we click outside
-	if g.ActiveId == id && io.MouseClicked[0] && !init_state && !init_make_active { //-V560
+	if guiContext.ActiveId == id && io.MouseClicked[0] && !init_state && !init_make_active { //-V560
 		clear_active_id = true
 	}
 
 	// Lock the decision of whether we are going to take the path displaying the cursor or selection
-	var render_cursor = (g.ActiveId == id) || (state != nil && user_scroll_active)
+	var render_cursor = (guiContext.ActiveId == id) || (state != nil && user_scroll_active)
 	var render_selection = state != nil && state.HasSelection() && (RENDER_SELECTION_WHEN_INACTIVE || render_cursor)
 	var value_changed = false
 	var enter_pressed = false
@@ -589,7 +589,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	// Select the buffer to render.
-	var buf_display_from_state = (render_cursor || render_selection || g.ActiveId == id) && !is_readonly && state != nil && state.TextAIsValid
+	var buf_display_from_state = (render_cursor || render_selection || guiContext.ActiveId == id) && !is_readonly && state != nil && state.TextAIsValid
 
 	b := *buf
 	if buf_display_from_state {
@@ -600,13 +600,13 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 	// Password pushes a temporary font with only a fallback glyph
 	if is_password && !is_displaying_hint {
-		var glyph = g.Font.FindGlyph('*')
-		var password_font = &g.InputTextPasswordFont
-		password_font.FontSize = g.Font.FontSize
-		password_font.Scale = g.Font.Scale
-		password_font.Ascent = g.Font.Ascent
-		password_font.Descent = g.Font.Descent
-		password_font.ContainerAtlas = g.Font.ContainerAtlas
+		var glyph = guiContext.Font.FindGlyph('*')
+		var password_font = &guiContext.InputTextPasswordFont
+		password_font.FontSize = guiContext.Font.FontSize
+		password_font.Scale = guiContext.Font.Scale
+		password_font.Ascent = guiContext.Font.Ascent
+		password_font.Descent = guiContext.Font.Descent
+		password_font.ContainerAtlas = guiContext.Font.ContainerAtlas
 		password_font.FallbackGlyph = glyph
 		password_font.FallbackAdvanceX = glyph.AdvanceX
 		IM_ASSERT(len(password_font.Glyphs) == 0 && len(password_font.IndexAdvanceX) == 0 && len(password_font.IndexLookup) == 0)
@@ -615,7 +615,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 	// Process mouse inputs and character inputs
 	var backup_current_text_length int = 0
-	if g.ActiveId == id {
+	if guiContext.ActiveId == id {
 		IM_ASSERT(state != nil)
 		backup_current_text_length = state.CurLenA
 		state.Edited = false
@@ -626,13 +626,13 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 		// Although we are active we don't prevent mouse from hovering other elements unless we are interacting right now with the widget.
 		// Down the line we should have a cleaner library-wide concept of Selected vs Active.
-		g.ActiveIdAllowOverlap = !io.MouseDown[0]
-		g.WantTextInputNextFrame = 1
+		guiContext.ActiveIdAllowOverlap = !io.MouseDown[0]
+		guiContext.WantTextInputNextFrame = 1
 
 		// Edit in progress
 		var mouse_x = (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + state.ScrollX
 
-		var mouse_y = g.FontSize * 0.5
+		var mouse_y = guiContext.FontSize * 0.5
 		if is_multiline {
 			mouse_y = io.MousePos.y - draw_window.DC.CursorPos.y
 		}
@@ -672,7 +672,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		}
 
 		// Process regular text input (before we check for Return because using some IME will effectively send a Return?)
-		// We ignore CTRL inputs, but need to allow ALT+CTRL as some keyboards (e.g. German) use AltGR (which _is_ Alt+Ctrl) to input certain characters.
+		// We ignore CTRL inputs, but need to allow ALT+CTRL as some keyboards (e.guiContext. German) use AltGR (which _is_ Alt+Ctrl) to input certain characters.
 		if len(io.InputQueueCharacters) > 0 {
 			if !ignore_char_inputs && !is_readonly && !user_nav_input_start {
 				for n := range io.InputQueueCharacters {
@@ -694,11 +694,11 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 	// Process other shortcuts/key-presses
 	var cancel_edit = false
-	if g.ActiveId == id && !g.ActiveIdIsJustActivated && !clear_active_id {
+	if guiContext.ActiveId == id && !guiContext.ActiveIdIsJustActivated && !clear_active_id {
 		IM_ASSERT(state != nil)
 		IM_ASSERT_USER_ERROR(io.KeyMods == GetMergedKeyModFlags(), "Mismatching io.KeyCtrl/io.KeyShift/io.KeyAlt/io.KeySuper vs io.KeyMods") // We rarely do this check, but if anything let's do it here.
 
-		var row_count_per_page = max((int)((inner_size.y-style.FramePadding.y)/g.FontSize), 1)
+		var row_count_per_page = max((int)((inner_size.y-style.FramePadding.y)/guiContext.FontSize), 1)
 		state.Stb.row_count_per_page = row_count_per_page
 
 		var k_mask int
@@ -718,7 +718,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		var is_shift_key_only = (io.KeyMods == ImGuiKeyModFlags_Shift)
 		var is_shortcut_key = (io.KeyMods == ImGuiKeyModFlags_Ctrl)
 
-		if g.IO.ConfigMacOSXBehaviors {
+		if guiContext.IO.ConfigMacOSXBehaviors {
 			is_shortcut_key = (io.KeyMods == ImGuiKeyModFlags_Super)
 		}
 
@@ -750,7 +750,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			state.OnKeyPressed(k | k_mask)
 		} else if IsKeyPressedMap(ImGuiKey_UpArrow, true) && is_multiline {
 			if io.KeyCtrl {
-				setScrollY(draw_window, max(draw_window.Scroll.y-g.FontSize, 0.0))
+				setScrollY(draw_window, max(draw_window.Scroll.y-guiContext.FontSize, 0.0))
 			} else {
 				var k int = STB_TEXTEDIT_K_UP
 				if is_startend_key_down {
@@ -760,7 +760,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			}
 		} else if IsKeyPressedMap(ImGuiKey_DownArrow, true) && is_multiline {
 			if io.KeyCtrl {
-				setScrollY(draw_window, min(draw_window.Scroll.y+g.FontSize, GetScrollMaxY()))
+				setScrollY(draw_window, min(draw_window.Scroll.y+guiContext.FontSize, GetScrollMaxY()))
 			} else {
 				var k int = STB_TEXTEDIT_K_DOWN
 				if is_startend_key_down {
@@ -770,10 +770,10 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			}
 		} else if IsKeyPressedMap(ImGuiKey_PageUp, true) && is_multiline {
 			state.OnKeyPressed(STB_TEXTEDIT_K_PGUP | k_mask)
-			scroll_y -= float(row_count_per_page) * g.FontSize
+			scroll_y -= float(row_count_per_page) * guiContext.FontSize
 		} else if IsKeyPressedMap(ImGuiKey_PageDown, true) && is_multiline {
 			state.OnKeyPressed(STB_TEXTEDIT_K_PGDOWN | k_mask)
-			scroll_y += float(row_count_per_page) * g.FontSize
+			scroll_y += float(row_count_per_page) * guiContext.FontSize
 		} else if IsKeyPressedMap(ImGuiKey_Home, true) {
 			var k int = STB_TEXTEDIT_K_LINESTART
 			if is_startend_key_down {
@@ -878,7 +878,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	// Process callbacks and apply result back to user's buffer.
-	if g.ActiveId == id {
+	if guiContext.ActiveId == id {
 		IM_ASSERT(state != nil)
 		var apply_new_text []byte
 		var apply_new_text_length int
@@ -1044,8 +1044,8 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		state.UserCallbackData = nil
 	}
 
-	// Release active ID at the end of the function (so e.g. pressing Return still does a final application of the value)
-	if clear_active_id && g.ActiveId == id {
+	// Release active ID at the end of the function (so e.guiContext. pressing Return still does a final application of the value)
+	if clear_active_id && guiContext.ActiveId == id {
 		ClearActiveID()
 	}
 
@@ -1149,15 +1149,15 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 			// Calculate 2d position by finding the beginning of the line and measuring distance
 			cursor_offset.x = InputTextCalcTextSizeW(ImStrbolW(searches_input_ptr[0], text_begin), &searches_input_ptr[0], nil, false).x
-			cursor_offset.y = float(searches_result_line_no[0]) * g.FontSize
+			cursor_offset.y = float(searches_result_line_no[0]) * guiContext.FontSize
 			if searches_result_line_no[1] >= 0 {
 				select_start_offset.x = InputTextCalcTextSizeW(ImStrbolW(searches_input_ptr[1], text_begin), &searches_input_ptr[1], nil, false).x
-				select_start_offset.y = float(searches_result_line_no[1]) * g.FontSize
+				select_start_offset.y = float(searches_result_line_no[1]) * guiContext.FontSize
 			}
 
 			// Store text height (note that we haven't calculated text width at all, see GitHub issues #383, #1224)
 			if is_multiline {
-				text_size = ImVec2{inner_size.x, float(line_count) * g.FontSize}
+				text_size = ImVec2{inner_size.x, float(line_count) * guiContext.FontSize}
 			}
 		}
 
@@ -1179,8 +1179,8 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			// Vertical scroll
 			if is_multiline {
 				// Test if cursor is vertically visible
-				if cursor_offset.y-g.FontSize < scroll_y {
-					scroll_y = max(0.0, cursor_offset.y-g.FontSize)
+				if cursor_offset.y-guiContext.FontSize < scroll_y {
+					scroll_y = max(0.0, cursor_offset.y-guiContext.FontSize)
 				} else if cursor_offset.y-inner_size.y >= scroll_y {
 					scroll_y = cursor_offset.y - inner_size.y + style.FramePadding.y*2.0
 				}
@@ -1216,7 +1216,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			var rect_pos = draw_pos.Add(select_start_offset).Sub(draw_scroll)
 			var slice = text_selected_begin[:len(text_selected_begin)-len(text_selected_end)]
 			for i, p := range slice {
-				if rect_pos.y > clip_rect.w+g.FontSize {
+				if rect_pos.y > clip_rect.w+guiContext.FontSize {
 					break
 				}
 				if rect_pos.y < clip_rect.y {
@@ -1231,20 +1231,20 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 					var pp = slice[i:]
 					var rect_size = InputTextCalcTextSizeW(slice[i:], &pp, nil, true)
 					if rect_size.x <= 0.0 {
-						rect_size.x = IM_FLOOR(g.Font.GetCharAdvance((ImWchar)(' ')) * 0.50) // So we can see selected empty lines
+						rect_size.x = IM_FLOOR(guiContext.Font.GetCharAdvance((ImWchar)(' ')) * 0.50) // So we can see selected empty lines
 					}
-					var rect = ImRect{rect_pos.Add(ImVec2{0.0, bg_offy_up - g.FontSize}), rect_pos.Add(ImVec2{rect_size.x, bg_offy_dn})}
+					var rect = ImRect{rect_pos.Add(ImVec2{0.0, bg_offy_up - guiContext.FontSize}), rect_pos.Add(ImVec2{rect_size.x, bg_offy_dn})}
 					rect.ClipWith(ImRectFromVec4(&clip_rect))
 					if rect.Overlaps(ImRectFromVec4(&clip_rect)) {
 						draw_window.DrawList.AddRectFilled(rect.Min, rect.Max, bg_color, 0, 0)
 					}
 				}
 				rect_pos.x = draw_pos.x - draw_scroll.x
-				rect_pos.y += g.FontSize
+				rect_pos.y += guiContext.FontSize
 			}
 		}
 
-		// We test for 'buf_display_max_length' as a way to avoid some pathological cases (e.g. single-line 1 MB string) which would make ImDrawList crash.
+		// We test for 'buf_display_max_length' as a way to avoid some pathological cases (e.guiContext. single-line 1 MB string) which would make ImDrawList crash.
 		if is_multiline || len(buf_display)-len(buf_display_end) < buf_display_max_length {
 			var c = ImGuiCol_Text
 			if is_displaying_hint {
@@ -1255,16 +1255,16 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if is_multiline {
 				clip = nil
 			}
-			draw_window.DrawList.AddTextV(g.Font, g.FontSize, draw_pos.Sub(draw_scroll), col, string(buf_display[:len(buf_display)-len(buf_display_end)]), 0.0, clip)
+			draw_window.DrawList.AddTextV(guiContext.Font, guiContext.FontSize, draw_pos.Sub(draw_scroll), col, string(buf_display[:len(buf_display)-len(buf_display_end)]), 0.0, clip)
 		}
 
 		// Draw blinking cursor
 		if render_cursor {
 			state.CursorAnim += io.DeltaTime
-			var cursor_is_visible = (!g.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.20) <= 0.80
+			var cursor_is_visible = (!guiContext.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.20) <= 0.80
 			var f = draw_pos.Add(cursor_offset).Sub(draw_scroll)
 			var cursor_screen_pos = *ImFloorVec(&f)
-			var cursor_screen_rect = ImRect{ImVec2{cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5}, ImVec2{cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5}}
+			var cursor_screen_rect = ImRect{ImVec2{cursor_screen_pos.x, cursor_screen_pos.y - guiContext.FontSize + 0.5}, ImVec2{cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5}}
 			if cursor_is_visible && cursor_screen_rect.Overlaps(ImRectFromVec4(&clip_rect)) {
 				bl := cursor_screen_rect.GetBL()
 				draw_window.DrawList.AddLine(&cursor_screen_rect.Min, &bl, GetColorU32FromID(ImGuiCol_Text, 1), 1)
@@ -1272,15 +1272,15 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 
 			// Notify OS of text input position for advanced IME (-1 x offset so that Windows IME can cover our cursor. Bit of an extra nicety.)
 			if !is_readonly {
-				g.PlatformImePos = ImVec2{cursor_screen_pos.x - 1.0, cursor_screen_pos.y - g.FontSize}
+				guiContext.PlatformImePos = ImVec2{cursor_screen_pos.x - 1.0, cursor_screen_pos.y - guiContext.FontSize}
 			}
 		}
 	} else {
 		// Render text only (no selection, no cursor)
 		if is_multiline {
 			buf_display_end = buf_display[:]
-			text_size = ImVec2{inner_size.x, float(bytes.Count(buf_display, []byte{'\n'})) * g.FontSize} // We don't need width
-		} else if !is_displaying_hint && g.ActiveId == id {
+			text_size = ImVec2{inner_size.x, float(bytes.Count(buf_display, []byte{'\n'})) * guiContext.FontSize} // We don't need width
+		} else if !is_displaying_hint && guiContext.ActiveId == id {
 			buf_display_end = buf_display[state.CurLenA:]
 		} else if !is_displaying_hint {
 			buf_display_end = buf_display[len(buf_display):]
@@ -1296,7 +1296,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 			if is_multiline {
 				clip = nil
 			}
-			draw_window.DrawList.AddTextV(g.Font, g.FontSize, draw_pos, col, string(buf_display[:len(buf_display)-len(buf_display_end)]), 0.0, clip)
+			draw_window.DrawList.AddTextV(guiContext.Font, guiContext.FontSize, draw_pos, col, string(buf_display[:len(buf_display)-len(buf_display_end)]), 0.0, clip)
 		}
 	}
 
@@ -1311,7 +1311,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	// Log as text
-	if g.LogEnabled && (!is_password || is_displaying_hint) {
+	if guiContext.LogEnabled && (!is_password || is_displaying_hint) {
 		LogSetNextTextDecoration("{", "}")
 		LogRenderedText(&draw_pos, string(buf_display[:len(buf_display)-len(buf_display_end)]))
 	}

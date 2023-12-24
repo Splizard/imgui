@@ -17,29 +17,29 @@ import "fmt"
 //
 // return true if the popup is open, and you can start outputting to it.
 func BeginPopup(str_id string, flags ImGuiWindowFlags) bool {
-	if len(g.OpenPopupStack) <= len(g.BeginPopupStack) {
-		g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
+	if len(guiContext.OpenPopupStack) <= len(guiContext.BeginPopupStack) {
+		guiContext.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 		return false
 	}
 	flags |= ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings
-	return BeginPopupEx(g.CurrentWindow.GetIDs(str_id), flags)
+	return BeginPopupEx(guiContext.CurrentWindow.GetIDs(str_id), flags)
 }
 
 // BeginPopupModal If 'p_open' is specified for a modal popup window, the popup will have a regular close button which will close the popup.
-// Note that popup visibility status is owned by Dear ImGui (and manipulated with e.g. OpenPopup) so the actual value of *p_open is meaningless here.
+// Note that popup visibility status is owned by Dear ImGui (and manipulated with e.guiContext. OpenPopup) so the actual value of *p_open is meaningless here.
 // return true if the modal is open, and you can start outputting to it.
 func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var id = window.GetIDs(name)
 	if !isPopupOpen(id, ImGuiPopupFlags_None) {
-		g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
+		guiContext.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 		return false
 	}
 
 	// Center modal windows by default for increased visibility
 	// (this won't really last as settings will kick in, and is mostly for backward compatibility. user may do the same themselves)
 	// FIXME: Should test for (PosCond & window.SetWindowPosAllowFlags) with the upcoming window.
-	if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0 {
+	if (guiContext.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0 {
 		var viewport = GetMainViewport()
 		center := viewport.GetCenter()
 		SetNextWindowPos(&center, ImGuiCond_FirstUseEver, ImVec2{0.5, 0.5})
@@ -47,10 +47,10 @@ func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 	flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoCollapse
 	var is_open = Begin(name, p_open, flags)
-	if !is_open || (p_open != nil && !*p_open) { // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
+	if !is_open || (p_open != nil && !*p_open) { // NB: is_open can be 'false' when the popup is completely clipped (e.guiContext. zero size display)
 		EndPopup()
 		if is_open {
-			ClosePopupToLevel(int(len(g.BeginPopupStack)), true)
+			ClosePopupToLevel(int(len(guiContext.BeginPopupStack)), true)
 		}
 		return false
 	}
@@ -59,22 +59,22 @@ func BeginPopupModal(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 // EndPopup only call EndPopup() if BeginPopupXXX() returns true!
 func EndPopup() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	IM_ASSERT(window.Flags&ImGuiWindowFlags_Popup != 0) // Mismatched BeginPopup()/EndPopup() calls
-	IM_ASSERT(len(g.BeginPopupStack) > 0)
+	IM_ASSERT(len(guiContext.BeginPopupStack) > 0)
 
-	// Make all menus and popups wrap around for now, may need to expose that policy (e.g. focus scope could include wrap/loop policy flags used by new move requests)
-	if g.NavWindow == window {
+	// Make all menus and popups wrap around for now, may need to expose that policy (e.guiContext. focus scope could include wrap/loop policy flags used by new move requests)
+	if guiContext.NavWindow == window {
 		NavMoveRequestTryWrapping(window, ImGuiNavMoveFlags_LoopY)
 	}
 
 	// Child-popups don't need to be laid out
-	IM_ASSERT(!g.WithinEndChild)
+	IM_ASSERT(!guiContext.WithinEndChild)
 	if window.Flags&ImGuiWindowFlags_ChildWindow != 0 {
-		g.WithinEndChild = true
+		guiContext.WithinEndChild = true
 	}
 	End()
-	g.WithinEndChild = false
+	guiContext.WithinEndChild = false
 }
 
 // OpenPopup Popups: open/close functions
@@ -82,12 +82,12 @@ func EndPopup() {
 //   - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
 //   - CloseCurrentPopup(): use inside the BeginPopup()/EndPopup() scope to close manually.
 //   - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
-//   - Use ImGuiPopupFlags_NoOpenOverExistingPopup to a opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
+//   - Use ImGuiPopupFlags_NoOpenOverExistingPopup to a opening a popup if there's already one at the same level. This is equivalent to e.guiContext. testing for !IsAnyPopupOpen() prior to OpenPopup().
 //   - Use IsWindowAppearing() after BeginPopup() to tell if a window just opened.
 //
 // call to mark popup as open (don't call every frame!).
 func OpenPopup(str_id string, popup_flags ImGuiPopupFlags) {
-	OpenPopupEx(g.CurrentWindow.GetIDs(str_id), popup_flags)
+	OpenPopupEx(guiContext.CurrentWindow.GetIDs(str_id), popup_flags)
 }
 
 // OpenPopupID id overload to facilitate calling from nested stacks
@@ -99,29 +99,29 @@ func OpenPopupID(id ImGuiID, popup_flags ImGuiPopupFlags) {
 // - This is essentially the same as BeginPopupContextItem() but without the trailing BeginPopup()
 // helper to open popup when clicked on last item. Default to ImGuiPopupFlags_MouseButtonRight == 1. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 func OpenPopupOnItemClick(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*/) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var mouse_button = ImGuiMouseButton(popup_flags & ImGuiPopupFlags_MouseButtonMask_)
 	if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
-		var id = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
+		var id = guiContext.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
 		if str_id != "" {
 			id = window.GetIDs(str_id)
 		}
-		IM_ASSERT(id != 0) // You cannot pass a nil str_id if the last item has no identifier (e.g. a Text() item)
+		IM_ASSERT(id != 0) // You cannot pass a nil str_id if the last item has no identifier (e.guiContext. a Text() item)
 		OpenPopupEx(id, popup_flags)
 	}
 }
 
 // CloseCurrentPopup manually close the popup we have begin-ed into.
 func CloseCurrentPopup() {
-	var popup_idx = int(len(g.BeginPopupStack)) - 1
-	if popup_idx < 0 || popup_idx >= int(len(g.OpenPopupStack)) || g.BeginPopupStack[popup_idx].PopupId != g.OpenPopupStack[popup_idx].PopupId {
+	var popup_idx = int(len(guiContext.BeginPopupStack)) - 1
+	if popup_idx < 0 || popup_idx >= int(len(guiContext.OpenPopupStack)) || guiContext.BeginPopupStack[popup_idx].PopupId != guiContext.OpenPopupStack[popup_idx].PopupId {
 		return
 	}
 
 	// Closing a menu closes its top-most parent popup (unless a modal)
 	for popup_idx > 0 {
-		var popup_window = g.OpenPopupStack[popup_idx].Window
-		var parent_popup_window = g.OpenPopupStack[popup_idx-1].Window
+		var popup_window = guiContext.OpenPopupStack[popup_idx].Window
+		var parent_popup_window = guiContext.OpenPopupStack[popup_idx-1].Window
 		var close_parent = false
 		if popup_window != nil && (popup_window.Flags&ImGuiWindowFlags_ChildMenu != 0) {
 			if parent_popup_window == nil || (parent_popup_window.Flags&ImGuiWindowFlags_Modal == 0) {
@@ -133,19 +133,19 @@ func CloseCurrentPopup() {
 		}
 		popup_idx--
 	}
-	//IMGUI_DEBUG_LOG_POPUP("CloseCurrentPopup %d . %d\n", g.BeginPopupStack.Size-1, popup_idx)
+	//IMGUI_DEBUG_LOG_POPUP("CloseCurrentPopup %d . %d\n", guiContext.BeginPopupStack.Size-1, popup_idx)
 	ClosePopupToLevel(popup_idx, true)
 
 	// A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
 	// To improve this usage pattern, we avoid nav highlight for a single frame in the parent window.
 	// Similarly, we could avoid mouse hover highlight in this window but it is less visually problematic.
-	if window := g.NavWindow; window != nil {
+	if window := guiContext.NavWindow; window != nil {
 		window.DC.NavHideHighlightOneFrame = true
 	}
 }
 
 // Popups: open+begin combined functions helpers
-//  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.
+//  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.guiContext. hovering an item and right-clicking.
 //  - They are convenient to easily create context menus, hence the name.
 //  - IMPORTANT: Notice that BeginPopupContextXXX takes just ImGuiPopupFlags like OpenPopup() and unlike BeginPopup(). For full consistency, we may add ImGuiWindowFlags to the BeginPopupContextXXX functions in the future.
 //  - IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'mouse_button int/*= r*/,so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.
@@ -153,9 +153,9 @@ func CloseCurrentPopup() {
 // BeginPopupContextItem This is a helper to handle the simplest case of associating one named popup to one given widget.
 // - To create a popup associated to the last item, you generally want to pass a nil value to str_id.
 // - To create a popup with a specific identifier, pass it in str_id.
-//   - This is useful when using using BeginPopupContextItem() on an item which doesn't have an identifier, e.g. a Text() call.
+//   - This is useful when using using BeginPopupContextItem() on an item which doesn't have an identifier, e.guiContext. a Text() call.
 //   - This is useful when multiple code locations may want to manipulate/open the same popup, given an explicit id.
-//   - You may want to handle the whole on user side if you have specific needs (e.g. tweaking IsItemHovered() parameters).
+//   - You may want to handle the whole on user side if you have specific needs (e.guiContext. tweaking IsItemHovered() parameters).
 //     This is essentially the same as:
 //     id = str_id ? GetID(str_id) : GetItemID();
 //     OpenPopupOnItemClick(str_id);
@@ -169,15 +169,15 @@ func CloseCurrentPopup() {
 //
 // open+begin popup when clicked on last item. Use str_id==NULL to associate the popup to previous item. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
 func BeginPopupContextItem(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*/) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
-	var id = g.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
+	var id = guiContext.LastItemData.ID // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
 	if str_id != "" {
 		id = window.GetIDs(str_id)
 	}
-	IM_ASSERT(id != 0) // You cannot pass a nil str_id if the last item has no identifier (e.g. a Text() item)
+	IM_ASSERT(id != 0) // You cannot pass a nil str_id if the last item has no identifier (e.guiContext. a Text() item)
 	var mouse_button = ImGuiMouseButton(popup_flags & ImGuiPopupFlags_MouseButtonMask_)
 	if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
 		OpenPopupEx(id, popup_flags)
@@ -186,7 +186,7 @@ func BeginPopupContextItem(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*
 }
 
 func BeginPopupContextVoid(str_id string, popup_flags ImGuiPopupFlags) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if str_id == "" {
 		str_id = "void_context"
 	}
@@ -219,7 +219,7 @@ func BeginPopupContext(str_id string /*= L*/, popup_flags ImGuiPopupFlags /*= 1*
 func IsPopupOpen(str_id string, flags ImGuiPopupFlags) bool {
 	var id ImGuiID
 	if flags&ImGuiPopupFlags_AnyPopupId == 0 {
-		id = g.CurrentWindow.GetIDs(str_id)
+		id = guiContext.CurrentWindow.GetIDs(str_id)
 	}
 	if (flags&ImGuiPopupFlags_AnyPopupLevel != 0) && id != 0 {
 		IM_ASSERT_USER_ERROR(false, "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel.") // But non-string version is legal and used internally
@@ -228,8 +228,8 @@ func IsPopupOpen(str_id string, flags ImGuiPopupFlags) bool {
 }
 
 func GetTopMostPopupModal() *ImGuiWindow {
-	for n := len(g.OpenPopupStack) - 1; n >= 0; n-- {
-		if popup := g.OpenPopupStack[n].Window; popup != nil {
+	for n := len(guiContext.OpenPopupStack) - 1; n >= 0; n-- {
+		if popup := guiContext.OpenPopupStack[n].Window; popup != nil {
 			if popup.Flags&ImGuiWindowFlags_Modal != 0 {
 				return popup
 			}
@@ -241,7 +241,7 @@ func GetTopMostPopupModal() *ImGuiWindow {
 // GetPopupAllowedExtentRect Note that this is used for popups, which can overlap the non work-area of individual viewports.
 func GetPopupAllowedExtentRect(*ImGuiWindow) ImRect {
 	var r_screen = GetMainViewport().GetMainRect()
-	var padding = g.Style.DisplaySafeAreaPadding
+	var padding = guiContext.Style.DisplaySafeAreaPadding
 
 	var x, y float
 	if r_screen.GetWidth() > padding.x*2 {
@@ -256,7 +256,7 @@ func GetPopupAllowedExtentRect(*ImGuiWindow) ImRect {
 }
 
 func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
-	g := g
+	g := guiContext
 
 	var r_outer = GetPopupAllowedExtentRect(window)
 	if window.Flags&ImGuiWindowFlags_ChildMenu != 0 {
@@ -267,7 +267,7 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 		var horizontal_overlap = g.Style.ItemInnerSpacing.x // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
 		var r_avoid ImRect
 		if parent_window.DC.MenuBarAppending {
-			r_avoid = ImRect{ImVec2{-FLT_MAX, parent_window.ClipRect.Min.y}, ImVec2{FLT_MAX, parent_window.ClipRect.Max.y}} // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a NextWindowData.PosConstraintAvoidRect field
+			r_avoid = ImRect{ImVec2{-FLT_MAX, parent_window.ClipRect.Min.y}, ImVec2{FLT_MAX, parent_window.ClipRect.Max.y}} // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.guiContext. a NextWindowData.PosConstraintAvoidRect field
 		} else {
 			r_avoid = ImRect{ImVec2{parent_window.Pos.x + horizontal_overlap, -FLT_MAX}, ImVec2{parent_window.Pos.x + parent_window.Size.x - horizontal_overlap - parent_window.ScrollbarSizes.x, FLT_MAX}}
 		}
@@ -293,7 +293,7 @@ func FindBestWindowPosForPopup(window *ImGuiWindow) ImVec2 {
 	return window.Pos
 }
 
-// FindBestWindowPosForPopupEx r_avoid = the rectangle to avoid (e.g. for tooltip it is a rectangle around the mouse cursor which we want to avoid. for popups it's a small point around the cursor.)
+// FindBestWindowPosForPopupEx r_avoid = the rectangle to avoid (e.guiContext. for tooltip it is a rectangle around the mouse cursor which we want to avoid. for popups it's a small point around the cursor.)
 // r_outer = the visible area rectangle, minus safe area padding. If our popup size won't fit because of safe area padding we ignore it.
 // (r_outer is usually equivalent to the viewport rectangle minus padding, but when multi-viewports are enabled and monitor
 //
@@ -391,7 +391,7 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 
 			var avail_h = hl - hr
 
-			// If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
+			// If there not enough room on one axis, there's no point in positioning on a side on this axis (e.guiContext. when not enough width, use a top/bottom position to maximize available width)
 			if avail_w < size.x && (dir == ImGuiDir_Left || dir == ImGuiDir_Right) {
 				continue
 			}
@@ -442,7 +442,7 @@ func FindBestWindowPosForPopupEx(ref_pos *ImVec2, size *ImVec2, last_dir *ImGuiD
 // ClosePopupsOverWindow When popups are stacked, clicking on a lower level popups puts focus back to it and close popups above it.
 // This function closes any popups that are over 'ref_window'.
 func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_under_popup bool) {
-	if len(g.OpenPopupStack) == 0 {
+	if len(guiContext.OpenPopupStack) == 0 {
 		return
 	}
 
@@ -450,8 +450,8 @@ func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_unde
 	var popup_count_to_keep int = 0
 	if ref_window != nil {
 		// Find the highest popup which is a descendant of the reference window (generally reference window = NavWindow)
-		for ; popup_count_to_keep < int(len(g.OpenPopupStack)); popup_count_to_keep++ {
-			var popup = &g.OpenPopupStack[popup_count_to_keep]
+		for ; popup_count_to_keep < int(len(guiContext.OpenPopupStack)); popup_count_to_keep++ {
+			var popup = &guiContext.OpenPopupStack[popup_count_to_keep]
 			if popup.Window == nil {
 				continue
 			}
@@ -466,8 +466,8 @@ func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_unde
 			// - Each popups may contain child windows, which is why we compare .RootWindow!
 			//     Window . Popup1 . Popup1_Child . Popup2 . Popup2_Child
 			var ref_window_is_descendent_of_popup = false
-			for n := popup_count_to_keep; n < int(len(g.OpenPopupStack)); n++ {
-				if popup_window := g.OpenPopupStack[n].Window; popup_window != nil {
+			for n := popup_count_to_keep; n < int(len(guiContext.OpenPopupStack)); n++ {
+				if popup_window := guiContext.OpenPopupStack[n].Window; popup_window != nil {
 					if popup_window.RootWindow == ref_window.RootWindow {
 						ref_window_is_descendent_of_popup = true
 						break
@@ -479,7 +479,7 @@ func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_unde
 			}
 		}
 	}
-	if popup_count_to_keep < int(len(g.OpenPopupStack)) { // This test is not required but it allows to set a convenient breakpoint on the statement below
+	if popup_count_to_keep < int(len(guiContext.OpenPopupStack)) { // This test is not required but it allows to set a convenient breakpoint on the statement below
 		//IMGUI_DEBUG_LOG_POPUP("ClosePopupsOverWindow(\"%s\") . ClosePopupToLevel(%d)\n", ref_window.Name, popup_count_to_keep)
 		ClosePopupToLevel(popup_count_to_keep, restore_focus_to_window_under_popup)
 	}
@@ -489,18 +489,18 @@ func ClosePopupsOverWindow(ref_window *ImGuiWindow, restore_focus_to_window_unde
 func IsPopupOpenID(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
 	if popup_flags&ImGuiPopupFlags_AnyPopupId != 0 {
 		// Return true if any popup is open at the current BeginPopup() level of the popup stack
-		// This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.
+		// This may be used to e.guiContext. test for another popups already opened to handle popups priorities at the same level.
 		IM_ASSERT(id == 0)
 		if popup_flags&ImGuiPopupFlags_AnyPopupLevel != 0 {
-			return len(g.OpenPopupStack) > 0
+			return len(guiContext.OpenPopupStack) > 0
 		} else {
-			return len(g.OpenPopupStack) > len(g.BeginPopupStack)
+			return len(guiContext.OpenPopupStack) > len(guiContext.BeginPopupStack)
 		}
 	} else {
 		if popup_flags&ImGuiPopupFlags_AnyPopupLevel != 0 {
 			// Return true if the popup is open anywhere in the popup stack
-			for n := range g.OpenPopupStack {
-				if g.OpenPopupStack[n].PopupId == id {
+			for n := range guiContext.OpenPopupStack {
+				if guiContext.OpenPopupStack[n].PopupId == id {
 					return true
 				}
 			}
@@ -508,7 +508,7 @@ func IsPopupOpenID(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
 			return false
 		} else {
 			// Return true if the popup is open at the current BeginPopup() level of the popup stack (this is the most-common query)
-			return len(g.OpenPopupStack) > len(g.BeginPopupStack) && g.OpenPopupStack[len(g.BeginPopupStack)].PopupId == id
+			return len(guiContext.OpenPopupStack) > len(guiContext.BeginPopupStack) && guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)].PopupId == id
 		}
 	}
 }
@@ -518,8 +518,8 @@ func IsPopupOpenID(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
 // Popup identifiers are relative to the current ID-stack (so OpenPopup and BeginPopup needs to be at the same level).
 // One open popup per level of the popup hierarchy (NB: when assigning we reset the Window member of ImGuiPopupRef to nil)
 func OpenPopupEx(id ImGuiID, popup_flags ImGuiPopupFlags) {
-	var parent_window = g.CurrentWindow
-	var current_stack_size = int(len(g.BeginPopupStack))
+	var parent_window = guiContext.CurrentWindow
+	var current_stack_size = int(len(guiContext.BeginPopupStack))
 
 	if popup_flags&ImGuiPopupFlags_NoOpenOverExistingPopup != 0 {
 		if IsPopupOpen("", ImGuiPopupFlags_AnyPopupId) {
@@ -530,53 +530,53 @@ func OpenPopupEx(id ImGuiID, popup_flags ImGuiPopupFlags) {
 	var popup_ref ImGuiPopupData // Tagged as new ref as Window will be set back to nil if we write this into OpenPopupStack.
 	popup_ref.PopupId = id
 	popup_ref.Window = nil
-	popup_ref.SourceWindow = g.NavWindow
-	popup_ref.OpenFrameCount = g.FrameCount
+	popup_ref.SourceWindow = guiContext.NavWindow
+	popup_ref.OpenFrameCount = guiContext.FrameCount
 	popup_ref.OpenParentId = parent_window.IDStack[len(parent_window.IDStack)-1]
 	popup_ref.OpenPopupPos = NavCalcPreferredRefPos()
-	if IsMousePosValid(&g.IO.MousePos) {
-		popup_ref.OpenMousePos = g.IO.MousePos
+	if IsMousePosValid(&guiContext.IO.MousePos) {
+		popup_ref.OpenMousePos = guiContext.IO.MousePos
 	} else {
 		popup_ref.OpenMousePos = popup_ref.OpenPopupPos
 	}
 
 	//IMGUI_DEBUG_LOG_POPUP("OpenPopupEx(0x%08X)\n", id)
-	if int(len(g.OpenPopupStack)) < current_stack_size+1 {
-		g.OpenPopupStack = append(g.OpenPopupStack, popup_ref)
+	if int(len(guiContext.OpenPopupStack)) < current_stack_size+1 {
+		guiContext.OpenPopupStack = append(guiContext.OpenPopupStack, popup_ref)
 	} else {
 		// Gently handle the user mistakenly calling OpenPopup() every frame. It is a programming mistake! However, if we were to run the regular code path, the ui
 		// would become completely unusable because the popup will always be in hidden-while-calculating-size state _while_ claiming focus. Which would be a very confusing
 		// situation for the programmer. Instead, we silently allow the popup to proceed, it will keep reappearing and the programming error will be more obvious to understand.
-		if g.OpenPopupStack[current_stack_size].PopupId == id && g.OpenPopupStack[current_stack_size].OpenFrameCount == g.FrameCount-1 {
-			g.OpenPopupStack[current_stack_size].OpenFrameCount = popup_ref.OpenFrameCount
+		if guiContext.OpenPopupStack[current_stack_size].PopupId == id && guiContext.OpenPopupStack[current_stack_size].OpenFrameCount == guiContext.FrameCount-1 {
+			guiContext.OpenPopupStack[current_stack_size].OpenFrameCount = popup_ref.OpenFrameCount
 		} else {
 			// Close child popups if any, then flag popup for open/reopen
 			ClosePopupToLevel(current_stack_size, false)
-			g.OpenPopupStack = append(g.OpenPopupStack, popup_ref)
+			guiContext.OpenPopupStack = append(guiContext.OpenPopupStack, popup_ref)
 		}
 
 		// When reopening a popup we first refocus its parent, otherwise if its parent is itself a popup it would get closed by ClosePopupsOverWindow().
 		// This is equivalent to what ClosePopupToLevel() does.
-		//if (g.OpenPopupStack[current_stack_size].PopupId == id)
+		//if (guiContext.OpenPopupStack[current_stack_size].PopupId == id)
 		//    FocusWindow(parent_window);
 	}
 }
 
 func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) {
 	//IMGUI_DEBUG_LOG_POPUP("ClosePopupToLevel(%d), restore_focus_to_window_under_popup=%d\n", remaining, restore_focus_to_window_under_popup)
-	IM_ASSERT(remaining >= 0 && remaining < int(len(g.OpenPopupStack)))
+	IM_ASSERT(remaining >= 0 && remaining < int(len(guiContext.OpenPopupStack)))
 
 	// Trim open popup stack
-	var focus_window = g.OpenPopupStack[remaining].SourceWindow
-	var popup_window = g.OpenPopupStack[remaining].Window
-	g.OpenPopupStack = g.OpenPopupStack[:remaining]
+	var focus_window = guiContext.OpenPopupStack[remaining].SourceWindow
+	var popup_window = guiContext.OpenPopupStack[remaining].Window
+	guiContext.OpenPopupStack = guiContext.OpenPopupStack[:remaining]
 
 	if restore_focus_to_window_under_popup {
 		if focus_window != nil && !focus_window.WasActive && popup_window != nil {
 			// Fallback
 			FocusTopMostWindowUnderOne(popup_window, nil)
 		} else {
-			if g.NavLayer == ImGuiNavLayer_Main && focus_window != nil {
+			if guiContext.NavLayer == ImGuiNavLayer_Main && focus_window != nil {
 				focus_window = NavRestoreLastChildNavWindow(focus_window)
 			}
 			FocusWindow(focus_window)
@@ -587,25 +587,25 @@ func ClosePopupToLevel(remaining int, restore_focus_to_window_under_popup bool) 
 func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
 	if (popup_flags & ImGuiPopupFlags_AnyPopupId) != 0 {
 		// Return true if any popup is open at the current BeginPopup() level of the popup stack
-		// This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.
+		// This may be used to e.guiContext. test for another popups already opened to handle popups priorities at the same level.
 		IM_ASSERT(id == 0)
 		if popup_flags&ImGuiPopupFlags_AnyPopupLevel != 0 {
-			return len(g.OpenPopupStack) > 0
+			return len(guiContext.OpenPopupStack) > 0
 		} else {
-			return len(g.OpenPopupStack) > len(g.BeginPopupStack)
+			return len(guiContext.OpenPopupStack) > len(guiContext.BeginPopupStack)
 		}
 	} else {
 		if popup_flags&ImGuiPopupFlags_AnyPopupLevel != 0 {
 			// Return true if the popup is open anywhere in the popup stack
-			for n := range g.OpenPopupStack {
-				if g.OpenPopupStack[n].PopupId == id {
+			for n := range guiContext.OpenPopupStack {
+				if guiContext.OpenPopupStack[n].PopupId == id {
 					return true
 				}
 			}
 			return false
 		} else {
 			// Return true if the popup is open at the current BeginPopup() level of the popup stack (this is the most-common query)
-			return len(g.OpenPopupStack) > len(g.BeginPopupStack) && g.OpenPopupStack[len(g.BeginPopupStack)].PopupId == id
+			return len(guiContext.OpenPopupStack) > len(guiContext.BeginPopupStack) && guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)].PopupId == id
 		}
 	}
 }
@@ -613,20 +613,20 @@ func isPopupOpen(id ImGuiID, popup_flags ImGuiPopupFlags) bool {
 // BeginPopupEx Attention! BeginPopup() adds default flags which BeginPopupEx()!
 func BeginPopupEx(id ImGuiID, flags ImGuiWindowFlags) bool {
 	if !isPopupOpen(id, ImGuiPopupFlags_None) {
-		g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
+		guiContext.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 		return false
 	}
 
 	var name string
 	if flags&ImGuiWindowFlags_ChildMenu != 0 {
-		name = fmt.Sprintf("##Menu_%02d", int(len(g.BeginPopupStack))) // Recycle windows based on depth
+		name = fmt.Sprintf("##Menu_%02d", int(len(guiContext.BeginPopupStack))) // Recycle windows based on depth
 	} else {
 		name = fmt.Sprintf("##Popup_%08x", id) // Not recycling, so we can close/open during the same frame
 	}
 
 	flags |= ImGuiWindowFlags_Popup
 	var is_open = Begin(string(name[:]), nil, flags)
-	if !is_open { // NB: Begin can return false when the popup is completely clipped (e.g. zero size display)
+	if !is_open { // NB: Begin can return false when the popup is completely clipped (e.guiContext. zero size display)
 		EndPopup()
 	}
 

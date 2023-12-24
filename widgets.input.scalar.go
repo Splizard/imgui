@@ -3,7 +3,7 @@ package imgui
 import "fmt"
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
-// Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
+// Read code of e.guiContext. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_S64
 
@@ -12,7 +12,7 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 
 	if format == "" {
 		format = "%v"
@@ -30,11 +30,11 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 	if p_step != nil {
 		var button_size = GetFrameHeight()
 
-		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
+		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.guiContext. IsItemActive()
 		PushString(label)
 		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 
 		// Step buttons
@@ -48,7 +48,7 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		if ButtonEx("-", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -59,7 +59,7 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		if ButtonEx("+", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -76,11 +76,11 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 	}
 	if value_changed {
-		MarkItemEdited(g.LastItemData.ID)
+		MarkItemEdited(guiContext.LastItemData.ID)
 	}
 
 	return value_changed
@@ -102,7 +102,7 @@ func InputScalarInt64s(label string, p_data []int64, p_step, p_step_fast *int64,
 		p_data := &p_data[i]
 		PushID(i)
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = InputScalarInt64("", p_data, p_step, p_step_fast, format, flags) || value_changed
 		PopID()
@@ -110,7 +110,7 @@ func InputScalarInt64s(label string, p_data []int64, p_step, p_step_fast *int64,
 	}
 	PopID()
 
-	SameLine(0.0, g.Style.ItemInnerSpacing.x)
+	SameLine(0.0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -118,7 +118,7 @@ func InputScalarInt64s(label string, p_data []int64, p_step, p_step_fast *int64,
 }
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
-// Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
+// Read code of e.guiContext. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_S32
 
@@ -127,7 +127,7 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 
 	if format == "" {
 		format = "%v"
@@ -145,11 +145,11 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 	if p_step != nil {
 		var button_size = GetFrameHeight()
 
-		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
+		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.guiContext. IsItemActive()
 		PushString(label)
 		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 
 		// Step buttons
@@ -163,7 +163,7 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		if ButtonEx("-", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -174,7 +174,7 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		if ButtonEx("+", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -191,11 +191,11 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 	}
 	if value_changed {
-		MarkItemEdited(g.LastItemData.ID)
+		MarkItemEdited(guiContext.LastItemData.ID)
 	}
 
 	return value_changed
@@ -217,7 +217,7 @@ func InputScalarInt32s(label string, p_data []int32, p_step, p_step_fast *int32,
 		p_data := &p_data[i]
 		PushID(i)
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = InputScalarInt32("", p_data, p_step, p_step_fast, format, flags) || value_changed
 		PopID()
@@ -225,7 +225,7 @@ func InputScalarInt32s(label string, p_data []int32, p_step, p_step_fast *int32,
 	}
 	PopID()
 
-	SameLine(0.0, g.Style.ItemInnerSpacing.x)
+	SameLine(0.0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -233,7 +233,7 @@ func InputScalarInt32s(label string, p_data []int32, p_step, p_step_fast *int32,
 }
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
-// Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
+// Read code of e.guiContext. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_Double
 
@@ -242,7 +242,7 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 
 	if format == "" {
 		format = "%v"
@@ -260,11 +260,11 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 	if p_step != nil {
 		var button_size = GetFrameHeight()
 
-		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
+		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.guiContext. IsItemActive()
 		PushString(label)
 		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 
 		// Step buttons
@@ -278,7 +278,7 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		if ButtonEx("-", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -289,7 +289,7 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		if ButtonEx("+", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -306,11 +306,11 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 	}
 	if value_changed {
-		MarkItemEdited(g.LastItemData.ID)
+		MarkItemEdited(guiContext.LastItemData.ID)
 	}
 
 	return value_changed
@@ -332,7 +332,7 @@ func InputScalarFloat64s(label string, p_data []float64, p_step, p_step_fast *fl
 		p_data := &p_data[i]
 		PushID(i)
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = InputScalarFloat64("", p_data, p_step, p_step_fast, format, flags) || value_changed
 		PopID()
@@ -340,7 +340,7 @@ func InputScalarFloat64s(label string, p_data []float64, p_step, p_step_fast *fl
 	}
 	PopID()
 
-	SameLine(0.0, g.Style.ItemInnerSpacing.x)
+	SameLine(0.0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -348,7 +348,7 @@ func InputScalarFloat64s(label string, p_data []float64, p_step, p_step_fast *fl
 }
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
-// Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
+// Read code of e.guiContext. InputFloat(), InputInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, format string, flags ImGuiInputTextFlags) bool {
 	data_type := ImGuiDataType_Double
 
@@ -357,7 +357,7 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 
 	if format == "" {
 		format = "%v"
@@ -375,11 +375,11 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 	if p_step != nil {
 		var button_size = GetFrameHeight()
 
-		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
+		BeginGroup() // The only purpose of the group here is to allow the caller to query item data e.guiContext. IsItemActive()
 		PushString(label)
 		SetNextItemWidth(max(1.0, CalcItemWidth()-(button_size+style.ItemInnerSpacing.x)*2))
 		if InputText("", &buf, flags, nil, nil) { // PushId(label) + "" gives us the expected ID from outside point of view
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 
 		// Step buttons
@@ -393,7 +393,7 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		if ButtonEx("-", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -404,7 +404,7 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		if ButtonEx("+", &ImVec2{button_size, button_size}, button_flags) {
 
 			step := p_step
-			if g.IO.KeyCtrl && p_step_fast != nil {
+			if guiContext.IO.KeyCtrl && p_step_fast != nil {
 				step = p_step_fast
 			}
 
@@ -421,11 +421,11 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
-			value_changed = DataTypeApplyOpFromText(string(buf), string(g.InputTextState.InitialTextA), data_type, p_data, format)
+			value_changed = DataTypeApplyOpFromText(string(buf), string(guiContext.InputTextState.InitialTextA), data_type, p_data, format)
 		}
 	}
 	if value_changed {
-		MarkItemEdited(g.LastItemData.ID)
+		MarkItemEdited(guiContext.LastItemData.ID)
 	}
 
 	return value_changed
@@ -447,7 +447,7 @@ func InputScalarFloat32s(label string, p_data []float32, p_step, p_step_fast *fl
 		p_data := &p_data[i]
 		PushID(i)
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = InputScalarFloat32("", p_data, p_step, p_step_fast, format, flags) || value_changed
 		PopID()
@@ -455,7 +455,7 @@ func InputScalarFloat32s(label string, p_data []float32, p_step, p_step_fast *fl
 	}
 	PopID()
 
-	SameLine(0.0, g.Style.ItemInnerSpacing.x)
+	SameLine(0.0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()

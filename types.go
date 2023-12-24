@@ -139,7 +139,7 @@ type ImGuiIO struct {
 	SetClipboardTextFn func(user_data any, text string)
 	ClipboardUserData  any
 
-	// Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
+	// Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.guiContext. when using Japanese/Chinese IME on Windows)
 	// (default to use native imm32 api on Windows)
 	ImeSetInputScreenPosFn func(x, y int)
 	ImeWindowHandle        any // = NULL           // (Windows) Set this to your HWND to get automatic IME cursor positioning.
@@ -166,9 +166,9 @@ type ImGuiIO struct {
 	//  generally easier and more correct to use their state BEFORE calling NewFrame(). See FAQ for details!)
 	//------------------------------------------------------------------
 
-	WantCaptureMouse         bool   // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
-	WantCaptureKeyboard      bool   // Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-	WantTextInput            bool   // Mobile/console: when set, you may display an on-screen keyboard. This is set by Dear ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+	WantCaptureMouse         bool   // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.guiContext. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+	WantCaptureKeyboard      bool   // Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.guiContext. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+	WantTextInput            bool   // Mobile/console: when set, you may display an on-screen keyboard. This is set by Dear ImGui when it wants textual keyboard input to happen (e.guiContext. when a InputText widget is active).
 	WantSetMousePos          bool   // MousePos has been altered, backend should reposition mouse on next frame. Rarely used! Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
 	WantSaveIniSettings      bool   // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.WantSaveIniSettings yourself after saving!
 	NavActive                bool   // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
@@ -220,7 +220,7 @@ func NewImGuiIO() ImGuiIO {
 	io.DisplaySize = ImVec2{-1.0, -1.0}
 	io.DeltaTime = 1.0 / 60.0
 	io.IniSavingRate = 5.0
-	io.IniFilename = "imgui.ini" // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
+	io.IniFilename = "imgui.ini" // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.guiContext. same path as executables).
 	io.LogFilename = "imgui_log.txt"
 	io.MouseDoubleClickTime = 0.30
 	io.MouseDoubleClickMaxDist = 6.0
@@ -331,8 +331,8 @@ func (this *ImGuiInputTextCallbackData) InsertChars(pos int, new_text string) {
 		}
 
 		// Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
-		var edit_state = &g.InputTextState
-		IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID)
+		var edit_state = &guiContext.InputTextState
+		IM_ASSERT(edit_state.ID != 0 && guiContext.ActiveId == edit_state.ID)
 		//IM_ASSERT(this.Buf == edit_state.TextA)
 		var new_buf_size = this.BufTextLen + ImClampInt(new_text_len*4, 32, max(256, new_text_len)) + 1
 		edit_state.TextA = append(edit_state.TextA, make([]byte, new_buf_size-int(len(edit_state.TextA)))...)
@@ -477,7 +477,7 @@ const IM_DRAWLIST_TEX_LINES_WIDTH_MAX = 63
 //	B) render a complex 3D scene inside a UI element without an intermediate texture/render target, etc.
 //
 // The expected behavior from your rendering function is 'if (cmd.UserCallback != NULL) { cmd) cmd.UserCallback(parent_list, } else { RenderTriangles() }'
-// If you want to override the signature of ImDrawCallback, you can simply use e.g. '#define ImDrawCallback MyDrawCallback' (in imconfig.h) + update rendering backend accordingly.
+// If you want to override the signature of ImDrawCallback, you can simply use e.guiContext. '#define ImDrawCallback MyDrawCallback' (in imconfig.h) + update rendering backend accordingly.
 type ImDrawCallback func(parent_list *ImDrawList, cmd *ImDrawCmd)
 
 // ImDrawCmd Typically, 1 command = 1 GPU draw call (unless command is a callback)
@@ -551,13 +551,13 @@ type ImFontConfig struct {
 	SizePixels           float     //          // Size in pixels for rasterizer (more or less maps to the resulting font height).
 	OversampleH          int       // 3        // Rasterize at higher quality for sub-pixel positioning. Note the difference between 2 and 3 is minimal so you can reduce this to 2 to save memory. Read https://github.com/nothings/stb/blob/master/tests/oversample/README.md for details.
 	OversampleV          int       // 1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
-	PixelSnapH           bool      // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
+	PixelSnapH           bool      // false    // Align every glyph to pixel boundary. Useful e.guiContext. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
 	GlyphExtraSpacing    ImVec2    // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
 	GlyphOffset          ImVec2    // 0, 0     // Offset all glyphs from this font input.
 	GlyphRanges          []ImWchar // NULL     // Pointer to a user-provided list of Unicode range (2 value per range, values are inclusive, zero-terminated list). THE ARRAY DATA NEEDS TO PERSIST AS LONG AS THE FONT IS ALIVE.
 	GlyphMinAdvanceX     float     // 0        // Minimum AdvanceX for glyphs, set Min to align font icons, set both Min/Max to enforce mono-space font
 	GlyphMaxAdvanceX     float     // FLT_MAX  // Maximum AdvanceX for glyphs
-	MergeMode            bool      // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.g. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
+	MergeMode            bool      // false    // Merge into previous ImFont, so you can combine multiple inputs font into one ImFont (e.guiContext. ASCII font + icons + Japanese glyphs). You may want to use GlyphOffset.y when merge font of different heights.
 	FontBuilderFlags     uint      // 0        // Settings for custom font builder. THIS IS BUILDER IMPLEMENTATION DEPENDENT. Leave as zero if unsure.
 	RasterizerMultiply   float     // 1.0f     // Brighten (>1.0f) or darken (<1.0f) font output. Brightening small fonts may be a good workaround to make them more readable.
 	EllipsisChar         ImWchar   // -1       // Explicitly specify unicode codepoint of ellipsis character. When fonts are being merged first specified ellipsis will be used.
@@ -600,7 +600,7 @@ type ImFont struct {
 	DotChar             ImWchar                                         // 2     // out // = '.'      // Character used for ellipsis rendering (if a single '...' character isn't found)
 	DirtyLookupTables   bool                                            // 1     // out //
 	Scale               float                                           // 4     // in  // = 1.f      // Base font scale, multiplied by the per-window font scale which you can adjust with SetWindowFontScale()
-	Ascent, Descent     float                                           // 4+4   // out //            // Ascent: distance from top to bottom of e.g. 'A' [0..FontSize]
+	Ascent, Descent     float                                           // 4+4   // out //            // Ascent: distance from top to bottom of e.guiContext. 'A' [0..FontSize]
 	MetricsTotalSurface int                                             // 4     // out //            // Total surface in pixels to get an idea of the font rasterization/texture cost (not exact, we approximate the cost of padding between glyphs)
 	Used4kPagesMap      [(IM_UNICODE_CODEPOINT_MAX + 1) / 4096 / 8]ImU8 // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
 }
@@ -674,7 +674,7 @@ func (f *ImFont) AddRemapChar(dst, src ImWchar, overwrite_dst bool /*= true*/) {
 }
 
 // IsGlyphRangeUnused API is designed this way to avoid exposing the 4K page size
-// e.g. use with IsGlyphRangeUnused(0, 255)
+// e.guiContext. use with IsGlyphRangeUnused(0, 255)
 func (f *ImFont) IsGlyphRangeUnused(c_begin, c_last uint) bool {
 	var page_begin = c_begin / 4096
 	var page_last = c_last / 4096

@@ -51,7 +51,7 @@ func STB_TEXTEDIT_GETWIDTH(obj *STB_TEXTEDIT_STRING, line_start_idx, char_idx in
 	if c == '\n' {
 		return STB_TEXTEDIT_GETWIDTH_NEWLINE
 	}
-	return g.Font.GetCharAdvance(c) * (g.FontSize / g.Font.FontSize)
+	return guiContext.Font.GetCharAdvance(c) * (guiContext.FontSize / guiContext.Font.FontSize)
 }
 
 func STB_TEXTEDIT_GETCHAR(obj *STB_TEXTEDIT_STRING, idx int) STB_TEXTEDIT_CHARTYPE {
@@ -208,7 +208,7 @@ type STB_TexteditState struct {
 	select_start int // selection start point
 	select_end   int
 	// selection start and end point in characters; if equal, no selection.
-	// note that start may be less than or greater than end (e.g. when
+	// note that start may be less than or greater than end (e.guiContext. when
 	// dragging the mouse, start is where the initial click was, and you
 	// can drag in either direction)
 

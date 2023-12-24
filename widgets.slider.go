@@ -7,7 +7,7 @@ import (
 
 // Widgets: Regular Sliders
 // - CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
-// - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2 secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
+// - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.guiContext. "%.3f" -> 1.234; "%5.2 secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
 // - Format string may also be set to NULL or use the default format ("%f" or "%d").
 // - Legacy: Pre-1.78 there are SliderXXX() function signatures that takes a final `power float=1.0' argument instead of the `ImGuiSliderFlags flags=0' argument.
 //   If you get a warning converting a to float ImGuiSliderFlags, read https://github.com/ocornut/imgui/issues/3361
@@ -52,14 +52,14 @@ func SliderInt4(label string, v [4]int, v_min int, v_max int, format string /*= 
 }
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
-// Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
+// Read code of e.guiContext. SliderFloat(), SliderInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, p_max any, format string, flags ImGuiSliderFlags) bool {
 	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 	var w = CalcItemWidth()
 
@@ -94,14 +94,14 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 	var hovered = ItemHoverable(&frame_bb, id)
 	var temp_input_is_active = temp_input_allowed && TempInputIsActive(id)
 	if !temp_input_is_active {
-		var focus_requested = temp_input_allowed && (g.LastItemData.StatusFlags&ImGuiItemStatusFlags_Focused) != 0
-		var clicked = (hovered && g.IO.MouseClicked[0])
-		if focus_requested || clicked || g.NavActivateId == id || g.NavInputId == id {
+		var focus_requested = temp_input_allowed && (guiContext.LastItemData.StatusFlags&ImGuiItemStatusFlags_Focused) != 0
+		var clicked = (hovered && guiContext.IO.MouseClicked[0])
+		if focus_requested || clicked || guiContext.NavActivateId == id || guiContext.NavInputId == id {
 			SetActiveID(id, window)
 			SetFocusID(id, window)
 			FocusWindow(window)
-			g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right)
-			if temp_input_allowed && (focus_requested || (clicked && g.IO.KeyCtrl) || g.NavInputId == id) {
+			guiContext.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right)
+			if temp_input_allowed && (focus_requested || (clicked && guiContext.IO.KeyCtrl) || guiContext.NavInputId == id) {
 				temp_input_is_active = true
 			}
 		}
@@ -122,7 +122,7 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 
 	// Draw frame
 	var c = ImGuiCol_FrameBg
-	if g.ActiveId == id {
+	if guiContext.ActiveId == id {
 		c = ImGuiCol_FrameBgActive
 	} else if hovered {
 		c = ImGuiCol_FrameBgHovered
@@ -130,7 +130,7 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 
 	var frame_col = GetColorU32FromID(c, 1)
 	RenderNavHighlight(&frame_bb, id, 0)
-	RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding)
+	RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, guiContext.Style.FrameRounding)
 
 	// Slider behavior
 	var grab_bb ImRect
@@ -142,7 +142,7 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 	// Render grab
 	if grab_bb.Max.x > grab_bb.Min.x {
 		var c = ImGuiCol_SliderGrab
-		if g.ActiveId == id {
+		if guiContext.ActiveId == id {
 			c = ImGuiCol_SliderGrabActive
 		}
 
@@ -152,7 +152,7 @@ func SliderScalar(label string, data_type ImGuiDataType, p_data any, p_min any, 
 	// Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
 	p_data_val := reflect.ValueOf(p_data).Elem()
 	var value_buf = fmt.Sprintf(format, p_data_val)
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		LogSetNextTextDecoration("{", "}")
 	}
 	RenderTextClipped(&frame_bb.Min, &frame_bb.Max, value_buf, nil, &ImVec2{0.5, 0.5}, nil)
@@ -178,7 +178,7 @@ func SliderScalarN(label string, data_type ImGuiDataType, p_data []float, p_min 
 	for i := 0; i < len(p_data); i++ {
 		PushID(int(i))
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = SliderScalar("", data_type, &p_data[i], p_min, p_max, format, flags) || value_changed
 		PopID()
@@ -186,7 +186,7 @@ func SliderScalarN(label string, data_type ImGuiDataType, p_data []float, p_min 
 	}
 	PopID()
 
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -207,7 +207,7 @@ func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data an
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 
 	var label_size = CalcTextSize(label, true, -1)
@@ -231,16 +231,16 @@ func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data an
 	}
 
 	var hovered = ItemHoverable(&frame_bb, id)
-	if (hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id || g.NavInputId == id {
+	if (hovered && guiContext.IO.MouseClicked[0]) || guiContext.NavActivateId == id || guiContext.NavInputId == id {
 		SetActiveID(id, window)
 		SetFocusID(id, window)
 		FocusWindow(window)
-		g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down)
+		guiContext.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down)
 	}
 
 	// Draw frame
 	var c = ImGuiCol_FrameBg
-	if g.ActiveId == id {
+	if guiContext.ActiveId == id {
 		c = ImGuiCol_FrameBgActive
 	} else if hovered {
 		c = ImGuiCol_FrameBgHovered
@@ -248,7 +248,7 @@ func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data an
 
 	var frame_col = GetColorU32FromID(c, 1)
 	RenderNavHighlight(&frame_bb, id, 0)
-	RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding)
+	RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, guiContext.Style.FrameRounding)
 
 	// Slider behavior
 	var grab_bb ImRect
@@ -260,7 +260,7 @@ func VSliderScalar(label string, size ImVec2, data_type ImGuiDataType, p_data an
 	// Render grab
 	if grab_bb.Max.y > grab_bb.Min.y {
 		var c = ImGuiCol_SliderGrab
-		if g.ActiveId == id {
+		if guiContext.ActiveId == id {
 			c = ImGuiCol_SliderGrabActive
 		}
 		window.DrawList.AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32FromID(c, 1), style.GrabRounding, 0)

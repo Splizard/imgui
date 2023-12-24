@@ -9,8 +9,8 @@ import (
 
 // Widgets: Drag Sliders
 //   - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
-//   - For all the Float2/Float3/Float4/Int2/Int3/Int4 versions of every functions, note that a 'v float[X]' function argument is the same as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible. You can pass address of your first element out of a contiguous set, e.g. &myvector.x
-//   - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2 secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
+//   - For all the Float2/Float3/Float4/Int2/Int3/Int4 versions of every functions, note that a 'v float[X]' function argument is the same as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible. You can pass address of your first element out of a contiguous set, e.guiContext. &myvector.x
+//   - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.guiContext. "%.3f" -> 1.234; "%5.2 secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
 //   - Format string may also be set to NULL or use the default format ("%f" or "%d").
 //   - Speed are per-pixel of mouse movement (v_speed=0.2: mouse needs to move by 5 pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed is Max(v_speed, minimum_step_at_given_precision).
 //   - Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual input can override those limits.
@@ -59,7 +59,7 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 	}
 	var value_changed = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags)
 	PopItemWidth()
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 
 	var max_min = max(v_min, *v_current_min)
 	if v_min >= v_max {
@@ -75,7 +75,7 @@ func DragFloatRange2(label string, v_current_min *float, v_current_max *float, v
 	}
 	value_changed = DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &max_min, &max_max, format, max_flags) || value_changed
 	PopItemWidth()
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 
 	TextEx(label, 0)
 	EndGroup()
@@ -121,7 +121,7 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 	}
 	var value_changed = DragScalar("##min", ImGuiDataType_S32, v_current_min, v_speed, &min_min, &min_max, format, min_flags)
 	PopItemWidth()
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 
 	var max_min = max(v_min, *v_current_min)
 	if v_min >= v_max {
@@ -137,7 +137,7 @@ func DragIntRange2(label string, v_current_min *int, v_current_max *int, v_speed
 	}
 	value_changed = DragScalar("##max", ImGuiDataType_S32, v_current_max, v_speed, &max_min, &max_max, format, max_flags) || value_changed
 	PopItemWidth()
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 
 	TextEx(label, 0)
 	EndGroup()
@@ -159,14 +159,14 @@ func GetMinimumStepAtDecimalPrecision(decimal_precision int) float {
 }
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
-// Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
+// Read code of e.guiContext. DragFloat(), DragInt() etc. or examples in 'Demo.Widgets.Data Types' to understand how to use this function directly.
 func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float /*= 0*/, p_min any /*= L*/, p_max any /*= L*/, format string, flags ImGuiSliderFlags) bool {
 	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 	var w = CalcItemWidth()
 
@@ -201,23 +201,23 @@ func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float
 	var hovered = ItemHoverable(&frame_bb, id)
 	var temp_input_is_active = temp_input_allowed && TempInputIsActive(id)
 	if !temp_input_is_active {
-		var focus_requested = temp_input_allowed && (g.LastItemData.StatusFlags&ImGuiItemStatusFlags_Focused) != 0
-		var clicked = (hovered && g.IO.MouseClicked[0])
-		var double_clicked = (hovered && g.IO.MouseDoubleClicked[0])
-		if focus_requested || clicked || double_clicked || g.NavActivateId == id || g.NavInputId == id {
+		var focus_requested = temp_input_allowed && (guiContext.LastItemData.StatusFlags&ImGuiItemStatusFlags_Focused) != 0
+		var clicked = (hovered && guiContext.IO.MouseClicked[0])
+		var double_clicked = (hovered && guiContext.IO.MouseDoubleClicked[0])
+		if focus_requested || clicked || double_clicked || guiContext.NavActivateId == id || guiContext.NavInputId == id {
 			SetActiveID(id, window)
 			SetFocusID(id, window)
 			FocusWindow(window)
-			g.ActiveIdUsingNavDirMask = (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right)
-			if temp_input_allowed && (focus_requested || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavInputId == id) {
+			guiContext.ActiveIdUsingNavDirMask = (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right)
+			if temp_input_allowed && (focus_requested || (clicked && guiContext.IO.KeyCtrl) || double_clicked || guiContext.NavInputId == id) {
 				temp_input_is_active = true
 			}
 		}
 		// Experimental: simple click (without moving) turns Drag into an InputText
 		// FIXME: Currently polling ImGuiConfigFlags_IsTouchScreen, may either poll an hypothetical ImGuiBackendFlags_HasKeyboard and/or an explicit drag settings.
-		if g.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active {
-			if g.ActiveId == id && hovered && g.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold*DRAG_MOUSE_THRESHOLD_FACTOR) {
-				g.NavInputId = id
+		if guiContext.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active {
+			if guiContext.ActiveId == id && hovered && guiContext.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, guiContext.IO.MouseDragThreshold*DRAG_MOUSE_THRESHOLD_FACTOR) {
+				guiContext.NavInputId = id
 				temp_input_is_active = true
 			}
 		}
@@ -237,7 +237,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float
 
 	var c = ImGuiCol_FrameBg
 	switch {
-	case g.ActiveId == id:
+	case guiContext.ActiveId == id:
 		c = ImGuiCol_FrameBgActive
 	case hovered:
 		c = ImGuiCol_FrameBgHovered
@@ -257,7 +257,7 @@ func DragScalar(label string, data_type ImGuiDataType, p_data any, v_speed float
 	// Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
 	p_data_val := reflect.ValueOf(p_data).Elem() // get actual value of the interface, not a pointer
 	var value_buf = fmt.Sprintf(format, p_data_val)
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		LogSetNextTextDecoration("{", "}")
 	}
 	RenderTextClipped(&frame_bb.Min, &frame_bb.Max, value_buf, nil, &ImVec2{0.5, 0.5}, nil)
@@ -283,7 +283,7 @@ func DragScalarFloat(label string, data_type ImGuiDataType, p_data *float, v_spe
 	PopItemWidth()
 	PopID()
 
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -303,7 +303,7 @@ func DragScalarFloats(label string, data_type ImGuiDataType, p_data []float, v_s
 	for i := range p_data {
 		PushID(int(i))
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = DragScalar("", data_type, &p_data[i], v_speed, p_min, p_max, format, flags) || value_changed
 		PopID()
@@ -311,7 +311,7 @@ func DragScalarFloats(label string, data_type ImGuiDataType, p_data []float, v_s
 	}
 	PopID()
 
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -332,7 +332,7 @@ func DragScalarInt(label string, data_type ImGuiDataType, p_data *int, v_speed f
 	PopItemWidth()
 	PopID()
 
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(FindRenderedTextEnd(label), 0)
 
 	EndGroup()
@@ -352,7 +352,7 @@ func DragScalarInts(label string, data_type ImGuiDataType, p_data []int, v_speed
 	for i := range p_data {
 		PushID(int(i))
 		if i > 0 {
-			SameLine(0, g.Style.ItemInnerSpacing.x)
+			SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 		}
 		value_changed = DragScalar("", data_type, &p_data[i], v_speed, p_min, p_max, format, flags) || value_changed
 		PopID()
@@ -360,7 +360,7 @@ func DragScalarInts(label string, data_type ImGuiDataType, p_data []int, v_speed
 	}
 	PopID()
 
-	SameLine(0, g.Style.ItemInnerSpacing.x)
+	SameLine(0, guiContext.Style.ItemInnerSpacing.x)
 	TextEx(label, 0)
 
 	EndGroup()
@@ -515,7 +515,7 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 			result = ImLerp(v_min, v_max, t)
 		} else {
 			// - For integer values we want the clicking position to match the grab box so we round above
-			//   This code is carefully tuned to work with large values (e.g. high ranges of U64) while preserving this property..
+			//   This code is carefully tuned to work with large values (e.guiContext. high ranges of U64) while preserving this property..
 			// - Not doing a *1.0 multiply at the end of a range as it tends to be lossy. While absolute aiming at a large s64/u64
 			//   range is going to be imprecise anyway, with this check we at least make the edge values matches expected limits.
 			if t < 1.0 {
@@ -552,24 +552,24 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 
 	// Default tweak speed
 	if v_speed == 0.0 && is_clamped && (*v_max-*v_min < FLT_MAX) {
-		v_speed = (float)((*v_max - *v_min) * g.DragSpeedDefaultRatio)
+		v_speed = (float)((*v_max - *v_min) * guiContext.DragSpeedDefaultRatio)
 	}
-	// Inputs accumulates into g.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
+	// Inputs accumulates into guiContext.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
 	var adjust_delta float
-	if g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid(nil) && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold*DRAG_MOUSE_THRESHOLD_FACTOR) {
+	if guiContext.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid(nil) && IsMouseDragPastThreshold(0, guiContext.IO.MouseDragThreshold*DRAG_MOUSE_THRESHOLD_FACTOR) {
 		switch axis {
 		case ImGuiAxis_X:
-			adjust_delta *= g.IO.MouseDelta.x
+			adjust_delta *= guiContext.IO.MouseDelta.x
 		case ImGuiAxis_Y:
-			adjust_delta *= g.IO.MouseDelta.y
+			adjust_delta *= guiContext.IO.MouseDelta.y
 		}
-		if g.IO.KeyAlt {
+		if guiContext.IO.KeyAlt {
 			adjust_delta *= 1.0 / 100.0
 		}
-		if g.IO.KeyShift {
+		if guiContext.IO.KeyShift {
 			adjust_delta *= 10.0
 		}
-	} else if g.ActiveIdSource == ImGuiInputSource_Nav {
+	} else if guiContext.ActiveIdSource == ImGuiInputSource_Nav {
 		var decimal_precision int = 3
 		amount := GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 1.0/10.0, 10.0)
 		switch axis {
@@ -594,18 +594,18 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 	}
 
 	// Clear current value on activation
-	// Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.g. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
-	var is_just_activated = g.ActiveIdIsJustActivated
+	// Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.guiContext. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
+	var is_just_activated = guiContext.ActiveIdIsJustActivated
 	var is_already_past_limits_and_pushing_outward = is_clamped && ((*v >= *v_max && adjust_delta > 0.0) || (*v <= *v_min && adjust_delta < 0.0))
 	if is_just_activated || is_already_past_limits_and_pushing_outward {
-		g.DragCurrentAccum = 0.0
-		g.DragCurrentAccumDirty = false
+		guiContext.DragCurrentAccum = 0.0
+		guiContext.DragCurrentAccumDirty = false
 	} else if adjust_delta != 0.0 {
-		g.DragCurrentAccum += adjust_delta
-		g.DragCurrentAccumDirty = true
+		guiContext.DragCurrentAccum += adjust_delta
+		guiContext.DragCurrentAccumDirty = true
 	}
 
-	if !g.DragCurrentAccumDirty {
+	if !guiContext.DragCurrentAccumDirty {
 		return false
 	}
 
@@ -621,11 +621,11 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 
 		// Convert to parametric space, apply delta, convert back
 		var v_old_parametric = ScaleRatioFromValueT(v_cur, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
-		var v_new_parametric = v_old_parametric + g.DragCurrentAccum
+		var v_new_parametric = v_old_parametric + guiContext.DragCurrentAccum
 		v_cur = ScaleValueFromRatioT(v_new_parametric, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 		v_old_ref_for_accum_remainder = v_old_parametric
 	} else {
-		v_cur += (float)(g.DragCurrentAccum)
+		v_cur += (float)(guiContext.DragCurrentAccum)
 	}
 
 	// Round to user desired precision based on format string
@@ -634,13 +634,13 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 	}
 
 	// Preserve remainder after rounding has been applied. This also allow slow tweaking of values.
-	g.DragCurrentAccumDirty = false
+	guiContext.DragCurrentAccumDirty = false
 	if is_logarithmic {
 		// Convert to parametric space, apply delta, convert back
 		var v_new_parametric = ScaleRatioFromValueT(v_cur, *v_min, *v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
-		g.DragCurrentAccum -= (float)(v_new_parametric - v_old_ref_for_accum_remainder)
+		guiContext.DragCurrentAccum -= (float)(v_new_parametric - v_old_ref_for_accum_remainder)
 	} else {
-		g.DragCurrentAccum -= (float)(v_cur - *v)
+		guiContext.DragCurrentAccum -= (float)(v_cur - *v)
 	}
 
 	// Lose zero sign for float/double
@@ -671,17 +671,17 @@ func DragBehavior(id ImGuiID, data_type ImGuiDataType, v any, v_speed float, n a
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 
-	if g.ActiveId == id {
-		if g.ActiveIdSource == ImGuiInputSource_Mouse && !g.IO.MouseDown[0] {
+	if guiContext.ActiveId == id {
+		if guiContext.ActiveIdSource == ImGuiInputSource_Mouse && !guiContext.IO.MouseDown[0] {
 			ClearActiveID()
-		} else if g.ActiveIdSource == ImGuiInputSource_Nav && g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated {
+		} else if guiContext.ActiveIdSource == ImGuiInputSource_Nav && guiContext.NavActivatePressedId == id && !guiContext.ActiveIdIsJustActivated {
 			ClearActiveID()
 		}
 	}
-	if g.ActiveId != id {
+	if guiContext.ActiveId != id {
 		return false
 	}
-	if (g.LastItemData.InFlags&ImGuiItemFlags_ReadOnly != 0) || (flags&ImGuiSliderFlags_ReadOnly != 0) {
+	if (guiContext.LastItemData.InFlags&ImGuiItemFlags_ReadOnly != 0) || (flags&ImGuiSliderFlags_ReadOnly != 0) {
 		return false
 	}
 

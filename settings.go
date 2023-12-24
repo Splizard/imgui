@@ -11,7 +11,7 @@ import (
 // LoadIniSettingsFromDisk Settings/.Ini Utilities
 // - The disk functions are automatically called if io.IniFilename != NULL (default is "imgui.ini").
 // - Set io.IniFilename to NULL to load/save manually. Read io.WantSaveIniSettings description about handling .ini saving manually.
-// - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.g. same path as executables).
+// - Important: default value "imgui.ini" is relative to current working dir! Most apps will want to lock this to an absolute path (e.guiContext. same path as executables).
 func LoadIniSettingsFromDisk(ini_filename string) {
 	var file_data_size uintptr = 0
 	var file_data = ImFileLoadToMemory(ini_filename, "rb", &file_data_size, 0)
@@ -22,15 +22,15 @@ func LoadIniSettingsFromDisk(ini_filename string) {
 } // call after CreateContext() and before the first call to NewFrame(). NewFrame() automatically calls LoadIniSettingsFromDisk(io.IniFilename).
 
 func LoadIniSettingsFromMemory(buf []byte, ini_size uintptr) {
-	IM_ASSERT(g.Initialized)
-	//IM_ASSERT(!g.WithinFrameScope && "Cannot be called between NewFrame() and EndFrame()");
-	//IM_ASSERT(g.SettingsLoaded == false && g.FrameCount == 0);
+	IM_ASSERT(guiContext.Initialized)
+	//IM_ASSERT(!guiContext.WithinFrameScope && "Cannot be called between NewFrame() and EndFrame()");
+	//IM_ASSERT(guiContext.SettingsLoaded == false && guiContext.FrameCount == 0);
 
 	// Call pre-read handlers
-	// Some types will clear their data (e.g. dock information) some types will allow merge/override (window)
-	for handler_n := range g.SettingsHandlers {
-		if g.SettingsHandlers[handler_n].ReadInitFn != nil {
-			g.SettingsHandlers[handler_n].ReadInitFn(g, &g.SettingsHandlers[handler_n])
+	// Some types will clear their data (e.guiContext. dock information) some types will allow merge/override (window)
+	for handler_n := range guiContext.SettingsHandlers {
+		if guiContext.SettingsHandlers[handler_n].ReadInitFn != nil {
+			guiContext.SettingsHandlers[handler_n].ReadInitFn(guiContext, &guiContext.SettingsHandlers[handler_n])
 		}
 	}
 
@@ -57,26 +57,26 @@ func LoadIniSettingsFromMemory(buf []byte, ini_size uintptr) {
 
 				entry_handler = FindSettingsHandler(settings_type)
 				if entry_handler != nil {
-					entry_data = entry_handler.ReadOpenFn(g, entry_handler, settings_id)
+					entry_data = entry_handler.ReadOpenFn(guiContext, entry_handler, settings_id)
 				}
 			}
 		} else if entry_handler != nil {
-			entry_handler.ReadLineFn(g, entry_handler, entry_data, line)
+			entry_handler.ReadLineFn(guiContext, entry_handler, entry_data, line)
 		}
 	}
 
-	g.SettingsLoaded = true
+	guiContext.SettingsLoaded = true
 
 	// Call post-read handlers
-	for handler_n := range g.SettingsHandlers {
-		if g.SettingsHandlers[handler_n].ApplyAllFn != nil {
-			g.SettingsHandlers[handler_n].ApplyAllFn(g, &g.SettingsHandlers[handler_n])
+	for handler_n := range guiContext.SettingsHandlers {
+		if guiContext.SettingsHandlers[handler_n].ApplyAllFn != nil {
+			guiContext.SettingsHandlers[handler_n].ApplyAllFn(guiContext, &guiContext.SettingsHandlers[handler_n])
 		}
 	}
 } // call after CreateContext() and before the first call to NewFrame() to provide .ini data from your own data source.
 
 func SaveIniSettingsToDisk(ini_filename string) {
-	g.SettingsDirtyTimer = 0.0
+	guiContext.SettingsDirtyTimer = 0.0
 	if ini_filename == "" {
 		return
 	}
@@ -88,44 +88,44 @@ func SaveIniSettingsToDisk(ini_filename string) {
 } // this is automatically called (if io.IniFilename is not empty) a few seconds after any modification that should be reflected in the .ini file (and also by DestroyContext).
 
 func SaveIniSettingsToMemory(out_size *uintptr) []byte {
-	g.SettingsDirtyTimer = 0.0
-	g.SettingsIniData = g.SettingsIniData[:0]
-	for handler_n := range g.SettingsHandlers {
-		var handler = &g.SettingsHandlers[handler_n]
-		handler.WriteAllFn(g, handler, &g.SettingsIniData)
+	guiContext.SettingsDirtyTimer = 0.0
+	guiContext.SettingsIniData = guiContext.SettingsIniData[:0]
+	for handler_n := range guiContext.SettingsHandlers {
+		var handler = &guiContext.SettingsHandlers[handler_n]
+		handler.WriteAllFn(guiContext, handler, &guiContext.SettingsIniData)
 	}
 	if out_size != nil {
-		*out_size = (size_t)(len(g.SettingsIniData))
+		*out_size = (size_t)(len(guiContext.SettingsIniData))
 	}
-	return g.SettingsIniData
+	return guiContext.SettingsIniData
 } // return a zero-terminated string with the .ini data which you can save by your own mean. call when io.WantSaveIniSettings is set, then save data by your own mean and clear io.WantSaveIniSettings.
 
 // MarkIniSettingsDirty Settings
 func MarkIniSettingsDirty() {
-	if g.SettingsDirtyTimer <= 0.0 {
-		g.SettingsDirtyTimer = g.IO.IniSavingRate
+	if guiContext.SettingsDirtyTimer <= 0.0 {
+		guiContext.SettingsDirtyTimer = guiContext.IO.IniSavingRate
 	}
 }
 
 func MarkIniSettingsDirtyWindow(window *ImGuiWindow) {
 	if window.Flags&ImGuiWindowFlags_NoSavedSettings == 0 {
-		if g.SettingsDirtyTimer <= 0.0 {
-			g.SettingsDirtyTimer = g.IO.IniSavingRate
+		if guiContext.SettingsDirtyTimer <= 0.0 {
+			guiContext.SettingsDirtyTimer = guiContext.IO.IniSavingRate
 		}
 	}
 }
 
 func ClearIniSettings() {
-	g.SettingsIniData = g.SettingsIniData[:0]
-	for handler_n := range g.SettingsHandlers {
-		if g.SettingsHandlers[handler_n].ClearAllFn != nil {
-			g.SettingsHandlers[handler_n].ClearAllFn(g, &g.SettingsHandlers[handler_n])
+	guiContext.SettingsIniData = guiContext.SettingsIniData[:0]
+	for handler_n := range guiContext.SettingsHandlers {
+		if guiContext.SettingsHandlers[handler_n].ClearAllFn != nil {
+			guiContext.SettingsHandlers[handler_n].ClearAllFn(guiContext, &guiContext.SettingsHandlers[handler_n])
 		}
 	}
 }
 
 func CreateNewWindowSettings(name string) *ImGuiWindowSettings {
-	g := g
+	g := guiContext
 
 	if index := strings.Index(name, "###"); index != -1 {
 		name = name[index:]
@@ -142,8 +142,8 @@ func CreateNewWindowSettings(name string) *ImGuiWindowSettings {
 }
 
 func FindWindowSettings(id ImGuiID) *ImGuiWindowSettings {
-	for i := range g.SettingsWindows {
-		settings := &g.SettingsWindows[i]
+	for i := range guiContext.SettingsWindows {
+		settings := &guiContext.SettingsWindows[i]
 		if settings.ID == id {
 			return settings
 		}
@@ -160,9 +160,9 @@ func FindOrCreateWindowSettings(name string) *ImGuiWindowSettings {
 
 func FindSettingsHandler(name string) *ImGuiSettingsHandler {
 	var type_hash = ImHashStr(name, 0, 0)
-	for handler_n := range g.SettingsHandlers {
-		if g.SettingsHandlers[handler_n].TypeHash == type_hash {
-			return &g.SettingsHandlers[handler_n]
+	for handler_n := range guiContext.SettingsHandlers {
+		if guiContext.SettingsHandlers[handler_n].TypeHash == type_hash {
+			return &guiContext.SettingsHandlers[handler_n]
 		}
 	}
 	return nil
@@ -171,24 +171,24 @@ func FindSettingsHandler(name string) *ImGuiSettingsHandler {
 // UpdateSettings Called by NewFrame()
 func UpdateSettings() {
 	// Load settings on first frame (if not explicitly loaded manually before)
-	if !g.SettingsLoaded {
-		IM_ASSERT(len(g.SettingsWindows) == 0)
-		if g.IO.IniFilename != "" {
-			LoadIniSettingsFromDisk(g.IO.IniFilename)
+	if !guiContext.SettingsLoaded {
+		IM_ASSERT(len(guiContext.SettingsWindows) == 0)
+		if guiContext.IO.IniFilename != "" {
+			LoadIniSettingsFromDisk(guiContext.IO.IniFilename)
 		}
-		g.SettingsLoaded = true
+		guiContext.SettingsLoaded = true
 	}
 
 	// Save settings (with a delay after the last modification, so we don't spam disk too much)
-	if g.SettingsDirtyTimer > 0.0 {
-		g.SettingsDirtyTimer -= g.IO.DeltaTime
-		if g.SettingsDirtyTimer <= 0.0 {
-			if g.IO.IniFilename != "" {
-				SaveIniSettingsToDisk(g.IO.IniFilename)
+	if guiContext.SettingsDirtyTimer > 0.0 {
+		guiContext.SettingsDirtyTimer -= guiContext.IO.DeltaTime
+		if guiContext.SettingsDirtyTimer <= 0.0 {
+			if guiContext.IO.IniFilename != "" {
+				SaveIniSettingsToDisk(guiContext.IO.IniFilename)
 			} else {
-				g.IO.WantSaveIniSettings = true // Let user know they can call SaveIniSettingsToMemory(). user will need to clear io.WantSaveIniSettings themselves.
+				guiContext.IO.WantSaveIniSettings = true // Let user know they can call SaveIniSettingsToMemory(). user will need to clear io.WantSaveIniSettings themselves.
 			}
-			g.SettingsDirtyTimer = 0
+			guiContext.SettingsDirtyTimer = 0
 		}
 	}
 }

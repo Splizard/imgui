@@ -16,7 +16,7 @@ func RenderArrowsForVerticalBar(draw_list *ImDrawList, pos, half_sz ImVec2, bar_
 
 // Widgets: Color Editor/Picker (tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)
 // - Note that in C++ a 'v float[X]' function argument is the _same_ as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible.
-// - You can pass the address of a first element float out of a contiguous structure, e.g. &myvector.x
+// - You can pass the address of a first element float out of a contiguous structure, e.guiContext. &myvector.x
 func ColorEdit3(label string, col *[3]float, flags ImGuiColorEditFlags) bool {
 	var col4 = [4]float{col[0], col[1], col[2], 1.0}
 	result := ColorEdit4(label, &col4, flags|ImGuiColorEditFlags_NoAlpha)
@@ -27,7 +27,7 @@ func ColorEdit3(label string, col *[3]float, flags ImGuiColorEditFlags) bool {
 }
 
 // Edit colors components (each component in 0.0f..1.0f range).
-// See enum ImGuiColorEditFlags_ for available options. e.g. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
+// See enum ImGuiColorEditFlags_ for available options. e.guiContext. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
 func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 	window := GetCurrentWindow()
@@ -35,7 +35,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var square_sz = GetFrameHeight()
 	var w_full = CalcItemWidth()
 	var w_button float = 0.0
@@ -43,7 +43,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 		w_button = (square_sz + style.ItemInnerSpacing.x)
 	}
 	var w_inputs = w_full - w_button
-	g.NextItemData.ClearFlags()
+	guiContext.NextItemData.ClearFlags()
 
 	BeginGroup()
 	PushString(label)
@@ -61,18 +61,18 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 
 	// Read stored options
 	if flags&ImGuiColorEditFlags_DisplayMask_ == 0 {
-		flags |= (g.ColorEditOptions & ImGuiColorEditFlags_DisplayMask_)
+		flags |= (guiContext.ColorEditOptions & ImGuiColorEditFlags_DisplayMask_)
 	}
 	if flags&ImGuiColorEditFlags_DataTypeMask_ == 0 {
-		flags |= (g.ColorEditOptions & ImGuiColorEditFlags_DataTypeMask_)
+		flags |= (guiContext.ColorEditOptions & ImGuiColorEditFlags_DataTypeMask_)
 	}
 	if flags&ImGuiColorEditFlags_PickerMask_ == 0 {
-		flags |= (g.ColorEditOptions & ImGuiColorEditFlags_PickerMask_)
+		flags |= (guiContext.ColorEditOptions & ImGuiColorEditFlags_PickerMask_)
 	}
 	if flags&ImGuiColorEditFlags_InputMask_ == 0 {
-		flags |= (g.ColorEditOptions & ImGuiColorEditFlags_InputMask_)
+		flags |= (guiContext.ColorEditOptions & ImGuiColorEditFlags_InputMask_)
 	}
-	flags |= (g.ColorEditOptions & ^(ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_))
+	flags |= (guiContext.ColorEditOptions & ^(ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_))
 
 	// FIXME (port): these asserts always fail for some reason
 	// IM_ASSERT(ImIsPowerOfTwoInt(int(flags & ImGuiColorEditFlags_DisplayMask_))) // Check that only 1 is selected
@@ -97,12 +97,12 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 	} else if (flags&ImGuiColorEditFlags_InputRGB) != 0 && (flags&ImGuiColorEditFlags_DisplayHSV) != 0 {
 		// Hue is lost when converting from greyscale rgb (saturation=0). Restore it.
 		ColorConvertRGBtoHSV(f[0], f[1], f[2], &f[0], &f[1], &f[2])
-		if g.ColorEditLastColor == [3]float32{col[0], col[1], col[2]} {
+		if guiContext.ColorEditLastColor == [3]float32{col[0], col[1], col[2]} {
 			if f[1] == 0 {
-				f[0] = g.ColorEditLastHue
+				f[0] = guiContext.ColorEditLastHue
 			}
 			if f[2] == 0 {
-				f[1] = g.ColorEditLastSat
+				f[1] = guiContext.ColorEditLastSat
 			}
 		}
 	}
@@ -199,7 +199,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 			i[0] = 0
 			i[1] = 0
 			i[2] = 0
-			i[3] = 0xFF // alpha default to 255 is not parsed by scanf (e.g. inputting #FFFFFF omitting alpha)
+			i[3] = 0xFF // alpha default to 255 is not parsed by scanf (e.guiContext. inputting #FFFFFF omitting alpha)
 			if alpha {
 				fmt.Sscanf(string(p), "%02X%02X%02X%02X", &i[0], &i[1], &i[2], &i[3]) // Treat at unsigned (%X is unsigned)
 			} else {
@@ -228,9 +228,9 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 		if ColorButton("##ColorButton", col_v4, flags, ImVec2{}) {
 			if flags&ImGuiColorEditFlags_NoPicker == 0 {
 				// Store current color and open a picker
-				g.ColorPickerRef = col_v4
+				guiContext.ColorPickerRef = col_v4
 				OpenPopup("picker", 0)
-				pos := g.LastItemData.Rect.GetBL().Add(ImVec2{-1, style.ItemSpacing.y})
+				pos := guiContext.LastItemData.Rect.GetBL().Add(ImVec2{-1, style.ItemSpacing.y})
 				SetNextWindowPos(&pos, 0, ImVec2{})
 			}
 		}
@@ -239,7 +239,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 		}
 
 		if BeginPopup("picker", 0) {
-			picker_active_window = g.CurrentWindow
+			picker_active_window = guiContext.CurrentWindow
 			if len(label) > 0 {
 				TextEx(label, 0)
 				Spacing()
@@ -247,7 +247,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 			var picker_flags_to_forward = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar
 			var picker_flags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf
 			SetNextItemWidth(square_sz * 12.0) // Use 256 + bar sizes?
-			value_changed = ColorPicker4("##picker", col, picker_flags, []float{g.ColorPickerRef.x, g.ColorPickerRef.y, g.ColorPickerRef.z, g.ColorPickerRef.w}) || value_changed
+			value_changed = ColorPicker4("##picker", col, picker_flags, []float{guiContext.ColorPickerRef.x, guiContext.ColorPickerRef.y, guiContext.ColorPickerRef.z, guiContext.ColorPickerRef.w}) || value_changed
 			EndPopup()
 		}
 	}
@@ -271,10 +271,10 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 			}
 		}
 		if flags&ImGuiColorEditFlags_DisplayHSV != 0 && flags&ImGuiColorEditFlags_InputRGB != 0 {
-			g.ColorEditLastHue = f[0]
-			g.ColorEditLastSat = f[1]
+			guiContext.ColorEditLastHue = f[0]
+			guiContext.ColorEditLastSat = f[1]
 			ColorConvertHSVtoRGB(f[0], f[1], f[2], &f[0], &f[1], &f[2])
-			copy(g.ColorEditLastColor[:], f[:3])
+			copy(guiContext.ColorEditLastColor[:], f[:3])
 		}
 		if (flags&ImGuiColorEditFlags_DisplayRGB) != 0 && (flags&ImGuiColorEditFlags_InputHSV) != 0 {
 			ColorConvertRGBtoHSV(f[0], f[1], f[2], &f[0], &f[1], &f[2])
@@ -293,7 +293,7 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 
 	// Drag and Drop Target
 	// NB: The flag test is merely an optional micro-optimization, BeginDragDropTarget() does the same test.
-	if (g.LastItemData.StatusFlags&ImGuiItemStatusFlags_HoveredRect != 0) && (flags&ImGuiColorEditFlags_NoDragDrop) == 0 && BeginDragDropTarget() {
+	if (guiContext.LastItemData.StatusFlags&ImGuiItemStatusFlags_HoveredRect != 0) && (flags&ImGuiColorEditFlags_NoDragDrop) == 0 && BeginDragDropTarget() {
 		var accepted_drag_drop = false
 		if payload := AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, 0); payload != nil {
 			data := payload.Data.([3]float32)
@@ -316,12 +316,12 @@ func ColorEdit4(label string, col *[4]float, flags ImGuiColorEditFlags) bool {
 	}
 
 	// When picker is being actively used, use its active id so IsItemActive() will function on ColorEdit4().
-	if picker_active_window != nil && g.ActiveId != 0 && g.ActiveIdWindow == picker_active_window {
-		g.LastItemData.ID = g.ActiveId
+	if picker_active_window != nil && guiContext.ActiveId != 0 && guiContext.ActiveIdWindow == picker_active_window {
+		guiContext.LastItemData.ID = guiContext.ActiveId
 	}
 
 	if value_changed {
-		MarkItemEdited(g.LastItemData.ID)
+		MarkItemEdited(guiContext.LastItemData.ID)
 	}
 
 	return value_changed
@@ -349,11 +349,11 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	}
 
 	var draw_list = window.DrawList
-	style := g.Style
-	io := g.IO
+	style := guiContext.Style
+	io := guiContext.IO
 
 	var width = CalcItemWidth()
-	g.NextItemData.ClearFlags()
+	guiContext.NextItemData.ClearFlags()
 
 	PushString(label)
 	BeginGroup()
@@ -369,15 +369,15 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 
 	// Read stored options
 	if flags&ImGuiColorEditFlags_PickerMask_ == 0 {
-		if (g.ColorEditOptions & ImGuiColorEditFlags_PickerMask_) != 0 {
-			flags |= g.ColorEditOptions & ImGuiColorEditFlags_PickerMask_
+		if (guiContext.ColorEditOptions & ImGuiColorEditFlags_PickerMask_) != 0 {
+			flags |= guiContext.ColorEditOptions & ImGuiColorEditFlags_PickerMask_
 		} else {
 			flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_PickerMask_
 		}
 	}
 	if flags&ImGuiColorEditFlags_InputMask_ == 0 {
-		if (g.ColorEditOptions & ImGuiColorEditFlags_InputMask_) != 0 {
-			flags |= g.ColorEditOptions & ImGuiColorEditFlags_InputMask_
+		if (guiContext.ColorEditOptions & ImGuiColorEditFlags_InputMask_) != 0 {
+			flags |= guiContext.ColorEditOptions & ImGuiColorEditFlags_InputMask_
 		} else {
 			flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_InputMask_
 		}
@@ -385,7 +385,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	IM_ASSERT(ImIsPowerOfTwoInt(int(flags & ImGuiColorEditFlags_PickerMask_))) // Check that only 1 is selected
 	IM_ASSERT(ImIsPowerOfTwoInt(int(flags & ImGuiColorEditFlags_InputMask_)))  // Check that only 1 is selected
 	if flags&ImGuiColorEditFlags_NoOptions == 0 {
-		flags |= (g.ColorEditOptions & ImGuiColorEditFlags_AlphaBar)
+		flags |= (guiContext.ColorEditOptions & ImGuiColorEditFlags_AlphaBar)
 	}
 
 	// Setup
@@ -425,12 +425,12 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	if (flags & ImGuiColorEditFlags_InputRGB) != 0 {
 		// Hue is lost when converting from greyscale rgb (saturation=0). Restore it.
 		ColorConvertRGBtoHSV(R, G, B, &H, &S, &V)
-		if g.ColorEditLastColor == [3]float32{col[0], col[1], col[2]} {
+		if guiContext.ColorEditLastColor == [3]float32{col[0], col[1], col[2]} {
 			if S == 0 {
-				H = g.ColorEditLastHue
+				H = guiContext.ColorEditLastHue
 			}
 			if V == 0 {
-				S = g.ColorEditLastSat
+				S = guiContext.ColorEditLastSat
 			}
 		}
 	} else if flags&ImGuiColorEditFlags_InputHSV != 0 {
@@ -444,8 +444,8 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 		// Hue wheel + SV triangle logic
 		InvisibleButton("hsv", ImVec2{sv_picker_size + style.ItemInnerSpacing.x + bars_width, sv_picker_size}, 0)
 		if IsItemActive() {
-			var initial_off = g.IO.MouseClickedPos[0].Sub(wheel_center)
-			var current_off = g.IO.MousePos.Sub(wheel_center)
+			var initial_off = guiContext.IO.MouseClickedPos[0].Sub(wheel_center)
+			var current_off = guiContext.IO.MousePos.Sub(wheel_center)
 			var initial_dist2 = ImLengthSqrVec2(initial_off)
 			if initial_dist2 >= (wheel_r_inner-1)*(wheel_r_inner-1) && initial_dist2 <= (wheel_r_outer+1)*(wheel_r_outer+1) {
 				// Interactive with Hue wheel
@@ -573,9 +573,9 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 			}
 
 			ColorConvertHSVtoRGB(h, s, v, &col[0], &col[1], &col[2])
-			g.ColorEditLastHue = H
-			g.ColorEditLastSat = S
-			copy(g.ColorEditLastColor[:], col[:3])
+			guiContext.ColorEditLastHue = H
+			guiContext.ColorEditLastSat = S
+			copy(guiContext.ColorEditLastColor[:], col[:3])
 		} else if flags&ImGuiColorEditFlags_InputHSV != 0 {
 			col[0] = H
 			col[1] = S
@@ -598,7 +598,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 			if ColorEdit4("##rgb", col, sub_flags|ImGuiColorEditFlags_DisplayRGB) {
 				// FIXME: Hackily differentiating using the DragInt (ActiveId != 0 && !ActiveIdAllowOverlap) vs. using the InputText or DropTarget.
 				// For the later we don't want to run the hue-wrap canceling code. If you are well versed in HSV picker please provide your input! (See #2050)
-				value_changed_fix_hue_wrap = (g.ActiveId != 0 && !g.ActiveIdAllowOverlap)
+				value_changed_fix_hue_wrap = (guiContext.ActiveId != 0 && !guiContext.ActiveIdAllowOverlap)
 				value_changed = true
 			}
 		}
@@ -638,12 +638,12 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 			G = col[1]
 			B = col[2]
 			ColorConvertRGBtoHSV(R, G, B, &H, &S, &V)
-			if g.ColorEditLastColor == [3]float32{col[0], col[1], col[2]} { // Fix local Hue as display below will use it immediately.
+			if guiContext.ColorEditLastColor == [3]float32{col[0], col[1], col[2]} { // Fix local Hue as display below will use it immediately.
 				if S == 0 {
-					H = g.ColorEditLastHue
+					H = guiContext.ColorEditLastHue
 				}
 				if V == 0 {
-					S = g.ColorEditLastSat
+					S = guiContext.ColorEditLastSat
 				}
 			}
 		} else if flags&ImGuiColorEditFlags_InputHSV != 0 {
@@ -758,7 +758,7 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 		value_changed = false
 	}
 	if value_changed {
-		MarkItemEdited(g.LastItemData.ID)
+		MarkItemEdited(guiContext.LastItemData.ID)
 	}
 
 	PopID()
@@ -789,7 +789,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 
 	var padding float
 	if size.y >= default_size {
-		padding = g.Style.FramePadding.y
+		padding = guiContext.Style.FramePadding.y
 	}
 
 	ItemSizeRect(&bb, padding)
@@ -811,7 +811,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 
 	var col_rgb_without_alpha = ImVec4{col_rgb.x, col_rgb.y, col_rgb.z, 1.0}
 	var grid_step = min(size.x, size.y) / 2.99
-	var rounding = min(g.Style.FrameRounding, grid_step*0.5)
+	var rounding = min(guiContext.Style.FrameRounding, grid_step*0.5)
 	var bb_inner = bb
 	var off float
 	if (flags & ImGuiColorEditFlags_NoBorder) == 0 {
@@ -836,7 +836,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 	}
 	RenderNavHighlight(&bb, id, 0)
 	if (flags & ImGuiColorEditFlags_NoBorder) == 0 {
-		if g.Style.FrameBorderSize > 0.0 {
+		if guiContext.Style.FrameBorderSize > 0.0 {
 			RenderFrameBorder(bb.Min, bb.Max, rounding)
 		} else {
 			window.DrawList.AddRect(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_FrameBg, 1), rounding, 0, 1) // Color button are often in need of some sort of border
@@ -845,7 +845,7 @@ func ColorButton(desc_id string, col ImVec4, flags ImGuiColorEditFlags, size ImV
 
 	// Drag and Drop Source
 	// NB: The ActiveId test is merely an optional micro-optimization, BeginDragDropSource() does the same test.
-	if g.ActiveId == id && (flags&ImGuiColorEditFlags_NoDragDrop) == 0 && BeginDragDropSource(0) {
+	if guiContext.ActiveId == id && (flags&ImGuiColorEditFlags_NoDragDrop) == 0 && BeginDragDropSource(0) {
 		if flags&ImGuiColorEditFlags_NoAlpha != 0 {
 			SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, &col_rgb, unsafe.Sizeof(float(0))*3, ImGuiCond_Once)
 		} else {
@@ -884,13 +884,13 @@ func SetColorEditOptions(flags ImGuiColorEditFlags) {
 	IM_ASSERT(ImIsPowerOfTwoInt(int(flags & ImGuiColorEditFlags_DataTypeMask_))) // Check only 1 option is selected
 	IM_ASSERT(ImIsPowerOfTwoInt(int(flags & ImGuiColorEditFlags_PickerMask_)))   // Check only 1 option is selected
 	IM_ASSERT(ImIsPowerOfTwoInt(int(flags & ImGuiColorEditFlags_InputMask_)))    // Check only 1 option is selected
-	g.ColorEditOptions = flags
+	guiContext.ColorEditOptions = flags
 }
 
 // Color
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 func ColorTooltip(text string, col [4]float, flags ImGuiColorEditFlags) {
-	g := g
+	g := guiContext
 
 	BeginTooltipEx(0, ImGuiTooltipFlags_OverridePreviousTooltip)
 	if len(text) > 0 {
@@ -933,7 +933,7 @@ func ColorEditOptionsPopup(col [4]float, flags ImGuiColorEditFlags) {
 	if (!allow_opt_inputs && !allow_opt_datatype) || !BeginPopup("context", 0) {
 		return
 	}
-	var opts = g.ColorEditOptions
+	var opts = guiContext.ColorEditOptions
 	if allow_opt_inputs {
 		if RadioButtonBool("RGB", (opts&ImGuiColorEditFlags_DisplayRGB) != 0) {
 			opts = (opts & ^ImGuiColorEditFlags_DisplayMask_) | ImGuiColorEditFlags_DisplayRGB
@@ -997,7 +997,7 @@ func ColorEditOptionsPopup(col [4]float, flags ImGuiColorEditFlags) {
 		EndPopup()
 	}
 
-	g.ColorEditOptions = opts
+	guiContext.ColorEditOptions = opts
 	EndPopup()
 }
 
@@ -1008,7 +1008,7 @@ func ColorPickerOptionsPopup(ref_col *[4]float, flags ImGuiColorEditFlags) {
 		return
 	}
 	if allow_opt_picker {
-		var picker_size = ImVec2{g.FontSize * 8, max(g.FontSize*8-(GetFrameHeight()+g.Style.ItemInnerSpacing.x), 1.0)} // FIXME: Picker size copied from main picker function
+		var picker_size = ImVec2{guiContext.FontSize * 8, max(guiContext.FontSize*8-(GetFrameHeight()+guiContext.Style.ItemInnerSpacing.x), 1.0)} // FIXME: Picker size copied from main picker function
 		PushItemWidth(picker_size.x)
 		for picker_type := 0; picker_type < 2; picker_type++ {
 			// Draw small/thumbnail version of each picker type (over an invisible button for selection)
@@ -1025,7 +1025,7 @@ func ColorPickerOptionsPopup(ref_col *[4]float, flags ImGuiColorEditFlags) {
 			}
 			var backup_pos = GetCursorScreenPos()
 			if Selectable("##selectable", false, 0, picker_size) { // By default, Selectable() is closing popup
-				g.ColorEditOptions = (g.ColorEditOptions & ^ImGuiColorEditFlags_PickerMask_) | (picker_flags & ImGuiColorEditFlags_PickerMask_)
+				guiContext.ColorEditOptions = (guiContext.ColorEditOptions & ^ImGuiColorEditFlags_PickerMask_) | (picker_flags & ImGuiColorEditFlags_PickerMask_)
 			}
 			SetCursorScreenPos(backup_pos)
 			var previewing_ref_col [4]float32
@@ -1045,7 +1045,7 @@ func ColorPickerOptionsPopup(ref_col *[4]float, flags ImGuiColorEditFlags) {
 		if allow_opt_picker {
 			Separator()
 		}
-		CheckboxFlagsInt("Alpha Bar", (*int)(&g.ColorEditOptions), int(ImGuiColorEditFlags_AlphaBar))
+		CheckboxFlagsInt("Alpha Bar", (*int)(&guiContext.ColorEditOptions), int(ImGuiColorEditFlags_AlphaBar))
 	}
 	EndPopup()
 }

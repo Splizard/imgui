@@ -65,9 +65,9 @@ func TreePushInterface(ptr_id any) {
 	}
 } // "
 
-// horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
+// horizontal distance preceding label when using TreeNode*() or Bullet() == (guiContext.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
 func GetTreeNodeToLabelSpacing() float {
-	return g.FontSize + (g.Style.FramePadding.x * 2.0)
+	return guiContext.FontSize + (guiContext.Style.FramePadding.x * 2.0)
 }
 
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
@@ -107,15 +107,15 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 		// Create a small overlapping close button
 		// FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
 		// FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
-		var last_item_backup = g.LastItemData
-		var button_size = g.FontSize
-		var button_x = max(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x-g.Style.FramePadding.x*2.0-button_size)
-		var button_y = g.LastItemData.Rect.Min.y
+		var last_item_backup = guiContext.LastItemData
+		var button_size = guiContext.FontSize
+		var button_x = max(guiContext.LastItemData.Rect.Min.x, guiContext.LastItemData.Rect.Max.x-guiContext.Style.FramePadding.x*2.0-button_size)
+		var button_y = guiContext.LastItemData.Rect.Min.y
 		var close_button_id = GetIDWithSeed("#CLOSE", id)
 		if CloseButton(close_button_id, &ImVec2{button_x, button_y}) {
 			*p_visible = false
 		}
-		g.LastItemData = last_item_backup
+		guiContext.LastItemData = last_item_backup
 	}
 
 	return is_open
@@ -123,15 +123,15 @@ func CollapsingHeaderVisible(label string, p_visible *bool, flags ImGuiTreeNodeF
 
 // set next TreeNode/CollapsingHeader open state.
 func SetNextItemOpen(is_open bool, cond ImGuiCond) {
-	if g.CurrentWindow.SkipItems {
+	if guiContext.CurrentWindow.SkipItems {
 		return
 	}
-	g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasOpen
-	g.NextItemData.OpenVal = is_open
+	guiContext.NextItemData.Flags |= ImGuiNextItemDataFlags_HasOpen
+	guiContext.NextItemData.OpenVal = is_open
 	if cond != 0 {
-		g.NextItemData.OpenCond = cond
+		guiContext.NextItemData.OpenCond = cond
 	} else {
-		g.NextItemData.OpenCond = ImGuiCond_Always
+		guiContext.NextItemData.OpenCond = ImGuiCond_Always
 	}
 }
 
@@ -144,7 +144,7 @@ func TreeNode(label string) bool {
 }
 
 func TreePushOverrideID(id ImGuiID) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	Indent(0)
 	window.DC.TreeDepth++
 	window.IDStack = append(window.IDStack, id)
@@ -152,16 +152,16 @@ func TreePushOverrideID(id ImGuiID) {
 
 // ~ Unindent()+PopId()
 func TreePop() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	Unindent(0)
 
 	window.DC.TreeDepth--
 	var tree_depth_mask ImU32 = (1 << window.DC.TreeDepth)
 
 	// Handle Left arrow to move to parent tree node (when ImGuiTreeNodeFlags_NavLeftJumpsBackHere is enabled)
-	if g.NavMoveDir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet() {
-		if g.NavIdIsAlive && (window.DC.TreeJumpToParentOnPopMask&tree_depth_mask) != 0 {
-			SetNavID(window.IDStack[len(window.IDStack)-1], g.NavLayer, 0, &ImRect{})
+	if guiContext.NavMoveDir == ImGuiDir_Left && guiContext.NavWindow == window && NavMoveRequestButNoResultYet() {
+		if guiContext.NavIdIsAlive && (window.DC.TreeJumpToParentOnPopMask&tree_depth_mask) != 0 {
+			SetNavID(window.IDStack[len(window.IDStack)-1], guiContext.NavLayer, 0, &ImRect{})
 			NavMoveRequestCancel()
 		}
 	}
@@ -178,19 +178,19 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 	}
 
 	// We only write to the tree storage if the user clicks (or explicitly use the SetNextItemOpen function)
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var storage = &window.DC.StateStorage
 
 	var is_open bool
-	if g.NextItemData.Flags&ImGuiNextItemDataFlags_HasOpen != 0 {
-		if g.NextItemData.OpenCond&ImGuiCond_Always != 0 {
-			is_open = g.NextItemData.OpenVal
+	if guiContext.NextItemData.Flags&ImGuiNextItemDataFlags_HasOpen != 0 {
+		if guiContext.NextItemData.OpenCond&ImGuiCond_Always != 0 {
+			is_open = guiContext.NextItemData.OpenVal
 			storage.SetInt(id, bool2int(is_open))
 		} else {
 			// We treat ImGuiCond_Once and ImGuiCond_FirstUseEver the same because tree node state are not saved persistently.
 			var stored_value = storage.GetInt(id, -1)
 			if stored_value == -1 {
-				is_open = g.NextItemData.OpenVal
+				is_open = guiContext.NextItemData.OpenVal
 				storage.SetInt(id, bool2int(is_open))
 			} else {
 				is_open = stored_value != 0
@@ -206,7 +206,7 @@ func TreeNodeBehaviorIsOpen(id ImGuiID, flags ImGuiTreeNodeFlags) bool {
 
 	// When logging is enabled, we automatically expand tree nodes (but *NOT* collapsing headers.. seems like sensible behavior).
 	// NB- If we are above max depth we still allow manually opened nodes to be logged.
-	if g.LogEnabled && (flags&ImGuiTreeNodeFlags_NoAutoOpenOnLog) == 0 && (window.DC.TreeDepth-g.LogDepthRef) < g.LogDepthToExpand {
+	if guiContext.LogEnabled && (flags&ImGuiTreeNodeFlags_NoAutoOpenOnLog) == 0 && (window.DC.TreeDepth-guiContext.LogDepthRef) < guiContext.LogDepthToExpand {
 		is_open = true
 	}
 
@@ -219,7 +219,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		return false
 	}
 
-	var style = &g.Style
+	var style = &guiContext.Style
 	var display_frame = (flags & ImGuiTreeNodeFlags_Framed) != 0
 	var padding ImVec2
 	if display_frame || (flags&ImGuiTreeNodeFlags_FramePadding) != 0 {
@@ -232,7 +232,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	var label_size = CalcTextSize(label, false, 0)
 
 	// We vertically grow up to current line height up the typical widget height.
-	var frame_height = max(min(window.DC.CurrLineSize.y, g.FontSize+style.FramePadding.y*2), label_size.y+padding.y*2)
+	var frame_height = max(min(window.DC.CurrLineSize.y, guiContext.FontSize+style.FramePadding.y*2), label_size.y+padding.y*2)
 	var frame_bb ImRect
 	if (flags & ImGuiTreeNodeFlags_SpanFullWidth) != 0 {
 		frame_bb.Min.x = window.WorkRect.Min.x
@@ -250,7 +250,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	// Collapser arrow width + Spacing
-	var text_offset_x = g.FontSize
+	var text_offset_x = guiContext.FontSize
 	if display_frame {
 		text_offset_x += padding.x * 3
 	} else {
@@ -258,7 +258,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	var text_offset_y = max(padding.y, window.DC.CurrLineTextBaseOffset) // Latch before ItemSize changes it
-	var text_width = g.FontSize
+	var text_width = guiContext.FontSize
 	if label_size.x > 0.0 { // Include collapser
 		text_width += padding.x * 2
 	}
@@ -272,17 +272,17 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	}
 
 	// Store a flag for the current depth to tell if we will allow closing this node when navigating one of its child.
-	// For this purpose we essentially compare if g.NavIdIsAlive went from 0 to 1 between TreeNode() and TreePop().
+	// For this purpose we essentially compare if guiContext.NavIdIsAlive went from 0 to 1 between TreeNode() and TreePop().
 	// This is currently only support 32 level deep and we are fine with (1 << Depth) overflowing into a zero.
 	var is_leaf = (flags & ImGuiTreeNodeFlags_Leaf) != 0
 	var is_open = TreeNodeBehaviorIsOpen(id, flags)
-	if is_open && !g.NavIdIsAlive && (flags&ImGuiTreeNodeFlags_NavLeftJumpsBackHere) != 0 && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
+	if is_open && !guiContext.NavIdIsAlive && (flags&ImGuiTreeNodeFlags_NavLeftJumpsBackHere) != 0 && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
 		window.DC.TreeJumpToParentOnPopMask |= (1 << window.DC.TreeDepth)
 	}
 
 	var item_add = ItemAdd(&interact_bb, id, nil, 0)
-	g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDisplayRect
-	g.LastItemData.DisplayRect = frame_bb
+	guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDisplayRect
+	guiContext.LastItemData.DisplayRect = frame_bb
 
 	if !item_add {
 		if is_open && flags&ImGuiTreeNodeFlags_NoTreePushOnOpen == 0 {
@@ -303,14 +303,14 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	// allow browsing a tree while preserving selection with code implementing multi-selection patterns.
 	// When clicking on the rest of the tree node we always disallow keyboard modifiers.
 	var arrow_hit_x1 = (text_pos.x - text_offset_x) - style.TouchExtraPadding.x
-	var arrow_hit_x2 = (text_pos.x - text_offset_x) + (g.FontSize + padding.x*2.0) + style.TouchExtraPadding.x
-	var is_mouse_x_over_arrow = (g.IO.MousePos.x >= arrow_hit_x1 && g.IO.MousePos.x < arrow_hit_x2)
-	if window != g.HoveredWindow || !is_mouse_x_over_arrow {
+	var arrow_hit_x2 = (text_pos.x - text_offset_x) + (guiContext.FontSize + padding.x*2.0) + style.TouchExtraPadding.x
+	var is_mouse_x_over_arrow = (guiContext.IO.MousePos.x >= arrow_hit_x1 && guiContext.IO.MousePos.x < arrow_hit_x2)
+	if window != guiContext.HoveredWindow || !is_mouse_x_over_arrow {
 		button_flags |= ImGuiButtonFlags_NoKeyModifiers
 	}
 
 	// Open behaviors can be altered with the _OpenOnArrow and _OnOnDoubleClick flags.
-	// Some alteration have subtle effects (e.g. toggle on MouseUp vs MouseDown events) due to requirements for multi-selection and drag and drop support.
+	// Some alteration have subtle effects (e.guiContext. toggle on MouseUp vs MouseDown events) due to requirements for multi-selection and drag and drop support.
 	// - Single-click on label = Toggle on MouseUp (default, when _OpenOnArrow=0)
 	// - Single-click on arrow = Toggle on MouseDown (when _OpenOnArrow=0)
 	// - Single-click on arrow = Toggle on MouseDown (when _OpenOnArrow=1)
@@ -333,28 +333,28 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 	var pressed = ButtonBehavior(&interact_bb, id, &hovered, &held, button_flags)
 	var toggled = false
 	if !is_leaf {
-		if pressed && g.DragDropHoldJustPressedId != id {
-			if (flags&(ImGuiTreeNodeFlags_OpenOnArrow|ImGuiTreeNodeFlags_OpenOnDoubleClick)) == 0 || (g.NavActivateId == id) {
+		if pressed && guiContext.DragDropHoldJustPressedId != id {
+			if (flags&(ImGuiTreeNodeFlags_OpenOnArrow|ImGuiTreeNodeFlags_OpenOnDoubleClick)) == 0 || (guiContext.NavActivateId == id) {
 				toggled = true
 			}
 			if flags&ImGuiTreeNodeFlags_OpenOnArrow != 0 {
-				toggled = toggled || (is_mouse_x_over_arrow && !g.NavDisableMouseHover) // Lightweight equivalent of IsMouseHoveringRect() since ButtonBehavior() already did the job
+				toggled = toggled || (is_mouse_x_over_arrow && !guiContext.NavDisableMouseHover) // Lightweight equivalent of IsMouseHoveringRect() since ButtonBehavior() already did the job
 			}
-			if (flags&ImGuiTreeNodeFlags_OpenOnDoubleClick) != 0 && g.IO.MouseDoubleClicked[0] {
+			if (flags&ImGuiTreeNodeFlags_OpenOnDoubleClick) != 0 && guiContext.IO.MouseDoubleClicked[0] {
 				toggled = true
 			}
-		} else if pressed && g.DragDropHoldJustPressedId == id {
+		} else if pressed && guiContext.DragDropHoldJustPressedId == id {
 			IM_ASSERT(button_flags&ImGuiButtonFlags_PressedOnDragDropHold != 0)
 			if !is_open { // When using Drag and Drop "hold to open" we keep the node highlighted after opening, but never close it again.
 				toggled = true
 			}
 		}
 
-		if g.NavId == id && g.NavMoveDir == ImGuiDir_Left && is_open {
+		if guiContext.NavId == id && guiContext.NavMoveDir == ImGuiDir_Left && is_open {
 			toggled = true
 			NavMoveRequestCancel()
 		}
-		if g.NavId == id && g.NavMoveDir == ImGuiDir_Right && !is_open { // If there's something upcoming on the line we may want to give it the priority?
+		if guiContext.NavId == id && guiContext.NavMoveDir == ImGuiDir_Right && !is_open { // If there's something upcoming on the line we may want to give it the priority?
 			toggled = true
 			NavMoveRequestCancel()
 		}
@@ -362,7 +362,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		if toggled {
 			is_open = !is_open
 			window.DC.StateStorage.SetInt(id, bool2int(is_open))
-			g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledOpen
+			guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledOpen
 		}
 	}
 	if flags&ImGuiTreeNodeFlags_AllowItemOverlap != 0 {
@@ -371,7 +371,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 
 	// In this branch, TreeNodeBehavior() cannot toggle the selection so this will never trigger.
 	if selected != was_selected { //-V547
-		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection
+		guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection
 	}
 
 	// Render
@@ -390,7 +390,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		RenderFrame(frame_bb.Min, frame_bb.Max, bg_col, true, style.FrameRounding)
 		RenderNavHighlight(&frame_bb, id, nav_highlight_flags)
 		if flags&ImGuiTreeNodeFlags_Bullet != 0 {
-			RenderBullet(window.DrawList, ImVec2{text_pos.x - text_offset_x*0.60, text_pos.y + g.FontSize*0.5}, text_col)
+			RenderBullet(window.DrawList, ImVec2{text_pos.x - text_offset_x*0.60, text_pos.y + guiContext.FontSize*0.5}, text_col)
 		} else if !is_leaf {
 			var arrow ImGuiDir
 			if is_open {
@@ -403,10 +403,10 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 			text_pos.x -= text_offset_x
 		}
 		if flags&ImGuiTreeNodeFlags_ClipLabelForTrailingButton != 0 {
-			frame_bb.Max.x -= g.FontSize + style.FramePadding.x
+			frame_bb.Max.x -= guiContext.FontSize + style.FramePadding.x
 		}
 
-		if g.LogEnabled {
+		if guiContext.LogEnabled {
 			LogSetNextTextDecoration("###", "###")
 		}
 		RenderTextClipped(&text_pos, &frame_bb.Max, label, &label_size, nil, nil)
@@ -425,7 +425,7 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 		}
 		RenderNavHighlight(&frame_bb, id, nav_highlight_flags)
 		if flags&ImGuiTreeNodeFlags_Bullet != 0 {
-			RenderBullet(window.DrawList, ImVec2{text_pos.x - text_offset_x*0.5, text_pos.y + g.FontSize*0.5}, text_col)
+			RenderBullet(window.DrawList, ImVec2{text_pos.x - text_offset_x*0.5, text_pos.y + guiContext.FontSize*0.5}, text_col)
 		} else if !is_leaf {
 			var arrow ImGuiDir
 			if is_open {
@@ -433,9 +433,9 @@ func TreeNodeBehavior(id ImGuiID, flags ImGuiTreeNodeFlags, label string) bool {
 			} else {
 				arrow = ImGuiDir_Right
 			}
-			RenderArrow(window.DrawList, ImVec2{text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize*0.15}, text_col, arrow, 0.70)
+			RenderArrow(window.DrawList, ImVec2{text_pos.x - text_offset_x + padding.x, text_pos.y + guiContext.FontSize*0.15}, text_col, arrow, 0.70)
 		}
-		if g.LogEnabled {
+		if guiContext.LogEnabled {
 			LogSetNextTextDecoration(">", "")
 		}
 		RenderText(text_pos, label, false)

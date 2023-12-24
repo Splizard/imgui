@@ -2,9 +2,9 @@ package imgui
 
 // Render a rectangle shaped with optional rounding and borders
 func RenderFrame(p_min ImVec2, p_max ImVec2, fill_col ImU32, border bool /*= true*/, rounding float) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	window.DrawList.AddRectFilled(p_min, p_max, fill_col, rounding, 0)
-	var border_size = g.Style.FrameBorderSize
+	var border_size = guiContext.Style.FrameBorderSize
 	if border && border_size > 0.0 {
 		window.DrawList.AddRect(p_min.Add(ImVec2{1, 1}), p_max.Add(ImVec2{1, 1}), GetColorU32FromID(ImGuiCol_BorderShadow, 1), rounding, 0, border_size)
 		window.DrawList.AddRect(p_min, p_max, GetColorU32FromID(ImGuiCol_Border, 1), rounding, 0, border_size)
@@ -14,7 +14,7 @@ func RenderFrame(p_min ImVec2, p_max ImVec2, fill_col ImU32, border bool /*= tru
 // Draw background and borders
 // Draw and handle scrollbars
 func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_bar_is_highlight bool, resize_grip_count int, resize_grip_col [4]ImU32, resize_grip_draw_size float) {
-	style := g.Style
+	style := guiContext.Style
 	var flags = window.Flags
 
 	// Ensure that ScrollBar doesn't read last frame's SkipItems
@@ -28,15 +28,15 @@ func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_
 	if window.Collapsed {
 		// Title bar only
 		var backup_border_size = style.FrameBorderSize
-		g.Style.FrameBorderSize = window.WindowBorderSize
+		guiContext.Style.FrameBorderSize = window.WindowBorderSize
 		var title_bar_col ImU32
-		if title_bar_is_highlight && !g.NavDisableHighlight {
+		if title_bar_is_highlight && !guiContext.NavDisableHighlight {
 			title_bar_col = GetColorU32FromID(ImGuiCol_TitleBgActive, 1)
 		} else {
 			title_bar_col = GetColorU32FromID(ImGuiCol_TitleBgCollapsed, 1)
 		}
 		RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding)
-		g.Style.FrameBorderSize = backup_border_size
+		guiContext.Style.FrameBorderSize = backup_border_size
 	} else {
 		// Window background
 		if flags&ImGuiWindowFlags_NoBackground == 0 {
@@ -44,8 +44,8 @@ func RenderWindowDecorations(window *ImGuiWindow, title_bar_rect *ImRect, title_
 
 			var override_alpha = false
 			var alpha float = 1.0
-			if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasBgAlpha != 0 {
-				alpha = g.NextWindowData.BgAlphaVal
+			if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasBgAlpha != 0 {
+				alpha = guiContext.NextWindowData.BgAlphaVal
 				override_alpha = true
 			}
 			if override_alpha {
@@ -140,30 +140,30 @@ func RenderWindowOuterBorders(window *ImGuiWindow) {
 				Add(ImVec2{0.5, 0.5}).Add(def.InnerDir.Scale(rounding)), rounding, def.OuterAngle, def.OuterAngle+IM_PI*0.25, 0)
 		window.DrawList.PathStroke(GetColorU32FromID(ImGuiCol_SeparatorActive, 1), 0, max(2.0, border_size)) // Thicker than usual
 	}
-	if g.Style.FrameBorderSize > 0 && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
+	if guiContext.Style.FrameBorderSize > 0 && window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 		var y = window.Pos.y + window.TitleBarHeight() - 1
-		window.DrawList.AddLine(&ImVec2{window.Pos.x + border_size, y}, &ImVec2{window.Pos.x + window.Size.x - border_size, y}, GetColorU32FromID(ImGuiCol_Border, 1), g.Style.FrameBorderSize)
+		window.DrawList.AddLine(&ImVec2{window.Pos.x + border_size, y}, &ImVec2{window.Pos.x + window.Size.x - border_size, y}, GetColorU32FromID(ImGuiCol_Border, 1), guiContext.Style.FrameBorderSize)
 	}
 }
 
 // Render title text, collapse button, close button
 func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, name string, p_open *bool) {
-	style := g.Style
+	style := guiContext.Style
 	var flags = window.Flags
 
 	var has_close_button = (p_open != nil)
 	var has_collapse_button = (flags&ImGuiWindowFlags_NoCollapse) == 0 && (style.WindowMenuButtonPosition != ImGuiDir_None)
 
 	// Close & Collapse button are on the Menu NavLayer and don't default focus (unless there's nothing else on that layer)
-	var item_flags_backup = g.CurrentItemFlags
-	g.CurrentItemFlags |= ImGuiItemFlags_NoNavDefaultFocus
+	var item_flags_backup = guiContext.CurrentItemFlags
+	guiContext.CurrentItemFlags |= ImGuiItemFlags_NoNavDefaultFocus
 	window.DC.NavLayerCurrent = ImGuiNavLayer_Menu
 
 	// Layout buttons
 	// FIXME: Would be nice to generalize the subtleties expressed here into reusable code.
 	var pad_l = style.FramePadding.x
 	var pad_r = style.FramePadding.x
-	var button_sz = g.FontSize
+	var button_sz = guiContext.FontSize
 	var close_button_pos ImVec2
 	var collapse_button_pos ImVec2
 	if has_close_button {
@@ -194,7 +194,7 @@ func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, n
 	}
 
 	window.DC.NavLayerCurrent = ImGuiNavLayer_Main
-	g.CurrentItemFlags = item_flags_backup
+	guiContext.CurrentItemFlags = item_flags_backup
 
 	// Title bar text (with: horizontal alignment, avoiding collapse/close button, optional "unsaved document" marker)
 	// FIXME: Refactor text alignment facilities along with RenderText helpers, this is WAY too much messy code..
@@ -207,10 +207,10 @@ func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, n
 	// As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,
 	// while uncentered title text will still reach edges correctly.
 	if pad_l > style.FramePadding.x {
-		pad_l += g.Style.ItemInnerSpacing.x
+		pad_l += guiContext.Style.ItemInnerSpacing.x
 	}
 	if pad_r > style.FramePadding.x {
-		pad_r += g.Style.ItemInnerSpacing.x
+		pad_r += guiContext.Style.ItemInnerSpacing.x
 	}
 	if style.WindowTitleAlign.x > 0.0 && style.WindowTitleAlign.x < 1.0 {
 		var centerness = ImSaturate(1.0 - ImFabs(style.WindowTitleAlign.x-0.5)*2.0) // 0.0f on either edges, 1.0f on center
@@ -220,7 +220,7 @@ func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, n
 	}
 
 	var layout_r = ImRect{ImVec2{title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y}, ImVec2{title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y}}
-	var clip_r = ImRect{ImVec2{layout_r.Min.x, layout_r.Min.y}, ImVec2{min(layout_r.Max.x+g.Style.ItemInnerSpacing.x, title_bar_rect.Max.x), layout_r.Max.y}}
+	var clip_r = ImRect{ImVec2{layout_r.Min.x, layout_r.Min.y}, ImVec2{min(layout_r.Max.x+guiContext.Style.ItemInnerSpacing.x, title_bar_rect.Max.x), layout_r.Max.y}}
 	if flags&ImGuiWindowFlags_UnsavedDocument != 0 {
 		var marker_pos ImVec2
 		marker_pos.x = ImClamp(layout_r.Min.x+(layout_r.GetWidth()-text_size.x)*style.WindowTitleAlign.x+text_size.x, layout_r.Min.x, layout_r.Max.x)
@@ -230,7 +230,7 @@ func RenderWindowTitleBarContents(window *ImGuiWindow, title_bar_rect *ImRect, n
 			clip_r.Max.x = min(clip_r.Max.x, marker_pos.x-float((int)(marker_size_x*0.5)))
 		}
 	}
-	//if (g.IO.KeyShift) window.DrawList.AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
-	//if (g.IO.KeyCtrl) window.DrawList.AddRect(clip_r.Min, clip_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
+	//if (guiContext.IO.KeyShift) window.DrawList.AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
+	//if (guiContext.IO.KeyCtrl) window.DrawList.AddRect(clip_r.Min, clip_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
 	RenderTextClipped(&layout_r.Min, &layout_r.Max, name, &text_size, &style.WindowTitleAlign, &clip_r)
 }

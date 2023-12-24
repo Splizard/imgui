@@ -5,10 +5,10 @@ func CheckboxFlagsInt(label string, flags *int, flags_value int) bool {
 	var any_on = (*flags & flags_value) != 0
 	var pressed bool
 	if !all_on && any_on {
-		var backup_item_flags = g.CurrentItemFlags
-		g.CurrentItemFlags |= ImGuiItemFlags_MixedValue
+		var backup_item_flags = guiContext.CurrentItemFlags
+		guiContext.CurrentItemFlags |= ImGuiItemFlags_MixedValue
 		pressed = Checkbox(label, &all_on)
-		g.CurrentItemFlags = backup_item_flags
+		guiContext.CurrentItemFlags = backup_item_flags
 	} else {
 		pressed = Checkbox(label, &all_on)
 
@@ -28,10 +28,10 @@ func CheckboxFlagsUint(label string, flags *uint, flags_value uint) bool {
 	var any_on = (*flags & flags_value) != 0
 	var pressed bool
 	if !all_on && any_on {
-		var backup_item_flags = g.CurrentItemFlags
-		g.CurrentItemFlags |= ImGuiItemFlags_MixedValue
+		var backup_item_flags = guiContext.CurrentItemFlags
+		guiContext.CurrentItemFlags |= ImGuiItemFlags_MixedValue
 		pressed = Checkbox(label, &all_on)
-		g.CurrentItemFlags = backup_item_flags
+		guiContext.CurrentItemFlags = backup_item_flags
 	} else {
 		pressed = Checkbox(label, &all_on)
 
@@ -52,7 +52,7 @@ func Checkbox(label string, v *bool) bool {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)
 
@@ -90,7 +90,7 @@ func Checkbox(label string, v *bool) bool {
 	RenderNavHighlight(&total_bb, id, 0)
 	RenderFrame(check_bb.Min, check_bb.Max, GetColorU32FromID(c, 1), true, style.FrameRounding)
 	var check_col = GetColorU32FromID(ImGuiCol_CheckMark, 1)
-	var mixed_value = (g.LastItemData.InFlags & ImGuiItemFlags_MixedValue) != 0
+	var mixed_value = (guiContext.LastItemData.InFlags & ImGuiItemFlags_MixedValue) != 0
 	if mixed_value {
 		// Undocumented tristate/mixed/indeterminate checkbox (#2644)
 		// This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
@@ -102,7 +102,7 @@ func Checkbox(label string, v *bool) bool {
 	}
 
 	var label_pos = ImVec2{check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y}
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		s := "[ ]"
 		if mixed_value {
 			s = "[~]"

@@ -43,7 +43,7 @@ var GCrc32LookupTable = [256]ImU32{
 // Because this syntax is rarely used we are optimizing for the common case.
 // - If we reach ### in the string we discard the hash so far and reset to the seed.
 // - We don't do 'current += 2; continue;' after handling ### to keep the code smaller/faster (measured ~10% diff in Debug build)
-// FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
+// FIXME-OPT: Replace with e.guiContext. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
 func ImHashStr(data_p string, data_size size_t, seed ImU32) ImGuiID {
 	seed = ^seed
 	var crc = seed

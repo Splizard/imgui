@@ -75,19 +75,19 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 	if (flags&ImGuiWindowFlags_NoResize != 0) || (flags&ImGuiWindowFlags_AlwaysAutoResize != 0) || window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0 {
 		return false
 	}
-	if !window.WasActive { // Early out to avoid running this code for e.g. an hidden implicit/fallback Debug window.
+	if !window.WasActive { // Early out to avoid running this code for e.guiContext. an hidden implicit/fallback Debug window.
 		return false
 	}
 
 	var ret_auto_fit = false
 	var resize_border_count int
-	if g.IO.ConfigWindowsResizeFromEdges {
+	if guiContext.IO.ConfigWindowsResizeFromEdges {
 		resize_border_count = 4
 	}
-	var grip_draw_size = IM_FLOOR(max(g.FontSize*1.35, window.WindowRounding+1.0+g.FontSize*0.2))
+	var grip_draw_size = IM_FLOOR(max(guiContext.FontSize*1.35, window.WindowRounding+1.0+guiContext.FontSize*0.2))
 	var grip_hover_inner_size = IM_FLOOR(grip_draw_size * 0.75)
 	var grip_hover_outer_size float
-	if g.IO.ConfigWindowsResizeFromEdges {
+	if guiContext.IO.ConfigWindowsResizeFromEdges {
 		grip_hover_outer_size = WINDOWS_HOVER_PADDING
 	}
 
@@ -119,13 +119,13 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 		//GetForegroundDrawList(window).AddRect(resize_rect.Min, resize_rect.Max, IM_COL32(255, 255, 0, 255));
 		if hovered || held {
 			if resize_grip_n&1 != 0 {
-				g.MouseCursor = ImGuiMouseCursor_ResizeNESW
+				guiContext.MouseCursor = ImGuiMouseCursor_ResizeNESW
 			} else {
-				g.MouseCursor = ImGuiMouseCursor_ResizeNWSE
+				guiContext.MouseCursor = ImGuiMouseCursor_ResizeNWSE
 			}
 		}
 
-		if held && g.IO.MouseDoubleClicked[0] && resize_grip_n == 0 {
+		if held && guiContext.IO.MouseDoubleClicked[0] && resize_grip_n == 0 {
 			// Manual auto-fit when double-clicking
 			size_target = CalcWindowSizeAfterConstraint(window, size_auto_fit)
 			ret_auto_fit = true
@@ -151,7 +151,7 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 			ls := def.InnerDir.Scale(grip_hover_outer_size)
 			rs := def.InnerDir.Scale(-grip_hover_inner_size)
 
-			var corner_target = g.IO.MousePos.Sub(g.ActiveIdClickOffset).Add(
+			var corner_target = guiContext.IO.MousePos.Sub(guiContext.ActiveIdClickOffset).Add(
 				ImLerpVec2WithVec2(&ls, &rs, def.CornerPosN)) // Corner of the window corresponding to our corner grip
 			corner_target = ImClampVec2(&corner_target, &clamp_min, clamp_max)
 			CalcResizePosSizeFromAnyCorner(window, &corner_target, &def.CornerPosN, &pos_target, &size_target)
@@ -182,11 +182,11 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 		var border_id = window.GetIDInt(int(border_n) + 4) // == GetWindowResizeBorderID()
 		ButtonBehavior(&border_rect, border_id, &hovered, &held, ImGuiButtonFlags_FlattenChildren)
 		//GetForegroundDrawLists(window).AddRect(border_rect.Min, border_rect.Max, IM_COL32(255, 255, 0, 255));
-		if (hovered && g.HoveredIdTimer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held {
+		if (hovered && guiContext.HoveredIdTimer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held {
 			if axis == ImGuiAxis_X {
-				g.MouseCursor = ImGuiMouseCursor_ResizeEW
+				guiContext.MouseCursor = ImGuiMouseCursor_ResizeEW
 			} else {
-				g.MouseCursor = ImGuiMouseCursor_ResizeNS
+				guiContext.MouseCursor = ImGuiMouseCursor_ResizeNS
 			}
 			if held {
 				*border_held = int(border_n)
@@ -211,9 +211,9 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 			var border_target = window.Pos
 			switch axis {
 			case ImGuiAxis_X:
-				border_target.x = g.IO.MousePos.x - g.ActiveIdClickOffset.x + WINDOWS_HOVER_PADDING
+				border_target.x = guiContext.IO.MousePos.x - guiContext.ActiveIdClickOffset.x + WINDOWS_HOVER_PADDING
 			case ImGuiAxis_Y:
-				border_target.y = g.IO.MousePos.y - g.ActiveIdClickOffset.y + WINDOWS_HOVER_PADDING
+				border_target.y = guiContext.IO.MousePos.y - guiContext.ActiveIdClickOffset.y + WINDOWS_HOVER_PADDING
 			}
 
 			border_target = ImClampVec2(&border_target, &clamp_min, clamp_max)
@@ -228,21 +228,21 @@ func UpdateWindowManualResize(window *ImGuiWindow, size_auto_fit *ImVec2, border
 	window.DC.NavLayerCurrent = ImGuiNavLayer_Main
 
 	// Navigation resize (keyboard/gamepad)
-	if g.NavWindowingTarget != nil && g.NavWindowingTarget.RootWindow == window {
+	if guiContext.NavWindowingTarget != nil && guiContext.NavWindowingTarget.RootWindow == window {
 		var nav_resize_delta ImVec2
-		if g.NavInputSource == ImGuiInputSource_Keyboard && g.IO.KeyShift {
+		if guiContext.NavInputSource == ImGuiInputSource_Keyboard && guiContext.IO.KeyShift {
 			nav_resize_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard, ImGuiInputReadMode_Down, 0, 0)
 		}
-		if g.NavInputSource == ImGuiInputSource_Gamepad {
+		if guiContext.NavInputSource == ImGuiInputSource_Gamepad {
 			nav_resize_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_Down, 0, 0)
 		}
 		if nav_resize_delta.x != 0.0 || nav_resize_delta.y != 0.0 {
 			const NAV_RESIZE_SPEED float = 600
-			nav_resize_delta = nav_resize_delta.Scale(ImFloor(NAV_RESIZE_SPEED * g.IO.DeltaTime * min(g.IO.DisplayFramebufferScale.x, g.IO.DisplayFramebufferScale.y)))
+			nav_resize_delta = nav_resize_delta.Scale(ImFloor(NAV_RESIZE_SPEED * guiContext.IO.DeltaTime * min(guiContext.IO.DisplayFramebufferScale.x, guiContext.IO.DisplayFramebufferScale.y)))
 			yd := visibility_rect.Min.Sub(window.Pos).Sub(window.Size)
 			nav_resize_delta = ImMaxVec2(&nav_resize_delta, &yd)
-			g.NavWindowingToggleLayer = false
-			g.NavDisableMouseHover = true
+			guiContext.NavWindowingToggleLayer = false
+			guiContext.NavDisableMouseHover = true
 			resize_grip_col[0] = GetColorU32FromInt(uint(ImGuiCol_ResizeGripActive))
 			// FIXME-NAV: Should store and accumulate into a separate size buffer to handle sizing constraints properly, right now a constraint will make us stuck.
 

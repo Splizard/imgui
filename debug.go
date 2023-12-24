@@ -10,16 +10,16 @@ import "fmt"
 // FIXME: Can't recover from inside BeginTabItem/EndTabItem yet.
 // FIXME: Can't recover from interleaved BeginTabBar/Begin
 func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any) {
-	for len(g.CurrentWindowStack) > 0 {
-		for g.CurrentTable != nil && (g.CurrentTable.OuterWindow == g.CurrentWindow || g.CurrentTable.InnerWindow == g.CurrentWindow) {
+	for len(guiContext.CurrentWindowStack) > 0 {
+		for guiContext.CurrentTable != nil && (guiContext.CurrentTable.OuterWindow == guiContext.CurrentWindow || guiContext.CurrentTable.InnerWindow == guiContext.CurrentWindow) {
 			if log_callback != nil {
-				log_callback(user_data, "Recovered from missing EndTable() in '%s'", g.CurrentTable.OuterWindow.Name)
+				log_callback(user_data, "Recovered from missing EndTable() in '%s'", guiContext.CurrentTable.OuterWindow.Name)
 			}
 			EndTable()
 		}
-		window := g.CurrentWindow
+		window := guiContext.CurrentWindow
 		IM_ASSERT(window != nil)
-		for g.CurrentTabBar != nil {
+		for guiContext.CurrentTabBar != nil {
 			if log_callback != nil {
 				log_callback(user_data, "Recovered from missing EndTabBar() in '%s'", window.Name)
 			}
@@ -31,7 +31,7 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any
 			}
 			TreePop()
 		}
-		for int(len(g.GroupStack)) > int(window.DC.StackSizesOnBegin.SizeOfGroupStack) {
+		for int(len(guiContext.GroupStack)) > int(window.DC.StackSizesOnBegin.SizeOfGroupStack) {
 			if log_callback != nil {
 				log_callback(user_data, "Recovered from missing EndGroup() in '%s'", window.Name)
 			}
@@ -43,29 +43,29 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any
 			}
 			PopID()
 		}
-		for int(len(g.ColorStack)) > int(window.DC.StackSizesOnBegin.SizeOfColorStack) {
+		for int(len(guiContext.ColorStack)) > int(window.DC.StackSizesOnBegin.SizeOfColorStack) {
 			if log_callback != nil {
-				log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.Name, GetStyleColorName(g.ColorStack[len(g.ColorStack)-1].Col))
+				log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.Name, GetStyleColorName(guiContext.ColorStack[len(guiContext.ColorStack)-1].Col))
 			}
 			PopStyleColor(1)
 		}
-		for int(len(g.StyleVarStack)) > int(window.DC.StackSizesOnBegin.SizeOfStyleVarStack) {
+		for int(len(guiContext.StyleVarStack)) > int(window.DC.StackSizesOnBegin.SizeOfStyleVarStack) {
 			if log_callback != nil {
 				log_callback(user_data, "Recovered from missing PopStyleVar() in '%s'", window.Name)
 			}
 			PopStyleVar(1)
 		}
-		for int(len(g.FocusScopeStack)) > int(window.DC.StackSizesOnBegin.SizeOfFocusScopeStack) {
+		for int(len(guiContext.FocusScopeStack)) > int(window.DC.StackSizesOnBegin.SizeOfFocusScopeStack) {
 			if log_callback != nil {
 				log_callback(user_data, "Recovered from missing PopFocusScope() in '%s'", window.Name)
 			}
 			PopFocusScope()
 		}
-		if len(g.CurrentWindowStack) == 1 {
-			IM_ASSERT(g.CurrentWindow.IsFallbackWindow)
+		if len(guiContext.CurrentWindowStack) == 1 {
+			IM_ASSERT(guiContext.CurrentWindow.IsFallbackWindow)
 			break
 		}
-		IM_ASSERT(window == g.CurrentWindow)
+		IM_ASSERT(window == guiContext.CurrentWindow)
 		if window.Flags&ImGuiWindowFlags_ChildWindow != 0 {
 			if log_callback != nil {
 				log_callback(user_data, "Recovered from missing EndChild() for '%s'", window.Name)
@@ -81,10 +81,10 @@ func ErrorCheckEndFrameRecover(log_callback ImGuiErrorLogCallback, user_data any
 }
 
 func DebugDrawItemRect(col ImU32 /*= IM_COL32(255,0,0,255)*/) {
-	window := g.CurrentWindow
-	getForegroundDrawList(window).AddRect(g.LastItemData.Rect.Min, g.LastItemData.Rect.Max, col, 0, 0, 1)
+	window := guiContext.CurrentWindow
+	getForegroundDrawList(window).AddRect(guiContext.LastItemData.Rect.Min, guiContext.LastItemData.Rect.Max, col, 0, 0, 1)
 }
-func DebugStartItemPicker() { g := g; g.DebugItemPickerActive = true }
+func DebugStartItemPicker() { g := guiContext; g.DebugItemPickerActive = true }
 
 // ShowFontAtlas [DEBUG] List fonts in a font atlas and display its texture
 func ShowFontAtlas(atlas *ImFontAtlas) {
@@ -114,7 +114,7 @@ func DebugNodeColumns(columns *ImGuiOldColumns) {
 }
 
 func DebugNodeDrawList(window *ImGuiWindow, draw_list *ImDrawList, label string) {
-	cfg := &g.DebugMetricsConfig
+	cfg := &guiContext.DebugMetricsConfig
 	var cmd_count = int(len(draw_list.CmdBuffer))
 	if cmd_count > 0 && draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].ElemCount == 0 && draw_list.CmdBuffer[len(draw_list.CmdBuffer)-1].UserCallback == nil {
 		cmd_count--
@@ -599,7 +599,7 @@ func DebugNodeWindow(window *ImGuiWindow, label string) {
 		BulletText("%s: nil", label)
 		return
 	}
-	g := g
+	g := guiContext
 
 	var selected_flags = ImGuiTreeNodeFlags_None
 	if window == g.NavWindow {
@@ -768,14 +768,14 @@ func DebugNodeViewport(viewport *ImGuiViewportP) {
 }
 
 func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewportP, bb *ImRect) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	var scale = bb.GetSize().Div(viewport.Size)
 	var off = bb.Min.Sub(viewport.Pos.Mul(scale))
 	var alpha_mul float = 1.0
 	window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_Border, alpha_mul*0.40), 0, 0)
-	for i := range g.Windows {
-		var thumb_window = g.Windows[i]
+	for i := range guiContext.Windows {
+		var thumb_window = guiContext.Windows[i]
 		if !thumb_window.WasActive || (thumb_window.Flags&ImGuiWindowFlags_ChildWindow != 0) {
 			continue
 		}
@@ -790,7 +790,7 @@ func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewport
 		title_r = ImRect{*ImFloorVec(&c), *ImFloorVec(&d)}
 		thumb_r.ClipWithFull(*bb)
 		title_r.ClipWithFull(*bb)
-		var window_is_focused = (g.NavWindow != nil && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight)
+		var window_is_focused = (guiContext.NavWindow != nil && thumb_window.RootWindowForTitleBarHighlight == guiContext.NavWindow.RootWindowForTitleBarHighlight)
 
 		focused_color := ImGuiCol_TitleBg
 		if window_is_focused {
@@ -800,7 +800,7 @@ func DebugRenderViewportThumbnail(draw_list *ImDrawList, viewport *ImGuiViewport
 		window.DrawList.AddRectFilled(thumb_r.Min, thumb_r.Max, GetColorU32FromID(ImGuiCol_WindowBg, alpha_mul), 0, 0)
 		window.DrawList.AddRectFilled(title_r.Min, title_r.Max, GetColorU32FromID(focused_color, alpha_mul), 0, 0)
 		window.DrawList.AddRect(thumb_r.Min, thumb_r.Max, GetColorU32FromID(ImGuiCol_Border, alpha_mul), 0, 0, 1)
-		window.DrawList.AddTextV(g.Font, g.FontSize*1.0, title_r.Min, GetColorU32FromID(ImGuiCol_Text, alpha_mul), thumb_window.Name, 0, nil)
+		window.DrawList.AddTextV(guiContext.Font, guiContext.FontSize*1.0, title_r.Min, GetColorU32FromID(ImGuiCol_Text, alpha_mul), thumb_window.Name, 0, nil)
 	}
 	draw_list.AddRect(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_Border, alpha_mul), 0, 0, 1)
 }
@@ -818,18 +818,18 @@ func MetricsHelpMarker(desc string) {
 }
 
 func RenderViewportsThumbnails() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	// We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
 	const SCALE = 1.0 / 8.0
 	var bb_full = ImRect{ImVec2{FLT_MAX, FLT_MAX}, ImVec2{-FLT_MAX, -FLT_MAX}}
-	for n := range g.Viewports {
-		bb_full.AddRect(g.Viewports[n].GetMainRect())
+	for n := range guiContext.Viewports {
+		bb_full.AddRect(guiContext.Viewports[n].GetMainRect())
 	}
 	var p = window.DC.CursorPos
 	var off = p.Sub(bb_full.Min.Scale(SCALE))
-	for n := range g.Viewports {
-		var viewport = g.Viewports[n]
+	for n := range guiContext.Viewports {
+		var viewport = guiContext.Viewports[n]
 		var viewport_draw_bb = ImRect{off.Add((viewport.Pos).Scale(SCALE)), off.Add((viewport.Pos.Add(viewport.Size)).Scale(SCALE))}
 		DebugRenderViewportThumbnail(window.DrawList, viewport, &viewport_draw_bb)
 	}
@@ -876,16 +876,16 @@ var trt_rects_names = []string{
 
 // UpdateDebugToolItemPicker [DEBUG] Item picker tool - start with DebugStartItemPicker() - useful to visually select an item and break into its call-stack.
 func UpdateDebugToolItemPicker() {
-	g.DebugItemPickerBreakId = 0
-	if g.DebugItemPickerActive {
-		var hovered_id = g.HoveredIdPreviousFrame
+	guiContext.DebugItemPickerBreakId = 0
+	if guiContext.DebugItemPickerActive {
+		var hovered_id = guiContext.HoveredIdPreviousFrame
 		SetMouseCursor(ImGuiMouseCursor_Hand)
 		if IsKeyPressedMap(ImGuiKey_Escape, true) {
-			g.DebugItemPickerActive = false
+			guiContext.DebugItemPickerActive = false
 		}
 		if IsMouseClicked(0, true) && hovered_id != 0 {
-			g.DebugItemPickerBreakId = hovered_id
-			g.DebugItemPickerActive = false
+			guiContext.DebugItemPickerBreakId = hovered_id
+			guiContext.DebugItemPickerActive = false
 		}
 		SetNextWindowBgAlpha(0.60)
 		BeginTooltip()
@@ -909,8 +909,8 @@ func ShowMetricsWindow(p_open *bool) {
 		return
 	}
 
-	io := g.IO
-	cfg := &g.DebugMetricsConfig
+	io := guiContext.IO
+	cfg := &guiContext.DebugMetricsConfig
 
 	Text("Dear ImGui %s", GetVersion())
 	Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0/io.Framerate, io.Framerate)
@@ -1006,11 +1006,11 @@ func ShowMetricsWindow(p_open *bool) {
 
 		SetNextItemWidth(GetFontSize() * 12)
 		cfg.ShowWindowsRects = Combo("##show_windows_rect_type", &cfg.ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count) || cfg.ShowWindowsRects
-		if cfg.ShowWindowsRects && g.NavWindow != nil {
-			BulletText("'%s':", g.NavWindow.Name)
+		if cfg.ShowWindowsRects && guiContext.NavWindow != nil {
+			BulletText("'%s':", guiContext.NavWindow.Name)
 			Indent(0)
 			for rect_n := int(0); rect_n < WRT_Count; rect_n++ {
-				var r = GetWindowRect(g.NavWindow, rect_n)
+				var r = GetWindowRect(guiContext.NavWindow, rect_n)
 				Text("(%6.1f,%6.1f) (%6.1f,%6.1f) Size (%6.1f,%6.1f) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n])
 			}
 			Unindent(0)
@@ -1023,9 +1023,9 @@ func ShowMetricsWindow(p_open *bool) {
 		SetNextItemWidth(GetFontSize() * 12)
 		cfg.ShowTablesRects = Combo("##show_table_rects_type", &cfg.ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count) || cfg.ShowTablesRects
 
-		if cfg.ShowTablesRects && g.NavWindow != nil {
-			for _, table := range g.Tables {
-				if table == nil || table.LastFrameActive < g.FrameCount-1 || (table.OuterWindow != g.NavWindow && table.InnerWindow != g.NavWindow) {
+		if cfg.ShowTablesRects && guiContext.NavWindow != nil {
+			for _, table := range guiContext.Tables {
+				if table == nil || table.LastFrameActive < guiContext.FrameCount-1 || (table.OuterWindow != guiContext.NavWindow && table.InnerWindow != guiContext.NavWindow) {
 					continue
 				}
 
@@ -1063,16 +1063,16 @@ func ShowMetricsWindow(p_open *bool) {
 		TreePop()
 	}
 
-	DebugNodeWindowsList(g.Windows, "Windows")
+	DebugNodeWindowsList(guiContext.Windows, "Windows")
 
 	// DrawLists
 	var drawlist_count int = 0
-	for viewport_i := int(0); viewport_i < int(len(g.Viewports)); viewport_i++ {
-		drawlist_count += g.Viewports[viewport_i].DrawDataBuilder.GetDrawListCount()
+	for viewport_i := int(0); viewport_i < int(len(guiContext.Viewports)); viewport_i++ {
+		drawlist_count += guiContext.Viewports[viewport_i].DrawDataBuilder.GetDrawListCount()
 	}
 	if TreeNodeF("DrawLists", "DrawLists (%d)", drawlist_count) {
-		for viewport_i := 0; viewport_i < len(g.Viewports); viewport_i++ {
-			var viewport = g.Viewports[viewport_i]
+		for viewport_i := 0; viewport_i < len(guiContext.Viewports); viewport_i++ {
+			var viewport = guiContext.Viewports[viewport_i]
 			for layer_i := 0; layer_i < len(viewport.DrawDataBuilder); layer_i++ {
 				for draw_list_i := 0; draw_list_i < len(viewport.DrawDataBuilder[layer_i]); draw_list_i++ {
 					DebugNodeDrawList(nil, viewport.DrawDataBuilder[layer_i][draw_list_i], "DrawList")
@@ -1083,21 +1083,21 @@ func ShowMetricsWindow(p_open *bool) {
 	}
 
 	// Viewports
-	if TreeNodeF("Viewports", "Viewports (%d)", len(g.Viewports)) {
+	if TreeNodeF("Viewports", "Viewports (%d)", len(guiContext.Viewports)) {
 		Indent(GetTreeNodeToLabelSpacing())
 		RenderViewportsThumbnails()
 		//FIXME causes infinite loop.
 		/*Unindent(GetTreeNodeToLabelSpacing())
-		for i := 0; i < len(g.Viewports); i++ {
-			DebugNodeViewport(g.Viewports[i])
+		for i := 0; i < len(guiContext.Viewports); i++ {
+			DebugNodeViewport(guiContext.Viewports[i])
 		}*/
 		TreePop()
 	}
 
 	// Details for Popups
-	if TreeNodeF("Popups", "Popups (%d)", len(g.OpenPopupStack)) {
-		for i := range g.OpenPopupStack {
-			var window = g.OpenPopupStack[i].Window
+	if TreeNodeF("Popups", "Popups (%d)", len(guiContext.OpenPopupStack)) {
+		for i := range guiContext.OpenPopupStack {
+			var window = guiContext.OpenPopupStack[i].Window
 			var winName = "nil"
 			if window.Name != "" {
 				winName = window.Name
@@ -1109,14 +1109,14 @@ func ShowMetricsWindow(p_open *bool) {
 			if (window.Flags & ImGuiWindowFlags_ChildMenu) != 0 {
 				kind += " ChildMenu"
 			}
-			BulletText("PopupID: %08x, Window: '%s'%s", g.OpenPopupStack[i].PopupId, winName, kind)
+			BulletText("PopupID: %08x, Window: '%s'%s", guiContext.OpenPopupStack[i].PopupId, winName, kind)
 		}
 		TreePop()
 	}
 
 	// Details for TabBars
-	if TreeNodeF("TabBars", "Tab Bars (%d)", len(g.TabBars)) {
-		for _, tab_bar := range g.TabBars {
+	if TreeNodeF("TabBars", "Tab Bars (%d)", len(guiContext.TabBars)) {
+		for _, tab_bar := range guiContext.TabBars {
 			PushInterface(tab_bar)
 			DebugNodeTabBar(tab_bar, "TabBar")
 			PopID()
@@ -1125,8 +1125,8 @@ func ShowMetricsWindow(p_open *bool) {
 	}
 
 	// Details for Tables
-	if TreeNodeF("Tables", "Tables (%d)", len(g.Tables)) {
-		for _, table := range g.Tables {
+	if TreeNodeF("Tables", "Tables (%d)", len(guiContext.Tables)) {
+		for _, table := range guiContext.Tables {
 			PushInterface(table)
 			DebugNodeTable(table)
 			PopID()
@@ -1135,7 +1135,7 @@ func ShowMetricsWindow(p_open *bool) {
 	}
 
 	// Details for Fonts
-	var atlas = g.IO.Fonts
+	var atlas = guiContext.IO.Fonts
 	if TreeNodeF("Fonts", "Fonts (%d)", len(atlas.Fonts)) {
 		ShowFontAtlas(atlas)
 		TreePop()
@@ -1152,31 +1152,31 @@ func ShowMetricsWindow(p_open *bool) {
 		}
 		SameLine(0, 0)
 		if SmallButton("Save to disk") {
-			SaveIniSettingsToDisk(g.IO.IniFilename)
+			SaveIniSettingsToDisk(guiContext.IO.IniFilename)
 		}
 		SameLine(0, 0)
-		if g.IO.IniFilename != "" {
-			Text("\"%s\"", g.IO.IniFilename)
+		if guiContext.IO.IniFilename != "" {
+			Text("\"%s\"", guiContext.IO.IniFilename)
 		} else {
 			TextUnformatted("<nil>")
 		}
-		Text("SettingsDirtyTimer %.2f", g.SettingsDirtyTimer)
-		if TreeNodeF("SettingsHandlers", "Settings handlers: (%d)", len(g.SettingsHandlers)) {
-			for n := range g.SettingsHandlers {
-				BulletText("%s", g.SettingsHandlers[n].TypeName)
+		Text("SettingsDirtyTimer %.2f", guiContext.SettingsDirtyTimer)
+		if TreeNodeF("SettingsHandlers", "Settings handlers: (%d)", len(guiContext.SettingsHandlers)) {
+			for n := range guiContext.SettingsHandlers {
+				BulletText("%s", guiContext.SettingsHandlers[n].TypeName)
 			}
 			TreePop()
 		}
-		if TreeNodeF("SettingsWindows", "Settings packed data: Windows: %d bytes", len(g.SettingsWindows)) {
-			for i := range g.SettingsWindows {
-				DebugNodeWindowSettings(&g.SettingsWindows[i])
+		if TreeNodeF("SettingsWindows", "Settings packed data: Windows: %d bytes", len(guiContext.SettingsWindows)) {
+			for i := range guiContext.SettingsWindows {
+				DebugNodeWindowSettings(&guiContext.SettingsWindows[i])
 			}
 			TreePop()
 		}
 
-		if TreeNodeF("SettingsTables", "Settings packed data: Tables: %d bytes", len(g.SettingsTables)) {
-			for i := range g.SettingsTables {
-				DebugNodeTableSettings(&g.SettingsTables[i])
+		if TreeNodeF("SettingsTables", "Settings packed data: Tables: %d bytes", len(guiContext.SettingsTables)) {
+			for i := range guiContext.SettingsTables {
+				DebugNodeTableSettings(&guiContext.SettingsTables[i])
 			}
 			TreePop()
 		}
@@ -1192,9 +1192,9 @@ func ShowMetricsWindow(p_open *bool) {
 		Indent(0)
 
 		name, rootName, underName, movingName := "nil", "nil", "nil", "nil"
-		if g.HoveredWindow != nil {
-			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
-				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
+		if guiContext.HoveredWindow != nil {
+			name, rootName, underName, movingName = guiContext.HoveredWindow.Name, guiContext.HoveredWindow.RootWindow.Name,
+				guiContext.HoveredWindow.RootWindow.Name, guiContext.MovingWindow.Name
 		}
 
 		Text("HoveredWindow: '%s'", name)
@@ -1204,33 +1204,33 @@ func ShowMetricsWindow(p_open *bool) {
 		Unindent(0)
 
 		activeName := "nil"
-		if g.ActiveIdWindow != nil {
-			activeName = g.ActiveIdWindow.Name
+		if guiContext.ActiveIdWindow != nil {
+			activeName = guiContext.ActiveIdWindow.Name
 		}
 
 		Text("ITEMS")
 		Indent(0)
-		Text("ActiveId: 0x%08X/0x%08X (%.2f sec), AllowOverlap: %d, Source: %s", g.ActiveId, g.ActiveIdPreviousFrame, g.ActiveIdTimer, g.ActiveIdAllowOverlap, input_source_names[g.ActiveIdSource])
+		Text("ActiveId: 0x%08X/0x%08X (%.2f sec), AllowOverlap: %d, Source: %s", guiContext.ActiveId, guiContext.ActiveIdPreviousFrame, guiContext.ActiveIdTimer, guiContext.ActiveIdAllowOverlap, input_source_names[guiContext.ActiveIdSource])
 		Text("ActiveIdWindow: '%s'", activeName)
-		Text("ActiveIdUsing: Wheel: %d, NavDirMask: %X, NavInputMask: %X, KeyInputMask: %llX", g.ActiveIdUsingMouseWheel, g.ActiveIdUsingNavDirMask, g.ActiveIdUsingNavInputMask, g.ActiveIdUsingKeyInputMask)
-		Text("HoveredId: 0x%08X (%.2f sec), AllowOverlap: %d", g.HoveredIdPreviousFrame, g.HoveredIdTimer, g.HoveredIdAllowOverlap) // Not displaying g.HoveredId as it is update mid-frame
-		Text("DragDrop: %d, SourceId = 0x%08X, Payload \"%s\" (%d bytes)", g.DragDropActive, g.DragDropPayload.SourceId, g.DragDropPayload.DataType, g.DragDropPayload.DataSize)
+		Text("ActiveIdUsing: Wheel: %d, NavDirMask: %X, NavInputMask: %X, KeyInputMask: %llX", guiContext.ActiveIdUsingMouseWheel, guiContext.ActiveIdUsingNavDirMask, guiContext.ActiveIdUsingNavInputMask, guiContext.ActiveIdUsingKeyInputMask)
+		Text("HoveredId: 0x%08X (%.2f sec), AllowOverlap: %d", guiContext.HoveredIdPreviousFrame, guiContext.HoveredIdTimer, guiContext.HoveredIdAllowOverlap) // Not displaying guiContext.HoveredId as it is update mid-frame
+		Text("DragDrop: %d, SourceId = 0x%08X, Payload \"%s\" (%d bytes)", guiContext.DragDropActive, guiContext.DragDropPayload.SourceId, guiContext.DragDropPayload.DataType, guiContext.DragDropPayload.DataSize)
 		Unindent(0)
 
 		navWindowName, navTargetName := "nil", "nil"
-		if g.NavWindow != nil {
-			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
+		if guiContext.NavWindow != nil {
+			navWindowName, navTargetName = guiContext.NavWindow.Name, guiContext.NavWindowingTarget.Name
 		}
 
 		Text("NAV,FOCUS")
 		Indent(0)
 		Text("NavWindow: '%s'", navWindowName)
-		Text("NavId: 0x%08X, NavLayer: %d", g.NavId, g.NavLayer)
-		Text("NavInputSource: %s", input_source_names[g.NavInputSource])
-		Text("NavActive: %d, NavVisible: %d", g.IO.NavActive, g.IO.NavVisible)
-		Text("NavActivateId: 0x%08X, NavInputId: 0x%08X", g.NavActivateId, g.NavInputId)
-		Text("NavDisableHighlight: %d, NavDisableMouseHover: %d", g.NavDisableHighlight, g.NavDisableMouseHover)
-		Text("NavFocusScopeId = 0x%08X", g.NavFocusScopeId)
+		Text("NavId: 0x%08X, NavLayer: %d", guiContext.NavId, guiContext.NavLayer)
+		Text("NavInputSource: %s", input_source_names[guiContext.NavInputSource])
+		Text("NavActive: %d, NavVisible: %d", guiContext.IO.NavActive, guiContext.IO.NavVisible)
+		Text("NavActivateId: 0x%08X, NavInputId: 0x%08X", guiContext.NavActivateId, guiContext.NavInputId)
+		Text("NavDisableHighlight: %d, NavDisableMouseHover: %d", guiContext.NavDisableHighlight, guiContext.NavDisableMouseHover)
+		Text("NavFocusScopeId = 0x%08X", guiContext.NavFocusScopeId)
 		Text("NavWindowingTarget: '%s'", navTargetName)
 		Unindent(0)
 
@@ -1239,8 +1239,8 @@ func ShowMetricsWindow(p_open *bool) {
 
 	// Overlay: Display windows Rectangles and Begin Order
 	if cfg.ShowWindowsRects || cfg.ShowWindowsBeginOrder {
-		for n := range g.Windows {
-			var window = g.Windows[n]
+		for n := range guiContext.Windows {
+			var window = guiContext.Windows[n]
 			if !window.WasActive {
 				continue
 			}
@@ -1259,8 +1259,8 @@ func ShowMetricsWindow(p_open *bool) {
 
 	// Overlay: Display Tables Rectangles
 	if cfg.ShowTablesRects {
-		for _, table := range g.Tables {
-			if table == nil || table.LastFrameActive < g.FrameCount-1 {
+		for _, table := range guiContext.Tables {
+			if table == nil || table.LastFrameActive < guiContext.FrameCount-1 {
 				continue
 			}
 			var draw_list = getForegroundDrawList(table.OuterWindow)

@@ -4,15 +4,15 @@ import "unsafe"
 
 // GetCurrentWindowRead Windows
 // We should always have a CurrentWindow in the stack (there is an implicit "Debug" window)
-// If this ever crash because g.CurrentWindow is NULL it means that either
+// If this ever crash because guiContext.CurrentWindow is NULL it means that either
 // - ImGui::NewFrame() has never been called, which is illegal.
 // - You are calling ImGui functions after ImGui::EndFrame()/ImGui::Render() and before the next ImGui::NewFrame(), which is also illegal.
 func GetCurrentWindowRead() *ImGuiWindow {
-	return g.CurrentWindow
+	return guiContext.CurrentWindow
 }
 func GetCurrentWindow() *ImGuiWindow {
-	g.CurrentWindow.WriteAccessed = true
-	return g.CurrentWindow
+	guiContext.CurrentWindow.WriteAccessed = true
+	return guiContext.CurrentWindow
 }
 
 func UpdateWindowParentAndRootLinks(window *ImGuiWindow, flags ImGuiWindowFlags, parent_window *ImGuiWindow) {
@@ -55,8 +55,8 @@ func IsWindowChildOf(window *ImGuiWindow, potential_parent *ImGuiWindow) bool {
 }
 
 func IsWindowAbove(potential_above *ImGuiWindow, potential_below *ImGuiWindow) bool {
-	for i := len(g.Windows) - 1; i >= 0; i-- {
-		var candidate_window = g.Windows[i]
+	for i := len(guiContext.Windows) - 1; i >= 0; i-- {
+		var candidate_window = guiContext.Windows[i]
 		if candidate_window == potential_above {
 			return true
 		}
@@ -75,13 +75,13 @@ func SetWindowHitTestHole(window *ImGuiWindow, pos *ImVec2, size *ImVec2) {
 }
 
 func BringWindowToDisplayBack(window *ImGuiWindow) {
-	if g.Windows[0] == window {
+	if guiContext.Windows[0] == window {
 		return
 	}
-	for i := range g.Windows {
-		if g.Windows[i] == window {
-			*g.Windows[1] = *g.Windows[0]
-			g.Windows[0] = window
+	for i := range guiContext.Windows {
+		if guiContext.Windows[i] == window {
+			*guiContext.Windows[1] = *guiContext.Windows[0]
+			guiContext.Windows[0] = window
 			break
 		}
 	}

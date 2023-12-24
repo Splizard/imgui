@@ -6,9 +6,9 @@ const NAV_WINDOWING_LIST_APPEAR_DELAY float = 0.15 // Time before the window lis
 const NAV_WINDOWING_HIGHLIGHT_DELAY float = 0.20 // Time before the highlight and screen dimming starts fading in
 
 func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OPT O(N)
-	for i := i_start; i >= 0 && i < int(len(g.WindowsFocusOrder)) && i != i_stop; i += dir {
-		if IsWindowNavFocusable(g.WindowsFocusOrder[i]) {
-			return g.WindowsFocusOrder[i]
+	for i := i_start; i >= 0 && i < int(len(guiContext.WindowsFocusOrder)) && i != i_stop; i += dir {
+		if IsWindowNavFocusable(guiContext.WindowsFocusOrder[i]) {
+			return guiContext.WindowsFocusOrder[i]
 		}
 	}
 	return nil
@@ -16,12 +16,12 @@ func FindWindowNavFocusable(i_start, i_stop, dir int) *ImGuiWindow { // FIXME-OP
 
 // NavMoveRequestForward Forward will reuse the move request again on the next frame (generally with modifications done to it)
 func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
-	IM_ASSERT(!g.NavMoveForwardToNextFrame)
+	IM_ASSERT(!guiContext.NavMoveForwardToNextFrame)
 	NavMoveRequestCancel()
-	g.NavMoveForwardToNextFrame = true
-	g.NavMoveDir = move_dir
-	g.NavMoveClipDir = clip_dir
-	g.NavMoveFlags = move_flags | ImGuiNavMoveFlags_Forwarded
+	guiContext.NavMoveForwardToNextFrame = true
+	guiContext.NavMoveDir = move_dir
+	guiContext.NavMoveClipDir = clip_dir
+	guiContext.NavMoveFlags = move_flags | ImGuiNavMoveFlags_Forwarded
 }
 
 // NavMoveRequestTryWrapping Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
@@ -29,29 +29,29 @@ func NavMoveRequestForward(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGu
 func NavMoveRequestTryWrapping(window *ImGuiWindow, move_flags ImGuiNavMoveFlags) {
 	IM_ASSERT(move_flags != 0) // Call with _WrapX, _WrapY, _LoopX, _LoopY
 	// In theory we should test for NavMoveRequestButNoResultYet() but there's no point doing it, NavEndFrame() will do the same test
-	if g.NavWindow == window && g.NavMoveScoringItems && g.NavLayer == ImGuiNavLayer_Main {
-		g.NavMoveFlags |= move_flags
+	if guiContext.NavWindow == window && guiContext.NavMoveScoringItems && guiContext.NavLayer == ImGuiNavLayer_Main {
+		guiContext.NavMoveFlags |= move_flags
 	}
 }
 
 // SetNavID FIXME-NAV: The existence of SetNavID vs SetFocusID properly needs to be clarified/reworked.
 // In our terminology those should be interchangeable. Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 func SetNavID(id ImGuiID, nav_layer ImGuiNavLayer, focus_scope_id ImGuiID, rect_rel *ImRect) {
-	IM_ASSERT(g.NavWindow != nil)
+	IM_ASSERT(guiContext.NavWindow != nil)
 	IM_ASSERT(nav_layer == ImGuiNavLayer_Main || nav_layer == ImGuiNavLayer_Menu)
-	g.NavId = id
-	g.NavLayer = nav_layer
-	g.NavFocusScopeId = focus_scope_id
-	g.NavWindow.NavLastIds[nav_layer] = id
-	g.NavWindow.NavRectRel[nav_layer] = *rect_rel
-	//g.NavDisableHighlight = false;
-	//g.NavDisableMouseHover = g.NavMousePosDirty = true;
+	guiContext.NavId = id
+	guiContext.NavLayer = nav_layer
+	guiContext.NavFocusScopeId = focus_scope_id
+	guiContext.NavWindow.NavLastIds[nav_layer] = id
+	guiContext.NavWindow.NavRectRel[nav_layer] = *rect_rel
+	//guiContext.NavDisableHighlight = false;
+	//guiContext.NavDisableMouseHover = guiContext.NavMousePosDirty = true;
 }
 
 func NavUpdateAnyRequestFlag() {
-	g.NavAnyRequest = g.NavMoveScoringItems || g.NavInitRequest
-	if g.NavAnyRequest {
-		IM_ASSERT(g.NavWindow != nil)
+	guiContext.NavAnyRequest = guiContext.NavMoveScoringItems || guiContext.NavInitRequest
+	if guiContext.NavAnyRequest {
+		IM_ASSERT(guiContext.NavWindow != nil)
 	}
 }
 
@@ -66,12 +66,12 @@ func NavRestoreLastChildNavWindow(window *ImGuiWindow) *ImGuiWindow {
 
 func GetNavInputAmount(n ImGuiNavInput, mode ImGuiInputReadMode) float {
 	if mode == ImGuiInputReadMode_Down {
-		return g.IO.NavInputs[n] // Instant, read analog input (0.0f..1.0f, as provided by user)
+		return guiContext.IO.NavInputs[n] // Instant, read analog input (0.0f..1.0f, as provided by user)
 	}
 
-	var t = g.IO.NavInputsDownDuration[n]
+	var t = guiContext.IO.NavInputsDownDuration[n]
 	if t < 0.0 && mode == ImGuiInputReadMode_Released { // Return 1.0f when just released, no repeat, ignore analog input.
-		if g.IO.NavInputsDownDurationPrev[n] >= 0.0 {
+		if guiContext.IO.NavInputsDownDurationPrev[n] >= 0.0 {
 			return 1
 		}
 		return 0
@@ -89,61 +89,61 @@ func GetNavInputAmount(n ImGuiNavInput, mode ImGuiInputReadMode) float {
 	}
 
 	if mode == ImGuiInputReadMode_Repeat {
-		return (float)(CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay*0.72, g.IO.KeyRepeatRate*0.80))
+		return (float)(CalcTypematicRepeatAmount(t-guiContext.IO.DeltaTime, t, guiContext.IO.KeyRepeatDelay*0.72, guiContext.IO.KeyRepeatRate*0.80))
 	}
 	if mode == ImGuiInputReadMode_RepeatSlow {
-		return (float)(CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay*1.25, g.IO.KeyRepeatRate*2.00))
+		return (float)(CalcTypematicRepeatAmount(t-guiContext.IO.DeltaTime, t, guiContext.IO.KeyRepeatDelay*1.25, guiContext.IO.KeyRepeatRate*2.00))
 	}
 	if mode == ImGuiInputReadMode_RepeatFast {
-		return (float)(CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay*0.72, g.IO.KeyRepeatRate*0.30))
+		return (float)(CalcTypematicRepeatAmount(t-guiContext.IO.DeltaTime, t, guiContext.IO.KeyRepeatDelay*0.72, guiContext.IO.KeyRepeatRate*0.30))
 	}
 	return 0.0
 }
 
 // NavMoveRequestButNoResultYet Gamepad/Keyboard Navigation
 func NavMoveRequestButNoResultYet() bool {
-	return g.NavMoveScoringItems && g.NavMoveResultLocal.ID == 0 && g.NavMoveResultOther.ID == 0
+	return guiContext.NavMoveScoringItems && guiContext.NavMoveResultLocal.ID == 0 && guiContext.NavMoveResultOther.ID == 0
 }
 
 func NavApplyItemToResult(result *ImGuiNavItemData) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	result.Window = window
-	result.ID = g.LastItemData.ID
+	result.ID = guiContext.LastItemData.ID
 	result.FocusScopeId = window.DC.NavFocusScopeIdCurrent
-	result.RectRel = ImRect{g.LastItemData.NavRect.Min.Sub(window.Pos), g.LastItemData.NavRect.Max.Sub(window.Pos)}
+	result.RectRel = ImRect{guiContext.LastItemData.NavRect.Min.Sub(window.Pos), guiContext.LastItemData.NavRect.Max.Sub(window.Pos)}
 }
 
-// NavProcessItem We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
+// NavProcessItem We get there when either NavId == id, or when guiContext.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after LastItemData is set.
 func NavProcessItem() {
-	window := g.CurrentWindow
-	var id = g.LastItemData.ID
-	var nav_bb = g.LastItemData.NavRect
-	var item_flags = g.LastItemData.InFlags
+	window := guiContext.CurrentWindow
+	var id = guiContext.LastItemData.ID
+	var nav_bb = guiContext.LastItemData.NavRect
+	var item_flags = guiContext.LastItemData.InFlags
 
 	// Process Init Request
-	if g.NavInitRequest && g.NavLayer == window.DC.NavLayerCurrent {
+	if guiContext.NavInitRequest && guiContext.NavLayer == window.DC.NavLayerCurrent {
 		// Even if 'ImGuiItemFlags_NoNavDefaultFocus' is on (typically collapse/close button) we record the first ResultId so they can be used as a fallback
 		var candidate_for_nav_default_focus = (item_flags & (ImGuiItemFlags_NoNavDefaultFocus | ImGuiItemFlags_Disabled)) == 0
-		if candidate_for_nav_default_focus || g.NavInitResultId == 0 {
-			g.NavInitResultId = id
-			g.NavInitResultRectRel = ImRect{nav_bb.Min.Sub(window.Pos), nav_bb.Max.Sub(window.Pos)}
+		if candidate_for_nav_default_focus || guiContext.NavInitResultId == 0 {
+			guiContext.NavInitResultId = id
+			guiContext.NavInitResultRectRel = ImRect{nav_bb.Min.Sub(window.Pos), nav_bb.Max.Sub(window.Pos)}
 		}
 		if candidate_for_nav_default_focus {
-			g.NavInitRequest = false // Found a match, clear request
+			guiContext.NavInitRequest = false // Found a match, clear request
 			NavUpdateAnyRequestFlag()
 		}
 	}
 
 	// Process Move Request (scoring for navigation)
 	// FIXME-NAV: Consider policy for double scoring (scoring from NavScoringRect + scoring from a rect wrapped according to current wrapping policy)
-	if g.NavMoveScoringItems {
-		if (g.NavId != id || (g.NavMoveFlags&ImGuiNavMoveFlags_AllowCurrentNavId != 0)) && item_flags&(ImGuiItemFlags_Disabled|ImGuiItemFlags_NoNav) == 0 {
+	if guiContext.NavMoveScoringItems {
+		if (guiContext.NavId != id || (guiContext.NavMoveFlags&ImGuiNavMoveFlags_AllowCurrentNavId != 0)) && item_flags&(ImGuiItemFlags_Disabled|ImGuiItemFlags_NoNav) == 0 {
 			var result *ImGuiNavItemData
-			if window == g.NavWindow {
-				result = &g.NavMoveResultLocal
+			if window == guiContext.NavWindow {
+				result = &guiContext.NavMoveResultLocal
 			} else {
-				result = &g.NavMoveResultOther
+				result = &guiContext.NavMoveResultOther
 			}
 			if NavScoreItem(result) {
 				NavApplyItemToResult(result)
@@ -151,10 +151,10 @@ func NavProcessItem() {
 
 			// Features like PageUp/PageDown need to maintain a separate score for the visible set of items.
 			const VISIBLE_RATIO float = 0.70
-			if (g.NavMoveFlags&ImGuiNavMoveFlags_AlsoScoreVisibleSet) != 0 && window.ClipRect.Overlaps(nav_bb) {
+			if (guiContext.NavMoveFlags&ImGuiNavMoveFlags_AlsoScoreVisibleSet) != 0 && window.ClipRect.Overlaps(nav_bb) {
 				if ImClamp(nav_bb.Max.y, window.ClipRect.Min.y, window.ClipRect.Max.y)-ImClamp(nav_bb.Min.y, window.ClipRect.Min.y, window.ClipRect.Max.y) >= (nav_bb.Max.y-nav_bb.Min.y)*VISIBLE_RATIO {
-					if NavScoreItem(&g.NavMoveResultLocalVisible) {
-						NavApplyItemToResult(&g.NavMoveResultLocalVisible)
+					if NavScoreItem(&guiContext.NavMoveResultLocalVisible) {
+						NavApplyItemToResult(&guiContext.NavMoveResultLocalVisible)
 					}
 				}
 			}
@@ -162,11 +162,11 @@ func NavProcessItem() {
 	}
 
 	// Update window-relative bounding box of navigated item
-	if g.NavId == id {
-		g.NavWindow = window // Always refresh g.NavWindow, because some operations such as FocusItem() don't have a window.
-		g.NavLayer = window.DC.NavLayerCurrent
-		g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent
-		g.NavIdIsAlive = true
+	if guiContext.NavId == id {
+		guiContext.NavWindow = window // Always refresh guiContext.NavWindow, because some operations such as FocusItem() don't have a window.
+		guiContext.NavLayer = window.DC.NavLayerCurrent
+		guiContext.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent
+		guiContext.NavIdIsAlive = true
 		window.NavRectRel[window.DC.NavLayerCurrent] = ImRect{nav_bb.Min.Sub(window.Pos), nav_bb.Max.Sub(window.Pos)} // Store item bounding box (relative to window position)
 	}
 }
@@ -176,10 +176,10 @@ func NavProcessItem() {
 // FIXME-NAV: This doesn't work properly with NavFlattened siblings as we use NavWindow rectangle for reference
 // FIXME-NAV: how to get Home/End to aim at the beginning/end of a 2D grid?
 func NavUpdatePageUpPageDown() float {
-	io := g.IO
+	io := guiContext.IO
 
-	var window = g.NavWindow
-	if (window.Flags&ImGuiWindowFlags_NoNavInputs != 0) || g.NavWindowingTarget != nil || g.NavLayer != ImGuiNavLayer_Main {
+	var window = guiContext.NavWindow
+	if (window.Flags&ImGuiWindowFlags_NoNavInputs != 0) || guiContext.NavWindowingTarget != nil || guiContext.NavLayer != ImGuiNavLayer_Main {
 		return 0.0
 	}
 
@@ -203,19 +203,19 @@ func NavUpdatePageUpPageDown() float {
 			setScrollY(window, window.ScrollMax.y)
 		}
 	} else {
-		var nav_rect_rel = &window.NavRectRel[g.NavLayer]
+		var nav_rect_rel = &window.NavRectRel[guiContext.NavLayer]
 		var page_offset_y = max(0.0, window.InnerRect.GetHeight()-window.CalcFontSize()*1.0+nav_rect_rel.GetHeight())
 		var nav_scoring_rect_offset_y float = 0.0
 		if IsKeyPressed(io.KeyMap[ImGuiKey_PageUp], true) {
 			nav_scoring_rect_offset_y = -page_offset_y
-			g.NavMoveDir = ImGuiDir_Down // Because our scoring rect is offset up, we request the down direction (so we can always land on the last item)
-			g.NavMoveClipDir = ImGuiDir_Up
-			g.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet
+			guiContext.NavMoveDir = ImGuiDir_Down // Because our scoring rect is offset up, we request the down direction (so we can always land on the last item)
+			guiContext.NavMoveClipDir = ImGuiDir_Up
+			guiContext.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet
 		} else if IsKeyPressed(io.KeyMap[ImGuiKey_PageDown], true) {
 			nav_scoring_rect_offset_y = +page_offset_y
-			g.NavMoveDir = ImGuiDir_Up // Because our scoring rect is offset down, we request the up direction (so we can always land on the last item)
-			g.NavMoveClipDir = ImGuiDir_Down
-			g.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet
+			guiContext.NavMoveDir = ImGuiDir_Up // Because our scoring rect is offset down, we request the up direction (so we can always land on the last item)
+			guiContext.NavMoveClipDir = ImGuiDir_Down
+			guiContext.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_AlsoScoreVisibleSet
 		} else if home_pressed {
 			// FIXME-NAV: handling of Home/End is assuming that the top/bottom most item will be visible with Scroll.y == 0/ScrollMax.y
 			// Scrolling will be handled via the ImGuiNavMoveFlags_ScrollToEdge flag, we don't scroll immediately to avoid scrolling happening before nav result.
@@ -226,8 +226,8 @@ func NavUpdatePageUpPageDown() float {
 				nav_rect_rel.Min.x = 0
 				nav_rect_rel.Max.x = 0.0
 			}
-			g.NavMoveDir = ImGuiDir_Down
-			g.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdge
+			guiContext.NavMoveDir = ImGuiDir_Down
+			guiContext.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdge
 			// FIXME-NAV: MoveClipDir left to _None, intentional?
 		} else if end_pressed {
 			nav_rect_rel.Min.y = window.ScrollMax.y + window.SizeFull.y - window.Scroll.y
@@ -236,8 +236,8 @@ func NavUpdatePageUpPageDown() float {
 				nav_rect_rel.Min.x = 0
 				nav_rect_rel.Max.x = 0.0
 			}
-			g.NavMoveDir = ImGuiDir_Up
-			g.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdge
+			guiContext.NavMoveDir = ImGuiDir_Up
+			guiContext.NavMoveFlags = ImGuiNavMoveFlags_AllowCurrentNavId | ImGuiNavMoveFlags_ScrollToEdge
 			// FIXME-NAV: MoveClipDir left to _None, intentional?
 		}
 		return nav_scoring_rect_offset_y
@@ -246,72 +246,72 @@ func NavUpdatePageUpPageDown() float {
 }
 
 func NavUpdateCreateMoveRequest() {
-	io := g.IO
-	var window = g.NavWindow
+	io := guiContext.IO
+	var window = guiContext.NavWindow
 
-	if g.NavMoveForwardToNextFrame && window != nil {
-		// Forwarding previous request (which has been modified, e.g. wrap around menus rewrite the requests with a starting rectangle at the other side of the window)
+	if guiContext.NavMoveForwardToNextFrame && window != nil {
+		// Forwarding previous request (which has been modified, e.guiContext. wrap around menus rewrite the requests with a starting rectangle at the other side of the window)
 		// (preserve most state, which were already set by the NavMoveRequestForward() function)
-		IM_ASSERT(g.NavMoveDir != ImGuiDir_None && g.NavMoveClipDir != ImGuiDir_None)
-		IM_ASSERT(g.NavMoveFlags&ImGuiNavMoveFlags_Forwarded != 0)
-		//IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward %d\n", g.NavMoveDir)
+		IM_ASSERT(guiContext.NavMoveDir != ImGuiDir_None && guiContext.NavMoveClipDir != ImGuiDir_None)
+		IM_ASSERT(guiContext.NavMoveFlags&ImGuiNavMoveFlags_Forwarded != 0)
+		//IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward %d\n", guiContext.NavMoveDir)
 	} else {
 		// Initiate directional inputs request
-		g.NavMoveDir = ImGuiDir_None
-		g.NavMoveFlags = ImGuiNavMoveFlags_None
-		if window != nil && g.NavWindowingTarget == nil && window.Flags&ImGuiWindowFlags_NoNavInputs == 0 {
+		guiContext.NavMoveDir = ImGuiDir_None
+		guiContext.NavMoveFlags = ImGuiNavMoveFlags_None
+		if window != nil && guiContext.NavWindowingTarget == nil && window.Flags&ImGuiWindowFlags_NoNavInputs == 0 {
 			var read_mode = ImGuiInputReadMode_Repeat
 			if !IsActiveIdUsingNavDir(ImGuiDir_Left) && (IsNavInputTest(ImGuiNavInput_DpadLeft, read_mode) || IsNavInputTest(ImGuiNavInput_KeyLeft_, read_mode)) {
-				g.NavMoveDir = ImGuiDir_Left
+				guiContext.NavMoveDir = ImGuiDir_Left
 			}
 			if !IsActiveIdUsingNavDir(ImGuiDir_Right) && (IsNavInputTest(ImGuiNavInput_DpadRight, read_mode) || IsNavInputTest(ImGuiNavInput_KeyRight_, read_mode)) {
-				g.NavMoveDir = ImGuiDir_Right
+				guiContext.NavMoveDir = ImGuiDir_Right
 			}
 			if !IsActiveIdUsingNavDir(ImGuiDir_Up) && (IsNavInputTest(ImGuiNavInput_DpadUp, read_mode) || IsNavInputTest(ImGuiNavInput_KeyUp_, read_mode)) {
-				g.NavMoveDir = ImGuiDir_Up
+				guiContext.NavMoveDir = ImGuiDir_Up
 			}
 			if !IsActiveIdUsingNavDir(ImGuiDir_Down) && (IsNavInputTest(ImGuiNavInput_DpadDown, read_mode) || IsNavInputTest(ImGuiNavInput_KeyDown_, read_mode)) {
-				g.NavMoveDir = ImGuiDir_Down
+				guiContext.NavMoveDir = ImGuiDir_Down
 			}
 		}
-		g.NavMoveClipDir = g.NavMoveDir
+		guiContext.NavMoveClipDir = guiContext.NavMoveDir
 	}
 
 	// Update PageUp/PageDown/Home/End scroll
 	// FIXME-NAV: Consider enabling those keys even without the master ImGuiConfigFlags_NavEnableKeyboard flag?
 	var nav_keyboard_active = (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0
 	var scoring_rect_offset_y float = 0.0
-	if window != nil && g.NavMoveDir == ImGuiDir_None && nav_keyboard_active {
+	if window != nil && guiContext.NavMoveDir == ImGuiDir_None && nav_keyboard_active {
 		scoring_rect_offset_y = NavUpdatePageUpPageDown()
 	}
 
 	// Submit
-	g.NavMoveForwardToNextFrame = false
-	if g.NavMoveDir != ImGuiDir_None {
-		NavMoveRequestSubmit(g.NavMoveDir, g.NavMoveClipDir, g.NavMoveFlags)
+	guiContext.NavMoveForwardToNextFrame = false
+	if guiContext.NavMoveDir != ImGuiDir_None {
+		NavMoveRequestSubmit(guiContext.NavMoveDir, guiContext.NavMoveClipDir, guiContext.NavMoveFlags)
 	}
 
 	// Moving with no reference triggers a init request (will be used as a fallback if the direction fails to find a match)
-	if g.NavMoveSubmitted && g.NavId == 0 {
-		//IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from move, window \"%s\", layer=%d\n", g.NavWindow.Name, g.NavLayer)
-		g.NavInitRequest = true
-		g.NavInitRequestFromMove = true
-		g.NavInitResultId = 0
-		g.NavDisableHighlight = false
+	if guiContext.NavMoveSubmitted && guiContext.NavId == 0 {
+		//IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from move, window \"%s\", layer=%d\n", guiContext.NavWindow.Name, guiContext.NavLayer)
+		guiContext.NavInitRequest = true
+		guiContext.NavInitRequestFromMove = true
+		guiContext.NavInitResultId = 0
+		guiContext.NavDisableHighlight = false
 	}
 
 	// When using gamepad, we project the reference nav bounding box into window visible area.
 	// This is to allow resuming navigation inside the visible area after doing a large amount of scrolling, since with gamepad every movements are relative
 	// (can't focus a visible object like we can with the mouse).
-	if g.NavMoveSubmitted && g.NavInputSource == ImGuiInputSource_Gamepad && g.NavLayer == ImGuiNavLayer_Main && window != nil {
+	if guiContext.NavMoveSubmitted && guiContext.NavInputSource == ImGuiInputSource_Gamepad && guiContext.NavLayer == ImGuiNavLayer_Main && window != nil {
 		var window_rect_rel = ImRect{window.InnerRect.Min.Sub(window.Pos).Sub(ImVec2{1, 1}), window.InnerRect.Max.Sub(window.Pos).Add(ImVec2{1, 1})}
-		if !window_rect_rel.ContainsRect(window.NavRectRel[g.NavLayer]) {
+		if !window_rect_rel.ContainsRect(window.NavRectRel[guiContext.NavLayer]) {
 			//IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp NavRectRel\n")
 			var pad = window.CalcFontSize() * 0.5
 			window_rect_rel.ExpandVec(ImVec2{-min(window_rect_rel.GetWidth(), pad), -min(window_rect_rel.GetHeight(), pad)}) // Terrible approximation for the intent of starting navigation from first fully visible item
-			window.NavRectRel[g.NavLayer].ClipWithFull(window_rect_rel)
-			g.NavId = 0
-			g.NavFocusScopeId = 0
+			window.NavRectRel[guiContext.NavLayer].ClipWithFull(window_rect_rel)
+			guiContext.NavId = 0
+			guiContext.NavFocusScopeId = 0
 		}
 	}
 
@@ -319,8 +319,8 @@ func NavUpdateCreateMoveRequest() {
 	var scoring_rect ImRect
 	if window != nil {
 		var nav_rect_rel ImRect
-		if !window.NavRectRel[g.NavLayer].IsInverted() {
-			nav_rect_rel = window.NavRectRel[g.NavLayer]
+		if !window.NavRectRel[guiContext.NavLayer].IsInverted() {
+			nav_rect_rel = window.NavRectRel[guiContext.NavLayer]
 		}
 		scoring_rect = ImRect{window.Pos.Add(nav_rect_rel.Min), window.Pos.Add(nav_rect_rel.Max)}
 		scoring_rect.TranslateY(scoring_rect_offset_y)
@@ -329,122 +329,122 @@ func NavUpdateCreateMoveRequest() {
 		IM_ASSERT(!scoring_rect.IsInverted()) // Ensure if we have a finite, non-inverted bounding box here will allows us to remove extraneous ImFabs() calls in NavScoreItem().
 		//GetForegroundDrawList().AddRect(scoring_rect.Min, scoring_rect.Max, IM_COL32(255,200,0,255)); // [DEBUG]
 	}
-	g.NavScoringRect = scoring_rect
+	guiContext.NavScoringRect = scoring_rect
 }
 
 // NavUpdateCancelRequest Process NavCancel input (to close a popup, get back to parent, clear focus)
-// FIXME: In order to support e.g. Escape to clear a selection we'll need:
+// FIXME: In order to support e.guiContext. Escape to clear a selection we'll need:
 // - either to store the equivalent of ActiveIdUsingKeyInputMask for a FocusScope and test for it.
-// - either to move most/all of those tests to the epilogue/end functions of the scope they are dealing with (e.g. exit child window in EndChild()) or in EndFrame(), to allow an earlier intercept
+// - either to move most/all of those tests to the epilogue/end functions of the scope they are dealing with (e.guiContext. exit child window in EndChild()) or in EndFrame(), to allow an earlier intercept
 func NavUpdateCancelRequest() {
 	if !IsNavInputTest(ImGuiNavInput_Cancel, ImGuiInputReadMode_Pressed) {
 		return
 	}
 
 	//IMGUI_DEBUG_LOG_NAV("[nav] ImGuiNavInput_Cancel\n")
-	if g.ActiveId != 0 {
+	if guiContext.ActiveId != 0 {
 		if !IsActiveIdUsingNavInput(ImGuiNavInput_Cancel) {
 			ClearActiveID()
 		}
-	} else if g.NavLayer != ImGuiNavLayer_Main {
+	} else if guiContext.NavLayer != ImGuiNavLayer_Main {
 		// Leave the "menu" layer
 		NavRestoreLayer(ImGuiNavLayer_Main)
-	} else if g.NavWindow != nil && g.NavWindow != g.NavWindow.RootWindow && g.NavWindow.Flags&ImGuiWindowFlags_Popup == 0 && g.NavWindow.ParentWindow != nil {
+	} else if guiContext.NavWindow != nil && guiContext.NavWindow != guiContext.NavWindow.RootWindow && guiContext.NavWindow.Flags&ImGuiWindowFlags_Popup == 0 && guiContext.NavWindow.ParentWindow != nil {
 		// Exit child window
-		var child_window = g.NavWindow
-		var parent_window = g.NavWindow.ParentWindow
+		var child_window = guiContext.NavWindow
+		var parent_window = guiContext.NavWindow.ParentWindow
 		IM_ASSERT(child_window.ChildId != 0)
 		var child_rect = child_window.Rect()
 		FocusWindow(parent_window)
 		SetNavID(child_window.ChildId, ImGuiNavLayer_Main, 0, &ImRect{child_rect.Min.Sub(parent_window.Pos), child_rect.Max.Sub(parent_window.Pos)})
-	} else if len(g.OpenPopupStack) > 0 {
+	} else if len(guiContext.OpenPopupStack) > 0 {
 		// Close open popup/menu
-		if g.OpenPopupStack[len(g.OpenPopupStack)-1].Window.Flags&ImGuiWindowFlags_Modal == 0 {
-			ClosePopupToLevel(int(len(g.OpenPopupStack)-1), true)
+		if guiContext.OpenPopupStack[len(guiContext.OpenPopupStack)-1].Window.Flags&ImGuiWindowFlags_Modal == 0 {
+			ClosePopupToLevel(int(len(guiContext.OpenPopupStack)-1), true)
 		}
 	} else {
 		// Clear NavLastId for popups but keep it for regular child window so we can leave one and come back where we were
-		if g.NavWindow != nil && ((g.NavWindow.Flags&ImGuiWindowFlags_Popup != 0) || g.NavWindow.Flags&ImGuiWindowFlags_ChildWindow == 0) {
-			g.NavWindow.NavLastIds[0] = 0
+		if guiContext.NavWindow != nil && ((guiContext.NavWindow.Flags&ImGuiWindowFlags_Popup != 0) || guiContext.NavWindow.Flags&ImGuiWindowFlags_ChildWindow == 0) {
+			guiContext.NavWindow.NavLastIds[0] = 0
 		}
-		g.NavId = 0
-		g.NavFocusScopeId = 0
+		guiContext.NavId = 0
+		guiContext.NavFocusScopeId = 0
 	}
 }
 
 func NavRestoreLayer(layer ImGuiNavLayer) {
 	if layer == ImGuiNavLayer_Main {
-		g.NavWindow = NavRestoreLastChildNavWindow(g.NavWindow)
+		guiContext.NavWindow = NavRestoreLastChildNavWindow(guiContext.NavWindow)
 	}
-	var window = g.NavWindow
+	var window = guiContext.NavWindow
 	if window.NavLastIds[layer] != 0 {
 		SetNavID(window.NavLastIds[layer], layer, 0, &window.NavRectRel[layer])
 	} else {
-		g.NavLayer = layer
+		guiContext.NavLayer = layer
 		NavInitWindow(window, true)
 	}
-	g.NavDisableHighlight = false
-	g.NavDisableMouseHover = true
-	g.NavMousePosDirty = true
+	guiContext.NavDisableHighlight = false
+	guiContext.NavDisableMouseHover = true
+	guiContext.NavMousePosDirty = true
 }
 
 func FindWindowFocusIndex(window *ImGuiWindow) int {
 	var order = int(window.FocusOrder)
-	IM_ASSERT(g.WindowsFocusOrder[order] == window)
+	IM_ASSERT(guiContext.WindowsFocusOrder[order] == window)
 	return order
 }
 
 func NavUpdateWindowingHighlightWindow(focus_change_dir int) {
-	IM_ASSERT(g.NavWindowingTarget != nil)
-	if g.NavWindowingTarget.Flags&ImGuiWindowFlags_Modal != 0 {
+	IM_ASSERT(guiContext.NavWindowingTarget != nil)
+	if guiContext.NavWindowingTarget.Flags&ImGuiWindowFlags_Modal != 0 {
 		return
 	}
 
-	var i_current = FindWindowFocusIndex(g.NavWindowingTarget)
+	var i_current = FindWindowFocusIndex(guiContext.NavWindowingTarget)
 	var window_target = FindWindowNavFocusable(i_current+focus_change_dir, -INT_MAX, focus_change_dir)
 	if window_target == nil {
 		var start int
 		if focus_change_dir < 0 {
-			start = int(len(g.WindowsFocusOrder) - 1)
+			start = int(len(guiContext.WindowsFocusOrder) - 1)
 		}
 		window_target = FindWindowNavFocusable(start, i_current, focus_change_dir)
 	}
 	if window_target != nil { // Don't reset windowing target if there's a single window in the list
-		g.NavWindowingTarget = window_target
-		g.NavWindowingTargetAnim = window_target
+		guiContext.NavWindowingTarget = window_target
+		guiContext.NavWindowingTargetAnim = window_target
 	}
-	g.NavWindowingToggleLayer = false
+	guiContext.NavWindowingToggleLayer = false
 }
 
 func NavUpdateInitResult() {
-	// In very rare cases g.NavWindow may be nil (e.g. clearing focus after requesting an init request, which does happen when releasing Alt while clicking on void)
-	if g.NavWindow == nil {
+	// In very rare cases guiContext.NavWindow may be nil (e.guiContext. clearing focus after requesting an init request, which does happen when releasing Alt while clicking on void)
+	if guiContext.NavWindow == nil {
 		return
 	}
 
 	// Apply result from previous navigation init request (will typically select the first item, unless SetItemDefaultFocus() has been called)
-	// FIXME-NAV: On _NavFlattened windows, g.NavWindow will only be updated during subsequent frame. Not a problem currently.
-	//IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", g.NavInitResultId, g.NavLayer, g.NavWindow.Name)
-	SetNavID(g.NavInitResultId, g.NavLayer, 0, &g.NavInitResultRectRel)
-	g.NavIdIsAlive = true // Mark as alive from previous frame as we got a result
-	if g.NavInitRequestFromMove {
-		g.NavDisableHighlight = false
-		g.NavDisableMouseHover = true
-		g.NavMousePosDirty = true
+	// FIXME-NAV: On _NavFlattened windows, guiContext.NavWindow will only be updated during subsequent frame. Not a problem currently.
+	//IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", guiContext.NavInitResultId, guiContext.NavLayer, guiContext.NavWindow.Name)
+	SetNavID(guiContext.NavInitResultId, guiContext.NavLayer, 0, &guiContext.NavInitResultRectRel)
+	guiContext.NavIdIsAlive = true // Mark as alive from previous frame as we got a result
+	if guiContext.NavInitRequestFromMove {
+		guiContext.NavDisableHighlight = false
+		guiContext.NavDisableMouseHover = true
+		guiContext.NavMousePosDirty = true
 	}
 }
 
 func NavCalcPreferredRefPos() ImVec2 {
-	if g.NavDisableHighlight || !g.NavDisableMouseHover || g.NavWindow == nil {
+	if guiContext.NavDisableHighlight || !guiContext.NavDisableMouseHover || guiContext.NavWindow == nil {
 		// Mouse (we need a fallback in case the mouse becomes invalid after being used)
-		if IsMousePosValid(&g.IO.MousePos) {
-			return g.IO.MousePos
+		if IsMousePosValid(&guiContext.IO.MousePos) {
+			return guiContext.IO.MousePos
 		}
-		return g.MouseLastValidPos
+		return guiContext.MouseLastValidPos
 	} else {
 		// When navigation is active and mouse is disabled, decide on an arbitrary position around the bottom left of the currently navigated item.
-		var rect_rel = &g.NavWindow.NavRectRel[g.NavLayer]
-		var pos = g.NavWindow.Pos.Add(ImVec2{rect_rel.Min.x + min(g.Style.FramePadding.x*4, rect_rel.GetWidth()), rect_rel.Max.y - min(g.Style.FramePadding.y, rect_rel.GetHeight())})
+		var rect_rel = &guiContext.NavWindow.NavRectRel[guiContext.NavLayer]
+		var pos = guiContext.NavWindow.Pos.Add(ImVec2{rect_rel.Min.x + min(guiContext.Style.FramePadding.x*4, rect_rel.GetWidth()), rect_rel.Max.y - min(guiContext.Style.FramePadding.y, rect_rel.GetHeight())})
 		var viewport = GetMainViewport()
 
 		clamped := ImClampVec2(&pos, &viewport.Pos, viewport.Pos.Add(viewport.Size))
@@ -468,7 +468,7 @@ func NavSaveLastChildNavWindowIntoParent(nav_window *ImGuiWindow) {
 // Keyboard: CTRL+Tab (change focus/move/resize), Alt (toggle menu layer)
 // Gamepad:  Hold Menu/Square (change focus/move/resize), Tap Menu/Square (toggle menu layer)
 func NavUpdateWindowing() {
-	io := g.IO
+	io := guiContext.IO
 
 	var apply_focus_window *ImGuiWindow = nil
 	var apply_toggle_layer = false
@@ -476,74 +476,74 @@ func NavUpdateWindowing() {
 	var modal_window = GetTopMostPopupModal()
 	var allow_windowing = (modal_window == nil)
 	if !allow_windowing {
-		g.NavWindowingTarget = nil
+		guiContext.NavWindowingTarget = nil
 	}
 
 	// Fade out
-	if g.NavWindowingTargetAnim != nil && g.NavWindowingTarget == nil {
-		g.NavWindowingHighlightAlpha = max(g.NavWindowingHighlightAlpha-io.DeltaTime*10.0, 0.0)
-		if g.DimBgRatio <= 0.0 && g.NavWindowingHighlightAlpha <= 0.0 {
-			g.NavWindowingTargetAnim = nil
+	if guiContext.NavWindowingTargetAnim != nil && guiContext.NavWindowingTarget == nil {
+		guiContext.NavWindowingHighlightAlpha = max(guiContext.NavWindowingHighlightAlpha-io.DeltaTime*10.0, 0.0)
+		if guiContext.DimBgRatio <= 0.0 && guiContext.NavWindowingHighlightAlpha <= 0.0 {
+			guiContext.NavWindowingTargetAnim = nil
 		}
 	}
 
 	// Start CTRL-TAB or Square+L/R window selection
-	var start_windowing_with_gamepad = allow_windowing && g.NavWindowingTarget == nil && IsNavInputTest(ImGuiNavInput_Menu, ImGuiInputReadMode_Pressed)
-	var start_windowing_with_keyboard = allow_windowing && g.NavWindowingTarget == nil && io.KeyCtrl && IsKeyPressedMap(ImGuiKey_Tab, true) && (io.ConfigFlags&ImGuiConfigFlags_NavEnableKeyboard) != 0
+	var start_windowing_with_gamepad = allow_windowing && guiContext.NavWindowingTarget == nil && IsNavInputTest(ImGuiNavInput_Menu, ImGuiInputReadMode_Pressed)
+	var start_windowing_with_keyboard = allow_windowing && guiContext.NavWindowingTarget == nil && io.KeyCtrl && IsKeyPressedMap(ImGuiKey_Tab, true) && (io.ConfigFlags&ImGuiConfigFlags_NavEnableKeyboard) != 0
 	if start_windowing_with_gamepad || start_windowing_with_keyboard {
 		var window *ImGuiWindow
-		if g.NavWindow != nil {
-			window = g.NavWindow
+		if guiContext.NavWindow != nil {
+			window = guiContext.NavWindow
 		} else {
-			window = FindWindowNavFocusable(int(len(g.WindowsFocusOrder)-1), -INT_MAX, -1)
+			window = FindWindowNavFocusable(int(len(guiContext.WindowsFocusOrder)-1), -INT_MAX, -1)
 		}
 		if window != nil {
-			g.NavWindowingTarget = window.RootWindow
-			g.NavWindowingTargetAnim = window.RootWindow
-			g.NavWindowingTimer = 0.0
-			g.NavWindowingHighlightAlpha = 0.0
+			guiContext.NavWindowingTarget = window.RootWindow
+			guiContext.NavWindowingTargetAnim = window.RootWindow
+			guiContext.NavWindowingTimer = 0.0
+			guiContext.NavWindowingHighlightAlpha = 0.0
 			if start_windowing_with_gamepad { // Gamepad starts toggling layer
-				g.NavWindowingToggleLayer = true
+				guiContext.NavWindowingToggleLayer = true
 			} else {
-				g.NavWindowingToggleLayer = false
+				guiContext.NavWindowingToggleLayer = false
 			}
 			if start_windowing_with_keyboard {
-				g.NavInputSource = ImGuiInputSource_Keyboard
+				guiContext.NavInputSource = ImGuiInputSource_Keyboard
 			} else {
-				g.NavInputSource = ImGuiInputSource_Gamepad
+				guiContext.NavInputSource = ImGuiInputSource_Gamepad
 			}
 		}
 	}
 
 	// Gamepad update
-	g.NavWindowingTimer += io.DeltaTime
-	if g.NavWindowingTarget != nil && g.NavInputSource == ImGuiInputSource_Gamepad {
+	guiContext.NavWindowingTimer += io.DeltaTime
+	if guiContext.NavWindowingTarget != nil && guiContext.NavInputSource == ImGuiInputSource_Gamepad {
 		// Highlight only appears after a brief time holding the button, so that a fast tap on PadMenu (to toggle NavLayer) doesn't add visual noise
-		g.NavWindowingHighlightAlpha = max(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05))
+		guiContext.NavWindowingHighlightAlpha = max(guiContext.NavWindowingHighlightAlpha, ImSaturate((guiContext.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05))
 
 		// Select window to focus
 		var focus_change_dir = bool2int(IsNavInputTest(ImGuiNavInput_FocusPrev, ImGuiInputReadMode_RepeatSlow)) - bool2int(IsNavInputTest(ImGuiNavInput_FocusNext, ImGuiInputReadMode_RepeatSlow))
 		if focus_change_dir != 0 {
 			NavUpdateWindowingHighlightWindow(focus_change_dir)
-			g.NavWindowingHighlightAlpha = 1.0
+			guiContext.NavWindowingHighlightAlpha = 1.0
 		}
 
 		// Single press toggles NavLayer, long press with L/R apply actual focus on release (until then the window was merely rendered top-most)
 		if !IsNavInputDown(ImGuiNavInput_Menu) {
-			g.NavWindowingToggleLayer = g.NavWindowingToggleLayer && (g.NavWindowingHighlightAlpha < 1.0) // Once button was held long enough we don't consider it a tap-to-toggle-layer press anymore.
-			if g.NavWindowingToggleLayer && g.NavWindow != nil {
+			guiContext.NavWindowingToggleLayer = guiContext.NavWindowingToggleLayer && (guiContext.NavWindowingHighlightAlpha < 1.0) // Once button was held long enough we don't consider it a tap-to-toggle-layer press anymore.
+			if guiContext.NavWindowingToggleLayer && guiContext.NavWindow != nil {
 				apply_toggle_layer = true
-			} else if !g.NavWindowingToggleLayer {
-				apply_focus_window = g.NavWindowingTarget
+			} else if !guiContext.NavWindowingToggleLayer {
+				apply_focus_window = guiContext.NavWindowingTarget
 			}
-			g.NavWindowingTarget = nil
+			guiContext.NavWindowingTarget = nil
 		}
 	}
 
 	// Keyboard: Focus
-	if g.NavWindowingTarget != nil && g.NavInputSource == ImGuiInputSource_Keyboard {
+	if guiContext.NavWindowingTarget != nil && guiContext.NavInputSource == ImGuiInputSource_Keyboard {
 		// Visuals only appears after a brief time after pressing TAB the first time, so that a fast CTRL+TAB doesn't add visual noise
-		g.NavWindowingHighlightAlpha = max(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05)) // 1.0f
+		guiContext.NavWindowingHighlightAlpha = max(guiContext.NavWindowingHighlightAlpha, ImSaturate((guiContext.NavWindowingTimer-NAV_WINDOWING_HIGHLIGHT_DELAY)/0.05)) // 1.0f
 		if IsKeyPressedMap(ImGuiKey_Tab, true) {
 			if io.KeyShift {
 				NavUpdateWindowingHighlightWindow(+1)
@@ -553,7 +553,7 @@ func NavUpdateWindowing() {
 
 		}
 		if !io.KeyCtrl {
-			apply_focus_window = g.NavWindowingTarget
+			apply_focus_window = guiContext.NavWindowingTarget
 		}
 	}
 
@@ -561,56 +561,56 @@ func NavUpdateWindowing() {
 	// - Testing that only Alt is tested prevents Alt+Shift or AltGR from toggling menu layer.
 	// - AltGR is normally Alt+Ctrl but we can't reliably detect it (not all backends/systems/layout emit it as Alt+Ctrl). But even on keyboards without AltGR we don't want Alt+Ctrl to open menu anyway.
 	if io.KeyMods == ImGuiKeyModFlags_Alt && (io.KeyModsPrev&ImGuiKeyModFlags_Alt) == 0 {
-		g.NavWindowingToggleLayer = true
-		g.NavInputSource = ImGuiInputSource_Keyboard
+		guiContext.NavWindowingToggleLayer = true
+		guiContext.NavInputSource = ImGuiInputSource_Keyboard
 	}
-	if g.NavWindowingToggleLayer && g.NavInputSource == ImGuiInputSource_Keyboard {
+	if guiContext.NavWindowingToggleLayer && guiContext.NavInputSource == ImGuiInputSource_Keyboard {
 		// We cancel toggling nav layer when any text has been typed (generally while holding Alt). (See #370)
 		// We cancel toggling nav layer when other modifiers are pressed. (See #4439)
 		if len(io.InputQueueCharacters) > 0 || io.KeyCtrl || io.KeyShift || io.KeySuper {
-			g.NavWindowingToggleLayer = false
+			guiContext.NavWindowingToggleLayer = false
 		}
 
 		// Apply layer toggle on release
 		// Important: we don't assume that Alt was previously held in order to handle loss of focus when backend calls io.AddFocusEvent(false)
 		// Important: as before version <18314 we lacked an explicit IO event for focus gain/loss, we also compare mouse validity to detect old backends clearing mouse pos on focus loss.
-		if io.KeyMods&ImGuiKeyModFlags_Alt == 0 && (io.KeyModsPrev&ImGuiKeyModFlags_Alt != 0) && g.NavWindowingToggleLayer {
-			if g.ActiveId == 0 || g.ActiveIdAllowOverlap {
+		if io.KeyMods&ImGuiKeyModFlags_Alt == 0 && (io.KeyModsPrev&ImGuiKeyModFlags_Alt != 0) && guiContext.NavWindowingToggleLayer {
+			if guiContext.ActiveId == 0 || guiContext.ActiveIdAllowOverlap {
 				if IsMousePosValid(&io.MousePos) == IsMousePosValid(&io.MousePosPrev) {
 					apply_toggle_layer = true
 				}
 			}
 		}
 		if !io.KeyAlt {
-			g.NavWindowingToggleLayer = false
+			guiContext.NavWindowingToggleLayer = false
 		}
 	}
 
 	// Move window
-	if g.NavWindowingTarget != nil && g.NavWindowingTarget.Flags&ImGuiWindowFlags_NoMove == 0 {
+	if guiContext.NavWindowingTarget != nil && guiContext.NavWindowingTarget.Flags&ImGuiWindowFlags_NoMove == 0 {
 		var move_delta ImVec2
-		if g.NavInputSource == ImGuiInputSource_Keyboard && !io.KeyShift {
+		if guiContext.NavInputSource == ImGuiInputSource_Keyboard && !io.KeyShift {
 			move_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard, ImGuiInputReadMode_Down, 0, 0)
 		}
-		if g.NavInputSource == ImGuiInputSource_Gamepad {
+		if guiContext.NavInputSource == ImGuiInputSource_Gamepad {
 			move_delta = GetNavInputAmount2d(ImGuiNavDirSourceFlags_PadLStick, ImGuiInputReadMode_Down, 0, 0)
 		}
 		if move_delta.x != 0.0 || move_delta.y != 0.0 {
 			const NAV_MOVE_SPEED float = 800.0
 			var move_speed = ImFloor(NAV_MOVE_SPEED * io.DeltaTime * min(io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y)) // FIXME: Doesn't handle variable framerate very well
-			var moving_window = g.NavWindowingTarget.RootWindow
+			var moving_window = guiContext.NavWindowingTarget.RootWindow
 			p := moving_window.Pos.Add(move_delta.Scale(move_speed))
 			setWindowPos(moving_window, &p, ImGuiCond_Always)
 			MarkIniSettingsDirtyWindow(moving_window)
-			g.NavDisableMouseHover = true
+			guiContext.NavDisableMouseHover = true
 		}
 	}
 
 	// Apply final focus
-	if apply_focus_window != nil && (g.NavWindow == nil || apply_focus_window != g.NavWindow.RootWindow) {
+	if apply_focus_window != nil && (guiContext.NavWindow == nil || apply_focus_window != guiContext.NavWindow.RootWindow) {
 		ClearActiveID()
-		g.NavDisableHighlight = false
-		g.NavDisableMouseHover = true
+		guiContext.NavDisableHighlight = false
+		guiContext.NavDisableMouseHover = true
 		apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window)
 		ClosePopupsOverWindow(apply_focus_window, false)
 		FocusWindow(apply_focus_window)
@@ -626,42 +626,42 @@ func NavUpdateWindowing() {
 		// we won't have a guarantee that windows has been visible before and therefore NavLayersActiveMask*
 		// won't be valid.
 		if apply_focus_window.DC.NavLayersActiveMaskNext == (1 << ImGuiNavLayer_Menu) {
-			g.NavLayer = ImGuiNavLayer_Menu
+			guiContext.NavLayer = ImGuiNavLayer_Menu
 		}
 	}
 	if apply_focus_window != nil {
-		g.NavWindowingTarget = nil
+		guiContext.NavWindowingTarget = nil
 	}
 
 	// Apply menu/layer toggle
-	if apply_toggle_layer && g.NavWindow != nil {
+	if apply_toggle_layer && guiContext.NavWindow != nil {
 		ClearActiveID()
 
 		// Move to parent menu if necessary
-		var new_nav_window = g.NavWindow
+		var new_nav_window = guiContext.NavWindow
 		for new_nav_window.ParentWindow != nil &&
 			(new_nav_window.DC.NavLayersActiveMask&(1<<ImGuiNavLayer_Menu)) == 0 &&
 			(new_nav_window.Flags&ImGuiWindowFlags_ChildWindow) != 0 &&
 			(new_nav_window.Flags&(ImGuiWindowFlags_Popup|ImGuiWindowFlags_ChildMenu)) == 0 {
 			new_nav_window = new_nav_window.ParentWindow
 		}
-		if new_nav_window != g.NavWindow {
-			var old_nav_window = g.NavWindow
+		if new_nav_window != guiContext.NavWindow {
+			var old_nav_window = guiContext.NavWindow
 			FocusWindow(new_nav_window)
 			new_nav_window.NavLastChildNavWindow = old_nav_window
 		}
 
 		// Toggle layer
 		var new_nav_layer ImGuiNavLayer
-		if g.NavWindow.DC.NavLayersActiveMask&(1<<ImGuiNavLayer_Menu) != 0 {
-			new_nav_layer = (ImGuiNavLayer)((int)(g.NavLayer ^ 1))
+		if guiContext.NavWindow.DC.NavLayersActiveMask&(1<<ImGuiNavLayer_Menu) != 0 {
+			new_nav_layer = (ImGuiNavLayer)((int)(guiContext.NavLayer ^ 1))
 		} else {
 			new_nav_layer = ImGuiNavLayer_Main
 		}
-		if new_nav_layer != g.NavLayer {
+		if new_nav_layer != guiContext.NavLayer {
 			// Reinitialize navigation when entering menu bar with the Alt key (FIXME: could be a properly of the layer?)
 			if new_nav_layer == ImGuiNavLayer_Menu {
-				g.NavWindow.NavLastIds[new_nav_layer] = 0
+				guiContext.NavWindow.NavLastIds[new_nav_layer] = 0
 			}
 			NavRestoreLayer(new_nav_layer)
 		}
@@ -669,7 +669,7 @@ func NavUpdateWindowing() {
 }
 
 func NavUpdate() {
-	io := g.IO
+	io := guiContext.IO
 
 	io.WantSetMousePos = false
 
@@ -677,10 +677,10 @@ func NavUpdate() {
 	// (do it before we map Keyboard input!)
 	var nav_keyboard_active = (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0
 	var nav_gamepad_active = (io.ConfigFlags&ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags&ImGuiBackendFlags_HasGamepad) != 0
-	if nav_gamepad_active && g.NavInputSource != ImGuiInputSource_Gamepad {
+	if nav_gamepad_active && guiContext.NavInputSource != ImGuiInputSource_Gamepad {
 		if io.NavInputs[ImGuiNavInput_Activate] > 0.0 || io.NavInputs[ImGuiNavInput_Input] > 0.0 || io.NavInputs[ImGuiNavInput_Cancel] > 0.0 || io.NavInputs[ImGuiNavInput_Menu] > 0.0 ||
 			io.NavInputs[ImGuiNavInput_DpadLeft] > 0.0 || io.NavInputs[ImGuiNavInput_DpadRight] > 0.0 || io.NavInputs[ImGuiNavInput_DpadUp] > 0.0 || io.NavInputs[ImGuiNavInput_DpadDown] > 0.0 {
-			g.NavInputSource = ImGuiInputSource_Gamepad
+			guiContext.NavInputSource = ImGuiInputSource_Gamepad
 		}
 	}
 
@@ -689,7 +689,7 @@ func NavUpdate() {
 		var NAV_MAP_KEY = func(key ImGuiKey, input ImGuiNavInput) {
 			if IsKeyDown(io.KeyMap[key]) {
 				io.NavInputs[input] = 1.0
-				g.NavInputSource = ImGuiInputSource_Keyboard
+				guiContext.NavInputSource = ImGuiInputSource_Keyboard
 			}
 		}
 		NAV_MAP_KEY(ImGuiKey_Space, ImGuiNavInput_Activate)
@@ -713,7 +713,7 @@ func NavUpdate() {
 			if io.NavInputsDownDuration[i] < 0.0 {
 				io.NavInputsDownDuration[i] = 0
 			} else {
-				io.NavInputsDownDuration[i] += g.IO.DeltaTime
+				io.NavInputsDownDuration[i] += guiContext.IO.DeltaTime
 			}
 		} else {
 			io.NavInputsDownDuration[i] = -1.0
@@ -721,26 +721,26 @@ func NavUpdate() {
 	}
 
 	// Process navigation init request (select first/default focus)
-	if g.NavInitResultId != 0 {
+	if guiContext.NavInitResultId != 0 {
 		NavUpdateInitResult()
 	}
-	g.NavInitRequest = false
-	g.NavInitRequestFromMove = false
-	g.NavInitResultId = 0
-	g.NavJustMovedToId = 0
+	guiContext.NavInitRequest = false
+	guiContext.NavInitRequestFromMove = false
+	guiContext.NavInitResultId = 0
+	guiContext.NavJustMovedToId = 0
 
 	// Process navigation move request
-	if g.NavMoveSubmitted {
+	if guiContext.NavMoveSubmitted {
 		NavMoveRequestApplyResult()
 	}
-	g.NavMoveSubmitted = false
-	g.NavMoveScoringItems = false
+	guiContext.NavMoveSubmitted = false
+	guiContext.NavMoveScoringItems = false
 
 	// Apply application mouse position movement, after we had a chance to process move request result.
-	if g.NavMousePosDirty && g.NavIdIsAlive {
+	if guiContext.NavMousePosDirty && guiContext.NavIdIsAlive {
 		// Set mouse position given our knowledge of the navigated item position from last frame
 		if (io.ConfigFlags&ImGuiConfigFlags_NavEnableSetMousePos != 0) && (io.BackendFlags&ImGuiBackendFlags_HasSetMousePos != 0) {
-			if !g.NavDisableHighlight && g.NavDisableMouseHover && g.NavWindow != nil {
+			if !guiContext.NavDisableHighlight && guiContext.NavDisableMouseHover && guiContext.NavWindow != nil {
 				p := NavCalcPreferredRefPos()
 				io.MousePos = p
 				io.MousePosPrev = p
@@ -748,77 +748,77 @@ func NavUpdate() {
 				//IMGUI_DEBUG_LOG("SetMousePos: (%.1f,%.1f)\n", io.MousePos.x, io.MousePos.y);
 			}
 		}
-		g.NavMousePosDirty = false
+		guiContext.NavMousePosDirty = false
 	}
-	g.NavIdIsAlive = false
-	g.NavJustTabbedId = 0
-	IM_ASSERT(g.NavLayer == 0 || g.NavLayer == 1)
+	guiContext.NavIdIsAlive = false
+	guiContext.NavJustTabbedId = 0
+	IM_ASSERT(guiContext.NavLayer == 0 || guiContext.NavLayer == 1)
 
 	// Store our return window (for returning from Menu Layer to Main Layer) and clear it as soon as we step back in our own Layer 0
-	if g.NavWindow != nil {
-		NavSaveLastChildNavWindowIntoParent(g.NavWindow)
+	if guiContext.NavWindow != nil {
+		NavSaveLastChildNavWindowIntoParent(guiContext.NavWindow)
 	}
-	if g.NavWindow != nil && g.NavWindow.NavLastChildNavWindow != nil && g.NavLayer == ImGuiNavLayer_Main {
-		g.NavWindow.NavLastChildNavWindow = nil
+	if guiContext.NavWindow != nil && guiContext.NavWindow.NavLastChildNavWindow != nil && guiContext.NavLayer == ImGuiNavLayer_Main {
+		guiContext.NavWindow.NavLastChildNavWindow = nil
 	}
 
 	// Update CTRL+TAB and Windowing features (hold Square to move/resize/etc.)
 	NavUpdateWindowing()
 
 	// Set output flags for user application
-	io.NavActive = (nav_keyboard_active || nav_gamepad_active) && g.NavWindow != nil && g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0
-	io.NavVisible = (io.NavActive && g.NavId != 0 && !g.NavDisableHighlight) || (g.NavWindowingTarget != nil)
+	io.NavActive = (nav_keyboard_active || nav_gamepad_active) && guiContext.NavWindow != nil && guiContext.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0
+	io.NavVisible = (io.NavActive && guiContext.NavId != 0 && !guiContext.NavDisableHighlight) || (guiContext.NavWindowingTarget != nil)
 
 	// Process NavCancel input (to close a popup, get back to parent, clear focus)
 	NavUpdateCancelRequest()
 
 	// Process manual activation request
-	g.NavActivateId = 0
-	g.NavActivateDownId = 0
-	g.NavActivatePressedId = 0
-	g.NavInputId = 0
-	if g.NavId != 0 && !g.NavDisableHighlight && g.NavWindowingTarget == nil && g.NavWindow != nil && g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0 {
+	guiContext.NavActivateId = 0
+	guiContext.NavActivateDownId = 0
+	guiContext.NavActivatePressedId = 0
+	guiContext.NavInputId = 0
+	if guiContext.NavId != 0 && !guiContext.NavDisableHighlight && guiContext.NavWindowingTarget == nil && guiContext.NavWindow != nil && guiContext.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0 {
 		var activate_down = IsNavInputDown(ImGuiNavInput_Activate)
 		var activate_pressed = activate_down && IsNavInputTest(ImGuiNavInput_Activate, ImGuiInputReadMode_Pressed)
-		if g.ActiveId == 0 && activate_pressed {
-			g.NavActivateId = g.NavId
+		if guiContext.ActiveId == 0 && activate_pressed {
+			guiContext.NavActivateId = guiContext.NavId
 		}
-		if (g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_down {
-			g.NavActivateDownId = g.NavId
+		if (guiContext.ActiveId == 0 || guiContext.ActiveId == guiContext.NavId) && activate_down {
+			guiContext.NavActivateDownId = guiContext.NavId
 		}
-		if (g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_pressed {
-			g.NavActivatePressedId = g.NavId
+		if (guiContext.ActiveId == 0 || guiContext.ActiveId == guiContext.NavId) && activate_pressed {
+			guiContext.NavActivatePressedId = guiContext.NavId
 		}
-		if (g.ActiveId == 0 || g.ActiveId == g.NavId) && IsNavInputTest(ImGuiNavInput_Input, ImGuiInputReadMode_Pressed) {
-			g.NavInputId = g.NavId
+		if (guiContext.ActiveId == 0 || guiContext.ActiveId == guiContext.NavId) && IsNavInputTest(ImGuiNavInput_Input, ImGuiInputReadMode_Pressed) {
+			guiContext.NavInputId = guiContext.NavId
 		}
 	}
-	if g.NavWindow != nil && (g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs != 0) {
-		g.NavDisableHighlight = true
+	if guiContext.NavWindow != nil && (guiContext.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs != 0) {
+		guiContext.NavDisableHighlight = true
 	}
-	if g.NavActivateId != 0 {
-		IM_ASSERT(g.NavActivateDownId == g.NavActivateId)
+	if guiContext.NavActivateId != 0 {
+		IM_ASSERT(guiContext.NavActivateDownId == guiContext.NavActivateId)
 	}
 
 	// Process programmatic activation request
-	if g.NavNextActivateId != 0 {
-		g.NavActivateId = g.NavNextActivateId
-		g.NavActivateDownId = g.NavNextActivateId
-		g.NavActivatePressedId = g.NavNextActivateId
-		g.NavInputId = g.NavNextActivateId
+	if guiContext.NavNextActivateId != 0 {
+		guiContext.NavActivateId = guiContext.NavNextActivateId
+		guiContext.NavActivateDownId = guiContext.NavNextActivateId
+		guiContext.NavActivatePressedId = guiContext.NavNextActivateId
+		guiContext.NavInputId = guiContext.NavNextActivateId
 	}
-	g.NavNextActivateId = 0
+	guiContext.NavNextActivateId = 0
 
 	// Process move requests
 	NavUpdateCreateMoveRequest()
 	NavUpdateAnyRequestFlag()
 
 	// Scrolling
-	if g.NavWindow != nil && (g.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0) && g.NavWindowingTarget == nil {
+	if guiContext.NavWindow != nil && (guiContext.NavWindow.Flags&ImGuiWindowFlags_NoNavInputs == 0) && guiContext.NavWindowingTarget == nil {
 		// *Fallback* manual-scroll with Nav directional keys when window has no navigable item
-		var window = g.NavWindow
+		var window = guiContext.NavWindow
 		var scroll_speed = IM_ROUND(window.CalcFontSize() * 100 * io.DeltaTime) // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
-		var move_dir = g.NavMoveDir
+		var move_dir = guiContext.NavMoveDir
 		if window.DC.NavLayersActiveMask == 0x00 && window.DC.NavHasScroll && move_dir != ImGuiDir_None {
 			if move_dir == ImGuiDir_Left || move_dir == ImGuiDir_Right {
 				var dir float
@@ -853,22 +853,22 @@ func NavUpdate() {
 
 	// Always prioritize mouse highlight if navigation is disabled
 	if !nav_keyboard_active && !nav_gamepad_active {
-		g.NavDisableHighlight = true
-		g.NavDisableMouseHover = false
-		g.NavMousePosDirty = false
+		guiContext.NavDisableHighlight = true
+		guiContext.NavDisableMouseHover = false
+		guiContext.NavMousePosDirty = false
 	}
 
 	// [DEBUG]
-	g.NavScoringDebugCount = 0
+	guiContext.NavScoringDebugCount = 0
 }
 
 // NavInitWindow This needs to be called before we submit any widget (aka in or before Begin)
 func NavInitWindow(window *ImGuiWindow, force_reinit bool) {
-	IM_ASSERT(window == g.NavWindow)
+	IM_ASSERT(window == guiContext.NavWindow)
 
 	if window.Flags&ImGuiWindowFlags_NoNavInputs != 0 {
-		g.NavId = 0
-		g.NavFocusScopeId = 0
+		guiContext.NavId = 0
+		guiContext.NavFocusScopeId = 0
 		return
 	}
 
@@ -877,17 +877,17 @@ func NavInitWindow(window *ImGuiWindow, force_reinit bool) {
 		init_for_nav = true
 	}
 
-	//IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, g.NavLayer)
+	//IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, guiContext.NavLayer)
 	if init_for_nav {
-		SetNavID(0, g.NavLayer, 0, &ImRect{})
-		g.NavInitRequest = true
-		g.NavInitRequestFromMove = false
-		g.NavInitResultId = 0
-		g.NavInitResultRectRel = ImRect{}
+		SetNavID(0, guiContext.NavLayer, 0, &ImRect{})
+		guiContext.NavInitRequest = true
+		guiContext.NavInitRequestFromMove = false
+		guiContext.NavInitResultId = 0
+		guiContext.NavInitResultRectRel = ImRect{}
 		NavUpdateAnyRequestFlag()
 	} else {
-		g.NavId = window.NavLastIds[0]
-		g.NavFocusScopeId = 0
+		guiContext.NavId = window.NavLastIds[0]
+		guiContext.NavFocusScopeId = 0
 	}
 }
 
@@ -903,19 +903,19 @@ func NavScoreItemDistInterval(a0, a1, b0, b1 float) float {
 
 // NavScoreItem Scoring function for gamepad/keyboard directional navigation. Based on https://gist.github.com/rygorous/6981057
 func NavScoreItem(result *ImGuiNavItemData) bool {
-	window := g.CurrentWindow
-	if g.NavLayer != window.DC.NavLayerCurrent {
+	window := guiContext.CurrentWindow
+	if guiContext.NavLayer != window.DC.NavLayerCurrent {
 		return false
 	}
 
 	// FIXME: Those are not good variables names
-	var cand = g.LastItemData.NavRect // Current item nav rectangle
-	var curr = g.NavScoringRect       // Current modified source rect (NB: we've applied Max.x = Min.x in NavUpdate() to inhibit the effect of having varied item width)
-	g.NavScoringDebugCount++
+	var cand = guiContext.LastItemData.NavRect // Current item nav rectangle
+	var curr = guiContext.NavScoringRect       // Current modified source rect (NB: we've applied Max.x = Min.x in NavUpdate() to inhibit the effect of having varied item width)
+	guiContext.NavScoringDebugCount++
 
 	// When entering through a NavFlattened border, we consider child window items as fully clipped for scoring
-	if window.ParentWindow == g.NavWindow {
-		IM_ASSERT((window.Flags|g.NavWindow.Flags)&ImGuiWindowFlags_NavFlattened != 0)
+	if window.ParentWindow == guiContext.NavWindow {
+		IM_ASSERT((window.Flags|guiContext.NavWindow.Flags)&ImGuiWindowFlags_NavFlattened != 0)
 		if !window.ClipRect.Overlaps(cand) {
 			return false
 		}
@@ -924,7 +924,7 @@ func NavScoreItem(result *ImGuiNavItemData) bool {
 
 	// We perform scoring on items bounding box clipped by the current clipping rectangle on the other axis (clipping on our movement axis would give us equal scores for all clipped items)
 	// For example, this ensure that items in one column are not reached when moving vertically from items in another column.
-	NavClampRectToVisibleAreaForMoveDir(g.NavMoveClipDir, &cand, &window.ClipRect)
+	NavClampRectToVisibleAreaForMoveDir(guiContext.NavMoveClipDir, &cand, &window.ClipRect)
 
 	// Compute distance between boxes
 	// FIXME-NAV: Introducing biases for vertical navigation, needs to be removed.
@@ -963,7 +963,7 @@ func NavScoreItem(result *ImGuiNavItemData) bool {
 		quadrant = ImGetDirQuadrantFromDelta(dcx, dcy)
 	} else {
 		// Degenerate case: two overlapping buttons with same center, break ties arbitrarily (note that LastItemId here is really the _previous_ item order, but it doesn't matter)
-		if g.LastItemData.ID < g.NavId {
+		if guiContext.LastItemData.ID < guiContext.NavId {
 			quadrant = ImGuiDir_Left
 		} else {
 			quadrant = ImGuiDir_Right
@@ -972,7 +972,7 @@ func NavScoreItem(result *ImGuiNavItemData) bool {
 
 	// Is it in the quadrant we're interesting in moving to?
 	var new_best = false
-	var move_dir = g.NavMoveDir
+	var move_dir = guiContext.NavMoveDir
 	if quadrant == move_dir {
 		// Does it beat the current best candidate?
 		if dist_box < result.DistBox {
@@ -1008,7 +1008,7 @@ func NavScoreItem(result *ImGuiNavItemData) bool {
 	// 2017/09/29: FIXME: This now currently only enabled inside menu bars, ideally we'd disable it everywhere. Menus in particular need to catch failure. For general navigation it feels awkward.
 	// Disabling it may lead to disconnected graphs when nodes are very spaced out on different axis. Perhaps consider offering this as an option?
 	if result.DistBox == FLT_MAX && dist_axial < result.DistAxial { // Check axial match
-		if g.NavLayer == ImGuiNavLayer_Menu && g.NavWindow.Flags&ImGuiWindowFlags_ChildMenu == 0 {
+		if guiContext.NavLayer == ImGuiNavLayer_Menu && guiContext.NavWindow.Flags&ImGuiWindowFlags_ChildMenu == 0 {
 			if (move_dir == ImGuiDir_Left && dax < 0.0) || (move_dir == ImGuiDir_Right && dax > 0.0) || (move_dir == ImGuiDir_Up && day < 0.0) || (move_dir == ImGuiDir_Down && day > 0.0) {
 				result.DistAxial = dist_axial
 				new_best = true
@@ -1030,7 +1030,7 @@ func NavClampRectToVisibleAreaForMoveDir(move_dir ImGuiDir, r *ImRect, clip_rect
 }
 
 func NavEndFrame() {
-	g := g
+	g := guiContext
 
 	// Show CTRL+TAB list window
 	if g.NavWindowingTarget != nil {
@@ -1094,23 +1094,23 @@ func NavEndFrame() {
 
 // NavUpdateWindowingOverlay Overlay displayed when using CTRL+TAB. Called by EndFrame().
 func NavUpdateWindowingOverlay() {
-	IM_ASSERT(g.NavWindowingTarget != nil)
+	IM_ASSERT(guiContext.NavWindowingTarget != nil)
 
-	if g.NavWindowingTimer < NAV_WINDOWING_LIST_APPEAR_DELAY {
+	if guiContext.NavWindowingTimer < NAV_WINDOWING_LIST_APPEAR_DELAY {
 		return
 	}
 
-	if g.NavWindowingListWindow == nil {
-		g.NavWindowingListWindow = FindWindowByName("###NavWindowingList")
+	if guiContext.NavWindowingListWindow == nil {
+		guiContext.NavWindowingListWindow = FindWindowByName("###NavWindowingList")
 	}
 	var viewport = GetMainViewport()
 	SetNextWindowSizeConstraints(ImVec2{viewport.Size.x * 0.20, viewport.Size.y * 0.20}, ImVec2{FLT_MAX, FLT_MAX}, nil, nil)
 	center := viewport.GetCenter()
 	SetNextWindowPos(&center, ImGuiCond_Always, ImVec2{0.5, 0.5})
-	PushStyleVec(ImGuiStyleVar_WindowPadding, g.Style.WindowPadding.Scale(2.0))
+	PushStyleVec(ImGuiStyleVar_WindowPadding, guiContext.Style.WindowPadding.Scale(2.0))
 	Begin("###NavWindowingList", nil, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoFocusOnAppearing|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoInputs|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoSavedSettings)
-	for n := range g.WindowsFocusOrder {
-		var window = g.WindowsFocusOrder[n]
+	for n := range guiContext.WindowsFocusOrder {
+		var window = guiContext.WindowsFocusOrder[n]
 		IM_ASSERT(window != nil) // Fix static analyzers
 		if !IsWindowNavFocusable(window) {
 			continue
@@ -1119,7 +1119,7 @@ func NavUpdateWindowingOverlay() {
 		if label == FindRenderedTextEnd(label) {
 			label = GetFallbackWindowNameForWindowingList(window)
 		}
-		Selectable(label, g.NavWindowingTarget == window, 0, ImVec2{})
+		Selectable(label, guiContext.NavWindowingTarget == window, 0, ImVec2{})
 	}
 	End()
 	PopStyleVar(1)
@@ -1127,18 +1127,18 @@ func NavUpdateWindowingOverlay() {
 
 // NavMoveRequestSubmit FIXME: ScoringRect is not set
 func NavMoveRequestSubmit(move_dir ImGuiDir, clip_dir ImGuiDir, move_flags ImGuiNavMoveFlags) {
-	IM_ASSERT(g.NavWindow != nil)
-	g.NavMoveSubmitted = true
-	g.NavMoveScoringItems = true
-	g.NavMoveDir = move_dir
-	g.NavMoveDirForDebug = move_dir
-	g.NavMoveClipDir = clip_dir
-	g.NavMoveFlags = move_flags
-	g.NavMoveForwardToNextFrame = false
-	g.NavMoveKeyMods = g.IO.KeyMods
-	g.NavMoveResultLocal.Clear()
-	g.NavMoveResultLocalVisible.Clear()
-	g.NavMoveResultOther.Clear()
+	IM_ASSERT(guiContext.NavWindow != nil)
+	guiContext.NavMoveSubmitted = true
+	guiContext.NavMoveScoringItems = true
+	guiContext.NavMoveDir = move_dir
+	guiContext.NavMoveDirForDebug = move_dir
+	guiContext.NavMoveClipDir = clip_dir
+	guiContext.NavMoveFlags = move_flags
+	guiContext.NavMoveForwardToNextFrame = false
+	guiContext.NavMoveKeyMods = guiContext.IO.KeyMods
+	guiContext.NavMoveResultLocal.Clear()
+	guiContext.NavMoveResultLocalVisible.Clear()
+	guiContext.NavMoveResultOther.Clear()
 }
 
 func GetNavInputAmount2d(dir_sources ImGuiNavDirSourceFlags, mode ImGuiInputReadMode, slow_factor float, fast_factor float) ImVec2 {
@@ -1163,10 +1163,10 @@ func GetNavInputAmount2d(dir_sources ImGuiNavDirSourceFlags, mode ImGuiInputRead
 
 // NavMoveRequestApplyResult Apply result from previous frame navigation directional move request. Always called from NavUpdate()
 func NavMoveRequestApplyResult() {
-	g := g
+	g := guiContext
 
 	// No result
-	// In a situation when there is no results but NavId != 0, re-enable the Navigation highlight (because g.NavId is not considered as a possible result)
+	// In a situation when there is no results but NavId != 0, re-enable the Navigation highlight (because guiContext.NavId is not considered as a possible result)
 	if g.NavMoveResultLocal.ID == 0 && g.NavMoveResultOther.ID == 0 {
 		if g.NavId != 0 {
 			g.NavDisableHighlight = false
@@ -1228,7 +1228,7 @@ func NavMoveRequestApplyResult() {
 	}
 
 	// Focus
-	//IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result.ID, g.NavLayer, g.NavWindow.Name)
+	//IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result.ID, guiContext.NavLayer, guiContext.NavWindow.Name)
 	SetNavID(result.ID, g.NavLayer, result.FocusScopeId, &result.RectRel)
 
 	// Enable nav highlight
@@ -1238,7 +1238,7 @@ func NavMoveRequestApplyResult() {
 }
 
 func NavMoveRequestCancel() {
-	g.NavMoveSubmitted = false
-	g.NavMoveScoringItems = false
+	guiContext.NavMoveSubmitted = false
+	guiContext.NavMoveScoringItems = false
 	NavUpdateAnyRequestFlag()
 }

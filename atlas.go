@@ -64,7 +64,7 @@ type ImFontBuildSrcData struct {
 	PackRange     [1]stbtt.PackRange // Hold the list of codepoints to pack (essentially points to Codepoints.Data)
 	Rects         []stbrp.Rect       // Rectangle to pack. We first fill in their size and the packer will give us their position.
 	PackedChars   []stbtt.PackedChar // Output glyphs
-	SrcRanges     []ImWchar          // Ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
+	SrcRanges     []ImWchar          // Ranges as requested by user (user is allowed to request too much, e.guiContext. 0x0020..0xFFFF)
 	DstIndex      int                // Index into atlas.Fonts[] and dst_tmp_array[]
 	GlyphsHighest int                // Highest requested codepoint
 	GlyphsCount   int                // Glyph count (excluding missing glyphs and glyphs already set by an earlier source font)
@@ -154,10 +154,10 @@ func (atlas *ImFontAtlas) AddFontDefault(font_cfg_template *ImFontConfig) *ImFon
 }
 
 // Build atlas, retrieve pixel data.
-// User is in charge of copying the pixels into graphics memory (e.g. create a texture with your engine). Then store your texture handle with SetTexID().
+// User is in charge of copying the pixels into graphics memory (e.guiContext. create a texture with your engine). Then store your texture handle with SetTexID().
 // The pitch is always = Width * BytesPerPixels (1 or 4)
 // Building in RGBA32 format is provided for convenience and compatibility, but note that unless you manually manipulate or copy color data into
-// the texture (e.g. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
+// the texture (e.guiContext. when using the AddCustomRect*** api), then the RGB pixels emitted will always be white (~75% of memory/bandwidth waste.
 // Build pixels data. This is called automatically for you by the GetTexData*** functions.
 func (atlas *ImFontAtlas) Build() bool {
 	IM_ASSERT_USER_ERROR(!atlas.Locked, "Cannot modify a locked ImFontAtlas between NewFrame() and EndFrame/Render()!")
@@ -489,7 +489,7 @@ func ImFontAtlasBuildWithStbTruetype(atlas *ImFontAtlas) bool {
 
 		for src_range := src_tmp.SrcRanges; src_range[0] != 0 && src_range[1] != 0; src_range = src_range[2:] {
 			for codepoint := src_range[0]; codepoint <= src_range[1]; codepoint++ {
-				if dst_tmp.GlyphsSet.TestBit(int(codepoint)) { // Don't overwrite existing glyphs. We could make this an option for MergeMode (e.g. MergeOverwrite==true)
+				if dst_tmp.GlyphsSet.TestBit(int(codepoint)) { // Don't overwrite existing glyphs. We could make this an option for MergeMode (e.guiContext. MergeOverwrite==true)
 					continue
 				}
 				if stbtt.FindGlyphIndex(&src_tmp.FontInfo, int(codepoint)) == 0 { // It is actually in the font?

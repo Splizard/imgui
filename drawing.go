@@ -6,7 +6,7 @@ import (
 
 // GetDrawData Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
 func GetDrawData() *ImDrawData {
-	var viewport = g.Viewports[0]
+	var viewport = guiContext.Viewports[0]
 
 	if viewport.DrawDataP.Valid {
 		return &viewport.DrawDataP
@@ -566,7 +566,7 @@ func (l *ImDrawList) AddPolyline(points []ImVec2, points_count int, col ImU32, f
 			// The width of the geometry we need to draw - l is essentially <thickness> pixels for the line itself, plus "one pixel" for AA.
 			// - In the texture-based path, we don't use AA_SIZE here because the +1 is tied to the generated texture
 			//   (see ImFontAtlasBuildRenderLinesTexData() function), and so alternate values won't work without changes to that code.
-			// - In the non texture-based paths, we would allow AA_SIZE to potentially be != 1.0f with a patch (e.g. fringe_scale patch to
+			// - In the non texture-based paths, we would allow AA_SIZE to potentially be != 1.0f with a patch (e.guiContext. fringe_scale patch to
 			//   allow scaling geometry while preserving one-screen-pixel AA fringe).
 			var half_draw_size = AA_SIZE
 			if use_texture {

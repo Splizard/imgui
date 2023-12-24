@@ -95,8 +95,8 @@ type ImGuiStyle struct {
 	FrameRounding       float  // Radius of frame corners rounding. Set to 0.0f to have rectangular frame (used by most widgets).
 	FrameBorderSize     float  // Thickness of border around frames. Generally set to 0.0f or 1.0f. (Other values are not well tested and more CPU/GPU costly).
 	ItemSpacing         ImVec2 // Horizontal and vertical spacing between widgets/lines.
-	ItemInnerSpacing    ImVec2 // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
-	IndentSpacing       float  // Horizontal indentation when e.g. entering a tree node. Generally :: (FontSize + FramePadding.x*2).
+	ItemInnerSpacing    ImVec2 // Horizontal and vertical spacing between within elements of a composed widget (e.guiContext. a slider and its label).
+	IndentSpacing       float  // Horizontal indentation when e.guiContext. entering a tree node. Generally :: (FontSize + FramePadding.x*2).
 	CellPadding         ImVec2 // Padding within a table cell
 	ScrollbarSize       float  // Width of the vertical scrollbar, Height of the horizontal scrollbar.
 	ScrollbarRounding   float  // Radius of grab corners for scrollbar.
@@ -112,7 +112,7 @@ type ImGuiStyle struct {
 	TabMinWidthForCloseButton  float    // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0f to always show when hovering, set to FLT_MAX to never show close button unless selected.
 	ColorButtonPosition        ImGuiDir // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
 	DisplayWindowPadding       ImVec2   // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-	DisplaySafeAreaPadding     ImVec2   // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
+	DisplaySafeAreaPadding     ImVec2   // If you cannot see the edges of your screen (e.guiContext. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
 	MouseCursorScale           float    // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
 	AntiAliasedLines           bool     // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU. Latched at the beginning of the frame (copied to ImDrawList).
 	AntiAliasedLinesUseTex     bool     // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering. Latched at the beginning of the frame (copied to ImDrawList).
@@ -143,10 +143,10 @@ func NewImGuiStyle() ImGuiStyle {
 		FrameRounding:              0.0,              // Radius of frame corners rounding. Set to 0.0f to have rectangular frames (used by most widgets).
 		FrameBorderSize:            0.0,              // Thickness of border around frames. Generally set to 0.0f or 1.0f. Other values not well tested.
 		ItemSpacing:                ImVec2{8, 4},     // Horizontal and vertical spacing between widgets/lines
-		ItemInnerSpacing:           ImVec2{4, 4},     // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
+		ItemInnerSpacing:           ImVec2{4, 4},     // Horizontal and vertical spacing between within elements of a composed widget (e.guiContext. a slider and its label)
 		CellPadding:                ImVec2{4, 2},     // Padding within a table cell
 		TouchExtraPadding:          ImVec2{0, 0},     // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
-		IndentSpacing:              21.0,             // Horizontal spacing when e.g. entering a tree node. Generally :: (FontSize + FramePadding.x*2).
+		IndentSpacing:              21.0,             // Horizontal spacing when e.guiContext. entering a tree node. Generally :: (FontSize + FramePadding.x*2).
 		ColumnsMinSpacing:          6.0,              // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
 		ScrollbarSize:              14.0,             // Width of the vertical scrollbar, Height of the horizontal scrollbar
 		ScrollbarRounding:          9.0,              // Radius of grab corners rounding for scrollbar
@@ -160,7 +160,7 @@ func NewImGuiStyle() ImGuiStyle {
 		ButtonTextAlign:            ImVec2{0.5, 0.5}, // Alignment of button text when button is larger than text.
 		SelectableTextAlign:        ImVec2{0.0, 0.0}, // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
 		DisplayWindowPadding:       ImVec2{19, 19},   // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-		DisplaySafeAreaPadding:     ImVec2{3, 3},     // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
+		DisplaySafeAreaPadding:     ImVec2{3, 3},     // If you cannot see the edge of your screen (e.guiContext. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
 		MouseCursorScale:           1.0,              // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
 		AntiAliasedLines:           true,             // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
 		AntiAliasedLinesUseTex:     true,             // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering.
@@ -174,11 +174,11 @@ func NewImGuiStyle() ImGuiStyle {
 
 // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame!
 func GetStyle() *ImGuiStyle {
-	IM_ASSERT_USER_ERROR(g != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
-	return &g.Style
+	IM_ASSERT_USER_ERROR(guiContext != nil, "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?")
+	return &guiContext.Style
 }
 
-// To scale your entire UI (e.g. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
+// To scale your entire UI (e.guiContext. if you want your app to use High DPI or generally be DPI aware) you may use this helper function. Scaling the fonts is done separately and is up to you.
 // Important: This operation is lossy because we round all sizes to integer. If you need to change your scale multiples, call this over a freshly initialized ImGuiStyle structure rather than scaling multiple times.
 func (style *ImGuiStyle) ScaleAllSizes(scale_factor float) {
 	winpad := style.WindowPadding.Scale(scale_factor)
@@ -219,24 +219,24 @@ func (style *ImGuiStyle) ScaleAllSizes(scale_factor float) {
 
 // modify a style variable float. always use this if you modify the style after NewFrame().
 func PushStyleFloat(idx ImGuiStyleVar, val float) {
-	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*float)
-	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModFloat(idx, *pvar))
+	var pvar = reflect.ValueOf(&guiContext.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*float)
+	guiContext.StyleVarStack = append(guiContext.StyleVarStack, NewImGuiStyleModFloat(idx, *pvar))
 	*pvar = val
 }
 
 // modify a style variable ImVec2. always use this if you modify the style after NewFrame().
 func PushStyleVec(idx ImGuiStyleVar, val ImVec2) {
-	var pvar = reflect.ValueOf(&g.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*ImVec2)
-	g.StyleVarStack = append(g.StyleVarStack, NewImGuiStyleModVec(idx, *pvar))
+	var pvar = reflect.ValueOf(&guiContext.Style).Elem().Field(golang.Int(idx)).Addr().Interface().(*ImVec2)
+	guiContext.StyleVarStack = append(guiContext.StyleVarStack, NewImGuiStyleModVec(idx, *pvar))
 	*pvar = val
 }
 
 func PopStyleVar(count int /*= 1*/) {
 	for count > 0 {
 		// We avoid a generic memcpy(data, &backup.Backup.., GDataTypeSize[info.Type] * info.Count), the overhead in Debug is not worth it.
-		var backup = &g.StyleVarStack[len(g.StyleVarStack)-1]
+		var backup = &guiContext.StyleVarStack[len(guiContext.StyleVarStack)-1]
 
-		field := reflect.ValueOf(&g.Style).Elem().Field(golang.Int(backup.VarIdx))
+		field := reflect.ValueOf(&guiContext.Style).Elem().Field(golang.Int(backup.VarIdx))
 		switch field.Type() {
 		case reflect.TypeOf(ImVec2{}):
 			field.Set(reflect.ValueOf(backup.Vec2()))
@@ -245,14 +245,14 @@ func PopStyleVar(count int /*= 1*/) {
 		case reflect.TypeOf(int(0)):
 			field.Set(reflect.ValueOf(backup.Int()))
 		}
-		g.StyleVarStack = g.StyleVarStack[:len(g.StyleVarStack)-1]
+		guiContext.StyleVarStack = guiContext.StyleVarStack[:len(guiContext.StyleVarStack)-1]
 		count--
 	}
 }
 
 // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
-	var style = g.Style
+	var style = guiContext.Style
 	var c = style.Colors[idx]
 	c.w *= style.Alpha * alpha_mul
 	return ColorConvertFloat4ToU32(c)
@@ -260,7 +260,7 @@ func GetColorU32FromID(idx ImGuiCol, alpha_mul float /*= 1.0*/) ImU32 {
 
 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromVec(col ImVec4) ImU32 {
-	var style = g.Style
+	var style = guiContext.Style
 	var c = col
 	c.w *= style.Alpha
 	return ColorConvertFloat4ToU32(c)
@@ -268,7 +268,7 @@ func GetColorU32FromVec(col ImVec4) ImU32 {
 
 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 func GetColorU32FromInt(col ImU32) ImU32 {
-	var style = g.Style
+	var style = guiContext.Style
 	if style.Alpha >= 1.0 {
 		return col
 	}
@@ -279,7 +279,7 @@ func GetColorU32FromInt(col ImU32) ImU32 {
 
 // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
 func GetStyleColorVec4(idx ImGuiCol) *ImVec4 {
-	var style = g.Style
+	var style = guiContext.Style
 	return &style.Colors[idx]
 }
 
@@ -287,24 +287,24 @@ func GetStyleColorVec4(idx ImGuiCol) *ImVec4 {
 func PushStyleColorInt(idx ImGuiCol, col ImU32) {
 	var backup ImGuiColorMod
 	backup.Col = idx
-	backup.BackupValue = g.Style.Colors[idx]
-	g.ColorStack = append(g.ColorStack, backup)
-	g.Style.Colors[idx] = ColorConvertU32ToFloat4(col)
+	backup.BackupValue = guiContext.Style.Colors[idx]
+	guiContext.ColorStack = append(guiContext.ColorStack, backup)
+	guiContext.Style.Colors[idx] = ColorConvertU32ToFloat4(col)
 }
 
 func PushStyleColorVec(idx ImGuiCol, col *ImVec4) {
 	var backup ImGuiColorMod
 	backup.Col = idx
-	backup.BackupValue = g.Style.Colors[idx]
-	g.ColorStack = append(g.ColorStack, backup)
-	g.Style.Colors[idx] = *col
+	backup.BackupValue = guiContext.Style.Colors[idx]
+	guiContext.ColorStack = append(guiContext.ColorStack, backup)
+	guiContext.Style.Colors[idx] = *col
 }
 
 func PopStyleColor(count int /*= 1*/) {
 	for count > 0 {
-		var backup = &g.ColorStack[len(g.ColorStack)-1]
-		g.Style.Colors[backup.Col] = backup.BackupValue
-		g.ColorStack = g.ColorStack[:len(g.ColorStack)-1]
+		var backup = &guiContext.ColorStack[len(guiContext.ColorStack)-1]
+		guiContext.Style.Colors[backup.Col] = backup.BackupValue
+		guiContext.ColorStack = guiContext.ColorStack[:len(guiContext.ColorStack)-1]
 		count--
 	}
 }

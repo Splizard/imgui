@@ -13,8 +13,8 @@ func SelectablePointer(label string, p_selected *bool, flags ImGuiSelectableFlag
 // - A selectable highlights when hovered, and can display another color when selected.
 // - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
 // "selected bool" carry the selection state (read-only). Selectable() is clicked is returns true so you can modify your selection state. size.x==0.0: use remaining width, size.x>0.0: specify width. size.y==0.0: use label height, size.y>0.0: specify height
-// Tip: pass a non-visible label (e.g. "##hello") then you can use the space to draw other text or image.
-// But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
+// Tip: pass a non-visible label (e.guiContext. "##hello") then you can use the space to draw other text or image.
+// But you need to make sure the ID is unique, e.guiContext. enclose calls in PushID/PopID or use ##unique_id.
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0.0f) and (SelectableTextAlign.x > 0.0f) followed by SameLine() is currently not supported.
 func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_arg ImVec2) bool {
@@ -23,7 +23,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 
 	// Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
 	var id = window.GetIDs(label)
@@ -71,7 +71,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		bb.Max.x += (spacing_x - spacing_L)
 		bb.Max.y += (spacing_y - spacing_U)
 	}
-	//if (g.IO.KeyCtrl) { GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
+	//if (guiContext.IO.KeyCtrl) { GetForegroundDrawList().AddRect(bb.Min, bb.Max, IM_COL32(0, 255, 0, 255)); }
 
 	// Modify ClipRect for the ItemAdd(), faster than doing a PushColumnsBackground/PushTableBackground for every Selectable..
 	var backup_clip_rect_min_x = window.ClipRect.Min.x
@@ -98,7 +98,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 		return false
 	}
 
-	var disabled_global = (g.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
+	var disabled_global = (guiContext.CurrentItemFlags & ImGuiItemFlags_Disabled) != 0
 	if disabled_item && !disabled_global { // Only testing this as an optimization
 		BeginDisabled(true)
 	}
@@ -107,7 +107,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	// which would be advantageous since most selectable are not selected.
 	if span_all_columns && window.DC.CurrentColumns != nil {
 		PushColumnsBackground()
-	} else if span_all_columns && g.CurrentTable != nil {
+	} else if span_all_columns && guiContext.CurrentTable != nil {
 		TablePushBackgroundChannel()
 	}
 
@@ -136,12 +136,12 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 	// Auto-select when moved into
 	// - This will be more fully fleshed in the range-select branch
 	// - This is not exposed as it won't nicely work with some user side handling of shift/control
-	// - We cannot do 'if (g.NavJustMovedToId != id) { selected = false; pressed = was_selected; }' for two reasons
-	//   - (1) it would require focus scope to be set, need exposing PushFocusScope() or equivalent (e.g. BeginSelection() calling PushFocusScope())
+	// - We cannot do 'if (guiContext.NavJustMovedToId != id) { selected = false; pressed = was_selected; }' for two reasons
+	//   - (1) it would require focus scope to be set, need exposing PushFocusScope() or equivalent (e.guiContext. BeginSelection() calling PushFocusScope())
 	//   - (2) usage will fail with clipped items
-	//   The multi-select API aim to fix those issues, e.g. may be replaced with a BeginSelection() API.
-	if (flags&ImGuiSelectableFlags_SelectOnNav != 0) && g.NavJustMovedToId != 0 && g.NavJustMovedToFocusScopeId == window.DC.NavFocusScopeIdCurrent {
-		if g.NavJustMovedToId == id {
+	//   The multi-select API aim to fix those issues, e.guiContext. may be replaced with a BeginSelection() API.
+	if (flags&ImGuiSelectableFlags_SelectOnNav != 0) && guiContext.NavJustMovedToId != 0 && guiContext.NavJustMovedToFocusScopeId == window.DC.NavFocusScopeIdCurrent {
+		if guiContext.NavJustMovedToId == id {
 			selected = true
 			pressed = true
 		}
@@ -149,9 +149,9 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 
 	// Update NavId when clicking or when Hovering (this doesn't happen on most widgets), so navigation can be resumed with gamepad/keyboard
 	if pressed || (hovered && (flags&ImGuiSelectableFlags_SetNavIdOnHover != 0)) {
-		if !g.NavDisableMouseHover && g.NavWindow == window && g.NavLayer == window.DC.NavLayerCurrent {
+		if !guiContext.NavDisableMouseHover && guiContext.NavWindow == window && guiContext.NavLayer == window.DC.NavLayerCurrent {
 			SetNavID(id, window.DC.NavLayerCurrent, window.DC.NavFocusScopeIdCurrent, &ImRect{bb.Min.Sub(window.Pos), bb.Max.Sub(window.Pos)}) // (bb == NavRect)
-			g.NavDisableHighlight = true
+			guiContext.NavDisableHighlight = true
 		}
 	}
 	if pressed {
@@ -164,7 +164,7 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 
 	// In this branch, Selectable() cannot toggle the selection so this will never trigger.
 	if selected != was_selected { //-V547
-		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection
+		guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection
 	}
 
 	// Render
@@ -186,14 +186,14 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 
 	if span_all_columns && window.DC.CurrentColumns != nil {
 		PopColumnsBackground()
-	} else if span_all_columns && g.CurrentTable != nil {
+	} else if span_all_columns && guiContext.CurrentTable != nil {
 		TablePopBackgroundChannel()
 	}
 
 	RenderTextClipped(&text_min, &text_max, label, &label_size, &style.SelectableTextAlign, &bb)
 
 	// Automatically close popups
-	if pressed && (window.Flags&ImGuiWindowFlags_Popup != 0) && (flags&ImGuiSelectableFlags_DontClosePopups == 0) && (g.LastItemData.InFlags&ImGuiItemFlags_SelectableDontClosePopup == 0) {
+	if pressed && (window.Flags&ImGuiWindowFlags_Popup != 0) && (flags&ImGuiSelectableFlags_DontClosePopups == 0) && (guiContext.LastItemData.InFlags&ImGuiItemFlags_SelectableDontClosePopup == 0) {
 		CloseCurrentPopup()
 	}
 
@@ -209,14 +209,14 @@ func Selectable(label string, selected bool, flags ImGuiSelectableFlags, size_ar
 
 // make last item the default focused item of a window.
 func SetItemDefaultFocus() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if !window.Appearing {
 		return
 	}
-	if g.NavWindow == window.RootWindowForNav && (g.NavInitRequest || g.NavInitResultId != 0) && g.NavLayer == window.DC.NavLayerCurrent {
-		g.NavInitRequest = false
-		g.NavInitResultId = g.LastItemData.ID
-		g.NavInitResultRectRel = ImRect{g.LastItemData.Rect.Min.Sub(window.Pos), g.LastItemData.Rect.Max.Sub(window.Pos)}
+	if guiContext.NavWindow == window.RootWindowForNav && (guiContext.NavInitRequest || guiContext.NavInitResultId != 0) && guiContext.NavLayer == window.DC.NavLayerCurrent {
+		guiContext.NavInitRequest = false
+		guiContext.NavInitResultId = guiContext.LastItemData.ID
+		guiContext.NavInitResultRectRel = ImRect{guiContext.LastItemData.Rect.Min.Sub(window.Pos), guiContext.LastItemData.Rect.Max.Sub(window.Pos)}
 		NavUpdateAnyRequestFlag()
 		if !IsItemVisible() {
 			SetScrollHereY(0.5)
@@ -227,31 +227,31 @@ func SetItemDefaultFocus() {
 // focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
 func SetKeyboardFocusHere(offset int) {
 	IM_ASSERT(offset >= -1) // -1 is allowed but not below
-	window := g.CurrentWindow
-	g.TabFocusRequestNextWindow = window
-	g.TabFocusRequestNextCounterRegular = window.DC.FocusCounterRegular + 1 + offset
-	g.TabFocusRequestNextCounterTabStop = INT_MAX
+	window := guiContext.CurrentWindow
+	guiContext.TabFocusRequestNextWindow = window
+	guiContext.TabFocusRequestNextCounterRegular = window.DC.FocusCounterRegular + 1 + offset
+	guiContext.TabFocusRequestNextCounterTabStop = INT_MAX
 }
 
 // Focus Scope (WIP)
 // This is generally used to identify a selection set (multiple of which may be in the same window), as selection
-// patterns generally need to react (e.g. clear selection) when landing on an item of the set.
+// patterns generally need to react (e.guiContext. clear selection) when landing on an item of the set.
 func PushFocusScope(id ImGuiID) {
-	window := g.CurrentWindow
-	g.FocusScopeStack = append(g.FocusScopeStack, window.DC.NavFocusScopeIdCurrent)
+	window := guiContext.CurrentWindow
+	guiContext.FocusScopeStack = append(guiContext.FocusScopeStack, window.DC.NavFocusScopeIdCurrent)
 	window.DC.NavFocusScopeIdCurrent = id
 }
 
 func PopFocusScope() {
-	window := g.CurrentWindow
-	IM_ASSERT(len(g.FocusScopeStack) > 0) // Too many PopFocusScope() ?
-	window.DC.NavFocusScopeIdCurrent = g.FocusScopeStack[len(g.FocusScopeStack)-1]
-	g.FocusScopeStack = g.FocusScopeStack[:len(g.FocusScopeStack)-1]
+	window := guiContext.CurrentWindow
+	IM_ASSERT(len(guiContext.FocusScopeStack) > 0) // Too many PopFocusScope() ?
+	window.DC.NavFocusScopeIdCurrent = guiContext.FocusScopeStack[len(guiContext.FocusScopeStack)-1]
+	guiContext.FocusScopeStack = guiContext.FocusScopeStack[:len(guiContext.FocusScopeStack)-1]
 }
 
-func GetFocusedFocusScope() ImGuiID { g := g; return g.NavFocusScopeId } // Focus scope which is actually active
+func GetFocusedFocusScope() ImGuiID { g := guiContext; return g.NavFocusScopeId } // Focus scope which is actually active
 func GetFocusScope() ImGuiID {
-	return g.CurrentWindow.DC.NavFocusScopeIdCurrent
+	return guiContext.CurrentWindow.DC.NavFocusScopeIdCurrent
 } // Focus scope we are outputting into, set by PushFocusScope()
 
 // Notifies Dear ImGui when hosting platform windows lose or gain input focus
@@ -261,7 +261,7 @@ func (io *ImGuiIO) AddFocusEvent(focused bool) {
 	}
 
 	// Clear buttons state when focus is lost
-	// (this is useful so e.g. releasing Alt after focus loss on Alt-Tab doesn't trigger the Alt menu toggle)
+	// (this is useful so e.guiContext. releasing Alt after focus loss on Alt-Tab doesn't trigger the Alt menu toggle)
 	io.KeysDown = [len(io.KeysDown)]bool{}
 	for n := range io.KeysDownDuration {
 		io.KeysDownDuration[n] = -1
@@ -281,7 +281,7 @@ func (io *ImGuiIO) AddFocusEvent(focused bool) {
 
 // Windows: Display Order and Focus Order
 func FocusWindow(window *ImGuiWindow) {
-	g := g
+	g := guiContext
 
 	if g.NavWindow != window {
 		g.NavWindow = window
@@ -341,38 +341,38 @@ func BringWindowToFocusFront(window *ImGuiWindow) {
 	IM_ASSERT(window == window.RootWindow)
 
 	var cur_order = window.FocusOrder
-	IM_ASSERT(g.WindowsFocusOrder[cur_order] == window)
-	if g.WindowsFocusOrder[len(g.WindowsFocusOrder)-1] == window {
+	IM_ASSERT(guiContext.WindowsFocusOrder[cur_order] == window)
+	if guiContext.WindowsFocusOrder[len(guiContext.WindowsFocusOrder)-1] == window {
 		return
 	}
 
-	var new_order = int(len(g.WindowsFocusOrder)) - 1
+	var new_order = int(len(guiContext.WindowsFocusOrder)) - 1
 	for n := int(cur_order); n < new_order; n++ {
-		g.WindowsFocusOrder[n] = g.WindowsFocusOrder[n+1]
-		g.WindowsFocusOrder[n].FocusOrder--
-		IM_ASSERT(int(g.WindowsFocusOrder[n].FocusOrder) == n)
+		guiContext.WindowsFocusOrder[n] = guiContext.WindowsFocusOrder[n+1]
+		guiContext.WindowsFocusOrder[n].FocusOrder--
+		IM_ASSERT(int(guiContext.WindowsFocusOrder[n].FocusOrder) == n)
 	}
-	g.WindowsFocusOrder[new_order] = window
+	guiContext.WindowsFocusOrder[new_order] = window
 	window.FocusOrder = (short)(new_order)
 }
 
 func BringWindowToDisplayFront(window *ImGuiWindow) {
-	var current_front_window = g.Windows[len(g.Windows)-1]
+	var current_front_window = guiContext.Windows[len(guiContext.Windows)-1]
 	if current_front_window == window || current_front_window.RootWindow == window { // Cheap early out (could be better)
 		return
 	}
-	for i := len(g.Windows) - 2; i >= 0; i-- { // We can ignore the top-most window
-		if g.Windows[i] == window {
-			amount := len(g.Windows) - i - 1
-			copy(g.Windows[i:], g.Windows[i+1:i+1+amount])
-			g.Windows[len(g.Windows)-1] = window
+	for i := len(guiContext.Windows) - 2; i >= 0; i-- { // We can ignore the top-most window
+		if guiContext.Windows[i] == window {
+			amount := len(guiContext.Windows) - i - 1
+			copy(guiContext.Windows[i:], guiContext.Windows[i+1:i+1+amount])
+			guiContext.Windows[len(guiContext.Windows)-1] = window
 			break
 		}
 	}
 }
 
 func FocusTopMostWindowUnderOne(under_this_window *ImGuiWindow, ignore_window *ImGuiWindow) {
-	g := g
+	g := guiContext
 
 	var start_idx int
 	if under_this_window != nil {

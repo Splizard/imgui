@@ -20,12 +20,12 @@ const (
 	ImGuiWindowFlags_MenuBar                   ImGuiWindowFlags = 1 << 10 // Has a menu-bar
 	ImGuiWindowFlags_HorizontalScrollbar       ImGuiWindowFlags = 1 << 11 // Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2(width,0.0f)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.
 	ImGuiWindowFlags_NoFocusOnAppearing        ImGuiWindowFlags = 1 << 12 // Disable taking focus when transitioning from hidden to visible state
-	ImGuiWindowFlags_NoBringToFrontOnFocus     ImGuiWindowFlags = 1 << 13 // Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus)
+	ImGuiWindowFlags_NoBringToFrontOnFocus     ImGuiWindowFlags = 1 << 13 // Disable bringing window to front when taking focus (e.guiContext. clicking on it or programmatically giving it focus)
 	ImGuiWindowFlags_AlwaysVerticalScrollbar   ImGuiWindowFlags = 1 << 14 // Always show vertical scrollbar (even if ContentSize.y < Size.y)
 	ImGuiWindowFlags_AlwaysHorizontalScrollbar ImGuiWindowFlags = 1 << 15 // Always show horizontal scrollbar (even if ContentSize.x < Size.x)
 	ImGuiWindowFlags_AlwaysUseWindowPadding    ImGuiWindowFlags = 1 << 16 // Ensure child windows without border uses style.WindowPadding (ignored by default for non-bordered child windows, because more convenient)
 	ImGuiWindowFlags_NoNavInputs               ImGuiWindowFlags = 1 << 18 // No gamepad/keyboard navigation within the window
-	ImGuiWindowFlags_NoNavFocus                ImGuiWindowFlags = 1 << 19 // No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)
+	ImGuiWindowFlags_NoNavFocus                ImGuiWindowFlags = 1 << 19 // No focusing toward this window with gamepad/keyboard navigation (e.guiContext. skipped by CTRL+TAB)
 	ImGuiWindowFlags_UnsavedDocument           ImGuiWindowFlags = 1 << 20 // Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
 	ImGuiWindowFlags_NoNav                                      = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus
 	ImGuiWindowFlags_NoDecoration                               = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse
@@ -62,7 +62,7 @@ const (
 	ImGuiInputTextFlags_AlwaysOverwrite     ImGuiInputTextFlags = 1 << 13 // Overwrite mode
 	ImGuiInputTextFlags_ReadOnly            ImGuiInputTextFlags = 1 << 14 // Read-only mode
 	ImGuiInputTextFlags_Password            ImGuiInputTextFlags = 1 << 15 // Password mode, display all characters as '*'
-	ImGuiInputTextFlags_NoUndoRedo          ImGuiInputTextFlags = 1 << 16 // Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().
+	ImGuiInputTextFlags_NoUndoRedo          ImGuiInputTextFlags = 1 << 16 // Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.guiContext. to call ClearActiveID().
 	ImGuiInputTextFlags_CharsScientific     ImGuiInputTextFlags = 1 << 17 // Allow 0123456789.+-*/eE (Scientific notation input)
 	ImGuiInputTextFlags_CallbackResize      ImGuiInputTextFlags = 1 << 18 // Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
 	ImGuiInputTextFlags_CallbackEdit        ImGuiInputTextFlags = 1 << 19 // Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
@@ -72,9 +72,9 @@ const (
 const (
 	ImGuiTreeNodeFlags_None                 ImGuiTreeNodeFlags = 0
 	ImGuiTreeNodeFlags_Selected             ImGuiTreeNodeFlags = 1 << 0  // Draw as selected
-	ImGuiTreeNodeFlags_Framed               ImGuiTreeNodeFlags = 1 << 1  // Draw frame with background (e.g. for CollapsingHeader)
+	ImGuiTreeNodeFlags_Framed               ImGuiTreeNodeFlags = 1 << 1  // Draw frame with background (e.guiContext. for CollapsingHeader)
 	ImGuiTreeNodeFlags_AllowItemOverlap     ImGuiTreeNodeFlags = 1 << 2  // Hit testing to allow subsequent widgets to overlap this one
-	ImGuiTreeNodeFlags_NoTreePushOnOpen     ImGuiTreeNodeFlags = 1 << 3  // Don't do a TreePush() when open (e.g. for CollapsingHeader) = no extra indent nor pushing on ID stack
+	ImGuiTreeNodeFlags_NoTreePushOnOpen     ImGuiTreeNodeFlags = 1 << 3  // Don't do a TreePush() when open (e.guiContext. for CollapsingHeader) = no extra indent nor pushing on ID stack
 	ImGuiTreeNodeFlags_NoAutoOpenOnLog      ImGuiTreeNodeFlags = 1 << 4  // Don't automatically and temporarily open node when Logging is active (by default logging will automatically open tree nodes)
 	ImGuiTreeNodeFlags_DefaultOpen          ImGuiTreeNodeFlags = 1 << 5  // Default node to be open
 	ImGuiTreeNodeFlags_OpenOnDoubleClick    ImGuiTreeNodeFlags = 1 << 6  // Need double-click to open node
@@ -181,7 +181,7 @@ const (
 //   - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
 //   - Columns sizing policy allowed: Fixed/Auto mostly.
 //   - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
-//   - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
+//   - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.guiContext. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
 //   - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
 //     If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
 //   - Read on documentation at the top of imgui_tables.cpp for details.
@@ -417,25 +417,25 @@ const (
 const (
 
 	// Gamepad Mapping
-	ImGuiNavInput_Activate    ImGuiNavInput = iota // activate / open / toggle / tweak value       // e.g. Cross  (PS4), A (Xbox), A (Switch), Space (Keyboard)
-	ImGuiNavInput_Cancel                           // cancel / close / exit                        // e.g. Circle (PS4), B (Xbox), B (Switch), Escape (Keyboard)
-	ImGuiNavInput_Input                            // text input / on-screen keyboard              // e.g. Triang.(PS4), Y (Xbox), X (Switch), Return (Keyboard)
-	ImGuiNavInput_Menu                             // tap: toggle menu / hold: focus, move, resize // e.g. Square (PS4), X (Xbox), Y (Switch), Alt (Keyboard)
-	ImGuiNavInput_DpadLeft                         // move / tweak / resize window (w/ PadMenu)    // e.g. D-pad Left/Right/Up/Down (Gamepads), Arrow keys (Keyboard)
+	ImGuiNavInput_Activate    ImGuiNavInput = iota // activate / open / toggle / tweak value       // e.guiContext. Cross  (PS4), A (Xbox), A (Switch), Space (Keyboard)
+	ImGuiNavInput_Cancel                           // cancel / close / exit                        // e.guiContext. Circle (PS4), B (Xbox), B (Switch), Escape (Keyboard)
+	ImGuiNavInput_Input                            // text input / on-screen keyboard              // e.guiContext. Triang.(PS4), Y (Xbox), X (Switch), Return (Keyboard)
+	ImGuiNavInput_Menu                             // tap: toggle menu / hold: focus, move, resize // e.guiContext. Square (PS4), X (Xbox), Y (Switch), Alt (Keyboard)
+	ImGuiNavInput_DpadLeft                         // move / tweak / resize window (w/ PadMenu)    // e.guiContext. D-pad Left/Right/Up/Down (Gamepads), Arrow keys (Keyboard)
 	ImGuiNavInput_DpadRight                        //
 	ImGuiNavInput_DpadUp                           //
 	ImGuiNavInput_DpadDown                         //
-	ImGuiNavInput_LStickLeft                       // scroll / move window (w/ PadMenu)            // e.g. Left Analog Stick Left/Right/Up/Down
+	ImGuiNavInput_LStickLeft                       // scroll / move window (w/ PadMenu)            // e.guiContext. Left Analog Stick Left/Right/Up/Down
 	ImGuiNavInput_LStickRight                      //
 	ImGuiNavInput_LStickUp                         //
 	ImGuiNavInput_LStickDown                       //
-	ImGuiNavInput_FocusPrev                        // next window (w/ PadMenu)                     // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-	ImGuiNavInput_FocusNext                        // prev window (w/ PadMenu)                     // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
-	ImGuiNavInput_TweakSlow                        // slower tweaks                                // e.g. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
-	ImGuiNavInput_TweakFast                        // faster tweaks                                // e.g. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
+	ImGuiNavInput_FocusPrev                        // next window (w/ PadMenu)                     // e.guiContext. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
+	ImGuiNavInput_FocusNext                        // prev window (w/ PadMenu)                     // e.guiContext. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
+	ImGuiNavInput_TweakSlow                        // slower tweaks                                // e.guiContext. L1 or L2 (PS4), LB or LT (Xbox), L or ZL (Switch)
+	ImGuiNavInput_TweakFast                        // faster tweaks                                // e.guiContext. R1 or R2 (PS4), RB or RT (Xbox), R or ZL (Switch)
 
 	// [Internal] Don't use directly! This is used internally to differentiate keyboard from gamepad inputs for behaviors that require to differentiate them.
-	// Keyboard behavior that have no corresponding gamepad mapping (e.g. CTRL+TAB) will be directly reading from io.KeysDown[] instead of io.NavInputs[].
+	// Keyboard behavior that have no corresponding gamepad mapping (e.guiContext. CTRL+TAB) will be directly reading from io.KeysDown[] instead of io.NavInputs[].
 	ImGuiNavInput_KeyLeft_  // move left                                    // = Arrow keys
 	ImGuiNavInput_KeyRight_ // move right
 	ImGuiNavInput_KeyUp_    // move up
@@ -544,8 +544,8 @@ const (
 	ImGuiColorEditFlags_NoAlpha        ImGuiColorEditFlags = 1 << 1  //              // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).
 	ImGuiColorEditFlags_NoPicker       ImGuiColorEditFlags = 1 << 2  //              // ColorEdit: disable picker when clicking on color square.
 	ImGuiColorEditFlags_NoOptions      ImGuiColorEditFlags = 1 << 3  //              // ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.
-	ImGuiColorEditFlags_NoSmallPreview ImGuiColorEditFlags = 1 << 4  //              // ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.g. to show only the inputs)
-	ImGuiColorEditFlags_NoInputs       ImGuiColorEditFlags = 1 << 5  //              // ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.g. to show only the small preview color square).
+	ImGuiColorEditFlags_NoSmallPreview ImGuiColorEditFlags = 1 << 4  //              // ColorEdit, ColorPicker: disable color square preview next to the inputs. (e.guiContext. to show only the inputs)
+	ImGuiColorEditFlags_NoInputs       ImGuiColorEditFlags = 1 << 5  //              // ColorEdit, ColorPicker: disable inputs sliders/text widgets (e.guiContext. to show only the small preview color square).
 	ImGuiColorEditFlags_NoTooltip      ImGuiColorEditFlags = 1 << 6  //              // ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.
 	ImGuiColorEditFlags_NoLabel        ImGuiColorEditFlags = 1 << 7  //              // ColorEdit, ColorPicker: disable display of inline text label (the label is still forwarded to the tooltip and picker).
 	ImGuiColorEditFlags_NoSidePreview  ImGuiColorEditFlags = 1 << 8  //              // ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.
@@ -584,7 +584,7 @@ const (
 	ImGuiSliderFlags_None            ImGuiSliderFlags = 0
 	ImGuiSliderFlags_AlwaysClamp     ImGuiSliderFlags = 1 << 4     // Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.
 	ImGuiSliderFlags_Logarithmic     ImGuiSliderFlags = 1 << 5     // Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.
-	ImGuiSliderFlags_NoRoundToFormat ImGuiSliderFlags = 1 << 6     // Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)
+	ImGuiSliderFlags_NoRoundToFormat ImGuiSliderFlags = 1 << 6     // Disable rounding underlying value to match precision of the display format string (e.guiContext. %.3f values are rounded to those 3 digits)
 	ImGuiSliderFlags_NoInput         ImGuiSliderFlags = 1 << 7     // Disable CTRL+Click or Enter key allowing to input text directly into the widget
 	ImGuiSliderFlags_InvalidMask_    ImGuiSliderFlags = 0x7000000F // [Internal] We treat using those bits as being potentially a 'float power' argument from the previous API that has got miscast to this enum, and will trigger an assert if needed.
 )
@@ -609,7 +609,7 @@ const (
 	ImGuiMouseCursor_ResizeEW                    // When hovering over a vertical border or a column
 	ImGuiMouseCursor_ResizeNESW                  // When hovering over the bottom-left corner of a window
 	ImGuiMouseCursor_ResizeNWSE                  // When hovering over the bottom-right corner of a window
-	ImGuiMouseCursor_Hand                        // (Unused by Dear ImGui functions. Use for e.g. hyperlinks)
+	ImGuiMouseCursor_Hand                        // (Unused by Dear ImGui functions. Use for e.guiContext. hyperlinks)
 	ImGuiMouseCursor_NotAllowed                  // When hovering something with disallowed interaction. Usually a crossed circle.
 	ImGuiMouseCursor_COUNT
 )
@@ -681,7 +681,7 @@ const (
 	ImGuiItemFlags_ButtonRepeat             ImGuiItemFlags = 1 << 1 // false     // Button() will return true multiple times based on io.KeyRepeatDelay and io.KeyRepeatRate settings.
 	ImGuiItemFlags_Disabled                 ImGuiItemFlags = 1 << 2 // false     // Disable interactions but doesn't affect visuals. See BeginDisabled()/EndDisabled(). See github.com/ocornut/imgui/issues/211
 	ImGuiItemFlags_NoNav                    ImGuiItemFlags = 1 << 3 // false     // Disable keyboard/gamepad directional navigation (FIXME: should merge with _NoTabStop)
-	ImGuiItemFlags_NoNavDefaultFocus        ImGuiItemFlags = 1 << 4 // false     // Disable item being a candidate for default focus (e.g. used by title bar items)
+	ImGuiItemFlags_NoNavDefaultFocus        ImGuiItemFlags = 1 << 4 // false     // Disable item being a candidate for default focus (e.guiContext. used by title bar items)
 	ImGuiItemFlags_SelectableDontClosePopup ImGuiItemFlags = 1 << 5 // false     // Disable MenuItem/Selectable() automatically closing their popup window
 	ImGuiItemFlags_MixedValue               ImGuiItemFlags = 1 << 6 // false     // [BETA] Represent a mixed/indeterminate value, generally multi-selection where values differ. Currently only supported by Checkbox() (later should support all sorts of widgets)
 	ImGuiItemFlags_ReadOnly                 ImGuiItemFlags = 1 << 7 // false     // [ALPHA] Allow hovering interactions but underlying value is not changed.
@@ -692,7 +692,7 @@ const (
 const (
 	ImGuiItemStatusFlags_None             ImGuiItemStatusFlags = 0
 	ImGuiItemStatusFlags_HoveredRect      ImGuiItemStatusFlags = 1 << 0 // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!, this is only one part of the most-common IsItemHovered test)
-	ImGuiItemStatusFlags_HasDisplayRect   ImGuiItemStatusFlags = 1 << 1 // g.LastItemData.DisplayRect is valid
+	ImGuiItemStatusFlags_HasDisplayRect   ImGuiItemStatusFlags = 1 << 1 // guiContext.LastItemData.DisplayRect is valid
 	ImGuiItemStatusFlags_Edited           ImGuiItemStatusFlags = 1 << 2 // Value exposed by item was edited in the current frame (should match the bool return value of most widgets)
 	ImGuiItemStatusFlags_ToggledSelection ImGuiItemStatusFlags = 1 << 3 // Set when Selectable(), TreeNode() reports toggling a selection. We can't report "Selected", only state changes, in order to easily handle clipping with less issues.
 	ImGuiItemStatusFlags_ToggledOpen      ImGuiItemStatusFlags = 1 << 4 // Set when TreeNode() reports toggling their open state.
@@ -719,7 +719,7 @@ const (
 	ImGuiButtonFlags_PressedOnClickReleaseAnywhere ImGuiButtonFlags = 1 << 6  // return true on click + release even if the release event is not done while hovering the item
 	ImGuiButtonFlags_PressedOnRelease              ImGuiButtonFlags = 1 << 7  // return true on release (default requires click+release)
 	ImGuiButtonFlags_PressedOnDoubleClick          ImGuiButtonFlags = 1 << 8  // return true on double-click (default requires click+release)
-	ImGuiButtonFlags_PressedOnDragDropHold         ImGuiButtonFlags = 1 << 9  // return true when held into while we are drag and dropping another item (used by e.g. tree nodes, collapsing headers)
+	ImGuiButtonFlags_PressedOnDragDropHold         ImGuiButtonFlags = 1 << 9  // return true when held into while we are drag and dropping another item (used by e.guiContext. tree nodes, collapsing headers)
 	ImGuiButtonFlags_Repeat                        ImGuiButtonFlags = 1 << 10 // hold to repeat
 	ImGuiButtonFlags_FlattenChildren               ImGuiButtonFlags = 1 << 11 // allow interactions even if a child window is overlapping
 	ImGuiButtonFlags_AllowItemOverlap              ImGuiButtonFlags = 1 << 12 // require previous frame HoveredId to either match id or be null before being usable, use along with SetItemAllowOverlap()
@@ -765,7 +765,7 @@ const (
 
 const (
 	ImGuiSeparatorFlags_None           ImGuiSeparatorFlags = 0
-	ImGuiSeparatorFlags_Horizontal     ImGuiSeparatorFlags = 1 << 0 // Axis default to current layout type, so generally Horizontal unless e.g. in a menu bar
+	ImGuiSeparatorFlags_Horizontal     ImGuiSeparatorFlags = 1 << 0 // Axis default to current layout type, so generally Horizontal unless e.guiContext. in a menu bar
 	ImGuiSeparatorFlags_Vertical       ImGuiSeparatorFlags = 1 << 1
 	ImGuiSeparatorFlags_SpanAllColumns ImGuiSeparatorFlags = 1 << 2
 )
@@ -820,7 +820,7 @@ const (
 	ImGuiInputSource_Mouse
 	ImGuiInputSource_Keyboard
 	ImGuiInputSource_Gamepad
-	ImGuiInputSource_Nav       // Stored in g.ActiveIdSource only
+	ImGuiInputSource_Nav       // Stored in guiContext.ActiveIdSource only
 	ImGuiInputSource_Clipboard // Currently only used by InputText()
 	ImGuiInputSource_COUNT
 )
@@ -878,7 +878,7 @@ const (
 	ImGuiNavHighlightFlags_None        ImGuiNavHighlightFlags = 0
 	ImGuiNavHighlightFlags_TypeDefault ImGuiNavHighlightFlags = 1 << 0
 	ImGuiNavHighlightFlags_TypeThin    ImGuiNavHighlightFlags = 1 << 1
-	ImGuiNavHighlightFlags_AlwaysDraw  ImGuiNavHighlightFlags = 1 << 2 // Draw rectangular highlight if (g.NavId == id) _even_ when using the mouse.
+	ImGuiNavHighlightFlags_AlwaysDraw  ImGuiNavHighlightFlags = 1 << 2 // Draw rectangular highlight if (guiContext.NavId == id) _even_ when using the mouse.
 	ImGuiNavHighlightFlags_NoRounding  ImGuiNavHighlightFlags = 1 << 3
 )
 
@@ -895,7 +895,7 @@ const (
 	ImGuiNavMoveFlags_LoopY               ImGuiNavMoveFlags = 1 << 1
 	ImGuiNavMoveFlags_WrapX               ImGuiNavMoveFlags = 1 << 2 // On failed request, request from opposite side one line down (when NavDir==right) or one line up (when NavDir==left)
 	ImGuiNavMoveFlags_WrapY               ImGuiNavMoveFlags = 1 << 3 // This is not super useful but provided for completeness
-	ImGuiNavMoveFlags_AllowCurrentNavId   ImGuiNavMoveFlags = 1 << 4 // Allow scoring and considering the current NavId as a move target candidate. This is used when the move source is offset (e.g. pressing PageDown actually needs to send a Up move request, if we are pressing PageDown from the bottom-most item we need to stay in place)
+	ImGuiNavMoveFlags_AllowCurrentNavId   ImGuiNavMoveFlags = 1 << 4 // Allow scoring and considering the current NavId as a move target candidate. This is used when the move source is offset (e.guiContext. pressing PageDown actually needs to send a Up move request, if we are pressing PageDown from the bottom-most item we need to stay in place)
 	ImGuiNavMoveFlags_AlsoScoreVisibleSet ImGuiNavMoveFlags = 1 << 5 // Store alternate result in NavMoveResultLocalVisible that only comprise elements that are already fully visible (used by PageUp/PageDown)
 	ImGuiNavMoveFlags_ScrollToEdge        ImGuiNavMoveFlags = 1 << 6
 	ImGuiNavMoveFlags_Forwarded           ImGuiNavMoveFlags = 1 << 7

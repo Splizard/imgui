@@ -2,17 +2,17 @@ package imgui
 
 // Update viewports and monitor infos
 func UpdateViewportsNewFrame() {
-	IM_ASSERT(len(g.Viewports) == 1)
+	IM_ASSERT(len(guiContext.Viewports) == 1)
 
 	// Update main viewport with current platform position.
 	// FIXME-VIEWPORT: Size is driven by backend/user code for backward-compatibility but we should aim to make this more consistent.
-	var main_viewport = g.Viewports[0]
+	var main_viewport = guiContext.Viewports[0]
 	main_viewport.Flags = ImGuiViewportFlags_IsPlatformWindow | ImGuiViewportFlags_OwnedByApp
 	main_viewport.Pos = ImVec2{}
-	main_viewport.Size = g.IO.DisplaySize
+	main_viewport.Size = guiContext.IO.DisplaySize
 
-	for n := range g.Viewports {
-		var viewport = g.Viewports[n]
+	for n := range guiContext.Viewports {
+		var viewport = guiContext.Viewports[n]
 
 		// Lock down space taken by menu bars and status bars, reset the offset for fucntions like BeginMainMenuBar() to alter them again.
 		viewport.WorkOffsetMin = viewport.BuildWorkOffsetMin

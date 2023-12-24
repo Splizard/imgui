@@ -1,8 +1,8 @@
 package imgui
 
 func RenderFrameBorder(p_min ImVec2, p_max ImVec2, rounding float) {
-	window := g.CurrentWindow
-	var border_size = g.Style.FrameBorderSize
+	window := guiContext.CurrentWindow
+	var border_size = guiContext.Style.FrameBorderSize
 	if border_size > 0.0 {
 		window.DrawList.AddRect(p_min.Add(ImVec2{1, 1}), p_max.Add(ImVec2{1, 1}), GetColorU32FromID(ImGuiCol_BorderShadow, 1), rounding, 0, border_size)
 		window.DrawList.AddRect(p_min, p_max, GetColorU32FromID(ImGuiCol_Border, 1), rounding, 0, border_size)
@@ -13,7 +13,7 @@ func RenderBullet(draw_list *ImDrawList, pos ImVec2, col ImU32) {
 	draw_list.AddCircleFilled(pos, draw_list._Data.FontSize*0.20, col, 8)
 }
 
-// RenderArrow Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
+// RenderArrow Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.guiContext. denote expanded/collapsed state
 func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, scale float /*= 1.0f*/) {
 	var h = draw_list._Data.FontSize * 1.00
 	var r = h * 0.40 * scale
@@ -54,19 +54,19 @@ func RenderArrow(draw_list *ImDrawList, pos ImVec2, col ImU32, dir ImGuiDir, sca
 // (As with anything within the ImGui:: namspace this doesn't touch your GPU or graphics API at all:
 // it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend).
 func Render() {
-	IM_ASSERT(g.Initialized)
+	IM_ASSERT(guiContext.Initialized)
 
-	if g.FrameCountEnded != g.FrameCount {
+	if guiContext.FrameCountEnded != guiContext.FrameCount {
 		EndFrame()
 	}
-	g.FrameCountRendered = g.FrameCount
-	g.IO.MetricsRenderWindows = 0
+	guiContext.FrameCountRendered = guiContext.FrameCount
+	guiContext.IO.MetricsRenderWindows = 0
 
-	CallContextHooks(g, ImGuiContextHookType_RenderPre)
+	CallContextHooks(guiContext, ImGuiContextHookType_RenderPre)
 
 	// Add background ImDrawList (for each active viewport)
-	for n := range g.Viewports {
-		var viewport = g.Viewports[n]
+	for n := range guiContext.Viewports {
+		var viewport = guiContext.Viewports[n]
 		viewport.DrawDataBuilder.Clear()
 		if viewport.DrawLists[0] != nil {
 			AddDrawListToDrawData(&viewport.DrawDataBuilder[0], getBackgroundDrawList(viewport))
@@ -75,15 +75,15 @@ func Render() {
 
 	// Add ImDrawList to render
 	var windows_to_render_top_most [2]*ImGuiWindow
-	if g.NavWindowingTarget != nil && g.NavWindowingTarget.Flags&ImGuiWindowFlags_NoBringToFrontOnFocus == 0 {
-		windows_to_render_top_most[0] = g.NavWindowingTarget.RootWindow
+	if guiContext.NavWindowingTarget != nil && guiContext.NavWindowingTarget.Flags&ImGuiWindowFlags_NoBringToFrontOnFocus == 0 {
+		windows_to_render_top_most[0] = guiContext.NavWindowingTarget.RootWindow
 	}
-	if g.NavWindowingTarget != nil {
-		windows_to_render_top_most[1] = g.NavWindowingListWindow
+	if guiContext.NavWindowingTarget != nil {
+		windows_to_render_top_most[1] = guiContext.NavWindowingListWindow
 	}
 
-	for n := range g.Windows {
-		var window = g.Windows[n]
+	for n := range guiContext.Windows {
+		var window = guiContext.Windows[n]
 		if IsWindowActiveAndVisible(window) && (window.Flags&ImGuiWindowFlags_ChildWindow) == 0 && window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1] {
 			AddRootWindowToDrawData(window)
 		}
@@ -95,15 +95,15 @@ func Render() {
 	}
 
 	// Setup ImDrawData structures for end-user
-	g.IO.MetricsRenderVertices = 0
-	g.IO.MetricsRenderIndices = 0
-	for n := range g.Viewports {
-		var viewport = g.Viewports[n]
+	guiContext.IO.MetricsRenderVertices = 0
+	guiContext.IO.MetricsRenderIndices = 0
+	for n := range guiContext.Viewports {
+		var viewport = guiContext.Viewports[n]
 		viewport.DrawDataBuilder.FlattenIntoSingleLayer()
 
 		// Draw software mouse cursor if requested by io.MouseDrawCursor flag
-		if g.IO.MouseDrawCursor {
-			RenderMouseCursor(GetForegroundDrawListViewport(viewport), g.IO.MousePos, g.Style.MouseCursorScale, g.MouseCursor, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48))
+		if guiContext.IO.MouseDrawCursor {
+			RenderMouseCursor(GetForegroundDrawListViewport(viewport), guiContext.IO.MousePos, guiContext.Style.MouseCursorScale, guiContext.MouseCursor, IM_COL32_WHITE, IM_COL32_BLACK, IM_COL32(0, 0, 0, 48))
 		}
 
 		// Add foreground ImDrawList (for each active viewport)
@@ -113,9 +113,9 @@ func Render() {
 
 		SetupViewportDrawData(viewport, &viewport.DrawDataBuilder[0])
 		var draw_data = &viewport.DrawDataP
-		g.IO.MetricsRenderVertices += draw_data.TotalVtxCount
-		g.IO.MetricsRenderIndices += draw_data.TotalIdxCount
+		guiContext.IO.MetricsRenderVertices += draw_data.TotalVtxCount
+		guiContext.IO.MetricsRenderIndices += draw_data.TotalIdxCount
 	}
 
-	CallContextHooks(g, ImGuiContextHookType_RenderPost)
+	CallContextHooks(guiContext, ImGuiContextHookType_RenderPost)
 }

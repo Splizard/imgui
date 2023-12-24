@@ -6,47 +6,47 @@ package imgui
 // set next window position. call before Begin(). use pivot=(0.5,0.5) to center on given point, etc.
 func SetNextWindowPos(pos *ImVec2, cond ImGuiCond, pivot ImVec2) {
 	IM_ASSERT(cond == 0 || ImIsPowerOfTwoInt(int(cond))) // Make sure the user doesn't attempt to combine multiple condition flags.
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasPos
-	g.NextWindowData.PosVal = *pos
-	g.NextWindowData.PosPivotVal = pivot
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasPos
+	guiContext.NextWindowData.PosVal = *pos
+	guiContext.NextWindowData.PosPivotVal = pivot
 	if cond != 0 {
-		g.NextWindowData.PosCond = cond
+		guiContext.NextWindowData.PosCond = cond
 	} else {
-		g.NextWindowData.PosCond = ImGuiCond_Always
+		guiContext.NextWindowData.PosCond = ImGuiCond_Always
 	}
 }
 
 // set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down. Use callback to apply non-trivial programmatic constraints.
 func SetNextWindowSizeConstraints(size_min ImVec2, size_max ImVec2, custom_callback ImGuiSizeCallback, custom_callback_data any) {
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint
-	g.NextWindowData.SizeConstraintRect = ImRect{size_min, size_max}
-	g.NextWindowData.SizeCallback = custom_callback
-	g.NextWindowData.SizeCallbackUserData = custom_callback_data
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint
+	guiContext.NextWindowData.SizeConstraintRect = ImRect{size_min, size_max}
+	guiContext.NextWindowData.SizeCallback = custom_callback
+	guiContext.NextWindowData.SizeCallbackUserData = custom_callback_data
 }
 
 // Content size = inner scrollable rectangle, padded with WindowPadding.
 // SetNextWindowContentSize(ImVec2(100,100) + ImGuiWindowFlags_AlwaysAutoResize will always allow submitting a 100x100 item.
 // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0 to leave it automatic. call before Begin()
 func SetNextWindowContentSize(size ImVec2) {
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasContentSize
-	g.NextWindowData.ContentSizeVal = *ImFloorVec(&size)
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasContentSize
+	guiContext.NextWindowData.ContentSizeVal = *ImFloorVec(&size)
 }
 
 // set next window collapsed state. call before Begin()
 func SetNextWindowCollapsed(collapsed bool, cond ImGuiCond) {
 	IM_ASSERT(cond == 0 || ImIsPowerOfTwoInt(int(cond))) // Make sure the user doesn't attempt to combine multiple condition flags.
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasCollapsed
-	g.NextWindowData.CollapsedVal = collapsed
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasCollapsed
+	guiContext.NextWindowData.CollapsedVal = collapsed
 	if cond != 0 {
-		g.NextWindowData.CollapsedCond = cond
+		guiContext.NextWindowData.CollapsedCond = cond
 	} else {
-		g.NextWindowData.CollapsedCond = ImGuiCond_Always
+		guiContext.NextWindowData.CollapsedCond = ImGuiCond_Always
 	}
 }
 
 // set next window to be focused / top-most. call before Begin()
 func SetNextWindowFocus() {
-	g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasFocus
+	guiContext.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasFocus
 }
 
 // (not recommended) set current window position - call within Begin()/End(). prefer using SetNextWindowPos(), as this may incur tearing and side-effects.
@@ -57,7 +57,7 @@ func SetWindowPos(pos ImVec2, cond ImGuiCond) {
 
 // (not recommended) set current window size - call within Begin()/End(). set to ImVec2(0, 0) to force an auto-fit. prefer using SetNextWindowSize(), as this may incur tearing and minor side-effects.
 func SetWindowSize(size ImVec2, cond ImGuiCond) {
-	setWindowSize(g.CurrentWindow, &size, cond)
+	setWindowSize(guiContext.CurrentWindow, &size, cond)
 }
 
 func setWindowCollapsed(window *ImGuiWindow, collapsed bool, cond ImGuiCond) {
@@ -73,12 +73,12 @@ func setWindowCollapsed(window *ImGuiWindow, collapsed bool, cond ImGuiCond) {
 
 // (not recommended) set current window collapsed state. prefer using SetNextWindowCollapsed().
 func SetWindowCollapsed(collapsed bool, cond ImGuiCond) {
-	setWindowCollapsed(g.CurrentWindow, collapsed, cond)
+	setWindowCollapsed(guiContext.CurrentWindow, collapsed, cond)
 }
 
 // (not recommended) set current window to be focused / top-most. prefer using SetNextWindowFocus().
 func SetWindowFocus() {
-	FocusWindow(g.CurrentWindow)
+	FocusWindow(guiContext.CurrentWindow)
 }
 
 // [OBSOLETE] set font scale. Adjust IO.FontGlobalScale if you want to scale all windows. This is an old API! For correct scaling, prefer to reload font + rebuild ImFontAtlas + call style.ScaleAllSizes().
@@ -87,8 +87,8 @@ func SetWindowFontScale(scale float) {
 	window := GetCurrentWindow()
 	window.FontWindowScale = scale
 	calculated := window.CalcFontSize()
-	g.FontSize = calculated
-	g.DrawListSharedData.FontSize = calculated
+	guiContext.FontSize = calculated
+	guiContext.DrawListSharedData.FontSize = calculated
 }
 
 // set named window position.

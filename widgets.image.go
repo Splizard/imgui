@@ -49,7 +49,7 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 	}
 	var col = GetColorU32FromID(c, 1)
 	RenderNavHighlight(&bb, id, 0)
-	RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)(min(padding.x, padding.y)), 0.0, g.Style.FrameRounding))
+	RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)(min(padding.x, padding.y)), 0.0, guiContext.Style.FrameRounding))
 	if bg_col.w > 0.0 {
 		window.DrawList.AddRectFilled(bb.Min.Add(*padding), bb.Max.Sub(*padding), GetColorU32FromVec(*bg_col), 0, 0)
 	}
@@ -62,7 +62,7 @@ func ImageButtonEx(id ImGuiID, texture_id ImTextureID, size *ImVec2, uv0 *ImVec2
 // frame_padding = 0: no framing
 // frame_padding > 0: set framing size
 func ImageButton(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec2, frame_padding int /*/*= /*/, bg_col ImVec4, tint_col ImVec4) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return false
 	}
@@ -72,7 +72,7 @@ func ImageButton(user_texture_id ImTextureID, size ImVec2, uv0 ImVec2, uv1 ImVec
 	var id = window.GetIDs("#image")
 	PopID()
 
-	var padding = g.Style.FramePadding
+	var padding = guiContext.Style.FramePadding
 	if frame_padding >= 0 {
 		padding = ImVec2{(float)(frame_padding), (float)(frame_padding)}
 	}

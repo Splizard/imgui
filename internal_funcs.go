@@ -10,18 +10,18 @@ func getForegroundDrawListViewport(viewport *ImGuiViewport, drawlist_no int, dra
 	IM_ASSERT(drawlist_no < int(len(viewport.DrawLists)))
 	var draw_list = viewport.DrawLists[drawlist_no]
 	if draw_list == nil {
-		l := NewImDrawList(&g.DrawListSharedData)
+		l := NewImDrawList(&guiContext.DrawListSharedData)
 		draw_list = &l
 		draw_list._OwnerName = drawlist_name
 		viewport.DrawLists[drawlist_no] = draw_list
 	}
 
 	// Our ImDrawList system requires that there is always a command
-	if viewport.DrawListsLastFrame[drawlist_no] != g.FrameCount {
+	if viewport.DrawListsLastFrame[drawlist_no] != guiContext.FrameCount {
 		draw_list._ResetForNewFrame()
-		draw_list.PushTextureID(g.IO.Fonts.TexID)
+		draw_list.PushTextureID(guiContext.IO.Fonts.TexID)
 		draw_list.PushClipRect(viewport.Pos, viewport.Pos.Add(viewport.Size), false)
-		viewport.DrawListsLastFrame[drawlist_no] = g.FrameCount
+		viewport.DrawListsLastFrame[drawlist_no] = guiContext.FrameCount
 	}
 	return draw_list
 }
@@ -31,7 +31,7 @@ func GetForegroundDrawListViewport(viewport *ImGuiViewport) *ImDrawList {
 	return getForegroundDrawListViewport(viewport, 1, "###Foreground")
 }
 
-// CallContextHooks Call context hooks (used by e.g. test engine)
+// CallContextHooks Call context hooks (used by e.guiContext. test engine)
 // We assume a small number of hooks so all stored in same array
 func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 	var g = ctx
@@ -43,100 +43,100 @@ func CallContextHooks(ctx *ImGuiContext, hook_type ImGuiContextHookType) {
 }
 
 // GetItemID Basic Accessors
-func GetItemID() ImGuiID { g := g; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
+func GetItemID() ImGuiID { g := guiContext; return g.LastItemData.ID } // Get ID of last item (~~ often same ImGui::GetID(label) beforehand)
 func GetItemStatusFlags() ImGuiItemStatusFlags {
-	return g.LastItemData.StatusFlags
+	return guiContext.LastItemData.StatusFlags
 }
-func GetItemFlags() ImGuiItemFlags { g := g; return g.LastItemData.InFlags }
-func GetActiveID() ImGuiID         { g := g; return g.ActiveId }
-func GetFocusID() ImGuiID          { g := g; return g.NavId }
+func GetItemFlags() ImGuiItemFlags { g := guiContext; return g.LastItemData.InFlags }
+func GetActiveID() ImGuiID         { g := guiContext; return g.ActiveId }
+func GetFocusID() ImGuiID          { g := guiContext; return g.NavId }
 
 func SetActiveID(id ImGuiID, window *ImGuiWindow) {
-	g.ActiveIdIsJustActivated = g.ActiveId != id
-	if g.ActiveIdIsJustActivated {
-		g.ActiveIdTimer = 0.0
-		g.ActiveIdHasBeenPressedBefore = false
-		g.ActiveIdHasBeenEditedBefore = false
-		g.ActiveIdMouseButton = -1
+	guiContext.ActiveIdIsJustActivated = guiContext.ActiveId != id
+	if guiContext.ActiveIdIsJustActivated {
+		guiContext.ActiveIdTimer = 0.0
+		guiContext.ActiveIdHasBeenPressedBefore = false
+		guiContext.ActiveIdHasBeenEditedBefore = false
+		guiContext.ActiveIdMouseButton = -1
 		if id != 0 {
-			g.LastActiveId = id
-			g.LastActiveIdTimer = 0.0
+			guiContext.LastActiveId = id
+			guiContext.LastActiveIdTimer = 0.0
 		}
 	}
-	g.ActiveId = id
-	g.ActiveIdAllowOverlap = false
-	g.ActiveIdNoClearOnFocusLoss = false
-	g.ActiveIdWindow = window
-	g.ActiveIdHasBeenEditedThisFrame = false
+	guiContext.ActiveId = id
+	guiContext.ActiveIdAllowOverlap = false
+	guiContext.ActiveIdNoClearOnFocusLoss = false
+	guiContext.ActiveIdWindow = window
+	guiContext.ActiveIdHasBeenEditedThisFrame = false
 	if id != 0 {
-		g.ActiveIdIsAlive = id
-		if g.NavActivateId == id || g.NavInputId == id || g.NavJustTabbedId == id || g.NavJustMovedToId == id {
-			g.ActiveIdSource = ImGuiInputSource_Nav
+		guiContext.ActiveIdIsAlive = id
+		if guiContext.NavActivateId == id || guiContext.NavInputId == id || guiContext.NavJustTabbedId == id || guiContext.NavJustMovedToId == id {
+			guiContext.ActiveIdSource = ImGuiInputSource_Nav
 		} else {
-			g.ActiveIdSource = ImGuiInputSource_Mouse
+			guiContext.ActiveIdSource = ImGuiInputSource_Mouse
 		}
 	}
 
 	// Clear declaration of inputs claimed by the widget
 	// (Please note that this is WIP and not all keys/inputs are thoroughly declared by all widgets yet)
-	g.ActiveIdUsingMouseWheel = false
-	g.ActiveIdUsingNavDirMask = 0x00
-	g.ActiveIdUsingNavInputMask = 0x00
-	g.ActiveIdUsingKeyInputMask = 0x00
+	guiContext.ActiveIdUsingMouseWheel = false
+	guiContext.ActiveIdUsingNavDirMask = 0x00
+	guiContext.ActiveIdUsingNavInputMask = 0x00
+	guiContext.ActiveIdUsingKeyInputMask = 0x00
 }
 
 func SetFocusID(id ImGuiID, window *ImGuiWindow) {
 	IM_ASSERT(id != 0)
 
 	// Assume that SetFocusID() is called in the context where its window.DC.NavLayerCurrent and window.DC.NavFocusScopeIdCurrent are valid.
-	// Note that window may be != g.CurrentWindow (e.g. SetFocusID call in InputTextEx for multi-line text)
+	// Note that window may be != guiContext.CurrentWindow (e.guiContext. SetFocusID call in InputTextEx for multi-line text)
 	var nav_layer = window.DC.NavLayerCurrent
-	if g.NavWindow != window {
-		g.NavInitRequest = false
+	if guiContext.NavWindow != window {
+		guiContext.NavInitRequest = false
 	}
-	g.NavWindow = window
-	g.NavId = id
-	g.NavLayer = nav_layer
-	g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent
+	guiContext.NavWindow = window
+	guiContext.NavId = id
+	guiContext.NavLayer = nav_layer
+	guiContext.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent
 	window.NavLastIds[nav_layer] = id
-	if g.LastItemData.ID == id {
-		window.NavRectRel[nav_layer] = ImRect{g.LastItemData.NavRect.Min.Sub(window.Pos), g.LastItemData.NavRect.Max.Sub(window.Pos)}
+	if guiContext.LastItemData.ID == id {
+		window.NavRectRel[nav_layer] = ImRect{guiContext.LastItemData.NavRect.Min.Sub(window.Pos), guiContext.LastItemData.NavRect.Max.Sub(window.Pos)}
 	}
 
-	if g.ActiveIdSource == ImGuiInputSource_Nav {
-		g.NavDisableMouseHover = true
+	if guiContext.ActiveIdSource == ImGuiInputSource_Nav {
+		guiContext.NavDisableMouseHover = true
 	} else {
-		g.NavDisableHighlight = true
+		guiContext.NavDisableHighlight = true
 	}
 }
 
 func ClearActiveID() {
-	SetActiveID(0, nil) // g.ActiveId = 0
+	SetActiveID(0, nil) // guiContext.ActiveId = 0
 }
 
 func GetHoveredID() ImGuiID {
-	if g.HoveredId != 0 {
-		return g.HoveredId
+	if guiContext.HoveredId != 0 {
+		return guiContext.HoveredId
 	}
-	return g.HoveredIdPreviousFrame
+	return guiContext.HoveredIdPreviousFrame
 }
 
 func SetHoveredID(id ImGuiID) {
-	g.HoveredId = id
-	g.HoveredIdAllowOverlap = false
-	g.HoveredIdUsingMouseWheel = false
-	if id != 0 && g.HoveredIdPreviousFrame != id {
-		g.HoveredIdTimer = 0
-		g.HoveredIdNotActiveTimer = 0.0
+	guiContext.HoveredId = id
+	guiContext.HoveredIdAllowOverlap = false
+	guiContext.HoveredIdUsingMouseWheel = false
+	if id != 0 && guiContext.HoveredIdPreviousFrame != id {
+		guiContext.HoveredIdTimer = 0
+		guiContext.HoveredIdNotActiveTimer = 0.0
 	}
 }
 
 func KeepAliveID(id ImGuiID) {
-	if g.ActiveId == id {
-		g.ActiveIdIsAlive = id
+	if guiContext.ActiveId == id {
+		guiContext.ActiveIdIsAlive = id
 	}
-	if g.ActiveIdPreviousFrame == id {
-		g.ActiveIdPreviousFrameIsAlive = true
+	if guiContext.ActiveIdPreviousFrame == id {
+		guiContext.ActiveIdPreviousFrameIsAlive = true
 	}
 }
 
@@ -144,35 +144,35 @@ func KeepAliveID(id ImGuiID) {
 func MarkItemEdited(id ImGuiID) {
 	// This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
 	// ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
-	IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive)
+	IM_ASSERT(guiContext.ActiveId == id || guiContext.ActiveId == 0 || guiContext.DragDropActive)
 
-	//IM_ASSERT(g.CurrentWindow.DC.LastItemId == id);
-	g.ActiveIdHasBeenEditedThisFrame = true
-	g.ActiveIdHasBeenEditedBefore = true
-	g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited
+	//IM_ASSERT(guiContext.CurrentWindow.DC.LastItemId == id);
+	guiContext.ActiveIdHasBeenEditedThisFrame = true
+	guiContext.ActiveIdHasBeenEditedBefore = true
+	guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited
 }
 
 // PushItemFlag Parameter stacks
 func PushItemFlag(option ImGuiItemFlags, enabled bool) {
-	var item_flags = g.CurrentItemFlags
-	IM_ASSERT(item_flags == g.ItemFlagsStack[len(g.ItemFlagsStack)-1])
+	var item_flags = guiContext.CurrentItemFlags
+	IM_ASSERT(item_flags == guiContext.ItemFlagsStack[len(guiContext.ItemFlagsStack)-1])
 	if enabled {
 		item_flags |= option
 	} else {
 		item_flags &= ^option
 	}
-	g.CurrentItemFlags = item_flags
-	g.ItemFlagsStack = append(g.ItemFlagsStack, item_flags)
+	guiContext.CurrentItemFlags = item_flags
+	guiContext.ItemFlagsStack = append(guiContext.ItemFlagsStack, item_flags)
 }
 
 func PopItemFlag() {
-	IM_ASSERT(len(g.ItemFlagsStack) > 1) // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
-	g.ItemFlagsStack = g.ItemFlagsStack[:len(g.ItemFlagsStack)-1]
-	g.CurrentItemFlags = g.ItemFlagsStack[len(g.ItemFlagsStack)-1]
+	IM_ASSERT(len(guiContext.ItemFlagsStack) > 1) // Too many calls to PopItemFlag() - we always leave a 0 at the bottom of the stack.
+	guiContext.ItemFlagsStack = guiContext.ItemFlagsStack[:len(guiContext.ItemFlagsStack)-1]
+	guiContext.CurrentItemFlags = guiContext.ItemFlagsStack[len(guiContext.ItemFlagsStack)-1]
 }
 
-// CalcTypematicRepeatAmount t0 = previous time (e.g.: g.Time - g.IO.DeltaTime)
-// t1 = current time (e.g.: g.Time)
+// CalcTypematicRepeatAmount t0 = previous time (e.guiContext.: guiContext.Time - guiContext.IO.DeltaTime)
+// t1 = current time (e.guiContext.: guiContext.Time)
 // An event is triggered at:
 //
 //	t = 0.0f     t = repeat_delay,    t = repeat_delay + repeat_rate*N
@@ -199,33 +199,33 @@ func CalcTypematicRepeatAmount(t0, t1, repeat_delay, repeat_rate float) int {
 }
 
 func SetActiveIdUsingNavAndKeys() {
-	IM_ASSERT(g.ActiveId != 0)
-	g.ActiveIdUsingNavDirMask = ^(ImU32)(0)
-	g.ActiveIdUsingNavInputMask = ^(ImU32)(0)
-	g.ActiveIdUsingKeyInputMask = ^(ImU64)(0)
+	IM_ASSERT(guiContext.ActiveId != 0)
+	guiContext.ActiveIdUsingNavDirMask = ^(ImU32)(0)
+	guiContext.ActiveIdUsingNavInputMask = ^(ImU32)(0)
+	guiContext.ActiveIdUsingKeyInputMask = ^(ImU64)(0)
 	NavMoveRequestCancel()
 }
 
 func IsActiveIdUsingNavDir(dir ImGuiDir) bool {
-	return (g.ActiveIdUsingNavDirMask & (1 << dir)) != 0
+	return (guiContext.ActiveIdUsingNavDirMask & (1 << dir)) != 0
 }
 func IsActiveIdUsingNavInput(input ImGuiNavInput) bool {
-	return (g.ActiveIdUsingNavInputMask & (1 << input)) != 0
+	return (guiContext.ActiveIdUsingNavInputMask & (1 << input)) != 0
 }
 func IsActiveIdUsingKey(key ImGuiKey) bool {
 	IM_ASSERT(key < 64)
-	return (g.ActiveIdUsingKeyInputMask & ((ImU64)(1) << key)) != 0
+	return (guiContext.ActiveIdUsingKeyInputMask & ((ImU64)(1) << key)) != 0
 }
 
 func IsKeyPressedMap(key ImGuiKey, repeat bool /*= true*/) bool {
-	var key_index = g.IO.KeyMap[key]
+	var key_index = guiContext.IO.KeyMap[key]
 	if key_index >= 0 {
 		return IsKeyPressed(key_index, repeat)
 	}
 	return false
 }
 func IsNavInputDown(n ImGuiNavInput) bool {
-	return g.IO.NavInputs[n] > 0.0
+	return guiContext.IO.NavInputs[n] > 0.0
 }
 func IsNavInputTest(n ImGuiNavInput, rm ImGuiInputReadMode) bool {
 	return GetNavInputAmount(n, rm) > 0.0
@@ -291,20 +291,20 @@ func RenderColorRectWithAlphaCheckerboard(draw_list *ImDrawList, p_min ImVec2, p
 
 // RenderNavHighlight Navigation highlight
 func RenderNavHighlight(bb *ImRect, id ImGuiID, flags ImGuiNavHighlightFlags) {
-	if id != g.NavId {
+	if id != guiContext.NavId {
 		return
 	}
-	if g.NavDisableHighlight && flags&ImGuiNavHighlightFlags_AlwaysDraw == 0 {
+	if guiContext.NavDisableHighlight && flags&ImGuiNavHighlightFlags_AlwaysDraw == 0 {
 		return
 	}
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.DC.NavHideHighlightOneFrame {
 		return
 	}
 
 	var rounding float
 	if flags&ImGuiNavHighlightFlags_NoRounding == 0 {
-		rounding = g.Style.FrameRounding
+		rounding = guiContext.Style.FrameRounding
 	}
 
 	var display_rect = *bb
@@ -487,7 +487,7 @@ func CheckboxFlagsS(l string, s *ImU64, flags_value ImU64) bool { panic("not imp
 
 // Template functions are instantiated in imgui_widgets.cpp for a finite number of types.
 // To use them externally (for custom widget) you may need an "extern template" statement in your code in order to link to existing instances and silence Clang warnings (see #2036).
-// e.g. " extern template func  RoundScalarWithFormatT<float, float>(t string, data_type ImGuiDataType, v float) float {panic("not implemented")} "
+// e.guiContext. " extern template func  RoundScalarWithFormatT<float, float>(t string, data_type ImGuiDataType, v float) float {panic("not implemented")} "
 //template<typename T, typename SIGNED_T, typename FLOAT_T>   func  ScaleRatioFromValueT(data_type ImGuiDataType, T v, T v_min, T v_max, is_logarithmic bool, logarithmic_zero_epsilon float, zero_deadzone_size float) float {panic("not implemented")}
 //template<typename T, typename SIGNED_T, typename FLOAT_T>   func  ScaleValueFromRatioT(data_type ImGuiDataType, t float, T v_min, T v_max, is_logarithmic bool, logarithmic_zero_epsilon float, zero_deadzone_size float) T {panic("not implemented")}
 //template<typename T, typename SIGNED_T, typename FLOAT_T>   func  DragBehaviorT(data_type ImGuiDataType, v *T, v_speed float, T v_min, T v_max, t string, flags ImGuiSliderFlags) bool {panic("not implemented")}

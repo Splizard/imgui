@@ -8,10 +8,10 @@ package imgui
 //   - Return false when window is collapsed, so you can early out in your code. You always need to call ImGui::End() even if false is returned.
 //   - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
 func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
-	style := g.Style
-	IM_ASSERT(name != "")                        // Window name required
-	IM_ASSERT(g.WithinFrameScope)                // Forgot to call ImGui::NewFrame()
-	IM_ASSERT(g.FrameCountEnded != g.FrameCount) // Called ImGui::Render() or ImGui::EndFrame() and haven't called ImGui::NewFrame() again yet
+	style := guiContext.Style
+	IM_ASSERT(name != "")                                          // Window name required
+	IM_ASSERT(guiContext.WithinFrameScope)                         // Forgot to call ImGui::NewFrame()
+	IM_ASSERT(guiContext.FrameCountEnded != guiContext.FrameCount) // Called ImGui::Render() or ImGui::EndFrame() and haven't called ImGui::NewFrame() again yet
 
 	// Find or create
 	var window = FindWindowByName(name)
@@ -29,14 +29,14 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		IM_ASSERT(flags&ImGuiWindowFlags_ChildWindow != 0)
 	}
 
-	var current_frame = g.FrameCount
+	var current_frame = guiContext.FrameCount
 	var first_begin_of_the_frame = window.LastFrameActive != current_frame
-	window.IsFallbackWindow = len(g.CurrentWindowStack) == 0 && g.WithinFrameScopeWithImplicitWindow
+	window.IsFallbackWindow = len(guiContext.CurrentWindowStack) == 0 && guiContext.WithinFrameScopeWithImplicitWindow
 
 	// Update the Appearing flag
 	var window_just_activated_by_user = window.LastFrameActive < current_frame-1 // Not using !WasActive because the implicit "Debug" window would always toggle off.on
 	if flags&ImGuiWindowFlags_Popup != 0 {
-		var popup_ref = &g.OpenPopupStack[len(g.BeginPopupStack)]
+		var popup_ref = &guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)]
 		window_just_activated_by_user = window_just_activated_by_user || (window.PopupId != popup_ref.PopupId) // We recycle popups so treat window as activated if popup id changed
 		window_just_activated_by_user = window_just_activated_by_user || (window != popup_ref.Window)
 	}
@@ -49,18 +49,18 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	if first_begin_of_the_frame {
 		window.Flags = (ImGuiWindowFlags)(flags)
 		window.LastFrameActive = current_frame
-		window.LastTimeActive = (float)(g.Time)
+		window.LastTimeActive = (float)(guiContext.Time)
 		window.BeginOrderWithinParent = 0
-		window.BeginOrderWithinContext = (short)(g.WindowsActiveCount)
-		g.WindowsActiveCount++
+		window.BeginOrderWithinContext = (short)(guiContext.WindowsActiveCount)
+		guiContext.WindowsActiveCount++
 	} else {
 		flags = window.Flags
 	}
 
 	// Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
 	var parent_window_in_stack *ImGuiWindow
-	if len(g.CurrentWindowStack) > 0 {
-		parent_window_in_stack = g.CurrentWindowStack[len(g.CurrentWindowStack)-1].Window
+	if len(guiContext.CurrentWindowStack) > 0 {
+		parent_window_in_stack = guiContext.CurrentWindowStack[len(guiContext.CurrentWindowStack)-1].Window
 	}
 	var parent_window *ImGuiWindow
 	if first_begin_of_the_frame {
@@ -80,19 +80,19 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	}
 
 	// Add to stack
-	// We intentionally set g.CurrentWindow to nil to prevent usage until when the viewport is set, then will call SetCurrentWindow()
+	// We intentionally set guiContext.CurrentWindow to nil to prevent usage until when the viewport is set, then will call SetCurrentWindow()
 	var window_stack_data ImGuiWindowStackData
 	window_stack_data.Window = window
-	window_stack_data.ParentLastItemDataBackup = g.LastItemData
-	g.CurrentWindowStack = append(g.CurrentWindowStack, window_stack_data)
-	g.CurrentWindow = window
+	window_stack_data.ParentLastItemDataBackup = guiContext.LastItemData
+	guiContext.CurrentWindowStack = append(guiContext.CurrentWindowStack, window_stack_data)
+	guiContext.CurrentWindow = window
 	window.DC.StackSizesOnBegin.SetToCurrentState()
-	g.CurrentWindow = nil
+	guiContext.CurrentWindow = nil
 
 	if flags&ImGuiWindowFlags_Popup != 0 {
-		var popup_ref = &g.OpenPopupStack[len(g.BeginPopupStack)]
+		var popup_ref = &guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)]
 		popup_ref.Window = window
-		g.BeginPopupStack = append(g.BeginPopupStack, *popup_ref)
+		guiContext.BeginPopupStack = append(guiContext.BeginPopupStack, *popup_ref)
 		window.PopupId = popup_ref.PopupId
 	}
 
@@ -106,42 +106,42 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	window_pos_set_by_api := false
 	window_size_x_set_by_api := false
 	window_size_y_set_by_api := false
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasPos != 0 {
-		window_pos_set_by_api = (window.SetWindowPosAllowFlags & g.NextWindowData.PosCond) != 0
-		if window_pos_set_by_api && ImLengthSqrVec2(g.NextWindowData.PosPivotVal) > 0.00001 {
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasPos != 0 {
+		window_pos_set_by_api = (window.SetWindowPosAllowFlags & guiContext.NextWindowData.PosCond) != 0
+		if window_pos_set_by_api && ImLengthSqrVec2(guiContext.NextWindowData.PosPivotVal) > 0.00001 {
 			// May be processed on the next frame if this is our first frame and we are measuring size
 			// FIXME: Look into removing the branch so everything can go through this same code path for consistency.
-			window.SetWindowPosVal = g.NextWindowData.PosVal
-			window.SetWindowPosPivot = g.NextWindowData.PosPivotVal
+			window.SetWindowPosVal = guiContext.NextWindowData.PosVal
+			window.SetWindowPosPivot = guiContext.NextWindowData.PosPivotVal
 			window.SetWindowPosAllowFlags &= ^(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing)
 		} else {
-			setWindowPos(window, &g.NextWindowData.PosVal, g.NextWindowData.PosCond)
+			setWindowPos(window, &guiContext.NextWindowData.PosVal, guiContext.NextWindowData.PosCond)
 		}
 	}
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasSize != 0 {
-		window_size_x_set_by_api = (window.SetWindowSizeAllowFlags&g.NextWindowData.SizeCond) != 0 && (g.NextWindowData.SizeVal.x > 0.0)
-		window_size_y_set_by_api = (window.SetWindowSizeAllowFlags&g.NextWindowData.SizeCond) != 0 && (g.NextWindowData.SizeVal.y > 0.0)
-		setWindowSize(window, &g.NextWindowData.SizeVal, g.NextWindowData.SizeCond)
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasSize != 0 {
+		window_size_x_set_by_api = (window.SetWindowSizeAllowFlags&guiContext.NextWindowData.SizeCond) != 0 && (guiContext.NextWindowData.SizeVal.x > 0.0)
+		window_size_y_set_by_api = (window.SetWindowSizeAllowFlags&guiContext.NextWindowData.SizeCond) != 0 && (guiContext.NextWindowData.SizeVal.y > 0.0)
+		setWindowSize(window, &guiContext.NextWindowData.SizeVal, guiContext.NextWindowData.SizeCond)
 	}
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasScroll != 0 {
-		if g.NextWindowData.ScrollVal.x >= 0.0 {
-			window.ScrollTarget.x = g.NextWindowData.ScrollVal.x
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasScroll != 0 {
+		if guiContext.NextWindowData.ScrollVal.x >= 0.0 {
+			window.ScrollTarget.x = guiContext.NextWindowData.ScrollVal.x
 			window.ScrollTargetCenterRatio.x = 0.0
 		}
-		if g.NextWindowData.ScrollVal.y >= 0.0 {
-			window.ScrollTarget.y = g.NextWindowData.ScrollVal.y
+		if guiContext.NextWindowData.ScrollVal.y >= 0.0 {
+			window.ScrollTarget.y = guiContext.NextWindowData.ScrollVal.y
 			window.ScrollTargetCenterRatio.y = 0.0
 		}
 	}
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasContentSize != 0 {
-		window.ContentSizeExplicit = g.NextWindowData.ContentSizeVal
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasContentSize != 0 {
+		window.ContentSizeExplicit = guiContext.NextWindowData.ContentSizeVal
 	} else if first_begin_of_the_frame {
 		window.ContentSizeExplicit = ImVec2{}
 	}
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasCollapsed != 0 {
-		setWindowCollapsed(window, g.NextWindowData.CollapsedVal, g.NextWindowData.CollapsedCond)
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasCollapsed != 0 {
+		setWindowCollapsed(window, guiContext.NextWindowData.CollapsedVal, guiContext.NextWindowData.CollapsedCond)
 	}
-	if g.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasFocus != 0 {
+	if guiContext.NextWindowData.Flags&ImGuiNextWindowDataFlags_HasFocus != 0 {
 		FocusWindow(window)
 	}
 	if window.Appearing {
@@ -167,7 +167,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// Update stored window name when it changes (which can _only_ happen with the "###" operator, so the ID would stay unchanged).
 		// The title bar always display the 'name' parameter, so we only update the string storage if it needs to be visible to the end-user elsewhere.
 		var window_title_visible_elsewhere = false
-		if g.NavWindowingListWindow != nil && (window.Flags&ImGuiWindowFlags_NoNavFocus) == 0 { // Window titles visible when using CTRL+TAB
+		if guiContext.NavWindowingListWindow != nil && (window.Flags&ImGuiWindowFlags_NoNavFocus) == 0 { // Window titles visible when using CTRL+TAB
 			window_title_visible_elsewhere = true
 		}
 		if window_title_visible_elsewhere && !window_just_created && name == window.Name {
@@ -237,15 +237,15 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		}
 
 		// Lock menu offset so size calculation can use it as menu-bar windows need a minimum size.
-		window.DC.MenuBarOffset.x = max(max(window.WindowPadding.x, style.ItemSpacing.x), g.NextWindowData.MenuBarOffsetMinVal.x)
-		window.DC.MenuBarOffset.y = g.NextWindowData.MenuBarOffsetMinVal.y
+		window.DC.MenuBarOffset.x = max(max(window.WindowPadding.x, style.ItemSpacing.x), guiContext.NextWindowData.MenuBarOffsetMinVal.x)
+		window.DC.MenuBarOffset.y = guiContext.NextWindowData.MenuBarOffsetMinVal.y
 
 		// Collapse window by double-clicking on title bar
 		// At this point we don't have a clipping rectangle setup yet, so we can use the title bar area for hit detection and drawing
 		if flags&ImGuiWindowFlags_NoTitleBar == 0 && flags&ImGuiWindowFlags_NoCollapse == 0 {
 			// We don't use a regular button+id to test for double-click on title bar (mostly due to legacy reason, could be fixed), so verify that we don't have items over the title bar.
 			var title_bar_rect = window.TitleBarRect()
-			if g.HoveredWindow == window && g.HoveredId == 0 && g.HoveredIdPreviousFrame == 0 && IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max, true) && g.IO.MouseDoubleClicked[0] {
+			if guiContext.HoveredWindow == window && guiContext.HoveredId == 0 && guiContext.HoveredIdPreviousFrame == 0 && IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max, true) && guiContext.IO.MouseDoubleClicked[0] {
 				window.WantCollapseToggle = true
 			}
 			if window.WantCollapseToggle {
@@ -316,7 +316,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		if window_just_activated_by_user {
 			window.AutoPosLastDirection = ImGuiDir_None
 			if (flags&ImGuiWindowFlags_Popup) != 0 && flags&ImGuiWindowFlags_Modal == 0 && !window_pos_set_by_api { // FIXME: BeginPopup() could use SetNextWindowPos()
-				window.Pos = g.BeginPopupStack[len(g.BeginPopupStack)-1].OpenPopupPos
+				window.Pos = guiContext.BeginPopupStack[len(guiContext.BeginPopupStack)-1].OpenPopupPos
 			}
 		}
 
@@ -333,7 +333,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		var window_pos_with_pivot = window.SetWindowPosVal.x != FLT_MAX && window.HiddenFramesCannotSkipItems == 0
 		if window_pos_with_pivot {
 			p := window.SetWindowPosVal.Sub(window.Size.Mul(window.SetWindowPosPivot))
-			setWindowPos(window, &p, 0) // Position given a pivot (e.g. for centering)
+			setWindowPos(window, &p, 0) // Position given a pivot (e.guiContext. for centering)
 		} else if (flags & ImGuiWindowFlags_ChildMenu) != 0 {
 			window.Pos = FindBestWindowPosForPopup(window)
 		} else if (flags&ImGuiWindowFlags_Popup) != 0 && !window_pos_set_by_api && window_just_appearing_after_hidden_for_resize {
@@ -373,7 +373,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.0f) to completely hide artifacts.
 		//if ((window.Flags & ImGuiWindowFlags_MenuBar) || !(window.Flags & ImGuiWindowFlags_NoTitleBar))
-		//    window.WindowRounding = min(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.0f);
+		//    window.WindowRounding = min(window.WindowRounding, guiContext.FontSize + style.FramePadding.y * 2.0f);
 
 		// Apply window focus (new and reactivated windows are moved to front)
 		var want_focus = false
@@ -391,10 +391,10 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Allow resize from lower-left if we have the mouse cursor feedback for it.
 		var resize_grip_count int = 1
-		if g.IO.ConfigWindowsResizeFromEdges {
+		if guiContext.IO.ConfigWindowsResizeFromEdges {
 			resize_grip_count = 2
 		}
-		var resize_grip_draw_size = IM_FLOOR(max(g.FontSize*1.10, window.WindowRounding+1.0+g.FontSize*0.2))
+		var resize_grip_draw_size = IM_FLOOR(max(guiContext.FontSize*1.10, window.WindowRounding+1.0+guiContext.FontSize*0.2))
 		if !window.Collapsed {
 			if UpdateWindowManualResize(window, &size_auto_fit, &border_held, resize_grip_count, &resize_grip_col, &visibility_rect) {
 				use_current_size_for_scrollbar_x = true
@@ -473,8 +473,8 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Inner clipping rectangle.
 		// Will extend a little bit outside the normal work region.
-		// This is to allow e.g. Selectable or CollapsingHeader or some separators to cover that space.
-		// Force round operator last to ensure that e.g. (int)(max.x-min.x) in user's render code produce correct result.
+		// This is to allow e.guiContext. Selectable or CollapsingHeader or some separators to cover that space.
+		// Force round operator last to ensure that e.guiContext. (int)(max.x-min.x) in user's render code produce correct result.
 		// Note that if our window is collapsed we will end up with an inverted (~nil) clipping rectangle which is the correct behavior.
 		// Affected by window/frame border size. Used by:
 		// - Begin() initial clip rect
@@ -492,7 +492,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		if window.Size.x > 0.0 && flags&ImGuiWindowFlags_Tooltip == 0 && flags&ImGuiWindowFlags_AlwaysAutoResize == 0 {
 			window.ItemWidthDefault = ImFloor(window.Size.x * 0.65)
 		} else {
-			window.ItemWidthDefault = ImFloor(g.FontSize * 16.0)
+			window.ItemWidthDefault = ImFloor(guiContext.FontSize * 16.0)
 		}
 
 		// SCROLLING
@@ -511,12 +511,12 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 
 		// Setup draw list and outer clipping rectangle
 		IM_ASSERT(len(window.DrawList.CmdBuffer) == 1 && window.DrawList.CmdBuffer[0].ElemCount == 0)
-		window.DrawList.PushTextureID(g.Font.ContainerAtlas.TexID)
+		window.DrawList.PushTextureID(guiContext.Font.ContainerAtlas.TexID)
 		PushClipRect(host_rect.Min, host_rect.Max, false)
 
 		// Draw modal window background (darkens what is behind them, all viewports)
 		var dim_bg_for_modal = (flags&ImGuiWindowFlags_Modal != 0) && window == GetTopMostPopupModal() && window.HiddenFramesCannotSkipItems <= 0
-		var dim_bg_for_window_list = g.NavWindowingTargetAnim != nil && (window == g.NavWindowingTargetAnim.RootWindow)
+		var dim_bg_for_window_list = guiContext.NavWindowingTargetAnim != nil && (window == guiContext.NavWindowingTargetAnim.RootWindow)
 		if dim_bg_for_modal || dim_bg_for_window_list {
 
 			var c ImGuiCol
@@ -526,16 +526,16 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 				c = ImGuiCol_NavWindowingDimBg
 			}
 
-			var dim_bg_col = GetColorU32FromID(c, g.DimBgRatio)
+			var dim_bg_col = GetColorU32FromID(c, guiContext.DimBgRatio)
 			window.DrawList.AddRectFilled(viewport_rect.Min, viewport_rect.Max, dim_bg_col, 0, 0)
 		}
 
 		// Draw navigation selection/windowing rectangle background
-		if dim_bg_for_window_list && window == g.NavWindowingTargetAnim {
+		if dim_bg_for_window_list && window == guiContext.NavWindowingTargetAnim {
 			var bb = window.Rect()
-			bb.Expand(g.FontSize)
+			bb.Expand(guiContext.FontSize)
 			if !bb.ContainsRect(viewport_rect) { // Avoid drawing if the window covers all the viewport anyway
-				window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha*0.25), g.Style.WindowRounding, 0)
+				window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_NavWindowingHighlight, guiContext.NavWindowingHighlightAlpha*0.25), guiContext.Style.WindowRounding, 0)
 			}
 		}
 
@@ -567,9 +567,9 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			}
 
 			// Handle title bar, scrollbar, resize grips and resize borders
-			var window_to_highlight = g.NavWindow
-			if g.NavWindowingTarget != nil {
-				window_to_highlight = g.NavWindowingTarget
+			var window_to_highlight = guiContext.NavWindow
+			if guiContext.NavWindowingTarget != nil {
+				window_to_highlight = guiContext.NavWindowingTarget
 			}
 			var title_bar_is_highlight = want_focus || (window_to_highlight != nil && window.RootWindowForTitleBarHighlight == window_to_highlight.RootWindowForTitleBarHighlight)
 			RenderWindowDecorations(window, &title_bar_rect, title_bar_is_highlight, resize_grip_count, resize_grip_col, resize_grip_draw_size)
@@ -580,15 +580,15 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		}
 
 		// Draw navigation selection/windowing rectangle border
-		if g.NavWindowingTargetAnim == window {
-			var rounding = max(window.WindowRounding, g.Style.WindowRounding)
+		if guiContext.NavWindowingTargetAnim == window {
+			var rounding = max(window.WindowRounding, guiContext.Style.WindowRounding)
 			var bb = window.Rect()
-			bb.Expand(g.FontSize)
+			bb.Expand(guiContext.FontSize)
 			if bb.ContainsRect(viewport_rect) { // If a window fits the entire viewport, adjust its highlight inward
-				bb.Expand(-g.FontSize - 1.0)
+				bb.Expand(-guiContext.FontSize - 1.0)
 				rounding = window.WindowRounding
 			}
-			window.DrawList.AddRect(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha), rounding, 0, 3.0)
+			window.DrawList.AddRect(bb.Min, bb.Max, GetColorU32FromID(ImGuiCol_NavWindowingHighlight, guiContext.NavWindowingHighlightAlpha), rounding, 0, 3.0)
 		}
 
 		// UPDATE RECTANGLES (2- THOSE AFFECTED BY SCROLLING)
@@ -720,22 +720,22 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		// This works but 1. doesn't handle multiple Begin/End pairs, 2. recursing into another Begin/End pair - so we need to work that out and add better logging scope.
 		// Maybe we can support CTRL+C on every element?
 		/*
-		   //if (g.NavWindow == window && g.ActiveId == 0)
-		   if (g.ActiveId == window.MoveId)
-		       if (g.IO.KeyCtrl && IsKeyPressedMap(ImGuiKey_C))
+		   //if (guiContext.NavWindow == window && guiContext.ActiveId == 0)
+		   if (guiContext.ActiveId == window.MoveId)
+		       if (guiContext.IO.KeyCtrl && IsKeyPressedMap(ImGuiKey_C))
 		           LogToClipboard();
 		*/
 
 		// We fill last item data based on Title Bar/Tab, in order for IsItemHovered() and IsItemActive() to be usable after Begin().
 		// This is useful to allow creating context menus on title bar only, etc.
-		g.LastItemData.ID = window.MoveId
-		g.LastItemData.InFlags = g.CurrentItemFlags
+		guiContext.LastItemData.ID = window.MoveId
+		guiContext.LastItemData.InFlags = guiContext.CurrentItemFlags
 		if IsMouseHoveringRect(title_bar_rect.Min, title_bar_rect.Max, false) {
-			g.LastItemData.StatusFlags = ImGuiItemStatusFlags_HoveredRect
+			guiContext.LastItemData.StatusFlags = ImGuiItemStatusFlags_HoveredRect
 		} else {
-			g.LastItemData.StatusFlags = 0
+			guiContext.LastItemData.StatusFlags = 0
 		}
-		g.LastItemData.Rect = title_bar_rect
+		guiContext.LastItemData.Rect = title_bar_rect
 	} else {
 		// Append
 		SetCurrentWindow(window)
@@ -755,7 +755,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 	// Clear 'accessed' flag last thing (After PushClipRect which will set the flag. We want the flag to stay false when the default "Debug" window is unused)
 	window.WriteAccessed = false
 	window.BeginCount++
-	g.NextWindowData.ClearFlags()
+	guiContext.NextWindowData.ClearFlags()
 
 	// Update visibility
 	if first_begin_of_the_frame {
@@ -764,7 +764,7 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 			// Mark them as collapsed so commands are skipped earlier (we can't manually collapse them because they have no title bar).
 			IM_ASSERT((flags & ImGuiWindowFlags_NoTitleBar) != 0)
 			if flags&ImGuiWindowFlags_AlwaysAutoResize == 0 && window.AutoFitFramesX <= 0 && window.AutoFitFramesY <= 0 { // FIXME: Doesn't make sense for ChildWindow??
-				if !g.LogEnabled {
+				if !guiContext.LogEnabled {
 					if window.OuterRectClipped.Min.x >= window.OuterRectClipped.Max.x || window.OuterRectClipped.Min.y >= window.OuterRectClipped.Max.y {
 						window.HiddenFramesCanSkipItems = 1
 					}

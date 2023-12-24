@@ -30,7 +30,7 @@ type (
 
 type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 
-// g Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
+// guiContext Current context pointer. Implicitly used by all Dear ImGui functions. Always assumed to be != nil.
 //   - ImGui::CreateContext() will automatically set this pointer if it is nil.
 //     Change to a different context by calling ImGui::SetCurrentContext().
 //   - Important: Dear ImGui functions are not thread-safe because of this pointer.
@@ -38,15 +38,15 @@ type ImGuiErrorLogCallback func(user_data any, fmt string, args ...any)
 //   - Change this variable to use thread local storage so each thread can refer to a different context, in your imconfig.h:
 //     struct ImGuiContext;
 //     extern thread_local ImGuiContext* MyImGuiTLS;
-//     #define g MyImGuiTLS
+//     #define guiContext MyImGuiTLS
 //     And then define MyImGuiTLS in one of your cpp files. Note that thread_local is a C++11 keyword, earlier C++ uses compiler-specific keyword.
 //   - Future development aims to make this context pointer explicit to all calls. Also read https://github.com/ocornut/imgui/issues/586
 //   - If you need a finite number of contexts, you may compile and use multiple instances of the ImGui code from a different namespace.
 //   - DLL users: read comments above.
-var g *ImGuiContext
+var guiContext *ImGuiContext
 
 func IMGUI_DEBUG_LOG(format string, args ...any) {
-	fmt.Printf(fmt.Sprintf("[%05d] ", g.FrameCount)+format, args...)
+	fmt.Printf(fmt.Sprintf("[%05d] ", guiContext.FrameCount)+format, args...)
 }
 
 func IM_ASSERT_USER_ERROR(x bool, msg string) {
@@ -591,7 +591,7 @@ type ImGuiPopupData struct {
 	Window         *ImGuiWindow // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
 	SourceWindow   *ImGuiWindow // Set on OpenPopup() copy of NavWindow at the time of opening the popup
 	OpenFrameCount int          // Set on OpenPopup()
-	OpenParentId   ImGuiID      // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
+	OpenParentId   ImGuiID      // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.guiContext. inside menu bar vs loose menu items)
 	OpenPopupPos   ImVec2       // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
 	OpenMousePos   ImVec2       // Set on OpenPopup(), copy of mouse position at the time of opening popup
 }
@@ -651,7 +651,7 @@ type ImGuiShrinkWidthItem struct {
 }
 
 type ImGuiPtrOrIndex struct {
-	Ptr   any // Either field can be set, not both. e.g. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
+	Ptr   any // Either field can be set, not both. e.guiContext. Dock node tab bars are loose while BeginTabBar() ones are in a pool.
 	Index int // Usually index in a main pool.
 }
 
@@ -771,7 +771,7 @@ type ImGuiSettingsHandler struct {
 	TypeHash   ImGuiID
 	ClearAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                           // Clear all settings data
 	ReadInitFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                           // Read: Called before reading (in registration order)
-	ReadOpenFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, name string) any          // Read: Called when entering into a new ini entry e.g. "[Window][Name]"
+	ReadOpenFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, name string) any          // Read: Called when entering into a new ini entry e.guiContext. "[Window][Name]"
 	ReadLineFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, entry any, line string)   // Read: Called for every line of text within an ini entry
 	ApplyAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler)                           // Read: Called after reading (in registration order)
 	WriteAllFn func(ctx *ImGuiContext, handler *ImGuiSettingsHandler, out_buf *ImGuiTextBuffer) // Write: Output every entries into 'out_buf'
@@ -808,18 +808,18 @@ type ImGuiStackSizes struct {
 }
 
 func (s *ImGuiStackSizes) SetToCurrentState() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	s.SizeOfIDStack = (short)(len(window.IDStack))
-	s.SizeOfColorStack = (short)(len(g.ColorStack))
-	s.SizeOfStyleVarStack = (short)(len(g.StyleVarStack))
-	s.SizeOfFontStack = (short)(len(g.FontStack))
-	s.SizeOfFocusScopeStack = (short)(len(g.FocusScopeStack))
-	s.SizeOfGroupStack = (short)(len(g.GroupStack))
-	s.SizeOfBeginPopupStack = (short)(len(g.BeginPopupStack))
+	s.SizeOfColorStack = (short)(len(guiContext.ColorStack))
+	s.SizeOfStyleVarStack = (short)(len(guiContext.StyleVarStack))
+	s.SizeOfFontStack = (short)(len(guiContext.FontStack))
+	s.SizeOfFocusScopeStack = (short)(len(guiContext.FocusScopeStack))
+	s.SizeOfGroupStack = (short)(len(guiContext.GroupStack))
+	s.SizeOfBeginPopupStack = (short)(len(guiContext.BeginPopupStack))
 }
 
 func (s *ImGuiStackSizes) CompareWithCurrentState() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	// Window stacks
 	// NOT checking: DC.ItemWidth, DC.TextWrapPos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
@@ -827,12 +827,12 @@ func (s *ImGuiStackSizes) CompareWithCurrentState() {
 
 	// Global stacks
 	// For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.
-	IM_ASSERT_USER_ERROR(s.SizeOfGroupStack == short(len(g.GroupStack)), "BeginGroup/EndGroup Mismatch!")
-	IM_ASSERT_USER_ERROR(s.SizeOfBeginPopupStack == short(len(g.BeginPopupStack)), "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!")
-	IM_ASSERT_USER_ERROR(s.SizeOfColorStack >= short(len(g.ColorStack)), "PushStyleColor/PopStyleColor Mismatch!")
-	IM_ASSERT_USER_ERROR(s.SizeOfStyleVarStack >= short(len(g.StyleVarStack)), "PushStyleVar/PopStyleVar Mismatch!")
-	IM_ASSERT_USER_ERROR(s.SizeOfFontStack >= short(len(g.FontStack)), "PushFont/PopFont Mismatch!")
-	IM_ASSERT_USER_ERROR(s.SizeOfFocusScopeStack == short(len(g.FocusScopeStack)), "PushFocusScope/PopFocusScope Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfGroupStack == short(len(guiContext.GroupStack)), "BeginGroup/EndGroup Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfBeginPopupStack == short(len(guiContext.BeginPopupStack)), "BeginPopup/EndPopup or BeginMenu/EndMenu Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfColorStack >= short(len(guiContext.ColorStack)), "PushStyleColor/PopStyleColor Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfStyleVarStack >= short(len(guiContext.StyleVarStack)), "PushStyleVar/PopStyleVar Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfFontStack >= short(len(guiContext.FontStack)), "PushFont/PopFont Mismatch!")
+	IM_ASSERT_USER_ERROR(s.SizeOfFocusScopeStack == short(len(guiContext.FocusScopeStack)), "PushFocusScope/PopFocusScope Mismatch!")
 }
 
 type ImGuiContextHookCallback func(ctx *ImGuiContext, hook *ImGuiContextHook)
@@ -874,7 +874,7 @@ type ImGuiWindowTempData struct {
 	MenuBarOffset             ImVec2           // MenuBarOffset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when MenuBarOffset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
 	MenuColumns               ImGuiMenuColumns // Simplified columns storage for menu items measurement
 	TreeDepth                 int              // Current tree depth.
-	TreeJumpToParentOnPopMask ImU32            // Store a copy of !g.NavIdIsAlive for TreeDepth 0..31.. Could be turned into a ImU64 if necessary.
+	TreeJumpToParentOnPopMask ImU32            // Store a copy of !guiContext.NavIdIsAlive for TreeDepth 0..31.. Could be turned into a ImU64 if necessary.
 	ChildWindows              []*ImGuiWindow
 	StateStorage              ImGuiStorage
 	CurrentColumns            *ImGuiOldColumns
@@ -920,7 +920,7 @@ type ImGuiWindow struct {
 	WriteAccessed                  bool // Set to true when any widget access the current window
 	Collapsed                      bool // Set when collapsing window to become only title-bar
 	WantCollapseToggle             bool
-	SkipItems                      bool    // Set when items can safely be all clipped (e.g. window not visible or collapsed)
+	SkipItems                      bool    // Set when items can safely be all clipped (e.guiContext. window not visible or collapsed)
 	Appearing                      bool    // Set during the frame where the window is appearing (or re-appearing)
 	Hidden                         bool    // Do not display (== HiddenFrames*** > 0)
 	IsFallbackWindow               bool    // Set on the "Debug##Default" window.
@@ -953,8 +953,8 @@ type ImGuiWindow struct {
 	OuterRectClipped  ImRect   // == Window->Rect() just after setup in Begin(). == window->Rect() for root window.
 	InnerRect         ImRect   // Inner rectangle (omit title bar, menu bar, scroll bar)
 	InnerClipRect     ImRect   // == InnerRect shrunk by WindowPadding*0.5f on each side, clipped within viewport or parent clip rect.
-	WorkRect          ImRect   // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1.0f on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
-	ParentWorkRect    ImRect   // Backup of WorkRect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
+	WorkRect          ImRect   // Initially covers the whole scrolling region. Reduced by containers e.guiContext columns/tables when active. Shrunk by WindowPadding*1.0f on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
+	ParentWorkRect    ImRect   // Backup of WorkRect before entering a container such as columns/tables. Used by e.guiContext. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
 	ClipRect          ImRect   // Current clipping/scissoring rectangle, evolve as we are using PushClipRect(), etc. == DrawList->clip_rect_stack.back().
 	ContentRegionRect ImRect   // FIXME: This is currently confusing/misleading. It is essentially WorkRect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
 	HitTestHoleSize   ImVec2ih // Define an optional rectangular hole where mouse will pass-through the window.
@@ -975,7 +975,7 @@ type ImGuiWindow struct {
 	RootWindowForTitleBarHighlight *ImGuiWindow // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
 	RootWindowForNav               *ImGuiWindow // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
 
-	NavLastChildNavWindow *ImGuiWindow                 // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.Windows sorted by last focused including child window.)
+	NavLastChildNavWindow *ImGuiWindow                 // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept guiContext.Windows sorted by last focused including child window.)
 	NavLastIds            [ImGuiNavLayer_COUNT]ImGuiID // Last known NavId for this window, per layer (0/1)
 	NavRectRel            [ImGuiNavLayer_COUNT]ImRect  // Reference rectangle, in window relative space
 
@@ -1078,7 +1078,7 @@ func (w *ImGuiWindow) Rect() ImRect {
 }
 
 func (w *ImGuiWindow) CalcFontSize() float {
-	var scale = g.FontBaseSize * w.FontWindowScale
+	var scale = guiContext.FontBaseSize * w.FontWindowScale
 	if w.ParentWindow != nil {
 		scale *= w.ParentWindow.FontWindowScale
 	}
@@ -1090,7 +1090,7 @@ func (w *ImGuiWindow) TitleBarHeight() float {
 	if w.Flags&ImGuiWindowFlags_NoTitleBar != 0 {
 		return 0.0
 	}
-	return w.CalcFontSize() + g.Style.FramePadding.y*2.0
+	return w.CalcFontSize() + guiContext.Style.FramePadding.y*2.0
 }
 
 func (w *ImGuiWindow) TitleBarRect() ImRect {
@@ -1099,7 +1099,7 @@ func (w *ImGuiWindow) TitleBarRect() ImRect {
 
 func (w *ImGuiWindow) MenuBarHeight() float {
 	if w.Flags&ImGuiWindowFlags_MenuBar != 0 {
-		return w.DC.MenuBarOffset.y + w.CalcFontSize() + g.Style.FramePadding.y*2.0
+		return w.DC.MenuBarOffset.y + w.CalcFontSize() + guiContext.Style.FramePadding.y*2.0
 	}
 	return 0
 }
@@ -1150,9 +1150,9 @@ type ImGuiTableColumn struct {
 	DrawChannelFrozen        ImGuiTableDrawChannelIdx // Draw channels for frozen rows (often headers)
 	DrawChannelUnfrozen      ImGuiTableDrawChannelIdx // Draw channels for unfrozen rows
 	IsEnabled                bool                     // IsUserEnabled && (Flags & ImGuiTableColumnFlags_Disabled) == 0
-	IsUserEnabled            bool                     // Is the column not marked Hidden by the user? (unrelated to being off view, e.g. clipped by scrolling).
+	IsUserEnabled            bool                     // Is the column not marked Hidden by the user? (unrelated to being off view, e.guiContext. clipped by scrolling).
 	IsUserEnabledNextFrame   bool
-	IsVisibleX               bool // Is actually in view (e.g. overlapping the host window clipping rectangle, not scrolled).
+	IsVisibleX               bool // Is actually in view (e.guiContext. overlapping the host window clipping rectangle, not scrolled).
 	IsVisibleY               bool
 	IsRequestOutput          bool // Return value for TableSetColumnIndex() / TableNextColumn(): whether we request user to output contents or not.
 	IsSkipItems              bool // Do we want item submissions to this column to be completely ignored (no layout will happen).
@@ -1194,7 +1194,7 @@ type ImGuiTable struct {
 	ID                         ImGuiID
 	Flags                      ImGuiTableFlags
 	RawData                    any                   // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
-	TempData                   *ImGuiTableTempData   // Transient data while table is active. Point within g.CurrentTableStack[]
+	TempData                   *ImGuiTableTempData   // Transient data while table is active. Point within guiContext.CurrentTableStack[]
 	Columns                    []ImGuiTableColumn    // ImGuiTableColumn Point within RawData[]
 	DisplayOrderToIndex        []ImGuiTableColumnIdx // ImGuiTableColumnIdx Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
 	RowCellData                []ImGuiTableCellData  // ImGuiTableCellData Point within RawData[]. Store cells background requests for current row.
@@ -1202,8 +1202,8 @@ type ImGuiTable struct {
 	EnabledMaskByIndex         ImU64                 // Column Index -> IsEnabled map (== not hidden by user/api) in a format adequate for iterating column without touching cold data
 	VisibleMaskByIndex         ImU64                 // Column Index -> IsVisibleX|IsVisibleY map (== not hidden by user/api && not hidden by scrolling/cliprect)
 	RequestOutputMaskByIndex   ImU64                 // Column Index -> IsVisible || AutoFit (== expect user to submit items)
-	SettingsLoadedFlags        ImGuiTableFlags       // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
-	SettingsOffset             int                   // Offset in g.SettingsTables
+	SettingsLoadedFlags        ImGuiTableFlags       // Which data were loaded from the .ini file (e.guiContext. when order is not altered we won't save order)
+	SettingsOffset             int                   // Offset in guiContext.SettingsTables
 	LastFrameActive            int
 	ColumnsCount               int // Number of columns declared in BeginTable()
 	CurrentRow                 int
@@ -1217,7 +1217,7 @@ type ImGuiTable struct {
 	RowIndentOffsetX           float
 	RowFlags                   ImGuiTableRowFlags // Current row flags, see ImGuiTableRowFlags_
 	LastRowFlags               ImGuiTableRowFlags
-	RowBgColorCounter          int      // Counter for alternating background colors (can be fast-forwarded by e.g clipper), not same as CurrentRow because header rows typically don't increase this.
+	RowBgColorCounter          int      // Counter for alternating background colors (can be fast-forwarded by e.guiContext clipper), not same as CurrentRow because header rows typically don't increase this.
 	RowBgColor                 [2]ImU32 // Background color override for current row.
 	BorderColorStrong          ImU32
 	BorderColorLight           ImU32
@@ -1306,7 +1306,7 @@ func NewImGuiTable() ImGuiTable {
 // - Accessing those requires chasing an extra pointer so for very frequently used data we leave them in the main table structure.
 // - We also leave out of this structure data that tend to be particularly useful for debugging/metrics.
 type ImGuiTableTempData struct {
-	TableIndex                   int     // Index in g.Tables.Buf[] pool
+	TableIndex                   int     // Index in guiContext.Tables.Buf[] pool
 	LastTimeActive               float32 // Last timestamp this structure was used
 	UserOuterSize                ImVec2  // outer_size.x passed to BeginTable()
 	DrawSplitter                 ImDrawListSplitter

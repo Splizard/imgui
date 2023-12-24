@@ -3,32 +3,32 @@ package imgui
 const WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER float = 2.00 // Lock scrolled window (so it doesn't pick child windows that are scrolling through) for a certain time, unless mouse moved.
 
 // Inputs Utilities: Mouse
-// - To refer to a mouse button, you may use named enums in your code e.g. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
+// - To refer to a mouse button, you may use named enums in your code e.guiContext. ImGuiMouseButton_Left, ImGuiMouseButton_Right.
 // - You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
 // - Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' and 'io.MouseDraggingThreshold')
 
 // IsMouseDown is mouse button held?
 func IsMouseDown(button ImGuiMouseButton) bool {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	return g.IO.MouseDown[button]
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
+	return guiContext.IO.MouseDown[button]
 }
 
 // IsMouseReleased did mouse button released? (went from Down to !Down)
 func IsMouseReleased(button ImGuiMouseButton) bool {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	return g.IO.MouseReleased[button]
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
+	return guiContext.IO.MouseReleased[button]
 }
 
 // IsMouseDoubleClicked did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)
 func IsMouseDoubleClicked(button ImGuiMouseButton) bool {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	return g.IO.MouseDoubleClicked[button]
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
+	return guiContext.IO.MouseDoubleClicked[button]
 }
 
 // IsAnyMouseDown is any mouse button held?
 func IsAnyMouseDown() bool {
-	for n := range g.IO.MouseDown {
-		if g.IO.MouseDown[n] {
+	for n := range guiContext.IO.MouseDown {
+		if guiContext.IO.MouseDown[n] {
 			return true
 		}
 	}
@@ -37,15 +37,15 @@ func IsAnyMouseDown() bool {
 
 // GetMousePos shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
 func GetMousePos() ImVec2 {
-	return g.IO.MousePos
+	return guiContext.IO.MousePos
 }
 
 // GetMousePosOnOpeningCurrentPopup retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to a user backing that value themselves)
 func GetMousePosOnOpeningCurrentPopup() ImVec2 {
-	if len(g.BeginPopupStack) > 0 {
-		return g.OpenPopupStack[len(g.BeginPopupStack)-1].OpenMousePos
+	if len(guiContext.BeginPopupStack) > 0 {
+		return guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)-1].OpenMousePos
 	}
-	return g.IO.MousePos
+	return guiContext.IO.MousePos
 }
 
 // GetMouseDragDelta Return the delta from the initial clicking position while the mouse button is clicked or was just released.
@@ -53,14 +53,14 @@ func GetMousePosOnOpeningCurrentPopup() ImVec2 {
 // NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
 // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
 func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*= -1.0*/) ImVec2 {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
 	if lock_threshold < 0.0 {
-		lock_threshold = g.IO.MouseDragThreshold
+		lock_threshold = guiContext.IO.MouseDragThreshold
 	}
-	if g.IO.MouseDown[button] || g.IO.MouseReleased[button] {
-		if g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold*lock_threshold {
-			if IsMousePosValid(&g.IO.MousePos) && IsMousePosValid(&g.IO.MouseClickedPos[button]) {
-				return g.IO.MousePos.Sub(g.IO.MouseClickedPos[button])
+	if guiContext.IO.MouseDown[button] || guiContext.IO.MouseReleased[button] {
+		if guiContext.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold*lock_threshold {
+			if IsMousePosValid(&guiContext.IO.MousePos) && IsMousePosValid(&guiContext.IO.MouseClickedPos[button]) {
+				return guiContext.IO.MousePos.Sub(guiContext.IO.MouseClickedPos[button])
 			}
 		}
 	}
@@ -68,51 +68,51 @@ func GetMouseDragDelta(button ImGuiMouseButton /*= 0*/, lock_threshold float /*=
 }
 
 func ResetMouseDragDelta(button ImGuiMouseButton) {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	// NB: We don't need to reset g.IO.MouseDragMaxDistanceSqr
-	g.IO.MouseClickedPos[button] = g.IO.MousePos
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
+	// NB: We don't need to reset guiContext.IO.MouseDragMaxDistanceSqr
+	guiContext.IO.MouseClickedPos[button] = guiContext.IO.MousePos
 }
 
 // GetMouseCursor get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
 func GetMouseCursor() ImGuiMouseCursor {
-	return g.MouseCursor
+	return guiContext.MouseCursor
 }
 
 // CaptureMouseFromApp attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value  {panic("not implemented")}" after the next NewFrame() call.
 func CaptureMouseFromApp(want_capture_mouse_value bool /*= true*/) {
 	if want_capture_mouse_value {
-		g.WantCaptureMouseNextFrame = 1
+		guiContext.WantCaptureMouseNextFrame = 1
 	} else {
-		g.WantCaptureMouseNextFrame = 0
+		guiContext.WantCaptureMouseNextFrame = 0
 	}
 }
 
 // IsMousePosValid We typically use ImVec2(-FLT_MAX,-FLT_MAX) to denote an invalid mouse position.
 func IsMousePosValid(mouse_pos *ImVec2) bool {
 	// The assert is only to silence a false-positive in XCode Static Analysis.
-	// Because g is not dereferenced in every code path, the static analyzer assume that it may be nil (which it doesn't for other functions).
-	IM_ASSERT(g != nil)
+	// Because guiContext is not dereferenced in every code path, the static analyzer assume that it may be nil (which it doesn't for other functions).
+	IM_ASSERT(guiContext != nil)
 	var MOUSE_INVALID float = -256000.0
 	var p ImVec2
 	if mouse_pos != nil {
 		p = *mouse_pos
 	} else {
-		p = g.IO.MousePos
+		p = guiContext.IO.MousePos
 	}
 	return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID
 }
 
 // IsMouseClicked did mouse button clicked? (went from !Down to Down)
 func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	var t = g.IO.MouseDownDuration[button]
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
+	var t = guiContext.IO.MouseDownDuration[button]
 	if t == 0.0 {
 		return true
 	}
 
-	if repeat && t > g.IO.KeyRepeatDelay {
+	if repeat && t > guiContext.IO.KeyRepeatDelay {
 		// FIXME: 2019/05/03: Our old repeat code was wrong here and led to doubling the repeat rate, which made it an ok rate for repeat on mouse hold.
-		var amount = CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate*0.50)
+		var amount = CalcTypematicRepeatAmount(t-guiContext.IO.DeltaTime, t, guiContext.IO.KeyRepeatDelay, guiContext.IO.KeyRepeatRate*0.50)
 		if amount > 0 {
 			return true
 		}
@@ -122,22 +122,22 @@ func IsMouseClicked(button ImGuiMouseButton, repeat bool) bool {
 
 // SetMouseCursor set desired cursor type
 func SetMouseCursor(cursor_type ImGuiMouseCursor) {
-	g.MouseCursor = cursor_type
+	guiContext.MouseCursor = cursor_type
 }
 
 func StartLockWheelingWindow(window *ImGuiWindow) {
-	if g.WheelingWindow == window {
+	if guiContext.WheelingWindow == window {
 		return
 	}
-	g.WheelingWindow = window
-	g.WheelingWindowRefMousePos = g.IO.MousePos
-	g.WheelingWindowTimer = WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER
+	guiContext.WheelingWindow = window
+	guiContext.WheelingWindowRefMousePos = guiContext.IO.MousePos
+	guiContext.WheelingWindowTimer = WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER
 }
 
 // IsMouseDragging is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
 func IsMouseDragging(button ImGuiMouseButton, lock_threshold float /*= -1.0*/) bool {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
-	if !g.IO.MouseDown[button] {
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
+	if !guiContext.IO.MouseDown[button] {
 		return false
 	}
 	return IsMouseDragPastThreshold(button, lock_threshold)
@@ -146,22 +146,22 @@ func IsMouseDragging(button ImGuiMouseButton, lock_threshold float /*= -1.0*/) b
 // IsMouseDragPastThreshold Return if a mouse click/drag went past the given threshold. Valid to call during the MouseReleased frame.
 // [Internal] This doesn't test if the button is pressed
 func IsMouseDragPastThreshold(button ImGuiMouseButton, lock_threshold float /*= -1.0f*/) bool {
-	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(g.IO.MouseDown)))
+	IM_ASSERT(button >= 0 && button < ImGuiMouseButton(len(guiContext.IO.MouseDown)))
 	if lock_threshold < 0.0 {
-		lock_threshold = g.IO.MouseDragThreshold
+		lock_threshold = guiContext.IO.MouseDragThreshold
 	}
-	return g.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold*lock_threshold
+	return guiContext.IO.MouseDragMaxDistanceSqr[button] >= lock_threshold*lock_threshold
 }
 
 func StartMouseMovingWindow(window *ImGuiWindow) {
 	// Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
-	// We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
+	// We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear guiContext.MovingWindow afterward.
 	// This is because we want ActiveId to be set even when the window is not permitted to move.
 	FocusWindow(window)
 	SetActiveID(window.MoveId, window)
-	g.NavDisableHighlight = true
-	g.ActiveIdClickOffset = g.IO.MouseClickedPos[0].Sub(window.RootWindow.Pos)
-	g.ActiveIdNoClearOnFocusLoss = true
+	guiContext.NavDisableHighlight = true
+	guiContext.ActiveIdClickOffset = guiContext.IO.MouseClickedPos[0].Sub(window.RootWindow.Pos)
+	guiContext.ActiveIdNoClearOnFocusLoss = true
 	SetActiveIdUsingNavAndKeys()
 
 	var can_move_window = true
@@ -169,16 +169,16 @@ func StartMouseMovingWindow(window *ImGuiWindow) {
 		can_move_window = false
 	}
 	if can_move_window {
-		g.MovingWindow = window
+		guiContext.MovingWindow = window
 	}
 }
 
 // IsMouseHoveringRect Test if mouse cursor is hovering given rectangle
 // NB- Rectangle is clipped by our current clip setting
-// NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
+// NB- Expand the rectangle to be generous on imprecise inputs systems (guiContext.Style.TouchExtraPadding)
 // is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
 func IsMouseHoveringRect(r_min, r_max ImVec2, clip bool /*= true*/) bool {
-	g := g
+	g := guiContext
 
 	// Clip
 	var rect_clipped = ImRect{r_min, r_max}
@@ -194,8 +194,8 @@ func IsMouseHoveringRect(r_min, r_max ImVec2, clip bool /*= true*/) bool {
 func IsWindowContentHoverable(window *ImGuiWindow, flags ImGuiHoveredFlags) bool {
 	// An active popup disable hovering on other windows (apart from its own children)
 	// FIXME-OPT: This could be cached/stored within the window.
-	if g.NavWindow != nil {
-		if focused_root_window := g.NavWindow.RootWindow; focused_root_window != nil {
+	if guiContext.NavWindow != nil {
+		if focused_root_window := guiContext.NavWindow.RootWindow; focused_root_window != nil {
 			if focused_root_window.WasActive && focused_root_window != window.RootWindow {
 				// For the purpose of those flags we differentiate "standard popup" from "modal popup"
 				// NB: The order of those two tests is important because Modal windows are also Popups.
@@ -212,42 +212,42 @@ func IsWindowContentHoverable(window *ImGuiWindow, flags ImGuiHoveredFlags) bool
 }
 
 func UpdateMouseMovingWindowEndFrame() {
-	if g.ActiveId != 0 || g.HoveredId != 0 {
+	if guiContext.ActiveId != 0 || guiContext.HoveredId != 0 {
 		return
 	}
 
 	// Unless we just made a window/popup appear
-	if g.NavWindow != nil && g.NavWindow.Appearing {
+	if guiContext.NavWindow != nil && guiContext.NavWindow.Appearing {
 		return
 	}
 
 	// Click on empty space to focus window and start moving
 	// (after we're done with all our widgets)
-	if g.IO.MouseClicked[0] {
+	if guiContext.IO.MouseClicked[0] {
 		// Handle the edge case of a popup being closed while clicking in its empty space.
 		// If we try to focus it, FocusWindow() > ClosePopupsOverWindow() will accidentally close any parent popups because they are not linked together any more.
 		var root_window *ImGuiWindow
-		if g.HoveredWindow != nil {
-			root_window = g.HoveredWindow.RootWindow
+		if guiContext.HoveredWindow != nil {
+			root_window = guiContext.HoveredWindow.RootWindow
 		}
 		var is_closed_popup = root_window != nil && (root_window.Flags&ImGuiWindowFlags_Popup != 0) && !IsPopupOpenID(root_window.PopupId, ImGuiPopupFlags_AnyPopupLevel)
 
 		if root_window != nil && !is_closed_popup {
-			StartMouseMovingWindow(g.HoveredWindow) //-V595
+			StartMouseMovingWindow(guiContext.HoveredWindow) //-V595
 
 			// Cancel moving if clicked outside of title bar
-			if g.IO.ConfigWindowsMoveFromTitleBarOnly && root_window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
+			if guiContext.IO.ConfigWindowsMoveFromTitleBarOnly && root_window.Flags&ImGuiWindowFlags_NoTitleBar == 0 {
 				rect := root_window.TitleBarRect()
-				if !rect.ContainsVec(g.IO.MouseClickedPos[0]) {
-					g.MovingWindow = nil
+				if !rect.ContainsVec(guiContext.IO.MouseClickedPos[0]) {
+					guiContext.MovingWindow = nil
 				}
 			}
 
 			// Cancel moving if clicked over an item which was disabled or inhibited by popups (note that we know HoveredId == 0 already)
-			if g.HoveredIdDisabled {
-				g.MovingWindow = nil
+			if guiContext.HoveredIdDisabled {
+				guiContext.MovingWindow = nil
 			}
-		} else if root_window == nil && g.NavWindow != nil && GetTopMostPopupModal() == nil {
+		} else if root_window == nil && guiContext.NavWindow != nil && GetTopMostPopupModal() == nil {
 			// Clicking on void disable focus
 			FocusWindow(nil)
 		}
@@ -256,15 +256,15 @@ func UpdateMouseMovingWindowEndFrame() {
 	// With right mouse button we close popups without changing focus based on where the mouse is aimed
 	// Instead, focus will be restored to the window under the bottom-most closed popup.
 	// (The left mouse button path calls FocusWindow on the hovered window, which will lead NewFrame.ClosePopupsOverWindow to trigger)
-	if g.IO.MouseClicked[1] {
+	if guiContext.IO.MouseClicked[1] {
 		// Find the top-most window between HoveredWindow and the top-most Modal Window.
 		// This is where we can trim the popup stack.
 		var modal = GetTopMostPopupModal()
-		var hovered_window_above_modal = g.HoveredWindow != nil && IsWindowAbove(g.HoveredWindow, modal)
+		var hovered_window_above_modal = guiContext.HoveredWindow != nil && IsWindowAbove(guiContext.HoveredWindow, modal)
 
 		win := modal
 		if hovered_window_above_modal {
-			win = g.HoveredWindow
+			win = guiContext.HoveredWindow
 		}
 
 		ClosePopupsOverWindow(win, true)
@@ -272,7 +272,7 @@ func UpdateMouseMovingWindowEndFrame() {
 }
 
 func UpdateMouseWheel() {
-	g := g
+	g := guiContext
 
 	// Reset the locked window if we move the mouse or after the timer elapses
 	if g.WheelingWindow != nil {
@@ -372,9 +372,9 @@ func UpdateMouseWheel() {
 }
 
 func UpdateMouseInputs() {
-	g := g
+	g := guiContext
 
-	// Round mouse position to avoid spreading non-rounded position (e.g. UpdateManualResize doesn't support them well)
+	// Round mouse position to avoid spreading non-rounded position (e.guiContext. UpdateManualResize doesn't support them well)
 	if IsMousePosValid(&g.IO.MousePos) {
 		g.IO.MousePos = *ImFloorVec(&g.IO.MousePos)
 		g.MouseLastValidPos = *ImFloorVec(&g.IO.MousePos)

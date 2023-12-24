@@ -27,7 +27,7 @@ func (this *ImGuiStoragePair) SetFloat(key ImGuiID, val float) {
 
 // ImGuiStorage Helper: Key->Value storage
 // Typically you don't have to worry about this since a storage is held within each Window.
-// We use it to e.g. store collapse state for a tree (Int 0/1)
+// We use it to e.guiContext. store collapse state for a tree (Int 0/1)
 // This is optimized for efficient lookup (dichotomy into a contiguous buffer) and rare insertion (typically tied to user interactions aka max once a frame)
 // You can use it as custom user storage for temporary values. Declare your own storage if, for example:
 // - You want to manipulate the open/close state of a particular sub-tree in your interface (tree node uses Int 0/1 to store their state).

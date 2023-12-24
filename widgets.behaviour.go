@@ -1,12 +1,12 @@
 package imgui
 
 func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size2 *float, min_size1 float, min_size2 float, hover_extend float, hover_visibility_delay float) bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	var item_flags_backup = g.CurrentItemFlags
-	g.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus
+	var item_flags_backup = guiContext.CurrentItemFlags
+	guiContext.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus
 	var item_add = ItemAdd(bb, id, nil, 0)
-	g.CurrentItemFlags = item_flags_backup
+	guiContext.CurrentItemFlags = item_flags_backup
 	if !item_add {
 		return false
 	}
@@ -20,13 +20,13 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 	}
 	ButtonBehavior(&bb_interact, id, &hovered, &held, ImGuiButtonFlags_FlattenChildren|ImGuiButtonFlags_AllowItemOverlap)
 	if hovered {
-		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredRect // for IsItemHovered(), because bb_interact is larger than bb
+		guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredRect // for IsItemHovered(), because bb_interact is larger than bb
 	}
-	if g.ActiveId != id {
+	if guiContext.ActiveId != id {
 		SetItemAllowOverlap()
 	}
 
-	if held || (hovered && g.HoveredIdPreviousFrame == id && g.HoveredIdTimer >= hover_visibility_delay) {
+	if held || (hovered && guiContext.HoveredIdPreviousFrame == id && guiContext.HoveredIdTimer >= hover_visibility_delay) {
 		if axis == ImGuiAxis_Y {
 			SetMouseCursor(ImGuiMouseCursor_ResizeNS)
 		} else {
@@ -36,7 +36,7 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 
 	var bb_render = *bb
 	if held {
-		var mouse_delta_2d = g.IO.MousePos.Sub(g.ActiveIdClickOffset).Sub(bb_interact.Min)
+		var mouse_delta_2d = guiContext.IO.MousePos.Sub(guiContext.ActiveIdClickOffset).Sub(bb_interact.Min)
 		var mouse_delta = mouse_delta_2d.x
 		if axis == ImGuiAxis_Y {
 			mouse_delta = mouse_delta_2d.y
@@ -74,7 +74,7 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 	var c = ImGuiCol_Separator
 	if held {
 		c = ImGuiCol_SeparatorActive
-	} else if hovered && g.HoveredIdTimer >= hover_visibility_delay {
+	} else if hovered && guiContext.HoveredIdTimer >= hover_visibility_delay {
 		c = ImGuiCol_SeparatorHovered
 	}
 
@@ -87,7 +87,7 @@ func SplitterBehavior(bb *ImRect, id ImGuiID, axis ImGuiAxis, size1 *float, size
 
 // FIXME: Move more of the code into SliderBehavior()
 func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
-	style := g.Style
+	style := guiContext.Style
 
 	var axis = ImGuiAxis_X
 	if (flags & ImGuiSliderFlags_Vertical) != 0 {
@@ -126,14 +126,14 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 
 	// Process interacting with the slider
 	var value_changed = false
-	if g.ActiveId == id {
+	if guiContext.ActiveId == id {
 		var set_new_value = false
 		var clicked_t float = 0.0
-		if g.ActiveIdSource == ImGuiInputSource_Mouse {
-			if !g.IO.MouseDown[0] {
+		if guiContext.ActiveIdSource == ImGuiInputSource_Mouse {
+			if !guiContext.IO.MouseDown[0] {
 				ClearActiveID()
 			} else {
-				var mouse_abs_pos = g.IO.MousePos.Axis(axis)
+				var mouse_abs_pos = guiContext.IO.MousePos.Axis(axis)
 				clicked_t = 0.0
 				if slider_usable_sz > 0.0 {
 					clicked_t = ImClamp((mouse_abs_pos-slider_usable_pos_min)/slider_usable_sz, 0.0, 1.0)
@@ -143,10 +143,10 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 				}
 				set_new_value = true
 			}
-		} else if g.ActiveIdSource == ImGuiInputSource_Nav {
-			if g.ActiveIdIsJustActivated {
-				g.SliderCurrentAccum = 0.0 // Reset any stored nav delta upon activation
-				g.SliderCurrentAccumDirty = false
+		} else if guiContext.ActiveIdSource == ImGuiInputSource_Nav {
+			if guiContext.ActiveIdIsJustActivated {
+				guiContext.SliderCurrentAccum = 0.0 // Reset any stored nav delta upon activation
+				guiContext.SliderCurrentAccumDirty = false
 			}
 
 			var input_delta2 = GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 0.0, 0.0)
@@ -180,19 +180,19 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 					input_delta *= 10.0
 				}
 
-				g.SliderCurrentAccum += input_delta
-				g.SliderCurrentAccumDirty = true
+				guiContext.SliderCurrentAccum += input_delta
+				guiContext.SliderCurrentAccumDirty = true
 			}
 
-			var delta = g.SliderCurrentAccum
-			if g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated {
+			var delta = guiContext.SliderCurrentAccum
+			if guiContext.NavActivatePressedId == id && !guiContext.ActiveIdIsJustActivated {
 				ClearActiveID()
-			} else if g.SliderCurrentAccumDirty {
+			} else if guiContext.SliderCurrentAccumDirty {
 				clicked_t = ScaleRatioFromValueT(*v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 
 				if (clicked_t >= 1.0 && delta > 0.0) || (clicked_t <= 0.0 && delta < 0.0) { // This is to avoid applying the saturation when already past the limits
 					set_new_value = false
-					g.SliderCurrentAccum = 0.0 // If pushing up against the limits, don't continue to accumulate
+					guiContext.SliderCurrentAccum = 0.0 // If pushing up against the limits, don't continue to accumulate
 				} else {
 					set_new_value = true
 					var old_clicked_t = clicked_t
@@ -206,13 +206,13 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 					var new_clicked_t = ScaleRatioFromValueT(v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize)
 
 					if delta > 0 {
-						g.SliderCurrentAccum -= min(new_clicked_t-old_clicked_t, delta)
+						guiContext.SliderCurrentAccum -= min(new_clicked_t-old_clicked_t, delta)
 					} else {
-						g.SliderCurrentAccum -= max(new_clicked_t-old_clicked_t, delta)
+						guiContext.SliderCurrentAccum -= max(new_clicked_t-old_clicked_t, delta)
 					}
 				}
 
-				g.SliderCurrentAccumDirty = false
+				guiContext.SliderCurrentAccumDirty = false
 			}
 		}
 
@@ -252,13 +252,13 @@ func sliderBehaviour(bb *ImRect, id ImGuiID, v *float, v_min float, v_max float,
 }
 
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
-// So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
+// So e.guiContext. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
 func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v any, p_min any, p_max any, format string, flags ImGuiSliderFlags, out_grab_bb *ImRect) bool {
 	// Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
 	IM_ASSERT_USER_ERROR((flags == 1 || (flags&ImGuiSliderFlags_InvalidMask_) == 0), "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.")
 
-	if (g.LastItemData.InFlags&ImGuiItemFlags_ReadOnly != 0) || (flags&ImGuiSliderFlags_ReadOnly != 0) {
+	if (guiContext.LastItemData.InFlags&ImGuiItemFlags_ReadOnly != 0) || (flags&ImGuiSliderFlags_ReadOnly != 0) {
 		return false
 	}
 

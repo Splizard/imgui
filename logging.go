@@ -8,26 +8,26 @@ import (
 // LogBegin Logging/Capture
 // . BeginCapture() when we design v2 api, for now stay under the radar by using the old name.
 func LogBegin(ltype ImGuiLogType, auto_open_depth int) {
-	window := g.CurrentWindow
-	IM_ASSERT(!g.LogEnabled)
-	IM_ASSERT(g.LogFile == nil)
-	IM_ASSERT(g.LogBuffer.Len() == 0)
-	g.LogEnabled = true
-	g.LogType = ltype
-	g.LogNextPrefix = ""
-	g.LogNextSuffix = ""
-	g.LogDepthRef = window.DC.TreeDepth
-	g.LogDepthToExpand = g.LogDepthToExpandDefault
+	window := guiContext.CurrentWindow
+	IM_ASSERT(!guiContext.LogEnabled)
+	IM_ASSERT(guiContext.LogFile == nil)
+	IM_ASSERT(guiContext.LogBuffer.Len() == 0)
+	guiContext.LogEnabled = true
+	guiContext.LogType = ltype
+	guiContext.LogNextPrefix = ""
+	guiContext.LogNextSuffix = ""
+	guiContext.LogDepthRef = window.DC.TreeDepth
+	guiContext.LogDepthToExpand = guiContext.LogDepthToExpandDefault
 	if auto_open_depth >= 0 {
-		g.LogDepthToExpand = auto_open_depth
+		guiContext.LogDepthToExpand = auto_open_depth
 	}
-	g.LogLinePosY = FLT_MAX
-	g.LogLineFirstItem = true
+	guiContext.LogLinePosY = FLT_MAX
+	guiContext.LogLineFirstItem = true
 }
 
 // LogToBuffer Start logging/capturing to internal buffer
 func LogToBuffer(auto_open_depth int /*= -1*/) {
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		return
 	}
 	LogBegin(ImGuiLogType_Buffer, auto_open_depth)
@@ -42,8 +42,8 @@ func LogRenderedText(ref_pos *ImVec2, text string) {
 
 // LogSetNextTextDecoration Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
 func LogSetNextTextDecoration(prefix string, suffix string) {
-	g.LogNextPrefix = prefix
-	g.LogNextSuffix = suffix
+	guiContext.LogNextPrefix = prefix
+	guiContext.LogNextSuffix = suffix
 }
 
 // Logging/Capture
@@ -51,16 +51,16 @@ func LogSetNextTextDecoration(prefix string, suffix string) {
 
 // LogToTTY start logging to tty (stdout)
 func LogToTTY(auto_open_depth int /*= -1*/) {
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		return
 	}
 	LogBegin(ImGuiLogType_TTY, auto_open_depth)
-	g.LogFile = os.Stdout
+	guiContext.LogFile = os.Stdout
 }
 
 // LogToFile Start logging/capturing text output to given file
 func LogToFile(auto_open_depth int /*= 1*/, filename string) {
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		return
 	}
 
@@ -68,7 +68,7 @@ func LogToFile(auto_open_depth int /*= 1*/, filename string) {
 	// be subject to outputting OS-incompatible carriage return if within strings the user doesn't use IM_NEWLINE.
 	// By opening the file in binary mode "ab" we have consistent output everywhere.
 	if filename == "" {
-		filename = g.IO.LogFilename
+		filename = guiContext.IO.LogFilename
 	}
 	if filename == "" || filename[0] == 0 {
 		return
@@ -80,46 +80,46 @@ func LogToFile(auto_open_depth int /*= 1*/, filename string) {
 	}
 
 	LogBegin(ImGuiLogType_File, auto_open_depth)
-	g.LogFile = f
+	guiContext.LogFile = f
 }
 
 // LogToClipboard start logging to OS clipboard
 func LogToClipboard(auto_open_depth int /*= -1*/) {
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		return
 	}
 	LogBegin(ImGuiLogType_Clipboard, auto_open_depth)
 }
 
 func LogFinish() {
-	if !g.LogEnabled {
+	if !guiContext.LogEnabled {
 		return
 	}
 
 	LogText(IM_NEWLINE)
-	switch g.LogType {
+	switch guiContext.LogType {
 	case ImGuiLogType_TTY:
-		//g.LogFile
+		//guiContext.LogFile
 	case ImGuiLogType_File:
-		ImFileClose(g.LogFile)
+		ImFileClose(guiContext.LogFile)
 	case ImGuiLogType_Buffer:
 	case ImGuiLogType_Clipboard:
-		if g.LogBuffer.Len() > 0 {
-			SetClipboardText(g.LogBuffer.String())
+		if guiContext.LogBuffer.Len() > 0 {
+			SetClipboardText(guiContext.LogBuffer.String())
 		}
 	case ImGuiLogType_None:
 		IM_ASSERT(false)
 	}
 
-	g.LogEnabled = false
-	g.LogType = ImGuiLogType_None
-	g.LogFile = nil
-	g.LogBuffer.Reset()
+	guiContext.LogEnabled = false
+	guiContext.LogType = ImGuiLogType_None
+	guiContext.LogFile = nil
+	guiContext.LogBuffer.Reset()
 } // stop logging (close file, etc.)
 
 // LogButtons helper to display buttons for logging to tty/file/clipboard
 func LogButtons() {
-	g := g
+	g := guiContext
 
 	PushString("LogButtons")
 	var log_to_tty = Button("Log To TTY")
@@ -148,13 +148,13 @@ func LogButtons() {
 
 // LogText pass text data straight to log (without being displayed)
 func LogText(format string, args ...any) {
-	if !g.LogEnabled {
+	if !guiContext.LogEnabled {
 		return
 	}
 
-	if g.LogFile != nil {
-		fmt.Fprintf(g.LogFile, format, args...)
+	if guiContext.LogFile != nil {
+		fmt.Fprintf(guiContext.LogFile, format, args...)
 	} else {
-		fmt.Fprintf(&g.LogBuffer, format, args...)
+		fmt.Fprintf(&guiContext.LogBuffer, format, args...)
 	}
 }

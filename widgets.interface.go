@@ -123,7 +123,7 @@ func DataTypeApplyOp(data_type ImGuiDataType, op int, output any, arg_1 any, arg
 	IM_ASSERT(false)
 }
 
-// DataTypeApplyOpFromText User can input math operators (e.g. +100) to edit a numerical values.
+// DataTypeApplyOpFromText User can input math operators (e.guiContext. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
 func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImGuiDataType, p_data any, format string) bool {
 	for buf[0] == ' ' || buf[0] == '\t' {
@@ -162,7 +162,7 @@ func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImG
 		if n, _ := fmt.Sscanf(initial_value_buf, format, &arg0i); op != 0 && n < 1 {
 			return false
 		}
-		// Store operand in a float so we can use fractional value for multipliers (*1.1), but constant always parsed as integer so we can fit big integers (e.g. 2000000003) past float precision
+		// Store operand in a float so we can use fractional value for multipliers (*1.1), but constant always parsed as integer so we can fit big integers (e.guiContext. 2000000003) past float precision
 		if op == '+' {
 			if n, _ := fmt.Sscanf(buf, "%d", &arg1i); n != 0 {
 				*v = arg0i + arg1i
@@ -187,7 +187,7 @@ func DataTypeApplyOpFromText(buf string, initial_value_buf string, data_type ImG
 
 		return data_backup != *v
 	} else if data_type == ImGuiDataType_Float {
-		// For floats we have to ignore format with precision (e.g. "%.2f") because sscanf doesn't take them in
+		// For floats we have to ignore format with precision (e.guiContext. "%.2f") because sscanf doesn't take them in
 		format = "%f"
 		var v = p_data.(*float)
 		var data_backup = *v

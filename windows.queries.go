@@ -15,14 +15,14 @@ func IsWindowCollapsed() bool {
 
 // Can we focus this window with CTRL+TAB (or PadMenu + PadFocusPrev/PadFocusNext)
 // Note that NoNavFocus makes the window not reachable with CTRL+TAB but it can still be focused with mouse or programmatically.
-// If you want a window to never be focused, you may use the e.g. NoInputs flag.
+// If you want a window to never be focused, you may use the e.guiContext. NoInputs flag.
 func IsWindowNavFocusable(window *ImGuiWindow) bool {
 	return window.WasActive && window == window.RootWindow && (window.Flags&ImGuiWindowFlags_NoNavFocus == 0)
 }
 
 // is current window focused? or its root/child, depending on flags. see flags for options.
 func IsWindowFocused(flags ImGuiFocusedFlags) bool {
-	g := g
+	g := guiContext
 
 	if flags&ImGuiFocusedFlags_AnyWindow != 0 {
 		return g.NavWindow != nil
@@ -44,37 +44,37 @@ func IsWindowFocused(flags ImGuiFocusedFlags) bool {
 // is current window hovered (and typically: not blocked by a popup/modal)? see flags for options. NB: If you are trying to check whether your mouse should be dispatched to imgui or to your app, you should use the 'io.WantCaptureMouse' boolean for that! Please read the FAQ!
 func IsWindowHovered(flags ImGuiHoveredFlags) bool {
 	IM_ASSERT((flags & ImGuiHoveredFlags_AllowWhenOverlapped) == 0) // Flags not supported by this function
-	if g.HoveredWindow == nil {
+	if guiContext.HoveredWindow == nil {
 		return false
 	}
 
 	if (flags & ImGuiHoveredFlags_AnyWindow) == 0 {
-		window := g.CurrentWindow
+		window := guiContext.CurrentWindow
 		switch flags & (ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows) {
 		case ImGuiHoveredFlags_RootWindow | ImGuiHoveredFlags_ChildWindows:
-			if g.HoveredWindow.RootWindow != window.RootWindow {
+			if guiContext.HoveredWindow.RootWindow != window.RootWindow {
 				return false
 			}
 		case ImGuiHoveredFlags_RootWindow:
-			if g.HoveredWindow != window.RootWindow {
+			if guiContext.HoveredWindow != window.RootWindow {
 				return false
 			}
 		case ImGuiHoveredFlags_ChildWindows:
-			if !IsWindowChildOf(g.HoveredWindow, window) {
+			if !IsWindowChildOf(guiContext.HoveredWindow, window) {
 				return false
 			}
 		default:
-			if g.HoveredWindow != window {
+			if guiContext.HoveredWindow != window {
 				return false
 			}
 		}
 	}
 
-	if !IsWindowContentHoverable(g.HoveredWindow, flags) {
+	if !IsWindowContentHoverable(guiContext.HoveredWindow, flags) {
 		return false
 	}
 	if flags&ImGuiHoveredFlags_AllowWhenBlockedByActiveItem == 0 {
-		if g.ActiveId != 0 && !g.ActiveIdAllowOverlap && g.ActiveId != g.HoveredWindow.MoveId {
+		if guiContext.ActiveId != 0 && !guiContext.ActiveIdAllowOverlap && guiContext.ActiveId != guiContext.HoveredWindow.MoveId {
 			return false
 		}
 	}
@@ -89,7 +89,7 @@ func GetWindowDrawList() *ImDrawList {
 
 // get current window position in screen space (useful if you want to do your own drawing via the DrawList API)
 func GetWindowPos() ImVec2 {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return window.Pos
 }
 
@@ -101,12 +101,12 @@ func GetWindowSize() ImVec2 {
 
 // get current window width (shortcut for GetWindowSize().x)
 func GetWindowWidth() float {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return window.Size.x
 }
 
 // get current window height (shortcut for GetWindowSize().y)
 func GetWindowHeight() float {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return window.Size.y
 }

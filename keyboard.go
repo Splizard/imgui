@@ -15,7 +15,7 @@ func PopAllowKeyboardFocus() {
 // map ImGuiKey_* values into user's key index. == io.KeyMap[key]
 func GetKeyIndex(imgui_key ImGuiKey) int {
 	IM_ASSERT(imgui_key >= 0 && imgui_key < ImGuiKey_COUNT)
-	return g.IO.KeyMap[imgui_key]
+	return guiContext.IO.KeyMap[imgui_key]
 }
 
 // Note that dear imgui doesn't know the semantic of each entry of io.KeysDown[]!
@@ -25,8 +25,8 @@ func IsKeyDown(user_key_index int) bool {
 	if user_key_index < 0 {
 		return false
 	}
-	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
-	return g.IO.KeysDown[user_key_index]
+	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(guiContext.IO.KeysDown)))
+	return guiContext.IO.KeysDown[user_key_index]
 }
 
 // was key released (went from Down to !Down)?
@@ -34,8 +34,8 @@ func IsKeyReleased(user_key_index int) bool {
 	if user_key_index < 0 {
 		return false
 	}
-	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
-	return g.IO.KeysDownDurationPrev[user_key_index] >= 0.0 && !g.IO.KeysDown[user_key_index]
+	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(guiContext.IO.KeysDown)))
+	return guiContext.IO.KeysDownDurationPrev[user_key_index] >= 0.0 && !guiContext.IO.KeysDown[user_key_index]
 }
 
 // uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate
@@ -43,17 +43,17 @@ func GetKeyPressedAmount(key_index int, repeat_delay float, repeat_rate float) i
 	if key_index < 0 {
 		return 0
 	}
-	IM_ASSERT(key_index >= 0 && key_index < int(len(g.IO.KeysDown)))
-	var t = g.IO.KeysDownDuration[key_index]
-	return CalcTypematicRepeatAmount(t-g.IO.DeltaTime, t, repeat_delay, repeat_rate)
+	IM_ASSERT(key_index >= 0 && key_index < int(len(guiContext.IO.KeysDown)))
+	var t = guiContext.IO.KeysDownDuration[key_index]
+	return CalcTypematicRepeatAmount(t-guiContext.IO.DeltaTime, t, repeat_delay, repeat_rate)
 }
 
-// attention: misleading name! manually override io.WantCaptureKeyboard flag next frame (said flag is entirely left for your application to handle). e.g. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard_value"  {panic("not implemented")} after the next NewFrame() call.
+// attention: misleading name! manually override io.WantCaptureKeyboard flag next frame (said flag is entirely left for your application to handle). e.guiContext. force capture keyboard when your widget is being hovered. This is equivalent to setting "io.WantCaptureKeyboard = want_capture_keyboard_value"  {panic("not implemented")} after the next NewFrame() call.
 func CaptureKeyboardFromApp(want_capture_keyboard_value bool /*= true*/) {
 	if want_capture_keyboard_value {
-		g.WantCaptureKeyboardNextFrame = 1
+		guiContext.WantCaptureKeyboardNextFrame = 1
 	} else {
-		g.WantCaptureKeyboardNextFrame = 0
+		guiContext.WantCaptureKeyboardNextFrame = 0
 	}
 }
 
@@ -83,16 +83,16 @@ func (io *ImGuiIO) ClearInputCharacters() {
 
 func GetMergedKeyModFlags() ImGuiKeyModFlags {
 	var key_mod_flags = ImGuiKeyModFlags_None
-	if g.IO.KeyCtrl {
+	if guiContext.IO.KeyCtrl {
 		key_mod_flags |= ImGuiKeyModFlags_Ctrl
 	}
-	if g.IO.KeyShift {
+	if guiContext.IO.KeyShift {
 		key_mod_flags |= ImGuiKeyModFlags_Shift
 	}
-	if g.IO.KeyAlt {
+	if guiContext.IO.KeyAlt {
 		key_mod_flags |= ImGuiKeyModFlags_Alt
 	}
-	if g.IO.KeySuper {
+	if guiContext.IO.KeySuper {
 		key_mod_flags |= ImGuiKeyModFlags_Super
 	}
 	return key_mod_flags
@@ -102,13 +102,13 @@ func IsKeyPressed(user_key_index int, repeat bool /*= true*/) bool {
 	if user_key_index < 0 {
 		return false
 	}
-	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(g.IO.KeysDown)))
-	var t = g.IO.KeysDownDuration[user_key_index]
+	IM_ASSERT(user_key_index >= 0 && user_key_index < int(len(guiContext.IO.KeysDown)))
+	var t = guiContext.IO.KeysDownDuration[user_key_index]
 	if t == 0.0 {
 		return true
 	}
-	if repeat && t > g.IO.KeyRepeatDelay {
-		return GetKeyPressedAmount(user_key_index, g.IO.KeyRepeatDelay, g.IO.KeyRepeatRate) > 0
+	if repeat && t > guiContext.IO.KeyRepeatDelay {
+		return GetKeyPressedAmount(user_key_index, guiContext.IO.KeyRepeatDelay, guiContext.IO.KeyRepeatRate) > 0
 	}
 	return false
 } // was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate

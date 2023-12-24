@@ -2,21 +2,21 @@ package imgui
 
 // Widgets: List Boxes
 // - This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
-// - The BeginListBox()/EndListBox() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() or any items.
+// - The BeginListBox()/EndListBox() api allows you to manage your contents and selection state however you want it, by creating e.guiContext. Selectable() or any items.
 // - The simplified/old ListBox() api are helpers over BeginListBox()/EndListBox() which are kept available for convenience purpose. This is analoguous to how Combos are created.
 // - Choose frame width:   size.x > 0.0: custom  /  size.x < 0.0 or -FLT_MIN: right-align   /  size.x = 0.0 (default): use current ItemWidth
 // - Choose frame height:  size.y > 0.0: custom  /  size.y < 0.0 or -FLT_MIN: bottom-align  /  size.y = 0.0 (default): arbitrary default height which can fit ~7 items
 
 // open a framed scrolling region
-// Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
-// Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
+// Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.guiContext. "##empty"
+// Tip: If your vertical size is calculated from an item count (e.guiContext. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.guiContext. 10.25 * item_height).
 func BeginListBox(label string, size_arg ImVec2) bool {
 	window := GetCurrentWindow()
 	if window.SkipItems {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = GetIDs(label)
 	var label_size = CalcTextSize(label, true, -1)
 
@@ -33,7 +33,7 @@ func BeginListBox(label string, size_arg ImVec2) bool {
 	}
 
 	var bb = ImRect{frame_bb.Min, frame_bb.Max.Add(ImVec2{padding, 0.0})}
-	g.NextItemData.ClearFlags()
+	guiContext.NextItemData.ClearFlags()
 
 	if !IsRectVisibleMinMax(bb.Min, bb.Max) {
 		v := bb.GetSize()
@@ -57,7 +57,7 @@ func BeginListBox(label string, size_arg ImVec2) bool {
 
 // only call EndListBox() if BeginListBox() returned true!
 func EndListBox() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	IM_ASSERT_USER_ERROR((window.Flags&ImGuiWindowFlags_ChildWindow) != 0, "Mismatched BeginListBox/EndListBox calls. Did you test the return value of BeginListBox?")
 
 	EndChildFrame()
@@ -78,7 +78,7 @@ func ListBox(label string, current_item *int, items []string, items_count int, h
 // This is merely a helper around BeginListBox(), EndListBox().
 // Considering using those directly to submit custom data or store selection differently.
 func ListBoxFunc(label string, current_item *int, items_getter func(data any, idx int, out_text *string) bool, data any, items_count int, height_in_items int /*= -1*/) bool {
-	g := g
+	g := guiContext
 
 	// Calculate size from "height_in_items"
 	if height_in_items < 0 {

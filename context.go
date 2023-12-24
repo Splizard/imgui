@@ -54,9 +54,9 @@ type ImGuiContext struct {
 	ActiveIdHasBeenEditedBefore              bool // Was the value associated to the widget Edited over the course of the Active state.
 	ActiveIdHasBeenEditedThisFrame           bool
 	ActiveIdUsingMouseWheel                  bool   // Active widget will want to read mouse wheel. Blocks scrolling the underlying window.
-	ActiveIdUsingNavDirMask                  ImU32  // Active widget will want to read those nav move requests (e.g. can activate a button and move away from it)
+	ActiveIdUsingNavDirMask                  ImU32  // Active widget will want to read those nav move requests (e.guiContext. can activate a button and move away from it)
 	ActiveIdUsingNavInputMask                ImU32  // Active widget will want to read those nav inputs.
-	ActiveIdUsingKeyInputMask                ImU64  // Active widget will want to read those key inputs. When we grow the ImGuiKey enum we'll need to either to order the enum to make useful keys come first, either redesign this into e.g. a small array.
+	ActiveIdUsingKeyInputMask                ImU64  // Active widget will want to read those key inputs. When we grow the ImGuiKey enum we'll need to either to order the enum to make useful keys come first, either redesign this into e.guiContext. a small array.
 	ActiveIdClickOffset                      ImVec2 // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
 	ActiveIdWindow                           *ImGuiWindow
 	ActiveIdSource                           ImGuiInputSource // Activating with mouse or nav (gamepad/keyboard)
@@ -69,7 +69,7 @@ type ImGuiContext struct {
 	LastActiveIdTimer                        float   // Store the last non-zero ActiveId timer since the beginning of activation, useful for animation.
 
 	// Next window/item data
-	CurrentItemFlags ImGuiItemFlags      // == g.ItemFlagsStack.back()
+	CurrentItemFlags ImGuiItemFlags      // == guiContext.ItemFlagsStack.back()
 	NextItemData     ImGuiNextItemData   // Storage for SetNextItem** functions
 	LastItemData     ImGuiLastItemData   // Storage for last submitted item (setup by ItemAdd)
 	NextWindowData   ImGuiNextWindowData // Storage for SetNextWindow** functions
@@ -91,7 +91,7 @@ type ImGuiContext struct {
 	NavWindow                  *ImGuiWindow // Focused window for navigation. Could be called 'FocusWindow'
 	NavId                      ImGuiID      // Focused item for navigation
 	NavFocusScopeId            ImGuiID      // Identify a selection scope (selection code often wants to "clear other items" when landing on an item of the selection set)
-	NavActivateId              ImGuiID      // ~~ (g.ActiveId == 0) && IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0, also set when calling ActivateItem()
+	NavActivateId              ImGuiID      // ~~ (guiContext.ActiveId == 0) && IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0, also set when calling ActivateItem()
 	NavActivateDownId          ImGuiID      // ~~ IsNavInputDown(ImGuiNavInput_Activate) ? NavId : 0
 	NavActivatePressedId       ImGuiID      // ~~ IsNavInputPressed(ImGuiNavInput_Activate) ? NavId : 0
 	NavInputId                 ImGuiID      // ~~ IsNavInputPressed(ImGuiNavInput_Input) ? NavId : 0
@@ -217,14 +217,14 @@ type ImGuiContext struct {
 	SettingsHandlers   []ImGuiSettingsHandler // List of .ini settings handlers
 	SettingsWindows    []ImGuiWindowSettings  // ImGuiWindow .ini settings entries
 	SettingsTables     []ImGuiTableSettings   // ImGuiTable .ini settings entries
-	Hooks              []ImGuiContextHook     // Hooks for extensions (e.g. test engine)
+	Hooks              []ImGuiContextHook     // Hooks for extensions (e.guiContext. test engine)
 	HookIdNext         ImGuiID                // Next available HookId
 
 	// Capture/Logging
 	LogEnabled              bool         // Currently capturing
 	LogType                 ImGuiLogType // Capture target
 	LogFile                 ImFileHandle // If != NULL log to stdout/ file
-	LogBuffer               bytes.Buffer // Accumulation buffer when log to clipboard. This is pointer so our g static constructor doesn't call heap allocators.
+	LogBuffer               bytes.Buffer // Accumulation buffer when log to clipboard. This is pointer so our guiContext static constructor doesn't call heap allocators.
 	LogNextPrefix           string
 	LogNextSuffix           string
 	LogLinePosY             float
@@ -297,7 +297,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 //     for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for details.
 func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
 	var ctx = NewImGuiContext(shared_font_atlas)
-	if g == nil {
+	if guiContext == nil {
 		SetCurrentContext(&ctx)
 	}
 	Initialize(&ctx)
@@ -307,19 +307,19 @@ func CreateContext(shared_font_atlas *ImFontAtlas) *ImGuiContext {
 // DestroyContext NULL = destroy current context
 func DestroyContext(ctx *ImGuiContext) {
 	if ctx == nil {
-		ctx = g
+		ctx = guiContext
 	}
 	Shutdown(ctx)
-	if g == ctx {
+	if guiContext == ctx {
 		SetCurrentContext(nil)
 	}
 }
 
-// GetCurrentContext Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
+// GetCurrentContext Internal state access - if you want to share Dear ImGui state between modules (e.guiContext. DLL) or allocate it yourself
 // Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end up using will point to the static data within its module
-func GetCurrentContext() *ImGuiContext { return g }
+func GetCurrentContext() *ImGuiContext { return guiContext }
 
-func SetCurrentContext(ctx *ImGuiContext) { g = ctx }
+func SetCurrentContext(ctx *ImGuiContext) { guiContext = ctx }
 
 // AddContextHook Generic context hooks
 // No specific ordering/dependency support, will see as needed
@@ -373,7 +373,7 @@ func Initialize(context *ImGuiContext) {
 
 // Shutdown Since 1.60 this is a _private_ function. You can call DestroyContext() to destroy the context created by CreateContext().
 func Shutdown(context *ImGuiContext) {
-	// The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
+	// The fonts atlas can be used prior to calling NewFrame(), so we clear it even if guiContext.Initialized is FALSE (which would happen if we never called NewFrame)
 	var g = context
 	if g.IO.Fonts != nil && g.FontAtlasOwnedByContext {
 		g.IO.Fonts.Locked = false

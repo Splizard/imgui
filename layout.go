@@ -20,7 +20,7 @@ func NewLine() {
 	if window.DC.CurrLineSize.y > 0.0 { // In the event that we are on a line with items that is smaller that FontSize high, we will preserve its height.
 		ItemSizeVec(&ImVec2{}, 0)
 	} else {
-		ItemSizeVec(&ImVec2{0.0, g.FontSize}, 0)
+		ItemSizeVec(&ImVec2{0.0, guiContext.FontSize}, 0)
 	}
 	window.DC.LayoutType = backup_layout_type
 }
@@ -49,11 +49,11 @@ func Dummy(size ImVec2) {
 // BeginGroup Lock horizontal starting position + capture group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 // Groups are currently a mishmash of functionalities which should perhaps be clarified and separated.
 func BeginGroup() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	g.GroupStack = append(g.GroupStack, ImGuiGroupData{})
+	guiContext.GroupStack = append(guiContext.GroupStack, ImGuiGroupData{})
 
-	var group_data = &g.GroupStack[len(g.GroupStack)-1]
+	var group_data = &guiContext.GroupStack[len(guiContext.GroupStack)-1]
 	group_data.WindowID = window.ID
 	group_data.BackupCursorPos = window.DC.CursorPos
 	group_data.BackupCursorMaxPos = window.DC.CursorMaxPos
@@ -61,26 +61,26 @@ func BeginGroup() {
 	group_data.BackupGroupOffset = window.DC.GroupOffset
 	group_data.BackupCurrLineSize = window.DC.CurrLineSize
 	group_data.BackupCurrLineTextBaseOffset = window.DC.CurrLineTextBaseOffset
-	group_data.BackupActiveIdIsAlive = g.ActiveIdIsAlive
-	group_data.BackupHoveredIdIsAlive = g.HoveredId != 0
-	group_data.BackupActiveIdPreviousFrameIsAlive = g.ActiveIdPreviousFrameIsAlive
+	group_data.BackupActiveIdIsAlive = guiContext.ActiveIdIsAlive
+	group_data.BackupHoveredIdIsAlive = guiContext.HoveredId != 0
+	group_data.BackupActiveIdPreviousFrameIsAlive = guiContext.ActiveIdPreviousFrameIsAlive
 	group_data.EmitItem = true
 
 	window.DC.GroupOffset.x = window.DC.CursorPos.x - window.Pos.x - window.DC.ColumnsOffset.x
 	window.DC.Indent = window.DC.GroupOffset
 	window.DC.CursorMaxPos = window.DC.CursorPos
 	window.DC.CurrLineSize = ImVec2{0.0, 0.0}
-	if g.LogEnabled {
-		g.LogLinePosY = -FLT_MAX // To enforce a carriage return
+	if guiContext.LogEnabled {
+		guiContext.LogLinePosY = -FLT_MAX // To enforce a carriage return
 	}
 }
 
 // EndGroup unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
 func EndGroup() {
-	window := g.CurrentWindow
-	IM_ASSERT(len(g.GroupStack) > 0) // Mismatched BeginGroup()/EndGroup() calls
+	window := guiContext.CurrentWindow
+	IM_ASSERT(len(guiContext.GroupStack) > 0) // Mismatched BeginGroup()/EndGroup() calls
 
-	var group_data = &g.GroupStack[len(g.GroupStack)-1]
+	var group_data = &guiContext.GroupStack[len(guiContext.GroupStack)-1]
 	IM_ASSERT(group_data.WindowID == window.ID) // EndGroup() in wrong window?
 
 	var group_bb = ImRect{group_data.BackupCursorPos, ImMaxVec2(&window.DC.CursorMaxPos, &group_data.BackupCursorPos)}
@@ -91,12 +91,12 @@ func EndGroup() {
 	window.DC.GroupOffset = group_data.BackupGroupOffset
 	window.DC.CurrLineSize = group_data.BackupCurrLineSize
 	window.DC.CurrLineTextBaseOffset = group_data.BackupCurrLineTextBaseOffset
-	if g.LogEnabled {
-		g.LogLinePosY = -FLT_MAX // To enforce a carriage return
+	if guiContext.LogEnabled {
+		guiContext.LogLinePosY = -FLT_MAX // To enforce a carriage return
 	}
 
 	if !group_data.EmitItem {
-		g.GroupStack = g.GroupStack[:len(g.GroupStack)-1]
+		guiContext.GroupStack = guiContext.GroupStack[:len(guiContext.GroupStack)-1]
 		return
 	}
 
@@ -107,36 +107,36 @@ func EndGroup() {
 	ItemAdd(&group_bb, 0, nil, 0)
 
 	// If the current ActiveId was declared within the boundary of our group, we copy it to LastItemId so IsItemActive(), IsItemDeactivated() etc. will be functional on the entire group.
-	// It would be be neater if we replaced window.DC.LastItemId by e.g. 'bool LastItemIsActive', but would put a little more burden on individual widgets.
+	// It would be be neater if we replaced window.DC.LastItemId by e.guiContext. 'bool LastItemIsActive', but would put a little more burden on individual widgets.
 	// Also if you grep for LastItemId you'll notice it is only used in that context.
 	// (The two tests not the same because ActiveIdIsAlive is an ID itself, in order to be able to handle ActiveId being overwritten during the frame.)
-	var group_contains_curr_active_id = (group_data.BackupActiveIdIsAlive != g.ActiveId) && (g.ActiveIdIsAlive == g.ActiveId) && g.ActiveId != 0
-	var group_contains_prev_active_id = (group_data.BackupActiveIdPreviousFrameIsAlive == false) && (g.ActiveIdPreviousFrameIsAlive == true)
+	var group_contains_curr_active_id = (group_data.BackupActiveIdIsAlive != guiContext.ActiveId) && (guiContext.ActiveIdIsAlive == guiContext.ActiveId) && guiContext.ActiveId != 0
+	var group_contains_prev_active_id = (group_data.BackupActiveIdPreviousFrameIsAlive == false) && (guiContext.ActiveIdPreviousFrameIsAlive == true)
 	if group_contains_curr_active_id {
-		g.LastItemData.ID = g.ActiveId
+		guiContext.LastItemData.ID = guiContext.ActiveId
 	} else if group_contains_prev_active_id {
-		g.LastItemData.ID = g.ActiveIdPreviousFrame
+		guiContext.LastItemData.ID = guiContext.ActiveIdPreviousFrame
 	}
-	g.LastItemData.Rect = group_bb
+	guiContext.LastItemData.Rect = group_bb
 
 	// Forward Hovered flag
-	group_contains_curr_hovered_id := (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0
+	group_contains_curr_hovered_id := (group_data.BackupHoveredIdIsAlive == false) && guiContext.HoveredId != 0
 	if group_contains_curr_hovered_id {
-		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow
+		guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow
 	}
 
 	// Forward Edited flag
-	if group_contains_curr_active_id && g.ActiveIdHasBeenEditedThisFrame {
-		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited
+	if group_contains_curr_active_id && guiContext.ActiveIdHasBeenEditedThisFrame {
+		guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited
 	}
 
 	// Forward Deactivated flag
-	g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDeactivated
-	if group_contains_prev_active_id && g.ActiveId != g.ActiveIdPreviousFrame {
-		g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Deactivated
+	guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDeactivated
+	if group_contains_prev_active_id && guiContext.ActiveId != guiContext.ActiveIdPreviousFrame {
+		guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Deactivated
 	}
 
-	g.GroupStack = g.GroupStack[:len(g.GroupStack)-1]
+	guiContext.GroupStack = guiContext.GroupStack[:len(guiContext.GroupStack)-1]
 	//window.DrawList.AddRect(group_bb.Min, group_bb.Max, IM_COL32(255,0,255,255));   // [Debug]
 }
 
@@ -209,28 +209,28 @@ func AlignTextToFramePadding() {
 		return
 	}
 
-	window.DC.CurrLineSize.y = max(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2)
-	window.DC.CurrLineTextBaseOffset = max(window.DC.CurrLineTextBaseOffset, g.Style.FramePadding.y)
+	window.DC.CurrLineSize.y = max(window.DC.CurrLineSize.y, guiContext.FontSize+guiContext.Style.FramePadding.y*2)
+	window.DC.CurrLineTextBaseOffset = max(window.DC.CurrLineTextBaseOffset, guiContext.Style.FramePadding.y)
 }
 
 // GetTextLineHeight ~ FontSize
 func GetTextLineHeight() float {
-	return g.FontSize
+	return guiContext.FontSize
 }
 
 // GetTextLineHeightWithSpacing ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
 func GetTextLineHeightWithSpacing() float {
-	return g.FontSize + g.Style.ItemSpacing.y
+	return guiContext.FontSize + guiContext.Style.ItemSpacing.y
 }
 
 // GetFrameHeight ~ FontSize + style.FramePadding.y * 2
 func GetFrameHeight() float {
-	return g.FontSize + g.Style.FramePadding.y*2.0
+	return guiContext.FontSize + guiContext.Style.FramePadding.y*2.0
 }
 
 // GetFrameHeightWithSpacing ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
 func GetFrameHeightWithSpacing() float {
-	return g.FontSize + g.Style.FramePadding.y*2.0 + g.Style.ItemSpacing.y
+	return guiContext.FontSize + guiContext.Style.FramePadding.y*2.0 + guiContext.Style.ItemSpacing.y
 }
 
 // Parameters stacks (current window)
@@ -239,19 +239,19 @@ func GetFrameHeightWithSpacing() float {
 func PushItemWidth(item_width float) {
 	// FIXME: Remove the == 0.0f behavior?
 
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
 	if item_width == 0 {
 		window.DC.ItemWidth = window.ItemWidthDefault
 	} else {
 		window.DC.ItemWidth = item_width
 	}
-	g.NextItemData.Flags &= ^ImGuiNextItemDataFlags_HasWidth
+	guiContext.NextItemData.Flags &= ^ImGuiNextItemDataFlags_HasWidth
 }
 
 func PushMultiItemsWidths(components int, width_full float) {
-	window := g.CurrentWindow
-	style := g.Style
+	window := guiContext.CurrentWindow
+	style := guiContext.Style
 	w_item_one := max(1.0, IM_FLOOR((width_full-(style.ItemInnerSpacing.x)*float(components-1))/(float)(components)))
 	w_item_last := max(1.0, IM_FLOOR(width_full-(w_item_one+style.ItemInnerSpacing.x)*float(components-1)))
 	window.DC.ItemWidthStack = append(window.DC.ItemWidthStack, window.DC.ItemWidth) // Backup current width
@@ -264,7 +264,7 @@ func PushMultiItemsWidths(components int, width_full float) {
 	} else {
 		window.DC.ItemWidth = w_item_one
 	}
-	g.NextItemData.Flags &= ^ImGuiNextItemDataFlags_HasWidth
+	guiContext.NextItemData.Flags &= ^ImGuiNextItemDataFlags_HasWidth
 }
 
 func PopItemWidth() {
@@ -276,18 +276,18 @@ func PopItemWidth() {
 // SetNextItemWidth set width of the _next_ common large "item+label" widget. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
 // Affect large frame+labels widgets only.
 func SetNextItemWidth(item_width float) {
-	g.NextItemData.Flags |= ImGuiNextItemDataFlags_HasWidth
-	g.NextItemData.Width = item_width
+	guiContext.NextItemData.Flags |= ImGuiNextItemDataFlags_HasWidth
+	guiContext.NextItemData.Width = item_width
 }
 
 // CalcItemWidth Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
 // The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()
 // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
 func CalcItemWidth() float {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var w float
-	if g.NextItemData.Flags&ImGuiNextItemDataFlags_HasWidth != 0 {
-		w = g.NextItemData.Width
+	if guiContext.NextItemData.Flags&ImGuiNextItemDataFlags_HasWidth != 0 {
+		w = guiContext.NextItemData.Width
 	} else {
 		w = window.DC.ItemWidth
 	}
@@ -307,16 +307,16 @@ func CalcItemWidth() float {
 
 // GetContentRegionAvail == GetContentRegionMax() - GetCursorPos()
 func GetContentRegionAvail() ImVec2 {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return GetContentRegionMaxAbs().Sub(window.DC.CursorPos)
 }
 
 // GetContentRegionMax current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
 // FIXME: This is in window space (not screen space!).
 func GetContentRegionMax() ImVec2 {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	mx := window.ContentRegionRect.Max.Sub(window.Pos)
-	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
+	if window.DC.CurrentColumns != nil || guiContext.CurrentTable != nil {
 		mx.x = window.WorkRect.Max.x - window.Pos.x
 	}
 	return mx
@@ -324,9 +324,9 @@ func GetContentRegionMax() ImVec2 {
 
 // GetContentRegionMaxAbs [Internal] Absolute coordinate. Saner. This is not exposed until we finishing refactoring work rect features.
 func GetContentRegionMaxAbs() ImVec2 {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	mx := window.ContentRegionRect.Max
-	if window.DC.CurrentColumns != nil || g.CurrentTable != nil {
+	if window.DC.CurrentColumns != nil || guiContext.CurrentTable != nil {
 		mx.x = window.WorkRect.Max.x
 	}
 	return mx
@@ -334,12 +334,12 @@ func GetContentRegionMaxAbs() ImVec2 {
 
 // GetWindowContentRegionMin content boundaries min for the full window (roughly (0,0)-Scroll), in window coordinates
 func GetWindowContentRegionMin() ImVec2 {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return window.ContentRegionRect.Min.Sub(window.Pos)
 }
 
 // GetWindowContentRegionMax content boundaries max for the full window (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
 func GetWindowContentRegionMax() ImVec2 {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	return window.ContentRegionRect.Max.Sub(window.Pos)
 }

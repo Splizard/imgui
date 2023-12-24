@@ -23,7 +23,7 @@ func TextColored(col *ImVec4, format string, args ...any) {
 // AVOID USING OUTSIDE OF IMGUI.CPP! NOT FOR PUBLIC CONSUMPTION. THOSE FUNCTIONS ARE A MESS. THEIR SIGNATURE AND BEHAVIOR WILL CHANGE, THEY NEED TO BE REFACTORED INTO SOMETHING DECENT.
 // NB: All position are in absolute pixels coordinates (we are never using window coordinates internally)
 func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	// Hide anything after a '##' string
 	var text_display_end string
@@ -33,19 +33,19 @@ func RenderText(pos ImVec2, text string, hide_text_after_hash bool /*= true*/) {
 	}
 
 	if text != "" {
-		window.DrawList.AddTextV(g.Font, g.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, 0, nil)
-		if g.LogEnabled {
+		window.DrawList.AddTextV(guiContext.Font, guiContext.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, 0, nil)
+		if guiContext.LogEnabled {
 			LogRenderedText(&pos, text)
 		}
 	}
 }
 
 func RenderTextWrapped(pos ImVec2, text string, wrap_width float) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
 	if len(text) > 0 {
-		window.DrawList.AddTextV(g.Font, g.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, wrap_width, nil)
-		if g.LogEnabled {
+		window.DrawList.AddTextV(guiContext.Font, guiContext.FontSize, pos, GetColorU32FromID(ImGuiCol_Text, 1), text, wrap_width, nil)
+		if guiContext.LogEnabled {
 			LogRenderedText(&pos, text)
 		}
 	}
@@ -130,7 +130,7 @@ func RenderTextEllipsis(draw_list *ImDrawList, pos_min *ImVec2, pos_max *ImVec2,
 		RenderTextClippedEx(draw_list, pos_min, &ImVec2{clip_max_x, pos_max.y}, text, &text_size, &ImVec2{0.0, 0.0}, nil)
 	}
 
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		LogRenderedText(pos_min, text)
 	}
 }
@@ -150,7 +150,7 @@ func TextEx(text string, flags ImGuiTextFlags) {
 		return
 	}
 
-	g := g
+	g := guiContext
 
 	var text_pos = ImVec2{window.DC.CursorPos.x, window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset}
 	var wrap_pos_x = window.DC.TextWrapPos
@@ -288,7 +288,7 @@ func FindRenderedTextEnd(t string) string {
 
 // CalcTextSize Text Utilities
 func CalcTextSize(text string, hide_text_after_double_hash bool /*= true*/, wrap_width float /*= -1.0*/) ImVec2 {
-	g := g
+	g := guiContext
 
 	var text_display_end string
 	if hide_text_after_double_hash {
@@ -304,7 +304,7 @@ func CalcTextSize(text string, hide_text_after_double_hash bool /*= true*/, wrap
 
 	// Round
 	// FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
-	// FIXME: Investigate using ceilf or e.g.
+	// FIXME: Investigate using ceilf or e.guiContext.
 	// - https://git.musl-libc.org/cgit/musl/tree/src/math/ceilf.c
 	// - https://embarkstudios.github.io/rust-gpu/api/src/libm/math/ceilf.rs.html
 	text_size.x = IM_FLOOR(text_size.x + 0.99999)
@@ -363,9 +363,9 @@ func RenderTextClipped(pos_min *ImVec2, pos_max *ImVec2, text string, text_size_
 		return
 	}
 
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_size_if_known, align, clip_rect)
-	if g.LogEnabled {
+	if guiContext.LogEnabled {
 		LogRenderedText(pos_min, text)
 	}
 }
@@ -398,7 +398,7 @@ func (f *ImFont) RenderText(draw_list *ImDrawList, size float, pos ImVec2, col I
 	}
 
 	// For large text, scan for the last visible line in order to avoid over-reserving in the call to PrimReserve()
-	// Note that very large horizontal line will still be affected by the issue (e.g. a one megabyte string buffer without a newline will likely crash atm)
+	// Note that very large horizontal line will still be affected by the issue (e.guiContext. a one megabyte string buffer without a newline will likely crash atm)
 	if int(len(text))-i > 10000 && !word_wrap_enabled {
 		var i_end = i
 		var y_end = y

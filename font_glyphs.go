@@ -4,7 +4,7 @@ package imgui
 // (Note: some language parsers may fail to convert the 31+1 bitfield members, in this case maybe drop store a single u32 or we can rework this)
 type ImFontGlyph struct {
 	Colored        uint  // Flag to indicate glyph is colored and should generally ignore tinting (make it usable with no shift on little-endian as this is used in loops)
-	Visible        uint  // Flag to indicate glyph has no visible pixels (e.g. space). Allow early out when rendering.
+	Visible        uint  // Flag to indicate glyph has no visible pixels (e.guiContext. space). Allow early out when rendering.
 	Codepoint      uint  // 0x0000..0x10FFFF
 	AdvanceX       float // Distance to next character (= data from font + ImFontConfig::GlyphExtraSpacing.x baked in)
 	X0, Y0, X1, Y1 float // Glyph corners
@@ -46,7 +46,7 @@ func (b ImFontGlyphRangesBuilder) AddText(text string) {
 	}
 }
 
-// AddRanges Add ranges, e.g. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
+// AddRanges Add ranges, e.guiContext. builder.AddRanges(ImFontAtlas::GetGlyphRangesDefault()) to force add all of ASCII/Latin+Ext
 func (b ImFontGlyphRangesBuilder) AddRanges(ranges []ImWchar) {
 	for ; len(ranges) > 0; ranges = ranges[2:] {
 		for c := ranges[0]; c <= ranges[1]; c++ {

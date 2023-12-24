@@ -4,7 +4,7 @@ import "fmt"
 
 // Popups, Modals, Tooltips
 func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags ImGuiWindowFlags) bool {
-	var parent_window = g.CurrentWindow
+	var parent_window = guiContext.CurrentWindow
 
 	flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ChildWindow
 	flags |= (parent_window.Flags & ImGuiWindowFlags_NoMove) // Inherit the NoMove flag
@@ -31,19 +31,19 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 
 	// Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
 	if name != "" {
-		g.TempBuffer = fmt.Sprintf("%s/%s_%08X", parent_window.Name, name, id)
+		guiContext.TempBuffer = fmt.Sprintf("%s/%s_%08X", parent_window.Name, name, id)
 	} else {
-		g.TempBuffer = fmt.Sprintf("%s/%08X", parent_window.Name, id)
+		guiContext.TempBuffer = fmt.Sprintf("%s/%08X", parent_window.Name, id)
 	}
 
-	var backup_border_size = g.Style.ChildBorderSize
+	var backup_border_size = guiContext.Style.ChildBorderSize
 	if !border {
-		g.Style.ChildBorderSize = 0.0
+		guiContext.Style.ChildBorderSize = 0.0
 	}
-	var ret = Begin(string(g.TempBuffer[:]), nil, flags)
-	g.Style.ChildBorderSize = backup_border_size
+	var ret = Begin(string(guiContext.TempBuffer[:]), nil, flags)
+	guiContext.Style.ChildBorderSize = backup_border_size
 
-	var child_window = g.CurrentWindow
+	var child_window = guiContext.CurrentWindow
 	child_window.ChildId = id
 	child_window.AutoFitChildAxises = (ImS8)(auto_fit_axises)
 
@@ -54,18 +54,18 @@ func BeginChildEx(name string, id ImGuiID, size_arg *ImVec2, border bool, flags 
 	}
 
 	// Process navigation-in immediately so NavInit can run on first frame
-	if g.NavActivateId == id && (flags&ImGuiWindowFlags_NavFlattened == 0) && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll) {
+	if guiContext.NavActivateId == id && (flags&ImGuiWindowFlags_NavFlattened == 0) && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll) {
 		FocusWindow(child_window)
 		NavInitWindow(child_window, false)
 		SetActiveID(id+1, child_window) // Steal ActiveId with another arbitrary id so that key-press won't activate child item
-		g.ActiveIdSource = ImGuiInputSource_Nav
+		guiContext.ActiveIdSource = ImGuiInputSource_Nav
 	}
 	return ret
 }
 
 // Child Windows
 //   - Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
-//   - For each independent axis of 'size': ==0.0: use remaining host window size / >0.0: fixed size / <0.0: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. ImVec2(0,400).
+//   - For each independent axis of 'size': ==0.0: use remaining host window size / >0.0: fixed size / <0.0: use remaining window size minus abs(size) / Each axis can use a different mode, e.guiContext. ImVec2(0,400).
 //   - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 //     Always call a matching EndChild() for each BeginChild() call, regardless of its return value.
 //     [Important: due to legacy reason, this is inconsistent with most other functions such as BeginMenu/EndMenu,
@@ -82,12 +82,12 @@ func BeginChildID(id ImGuiID, size ImVec2, border bool, flags ImGuiWindowFlags) 
 }
 
 func EndChild() {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	IM_ASSERT(!g.WithinEndChild)
+	IM_ASSERT(!guiContext.WithinEndChild)
 	IM_ASSERT(window.Flags&ImGuiWindowFlags_ChildWindow != 0) // Mismatched BeginChild()/EndChild() calls
 
-	g.WithinEndChild = true
+	guiContext.WithinEndChild = true
 	if window.BeginCount > 1 {
 		End()
 	} else {
@@ -100,7 +100,7 @@ func EndChild() {
 		}
 		End()
 
-		var parent_window = g.CurrentWindow
+		var parent_window = guiContext.CurrentWindow
 		var bb = ImRect{parent_window.DC.CursorPos, parent_window.DC.CursorPos.Add(sz)}
 		ItemSizeVec(&sz, 0)
 		if (window.DC.NavLayersActiveMask != 0 || window.DC.NavHasScroll) && (window.Flags&ImGuiWindowFlags_NavFlattened == 0) {
@@ -108,25 +108,25 @@ func EndChild() {
 			RenderNavHighlight(&bb, window.ChildId, 0)
 
 			// When browsing a window that has no activable items (scroll only) we keep a highlight on the child
-			if window.DC.NavLayersActiveMask == 0 && window == g.NavWindow {
-				RenderNavHighlight(&ImRect{bb.Min.Sub(ImVec2{2, 2}), bb.Max.Add(ImVec2{2, 2})}, g.NavId, ImGuiNavHighlightFlags_TypeThin)
+			if window.DC.NavLayersActiveMask == 0 && window == guiContext.NavWindow {
+				RenderNavHighlight(&ImRect{bb.Min.Sub(ImVec2{2, 2}), bb.Max.Add(ImVec2{2, 2})}, guiContext.NavId, ImGuiNavHighlightFlags_TypeThin)
 			}
 		} else {
 			// Not navigable into
 			ItemAdd(&bb, 0, nil, 0)
 		}
-		if g.HoveredWindow == window {
-			g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow
+		if guiContext.HoveredWindow == window {
+			guiContext.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow
 		}
 	}
-	g.WithinEndChild = false
-	g.LogLinePosY = -FLT_MAX // To enforce a carriage return
+	guiContext.WithinEndChild = false
+	guiContext.LogLinePosY = -FLT_MAX // To enforce a carriage return
 }
 
 // calculate coarse clipping for large list of evenly sized items. Prefer using the ImGuiListClipper higher-level helper if you can.
 // helper to create a child window / scrolling region that looks like a normal widget frame
 func BeginChildFrame(id ImGuiID, size ImVec2, flags ImGuiWindowFlags) bool {
-	style := g.Style
+	style := guiContext.Style
 	PushStyleColorVec(ImGuiCol_ChildBg, &style.Colors[ImGuiCol_FrameBg])
 	PushStyleFloat(ImGuiStyleVar_ChildRounding, style.FrameRounding)
 	PushStyleFloat(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize)

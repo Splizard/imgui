@@ -45,9 +45,9 @@ func NewImGuiListClipper() ImGuiListClipper {
 // items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
 // items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
 func (this ImGuiListClipper) Begin(items_count int, items_height float /*= -1.0f*/) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	if table := g.CurrentTable; table != nil {
+	if table := guiContext.CurrentTable; table != nil {
 		if table.IsInsideRow {
 			TableEndRow(table)
 		}
@@ -77,9 +77,9 @@ func (this ImGuiListClipper) End() {
 }
 
 func (this ImGuiListClipper) Step() bool {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table != nil && table.IsInsideRow {
 		TableEndRow(table)
 	}
@@ -172,18 +172,18 @@ func (this ImGuiListClipper) Step() bool {
 // FIXME-TABLE: This prevents us from using ImGuiListClipper _inside_ a table cell.
 // The problem we have is that without a Begin/End scheme for rows using the clipper is ambiguous.
 func GetSkipItemForListClipping() bool {
-	if g.CurrentTable != nil {
-		return g.CurrentTable.HostSkipItems
+	if guiContext.CurrentTable != nil {
+		return guiContext.CurrentTable.HostSkipItems
 	}
-	return g.CurrentWindow.SkipItems
+	return guiContext.CurrentWindow.SkipItems
 }
 
 // Helper to calculate coarse clipping of large list of evenly sized items.
 // NB: Prefer using the ImGuiListClipper higher-level helper if you can! Read comments and instructions there on how those use this sort of pattern.
 // NB: 'items_count' is only used to clamp the result, if you don't know your count you can use INT_MAX
 func CalcListClipping(items_count int, items_height float, out_items_display_start *int, out_items_display_end *int) {
-	window := g.CurrentWindow
-	if g.LogEnabled {
+	window := guiContext.CurrentWindow
+	if guiContext.LogEnabled {
 		// If logging is active, do not perform any clipping
 		*out_items_display_start = 0
 		*out_items_display_end = items_count
@@ -197,10 +197,10 @@ func CalcListClipping(items_count int, items_height float, out_items_display_sta
 
 	// We create the union of the ClipRect and the scoring rect which at worst should be 1 page away from ClipRect
 	var unclipped_rect = window.ClipRect
-	if g.NavMoveScoringItems {
-		unclipped_rect.AddRect(g.NavScoringRect)
+	if guiContext.NavMoveScoringItems {
+		unclipped_rect.AddRect(guiContext.NavScoringRect)
 	}
-	if g.NavJustMovedToId != 0 && window.NavLastIds[0] == g.NavJustMovedToId {
+	if guiContext.NavJustMovedToId != 0 && window.NavLastIds[0] == guiContext.NavJustMovedToId {
 		// Could store and use NavJustMovedToRectRe
 		unclipped_rect.AddRect(ImRect{window.Pos.Add(window.NavRectRel[0].Min), window.Pos.Add(window.NavRectRel[0].Max)})
 	}
@@ -210,10 +210,10 @@ func CalcListClipping(items_count int, items_height float, out_items_display_sta
 	var end = (int)((unclipped_rect.Max.y - pos.y) / items_height)
 
 	// When performing a navigation request, ensure we have one item extra in the direction we are moving to
-	if g.NavMoveScoringItems && g.NavMoveClipDir == ImGuiDir_Up {
+	if guiContext.NavMoveScoringItems && guiContext.NavMoveClipDir == ImGuiDir_Up {
 		start--
 	}
-	if g.NavMoveScoringItems && g.NavMoveClipDir == ImGuiDir_Down {
+	if guiContext.NavMoveScoringItems && guiContext.NavMoveClipDir == ImGuiDir_Down {
 		end++
 	}
 
@@ -227,16 +227,16 @@ func SetCursorPosYAndSetupForPrevLine(pos_y, line_height float) {
 	// Set cursor position and a few other things so that SetScrollHereY() and Columns() can work when seeking cursor.
 	// FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
 	// The clipper should probably have a 4th step to display the last item in a regular manner.
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	var off_y = pos_y - window.DC.CursorPos.y
 	window.DC.CursorPos.y = pos_y
 	window.DC.CursorMaxPos.y = max(window.DC.CursorMaxPos.y, pos_y)
-	window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
-	window.DC.PrevLineSize.y = (line_height - g.Style.ItemSpacing.y)    // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+	window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height       // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
+	window.DC.PrevLineSize.y = (line_height - guiContext.Style.ItemSpacing.y) // If we end up needing more accurate data (to e.guiContext. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
 	if columns := window.DC.CurrentColumns; columns != nil {
 		columns.LineMinY = window.DC.CursorPos.y // Setting this so that cell Y position are set properly
 	}
-	if table := g.CurrentTable; table != nil {
+	if table := guiContext.CurrentTable; table != nil {
 		if table.IsInsideRow {
 			TableEndRow(table)
 		}

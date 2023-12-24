@@ -16,12 +16,12 @@ var FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA = [ImGuiMouseCursor_COUNT][3]ImVec2{
 }
 
 // GetFont get current font
-func GetFont() *ImFont { return g.Font }
+func GetFont() *ImFont { return guiContext.Font }
 
 // GetFontSize get current font size (= height in pixels) of current font with current scale applied
-func GetFontSize() float { return g.FontSize }
+func GetFontSize() float { return guiContext.FontSize }
 
-func GetFontTexUvWhitePixel() ImVec2 { return g.DrawListSharedData.TexUvWhitePixel } // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
+func GetFontTexUvWhitePixel() ImVec2 { return guiContext.DrawListSharedData.TexUvWhitePixel } // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
 
 // PushFont Parameters stacks (shared)
 // use NULL as a shortcut to push default font
@@ -30,16 +30,16 @@ func PushFont(font *ImFont) {
 		font = GetDefaultFont()
 	}
 	SetCurrentFont(font)
-	g.FontStack = append(g.FontStack, font)
-	g.CurrentWindow.DrawList.PushTextureID(font.ContainerAtlas.TexID)
+	guiContext.FontStack = append(guiContext.FontStack, font)
+	guiContext.CurrentWindow.DrawList.PushTextureID(font.ContainerAtlas.TexID)
 }
 func PopFont() {
-	g.CurrentWindow.DrawList.PopTextureID()
-	g.FontStack = g.FontStack[:len(g.FontStack)-1]
-	if len(g.FontStack) == 0 {
+	guiContext.CurrentWindow.DrawList.PopTextureID()
+	guiContext.FontStack = guiContext.FontStack[:len(guiContext.FontStack)-1]
+	if len(guiContext.FontStack) == 0 {
 		SetCurrentFont(GetDefaultFont())
 	} else {
-		SetCurrentFont(g.FontStack[len(g.FontStack)-1])
+		SetCurrentFont(guiContext.FontStack[len(guiContext.FontStack)-1])
 	}
 }
 
@@ -56,10 +56,10 @@ func (f *ImFont) CalcWordWrapPositionA(scale float, text string, wrap_width floa
 	// List of hardcoded separators: .,;!?'"
 
 	// Skip extra blanks after a line returns (that includes not counting them in width computation)
-	// e.g. "Hello    world" -. "Hello" "World"
+	// e.guiContext. "Hello    world" -. "Hello" "World"
 
 	// Cut words that cannot possibly fit within one line.
-	// e.g.: "The tropical fish" with ~5 characters worth of width -. "The tr" "opical" "fish"
+	// e.guiContext.: "The tropical fish" with ~5 characters worth of width -. "The tr" "opical" "fish"
 
 	var line_width float = 0.0
 	var word_width float = 0.0
@@ -250,27 +250,27 @@ func SetCurrentFont(font *ImFont) {
 	IM_ASSERT(font != nil && font.IsLoaded()) // Font Atlas not created. Did you call io.Fonts.GetTexDataAsRGBA32 / GetTexDataAsAlpha8 ?
 	IM_ASSERT(font.Scale > 0.0)
 
-	g.Font = font
-	g.FontBaseSize = max(1.0, g.IO.FontGlobalScale*g.Font.FontSize*g.Font.Scale)
+	guiContext.Font = font
+	guiContext.FontBaseSize = max(1.0, guiContext.IO.FontGlobalScale*guiContext.Font.FontSize*guiContext.Font.Scale)
 
-	if g.CurrentWindow != nil {
-		g.FontSize = g.CurrentWindow.CalcFontSize()
+	if guiContext.CurrentWindow != nil {
+		guiContext.FontSize = guiContext.CurrentWindow.CalcFontSize()
 	} else {
-		g.FontSize = 0
+		guiContext.FontSize = 0
 	}
 
-	var atlas = g.Font.ContainerAtlas
-	g.DrawListSharedData.TexUvWhitePixel = atlas.TexUvWhitePixel
-	g.DrawListSharedData.TexUvLines = atlas.TexUvLines[:]
-	g.DrawListSharedData.Font = g.Font
-	g.DrawListSharedData.FontSize = g.FontSize
+	var atlas = guiContext.Font.ContainerAtlas
+	guiContext.DrawListSharedData.TexUvWhitePixel = atlas.TexUvWhitePixel
+	guiContext.DrawListSharedData.TexUvLines = atlas.TexUvLines[:]
+	guiContext.DrawListSharedData.Font = guiContext.Font
+	guiContext.DrawListSharedData.FontSize = guiContext.FontSize
 }
 
 func GetDefaultFont() *ImFont {
-	if g.IO.FontDefault != nil {
-		return g.IO.FontDefault
+	if guiContext.IO.FontDefault != nil {
+		return guiContext.IO.FontDefault
 	}
-	return g.IO.Fonts.Fonts[0]
+	return guiContext.IO.Fonts.Fonts[0]
 }
 
 func (f *ImFont) ClearOutputData() {

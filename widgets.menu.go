@@ -7,7 +7,7 @@ package imgui
 // - Not that MenuItem() keyboardshortcuts are displayed as a convenience but _not processed_ by Dear ImGui at the moment.
 
 // append to menu-bar of current window (requires ImGuiWindowFlags_MenuBar flag set on parent window).
-// FIXME: Provided a rectangle perhaps e.g. a BeginMenuBarEx() could be used anywhere..
+// FIXME: Provided a rectangle perhaps e.guiContext. a BeginMenuBarEx() could be used anywhere..
 // Currently the main responsibility of this function being to setup clip-rect + horizontal layout + menu navigation layer.
 // Ideally we also want this to be responsible for claiming space out of the main window scrolling rectangle, in which case ImGuiWindowFlags_MenuBar will become unnecessary.
 // Then later the same system could be used for multiple menu-bars, scrollbars, side-bars.
@@ -56,7 +56,7 @@ func EndMenuBar() {
 	if window.SkipItems {
 		return
 	}
-	g := g
+	g := guiContext
 
 	// Nav: When a move request within one of our child menu failed, capture the request to navigate among our siblings.
 	if NavMoveRequestButNoResultYet() && (g.NavMoveDir == ImGuiDir_Left || g.NavMoveDir == ImGuiDir_Right) && (g.NavWindow.Flags&ImGuiWindowFlags_ChildMenu) != 0 {
@@ -95,14 +95,14 @@ func EndMenuBar() {
 func BeginMainMenuBar() bool {
 	var viewport = GetMainViewport()
 
-	// For the main menu bar, which cannot be moved, we honor g.Style.DisplaySafeAreaPadding to ensure text can be visible on a TV set.
+	// For the main menu bar, which cannot be moved, we honor guiContext.Style.DisplaySafeAreaPadding to ensure text can be visible on a TV set.
 	// FIXME: This could be generalized as an opt-in way to clamp window.DC.CursorStartPos to avoid SafeArea?
 	// FIXME: Consider removing support for safe area down the line... it's messy. Nowadays consoles have support for TV calibration in OS settings.
-	g.NextWindowData.MenuBarOffsetMinVal = ImVec2{g.Style.DisplaySafeAreaPadding.x, max(g.Style.DisplaySafeAreaPadding.y-g.Style.FramePadding.y, 0.0)}
+	guiContext.NextWindowData.MenuBarOffsetMinVal = ImVec2{guiContext.Style.DisplaySafeAreaPadding.x, max(guiContext.Style.DisplaySafeAreaPadding.y-guiContext.Style.FramePadding.y, 0.0)}
 	var window_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar
 	var height = GetFrameHeight()
 	var is_open = BeginViewportSideBar("##MainMenuBar", viewport, ImGuiDir_Up, height, window_flags)
-	g.NextWindowData.MenuBarOffsetMinVal = ImVec2{}
+	guiContext.NextWindowData.MenuBarOffsetMinVal = ImVec2{}
 
 	if is_open {
 		BeginMenuBar()
@@ -119,8 +119,8 @@ func EndMainMenuBar() {
 
 	// When the user has left the menu layer (typically: closed menus through activation of an item), we restore focus to the previous window
 	// FIXME: With this strategy we won't be able to restore a nil focus.
-	if g.CurrentWindow == g.NavWindow && g.NavLayer == ImGuiNavLayer_Main && !g.NavAnyRequest {
-		FocusTopMostWindowUnderOne(g.NavWindow, nil)
+	if guiContext.CurrentWindow == guiContext.NavWindow && guiContext.NavLayer == ImGuiNavLayer_Main && !guiContext.NavAnyRequest {
+		FocusTopMostWindowUnderOne(guiContext.NavWindow, nil)
 	}
 
 	End()
@@ -136,9 +136,9 @@ func EndMenu() {
 	// Nav: When a left move request _within our child menu_ failed, close ourselves (the _parent_ menu).
 	// A menu doesn't close itself because EndMenuBar() wants the catch the last Left<>Right inputs.
 	// However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
-	window := g.CurrentWindow
-	if g.NavWindow != nil && g.NavWindow.ParentWindow == window && g.NavMoveDir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.LayoutType == ImGuiLayoutType_Vertical {
-		ClosePopupToLevel(int(len(g.BeginPopupStack)), true)
+	window := guiContext.CurrentWindow
+	if guiContext.NavWindow != nil && guiContext.NavWindow.ParentWindow == window && guiContext.NavMoveDir == ImGuiDir_Left && NavMoveRequestButNoResultYet() && window.DC.LayoutType == ImGuiLayoutType_Vertical {
+		ClosePopupToLevel(int(len(guiContext.BeginPopupStack)), true)
 		NavMoveRequestCancel()
 	}
 
@@ -237,7 +237,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 	var menu_is_open = IsPopupOpenID(id, ImGuiPopupFlags_None)
 
@@ -249,9 +249,9 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 
 	// If a menu with same the ID was already submitted, we will append to it, matching the behavior of Begin().
 	// We are relying on a O(N) search - so O(N log N) over the frame - which seems like the most efficient for the expected small amount of BeginMenu() calls per frame.
-	// If somehow this is ever becoming a problem we can switch to use e.g. ImGuiStorage mapping key to last frame used.
+	// If somehow this is ever becoming a problem we can switch to use e.guiContext. ImGuiStorage mapping key to last frame used.
 	var contains bool
-	for _, menu := range g.MenusIdSubmittedThisFrame {
+	for _, menu := range guiContext.MenusIdSubmittedThisFrame {
 		if menu == id {
 			contains = true
 			break
@@ -259,27 +259,27 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 	}
 	if contains {
 		if menu_is_open {
-			menu_is_open = BeginPopupEx(id, flags) // menu_is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
+			menu_is_open = BeginPopupEx(id, flags) // menu_is_open can be 'false' when the popup is completely clipped (e.guiContext. zero size display)
 		} else {
-			g.NextWindowData.ClearFlags() // we behave like Begin() and need to consume those values
+			guiContext.NextWindowData.ClearFlags() // we behave like Begin() and need to consume those values
 		}
 		return menu_is_open
 	}
 
 	// Tag menu as used. Next time BeginMenu() with same ID is called it will append to existing menu
-	g.MenusIdSubmittedThisFrame = append(g.MenusIdSubmittedThisFrame, id)
+	guiContext.MenusIdSubmittedThisFrame = append(guiContext.MenusIdSubmittedThisFrame, id)
 
 	var label_size = CalcTextSize(label, true, -1)
 	var pressed bool
-	var menuset_is_open = (window.Flags&ImGuiWindowFlags_Popup) == 0 && (len(g.OpenPopupStack) > len(g.BeginPopupStack) && g.OpenPopupStack[len(g.BeginPopupStack)].OpenParentId == window.IDStack[len(window.IDStack)-1])
-	var backed_nav_window = g.NavWindow
+	var menuset_is_open = (window.Flags&ImGuiWindowFlags_Popup) == 0 && (len(guiContext.OpenPopupStack) > len(guiContext.BeginPopupStack) && guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)].OpenParentId == window.IDStack[len(window.IDStack)-1])
+	var backed_nav_window = guiContext.NavWindow
 	if menuset_is_open {
-		g.NavWindow = window // Odd hack to allow hovering across menus of a same menu-set (otherwise we wouldn't be able to hover parent)
+		guiContext.NavWindow = window // Odd hack to allow hovering across menus of a same menu-set (otherwise we wouldn't be able to hover parent)
 	}
 
 	// The reference position stored in popup_pos will be used by Begin() to find a suitable position for the child menu,
 	// However the final position is going to be different! It is chosen by FindBestWindowPosForPopup().
-	// e.g. Menus tend to overlap each other horizontally to amplify relative Z-ordering.
+	// e.guiContext. Menus tend to overlap each other horizontally to amplify relative Z-ordering.
 	var popup_pos ImVec2
 	var pos = window.DC.CursorPos
 	PushString(label)
@@ -309,7 +309,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		if icon != "" {
 			icon_w = CalcTextSize(icon, true, -1).x
 		}
-		var checkmark_w = IM_FLOOR(g.FontSize * 1.20)
+		var checkmark_w = IM_FLOOR(guiContext.FontSize * 1.20)
 		var min_w = window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, 0.0, checkmark_w) // Feedback to next frame
 		var extra_w = max(0.0, GetContentRegionAvail().x-min_w)
 		var text_pos = ImVec2{window.DC.CursorPos.x + float(offsets.OffsetLabel), window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset}
@@ -318,15 +318,15 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		if icon_w > 0.0 {
 			RenderText(pos.Add(ImVec2{float(offsets.OffsetIcon), 0.0}), icon, true)
 		}
-		RenderArrow(window.DrawList, pos.Add(ImVec2{float(offsets.OffsetMark) + extra_w + g.FontSize*0.30, 0.0}), GetColorU32FromID(ImGuiCol_Text, 1), ImGuiDir_Right, 1)
+		RenderArrow(window.DrawList, pos.Add(ImVec2{float(offsets.OffsetMark) + extra_w + guiContext.FontSize*0.30, 0.0}), GetColorU32FromID(ImGuiCol_Text, 1), ImGuiDir_Right, 1)
 	}
 	if !enabled {
 		EndDisabled()
 	}
 
-	var hovered = (g.HoveredId == id) && enabled
+	var hovered = (guiContext.HoveredId == id) && enabled
 	if menuset_is_open {
-		g.NavWindow = backed_nav_window
+		guiContext.NavWindow = backed_nav_window
 	}
 
 	var want_open = false
@@ -338,13 +338,13 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		var moving_toward_other_child_menu = false
 
 		var child_menu_window *ImGuiWindow = nil
-		if len(g.BeginPopupStack) < len(g.OpenPopupStack) && g.OpenPopupStack[len(g.BeginPopupStack)].SourceWindow == window {
-			child_menu_window = g.OpenPopupStack[len(g.BeginPopupStack)].Window
+		if len(guiContext.BeginPopupStack) < len(guiContext.OpenPopupStack) && guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)].SourceWindow == window {
+			child_menu_window = guiContext.OpenPopupStack[len(guiContext.BeginPopupStack)].Window
 		}
-		if g.HoveredWindow == window && child_menu_window != nil && window.Flags&ImGuiWindowFlags_MenuBar == 0 {
+		if guiContext.HoveredWindow == window && child_menu_window != nil && window.Flags&ImGuiWindowFlags_MenuBar == 0 {
 			// FIXME-DPI: Values should be derived from a master "scale" factor.
 			var next_window_rect = child_menu_window.Rect()
-			var ta = g.IO.MousePos.Sub(g.IO.MouseDelta)
+			var ta = guiContext.IO.MousePos.Sub(guiContext.IO.MouseDelta)
 			var tb ImVec2
 			var tc ImVec2
 			if window.Pos.x < child_menu_window.Pos.x {
@@ -360,12 +360,12 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 			}
 			tb.y = ta.y + max((tb.y-extra)-ta.y, -100.0) // triangle is maximum 200 high to limit the slope and the bias toward large sub-menus // FIXME: Multiply by fb_scale?
 			tc.y = ta.y + min((tc.y+extra)-ta.y, +100.0)
-			moving_toward_other_child_menu = ImTriangleContainsPoint(&ta, &tb, &tc, &g.IO.MousePos)
+			moving_toward_other_child_menu = ImTriangleContainsPoint(&ta, &tb, &tc, &guiContext.IO.MousePos)
 			//GetForegroundDrawList().AddTriangleFilled(ta, tb, tc, moving_within_opened_triangle ? IM_COL32(0,128,0,128) : IM_COL32(128,0,0,128)); // [DEBUG]
 		}
 
 		// FIXME: Hovering a disabled BeginMenu or MenuItem won't close us
-		if menu_is_open && !hovered && g.HoveredWindow == window && g.HoveredIdPreviousFrame != 0 && g.HoveredIdPreviousFrame != id && !moving_toward_other_child_menu {
+		if menu_is_open && !hovered && guiContext.HoveredWindow == window && guiContext.HoveredIdPreviousFrame != 0 && guiContext.HoveredIdPreviousFrame != id && !moving_toward_other_child_menu {
 			want_close = true
 		}
 
@@ -375,11 +375,11 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 			want_open = true
 		}
 
-		if g.NavActivateId == id {
+		if guiContext.NavActivateId == id {
 			want_close = menu_is_open
 			want_open = !menu_is_open
 		}
-		if g.NavId == id && g.NavMoveDir == ImGuiDir_Right { // Nav-Right to open
+		if guiContext.NavId == id && guiContext.NavMoveDir == ImGuiDir_Right { // Nav-Right to open
 			want_open = true
 			NavMoveRequestCancel()
 		}
@@ -391,7 +391,7 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 			menu_is_open = false
 		} else if pressed || (hovered && menuset_is_open && !menu_is_open) { // First click to open, then hover to open others
 			want_open = true
-		} else if g.NavId == id && g.NavMoveDir == ImGuiDir_Down { // Nav-Down to open
+		} else if guiContext.NavId == id && guiContext.NavMoveDir == ImGuiDir_Down { // Nav-Down to open
 			want_open = true
 			NavMoveRequestCancel()
 		}
@@ -401,11 +401,11 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 		want_close = true
 	}
 	if want_close && IsPopupOpenID(id, ImGuiPopupFlags_None) {
-		ClosePopupToLevel(int(len(g.BeginPopupStack)), true)
+		ClosePopupToLevel(int(len(guiContext.BeginPopupStack)), true)
 	}
 	PopID()
 
-	if !menu_is_open && want_open && len(g.OpenPopupStack) > len(g.BeginPopupStack) {
+	if !menu_is_open && want_open && len(guiContext.OpenPopupStack) > len(guiContext.BeginPopupStack) {
 		// Don't recycle same menu level in the same frame, first close the other menu and yield for a frame.
 		OpenPopup(label, 0)
 		return false
@@ -418,9 +418,9 @@ func BeginMenuEx(label string, icon string, enabled bool /*= true*/) bool {
 
 	if menu_is_open {
 		SetNextWindowPos(&popup_pos, ImGuiCond_Always, ImVec2{}) // Note: this is super misleading! The value will serve as reference for FindBestWindowPosForPopup(), not actual pos.
-		menu_is_open = BeginPopupEx(id, flags)                   // menu_is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
+		menu_is_open = BeginPopupEx(id, flags)                   // menu_is_open can be 'false' when the popup is completely clipped (e.guiContext. zero size display)
 	} else {
-		g.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
+		guiContext.NextWindowData.ClearFlags() // We behave like Begin() and need to consume those values
 	}
 
 	return menu_is_open
@@ -432,7 +432,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 		return false
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var pos = window.DC.CursorPos
 	var label_size = CalcTextSize(label, true, -1)
 
@@ -467,7 +467,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 		if shortcut != "" {
 			shortcut_w = CalcTextSize(shortcut, true, -1).x
 		}
-		var checkmark_w = IM_FLOOR(g.FontSize * 1.20)
+		var checkmark_w = IM_FLOOR(guiContext.FontSize * 1.20)
 		var min_w = window.DC.MenuColumns.DeclColumns(icon_w, label_size.x, shortcut_w, checkmark_w) // Feedback for next frame
 		var stretch_w = max(0.0, GetContentRegionAvail().x-min_w)
 		pressed = Selectable("", false, flags|ImGuiSelectableFlags_SpanAvailWidth, ImVec2{min_w, 0.0})
@@ -481,7 +481,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 			PopStyleColor(1)
 		}
 		if *selected {
-			RenderCheckMark(window.DrawList, pos.Add(ImVec2{float(offsets.OffsetMark) + stretch_w + g.FontSize*0.40, g.FontSize * 0.134 * 0.5}), GetColorU32FromID(ImGuiCol_Text, 1), g.FontSize*0.866)
+			RenderCheckMark(window.DrawList, pos.Add(ImVec2{float(offsets.OffsetMark) + stretch_w + guiContext.FontSize*0.40, guiContext.FontSize * 0.134 * 0.5}), GetColorU32FromID(ImGuiCol_Text, 1), guiContext.FontSize*0.866)
 		}
 	}
 	if !enabled {

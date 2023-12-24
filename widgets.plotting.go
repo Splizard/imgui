@@ -49,7 +49,7 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, 
 		return -1
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var id = window.GetIDs(label)
 
 	var label_size = CalcTextSize(label, true, -1)
@@ -110,8 +110,8 @@ func PlotEx(plot_type ImGuiPlotType, label string, values_getter func(data any, 
 		var item_count = values_count + b
 
 		// Tooltip on hover
-		if hovered && inner_bb.ContainsVec(g.IO.MousePos) {
-			var t = ImClamp((g.IO.MousePos.x-inner_bb.Min.x)/(inner_bb.Max.x-inner_bb.Min.x), 0.0, 0.9999)
+		if hovered && inner_bb.ContainsVec(guiContext.IO.MousePos) {
+			var t = ImClamp((guiContext.IO.MousePos.x-inner_bb.Min.x)/(inner_bb.Max.x-inner_bb.Min.x), 0.0, 0.9999)
 			var v_idx = (int)(t * float(item_count))
 			IM_ASSERT(v_idx >= 0 && v_idx < values_count)
 

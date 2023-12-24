@@ -10,7 +10,7 @@ func TextUnformatted(text string) {
 
 // shortcut for PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]); Text(fmt, ...); PopStyleColor()  {panic("not implemented")}
 func TextDisabled(format string, args ...any) {
-	PushStyleColorVec(ImGuiCol_Text, &g.Style.Colors[ImGuiCol_TextDisabled])
+	PushStyleColorVec(ImGuiCol_Text, &guiContext.Style.Colors[ImGuiCol_TextDisabled])
 	if format[0] == '%' && format[1] == 's' && format[2] == 0 {
 		TextEx(fmt.Sprintf(format, args...), ImGuiTextFlags_NoWidthForLargeClippedText) // Skip formatting
 	} else {
@@ -21,7 +21,7 @@ func TextDisabled(format string, args ...any) {
 
 // shortcut for PushTextWrapPos(0.0); Text(fmt, ...); PopTextWrapPos()  {panic("not implemented")}. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().
 func TextWrapped(format string, args ...any) {
-	var need_backup = (g.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
+	var need_backup = (guiContext.CurrentWindow.DC.TextWrapPos < 0.0) // Keep existing wrap position if one is already set
 	if need_backup {
 		PushTextWrapPos(0.0)
 	}
@@ -42,7 +42,7 @@ func LabelText(label string, format string, args ...any) {
 		return
 	}
 
-	style := g.Style
+	style := guiContext.Style
 	var w = CalcItemWidth()
 
 	var value = fmt.Sprintf(format, args...)
@@ -79,7 +79,7 @@ func BulletText(format string, args ...any) {
 		return
 	}
 
-	style := g.Style
+	style := guiContext.Style
 
 	var text = fmt.Sprintf(format, args...)
 	var label_size = CalcTextSize(text, false, -1)
@@ -89,7 +89,7 @@ func BulletText(format string, args ...any) {
 		padding = (label_size.x + style.FramePadding.x*2)
 	}
 
-	var total_size = ImVec2{g.FontSize + padding, label_size.y}
+	var total_size = ImVec2{guiContext.FontSize + padding, label_size.y}
 	var pos = window.DC.CursorPos
 	pos.y += window.DC.CurrLineTextBaseOffset
 	ItemSizeVec(&total_size, 0.0)
@@ -100,8 +100,8 @@ func BulletText(format string, args ...any) {
 
 	// Render
 	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
-	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + g.FontSize*0.5, g.FontSize * 0.5}), text_col)
-	RenderText(bb.Min.Add(ImVec2{g.FontSize + style.FramePadding.x*2, 0.0}), text, false)
+	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + guiContext.FontSize*0.5, guiContext.FontSize * 0.5}), text_col)
+	RenderText(bb.Min.Add(ImVec2{guiContext.FontSize + style.FramePadding.x*2, 0.0}), text, false)
 }
 
 // draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
@@ -111,9 +111,9 @@ func Bullet() {
 		return
 	}
 
-	style := g.Style
-	var line_height = max(min(window.DC.CurrLineSize.y, g.FontSize+g.Style.FramePadding.y*2), g.FontSize)
-	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{g.FontSize, line_height})}
+	style := guiContext.Style
+	var line_height = max(min(window.DC.CurrLineSize.y, guiContext.FontSize+guiContext.Style.FramePadding.y*2), guiContext.FontSize)
+	var bb = ImRect{window.DC.CursorPos, window.DC.CursorPos.Add(ImVec2{guiContext.FontSize, line_height})}
 	ItemSizeRect(&bb, 0)
 	if !ItemAdd(&bb, 0, nil, 0) {
 		SameLine(0, style.FramePadding.x*2)
@@ -122,6 +122,6 @@ func Bullet() {
 
 	// Render and stay on same line
 	var text_col = GetColorU32FromID(ImGuiCol_Text, 1)
-	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + g.FontSize*0.5, line_height * 0.5}), text_col)
+	RenderBullet(window.DrawList, bb.Min.Add(ImVec2{style.FramePadding.x + guiContext.FontSize*0.5, line_height * 0.5}), text_col)
 	SameLine(0, style.FramePadding.x*2.0)
 }

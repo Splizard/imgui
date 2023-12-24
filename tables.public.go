@@ -36,11 +36,11 @@ func BeginTable(str_id string, columns_count int, flags ImGuiTableFlags, outer_s
 
 // EndTable only call EndTable() if BeginTable() returns true!
 func EndTable() {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Only call EndTable() if BeginTable() returns true!")
 
 	// This assert would be very useful to catch a common error... unfortunately it would probably trigger in some
-	// cases, and for consistency user may sometimes output empty tables (and still benefit from e.g. outer border)
+	// cases, and for consistency user may sometimes output empty tables (and still benefit from e.guiContext. outer border)
 	//IM_ASSERT(table.IsLayoutLocked && "Table unused: never called TableNextRow(), is that the intent?");
 
 	// If the user never got to call TableNextRow() or TableNextColumn(), we call layout ourselves to ensure all our
@@ -53,7 +53,7 @@ func EndTable() {
 	var inner_window = table.InnerWindow
 	var outer_window = table.OuterWindow
 	var temp_data = table.TempData
-	IM_ASSERT(inner_window == g.CurrentWindow)
+	IM_ASSERT(inner_window == guiContext.CurrentWindow)
 	IM_ASSERT(outer_window == inner_window || outer_window == inner_window.ParentWindow)
 
 	if table.IsInsideRow {
@@ -162,7 +162,7 @@ func EndTable() {
 	// Apply resizing/dragging at the end of the frame
 	if table.ResizedColumn != -1 && table.InstanceCurrent == table.InstanceInteracted {
 		var column = &table.Columns[table.ResizedColumn]
-		var new_x2 = (g.IO.MousePos.x - g.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS)
+		var new_x2 = (guiContext.IO.MousePos.x - guiContext.ActiveIdClickOffset.x + TABLE_RESIZE_SEPARATOR_HALF_THICKNESS)
 		var new_width = ImFloor(new_x2 - column.MinX - table.CellSpacingX1 - table.CellPaddingX*2.0)
 		table.ResizedColumnNextWidth = new_width
 	}
@@ -184,7 +184,7 @@ func EndTable() {
 
 	// Layout in outer window
 	// (FIXME: To allow auto-fit and allow desirable effect of SameLine() we dissociate 'used' vs 'ideal' size by overriding
-	// CursorPosPrevLine and CursorMaxPos manually. That should be a more general layout feature, see same problem e.g. #3414)
+	// CursorPosPrevLine and CursorMaxPos manually. That should be a more general layout feature, see same problem e.guiContext. #3414)
 	if inner_window != outer_window {
 		EndChild()
 	} else {
@@ -228,27 +228,27 @@ func EndTable() {
 	table.IsInitializing = false
 
 	// Clear or restore current table, if any
-	IM_ASSERT(g.CurrentWindow == outer_window && g.CurrentTable == table)
-	IM_ASSERT(g.CurrentTableStackIdx >= 0)
-	g.CurrentTableStackIdx--
-	if g.CurrentTableStackIdx >= 0 {
-		temp_data = &g.TablesTempDataStack[g.CurrentTableStackIdx]
+	IM_ASSERT(guiContext.CurrentWindow == outer_window && guiContext.CurrentTable == table)
+	IM_ASSERT(guiContext.CurrentTableStackIdx >= 0)
+	guiContext.CurrentTableStackIdx--
+	if guiContext.CurrentTableStackIdx >= 0 {
+		temp_data = &guiContext.TablesTempDataStack[guiContext.CurrentTableStackIdx]
 	} else {
 		temp_data = nil
 	}
 	if temp_data != nil {
-		g.CurrentTable = g.Tables[uint(temp_data.TableIndex)]
+		guiContext.CurrentTable = guiContext.Tables[uint(temp_data.TableIndex)]
 	} else {
-		g.CurrentTable = nil
+		guiContext.CurrentTable = nil
 	}
-	if g.CurrentTable != nil {
-		g.CurrentTable.TempData = temp_data
-		g.CurrentTable.DrawSplitter = &temp_data.DrawSplitter
+	if guiContext.CurrentTable != nil {
+		guiContext.CurrentTable.TempData = temp_data
+		guiContext.CurrentTable.DrawSplitter = &temp_data.DrawSplitter
 	}
 	outer_window.DC.CurrentTableIdx = -1
-	if g.CurrentTable != nil {
-		for i, table := range g.Tables {
-			if table == g.CurrentTable {
+	if guiContext.CurrentTable != nil {
+		for i, table := range guiContext.Tables {
+			if table == guiContext.CurrentTable {
 				outer_window.DC.CurrentTableIdx = int(i)
 				break
 			}
@@ -258,7 +258,7 @@ func EndTable() {
 
 // TableNextRow [Public] Starts into the first cell of a new row
 func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 
 	if !table.IsLayoutLocked {
 		TableUpdateLayout(table)
@@ -285,7 +285,7 @@ func TableNextRow(row_flags ImGuiTableRowFlags /*= 0*/, row_min_height float) {
 // append into the first cell of a new row.
 // append into the next column (or first column of next row if currently in last column). Return true when column is visible.
 func TableNextColumn() bool {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table == nil {
 		return false
 	}
@@ -309,7 +309,7 @@ func TableNextColumn() bool {
 // TableSetColumnIndex [Public] Append into a specific column
 // append into the specified column. Return true when column is visible.
 func TableSetColumnIndex(column_n int) bool {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table == nil {
 		return false
 	}
@@ -333,13 +333,13 @@ func TableSetColumnIndex(column_n int) bool {
 //     Headers are required to perform: reordering, sorting, and opening the context menu.
 //     The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
 //   - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
-//     some advanced use cases (e.g. adding custom widgets in header row).
+//     some advanced use cases (e.guiContext. adding custom widgets in header row).
 //   - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
 //
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0.0f) it is ignored
 func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_weight float /*= 0*/, user_id ImGuiID) {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
 	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call call TableSetupColumn() before first row!")
 	IM_ASSERT_USER_ERROR((flags&ImGuiTableColumnFlags_StatusMask_) == 0, "Illegal to pass StatusMask values to TableSetupColumn()")
@@ -417,7 +417,7 @@ func TableSetupColumn(label string, flags ImGuiTableColumnFlags, init_width_or_w
 // TableSetupScrollFreeze [Public]
 // lock columns/rows so they stay visible when scrolled.
 func TableSetupScrollFreeze(columns int, rows int) {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableSetupColumn() after BeginTable()!")
 	IM_ASSERT_USER_ERROR(!table.IsLayoutLocked, "Need to call TableSetupColumn() before first row!")
 	IM_ASSERT(columns >= 0 && columns < IMGUI_TABLE_MAX_COLUMNS)
@@ -466,7 +466,7 @@ func TableSetupScrollFreeze(columns int, rows int) {
 // FIXME-TABLE: TableOpenContextMenu() and TableGetHeaderRowHeight() are not public.
 // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
 func TableHeadersRow() {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableHeadersRow() after BeginTable()!")
 
 	// Layout if not already done (this is automatically done by TableNextRow, we do it here solely to facilitate stepping in debugger as it is frequent to step in TableUpdateLayout)
@@ -514,12 +514,12 @@ func TableHeadersRow() {
 // Note that because of how we cpu-clip and display sorting indicators, you _cannot_ use SameLine() after a TableHeader()
 // submit one header cell manually (rarely used)
 func TableHeader(label string) {
-	window := g.CurrentWindow
+	window := guiContext.CurrentWindow
 	if window.SkipItems {
 		return
 	}
 
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT_USER_ERROR(table != nil, "Need to call TableHeader() after BeginTable()!")
 	IM_ASSERT(table.CurrentColumn != -1)
 	var column_n = table.CurrentColumn
@@ -540,10 +540,10 @@ func TableHeader(label string) {
 	var sort_order_suf string
 	var ARROW_SCALE float = 0.65
 	if (table.Flags&ImGuiTableFlags_Sortable) != 0 && (column.Flags&ImGuiTableColumnFlags_NoSort) == 0 {
-		w_arrow = ImFloor(g.FontSize*ARROW_SCALE + g.Style.FramePadding.x)
+		w_arrow = ImFloor(guiContext.FontSize*ARROW_SCALE + guiContext.Style.FramePadding.x)
 		if column.SortOrder > 0 {
 			sort_order_suf = fmt.Sprintf("%d", column.SortOrder+1)
-			w_sort_text = g.Style.ItemInnerSpacing.x + CalcTextSize(sort_order_suf, true, -1).x
+			w_sort_text = guiContext.Style.ItemInnerSpacing.x + CalcTextSize(sort_order_suf, true, -1).x
 		}
 	}
 
@@ -555,7 +555,7 @@ func TableHeader(label string) {
 	// Keep header highlighted when context menu is open.
 	var selected = (table.IsContextPopupOpen && int(table.ContextPopupColumn) == column_n && table.InstanceInteracted == table.InstanceCurrent)
 	var id = window.GetIDs(label)
-	var bb = ImRect{ImVec2{cell_r.Min.x, cell_r.Min.y}, ImVec2{cell_r.Max.x, max(cell_r.Max.y, cell_r.Min.y+label_height+g.Style.CellPadding.y*2.0)}}
+	var bb = ImRect{ImVec2{cell_r.Min.x, cell_r.Min.y}, ImVec2{cell_r.Max.x, max(cell_r.Max.y, cell_r.Min.y+label_height+guiContext.Style.CellPadding.y*2.0)}}
 	ItemSizeVec(&ImVec2{0.0, label_height}, 0) // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
 	if !ItemAdd(&bb, id, nil, 0) {
 		return
@@ -567,7 +567,7 @@ func TableHeader(label string) {
 	// Using AllowItemOverlap mode because we cover the whole cell, and we want user to be able to submit subsequent items.
 	var hovered, held bool
 	var pressed = ButtonBehavior(&bb, id, &hovered, &held, ImGuiButtonFlags_AllowItemOverlap)
-	if g.ActiveId != id {
+	if guiContext.ActiveId != id {
 		SetItemAllowOverlap()
 	}
 	if held || hovered || selected {
@@ -591,17 +591,17 @@ func TableHeader(label string) {
 	if held {
 		table.HeldHeaderColumn = (ImGuiTableColumnIdx)(column_n)
 	}
-	window.DC.CursorPos.y -= g.Style.ItemSpacing.y * 0.5
+	window.DC.CursorPos.y -= guiContext.Style.ItemSpacing.y * 0.5
 
 	// Drag and drop to re-order columns.
 	// FIXME-TABLE: Scroll request while reordering a column and it lands out of the scrolling zone.
-	if held && (table.Flags&ImGuiTableFlags_Reorderable) != 0 && IsMouseDragging(0, -1) && !g.DragDropActive {
+	if held && (table.Flags&ImGuiTableFlags_Reorderable) != 0 && IsMouseDragging(0, -1) && !guiContext.DragDropActive {
 		// While moving a column it will jump on the other side of the mouse, so we also test for MouseDelta.x
 		table.ReorderColumn = (ImGuiTableColumnIdx)(column_n)
 		table.InstanceInteracted = table.InstanceCurrent
 
 		// We don't reorder: through the frozen<>unfrozen line, or through a column that is marked with ImGuiTableColumnFlags_NoReorder.
-		if g.IO.MouseDelta.x < 0.0 && g.IO.MousePos.x < cell_r.Min.x {
+		if guiContext.IO.MouseDelta.x < 0.0 && guiContext.IO.MousePos.x < cell_r.Min.x {
 
 			var prev_column *ImGuiTableColumn
 			if column.PrevEnabledColumn != -1 {
@@ -616,7 +616,7 @@ func TableHeader(label string) {
 				}
 			}
 		}
-		if g.IO.MouseDelta.x > 0.0 && g.IO.MousePos.x > cell_r.Max.x {
+		if guiContext.IO.MouseDelta.x > 0.0 && guiContext.IO.MousePos.x > cell_r.Max.x {
 
 			var next_column *ImGuiTableColumn
 			if column.NextEnabledColumn != -1 {
@@ -641,7 +641,7 @@ func TableHeader(label string) {
 			var y = label_pos.y
 			if column.SortOrder > 0 {
 				PushStyleColorInt(ImGuiCol_Text, GetColorU32FromID(ImGuiCol_Text, 0.70))
-				RenderText(ImVec2{x + g.Style.ItemInnerSpacing.x, y}, sort_order_suf, true)
+				RenderText(ImVec2{x + guiContext.Style.ItemInnerSpacing.x, y}, sort_order_suf, true)
 				PopStyleColor(1)
 				x += w_sort_text
 			}
@@ -657,17 +657,17 @@ func TableHeader(label string) {
 		// Handle clicking on column header to adjust Sort Order
 		if pressed && int(table.ReorderColumn) != column_n {
 			var sort_direction = TableGetColumnNextSortDirection(column)
-			TableSetColumnSortDirection(column_n, sort_direction, g.IO.KeyShift)
+			TableSetColumnSortDirection(column_n, sort_direction, guiContext.IO.KeyShift)
 		}
 	}
 
 	// Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
 	// be merged into a single draw call.
 	//window.DrawList.AddCircleFilled(ImVec2(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-	RenderTextEllipsis(window.DrawList, &label_pos, &ImVec2{ellipsis_max, label_pos.y + label_height + g.Style.FramePadding.y}, ellipsis_max, ellipsis_max, label, &label_size)
+	RenderTextEllipsis(window.DrawList, &label_pos, &ImVec2{ellipsis_max, label_pos.y + label_height + guiContext.Style.FramePadding.y}, ellipsis_max, ellipsis_max, label, &label_size)
 
 	var text_clipped = label_size.x > (ellipsis_max - label_pos.x)
-	if text_clipped && hovered && g.HoveredIdNotActiveTimer > g.TooltipSlowDelay {
+	if text_clipped && hovered && guiContext.HoveredIdNotActiveTimer > guiContext.TooltipSlowDelay {
 		SetTooltip("%.*s", (int)(len(label)), label)
 	}
 
@@ -680,13 +680,13 @@ func TableHeader(label string) {
 // TableGetSortSpecs Tables: Sorting
 //   - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
 //   - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
-//     since last call, or the first time. Make sure to set 'SpecsDirty/*= g*/,else you may
+//     since last call, or the first time. Make sure to set 'SpecsDirty/*= guiContext*/,else you may
 //     wastefully sort your data every frame!
 //   - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
 //
 // get latest sort specs for the table (NULL if not sorting).
 func TableGetSortSpecs() *ImGuiTableSortSpecs {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT(table != nil)
 
 	if (table.Flags & ImGuiTableFlags_Sortable) == 0 {
@@ -712,7 +712,7 @@ func TableGetColumnAvailSortDirection(column *ImGuiTableColumn, n int) ImGuiSort
 // - Functions args 'column_n int' treat the default value of -1 as the same as passing the current column index.
 // return number of columns (value passed to BeginTable)
 func TableGetColumnCount() int {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table != nil {
 		return int(table.ColumnsCount)
 	}
@@ -721,7 +721,7 @@ func TableGetColumnCount() int {
 
 // TableGetColumnIndex return current column index.
 func TableGetColumnIndex() int {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table == nil {
 		return 0
 	}
@@ -731,7 +731,7 @@ func TableGetColumnIndex() int {
 // TableGetRowIndex [Public] Note: for row coloring we use .RowBgColorCounter which is the same value without counting header rows
 // return current row index.
 func TableGetRowIndex() int {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table == nil {
 		return 0
 	}
@@ -740,7 +740,7 @@ func TableGetRowIndex() int {
 
 // TableGetColumnName return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
 func TableGetColumnName(column_n int /*= -1*/) string {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table == nil {
 		return ""
 	}
@@ -753,7 +753,7 @@ func TableGetColumnName(column_n int /*= -1*/) string {
 // TableGetColumnFlags We allow querying for an extra column in order to poll the IsHovered state of the right-most section
 // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	if table == nil {
 		return ImGuiTableColumnFlags_None
 	}
@@ -777,7 +777,7 @@ func TableGetColumnFlags(column_n int /*= -1*/) ImGuiTableColumnFlags {
 // - Alternative: the ImGuiTableColumnFlags_Disabled is an overriding/master disable flag which will also hide the column from context menu.
 // change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
 func TableSetColumnEnabled(column_n int, enabled bool) {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT(table != nil)
 	if table == nil {
 		return
@@ -793,7 +793,7 @@ func TableSetColumnEnabled(column_n int, enabled bool) {
 
 // TableSetBgColor change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1*/) {
-	var table = g.CurrentTable
+	var table = guiContext.CurrentTable
 	IM_ASSERT(target != ImGuiTableBgTarget_None)
 
 	if color == IM_COL32_DISABLE {
