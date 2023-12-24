@@ -699,7 +699,7 @@ func TableSetupColumnFlags(table *ImGuiTable, column *ImGuiTableColumn, flags_in
 
 	// Sizing Policy
 	if (flags & ImGuiTableColumnFlags_WidthMask_) == 0 {
-		var table_sizing_policy = (table.Flags & ImGuiTableFlags_SizingMask_)
+		var table_sizing_policy = table.Flags & ImGuiTableFlags_SizingMask_
 		if table_sizing_policy == ImGuiTableFlags_SizingFixedFit || table_sizing_policy == ImGuiTableFlags_SizingFixedSame {
 			flags |= ImGuiTableColumnFlags_WidthFixed
 		} else {
@@ -892,7 +892,7 @@ func (table *ImGuiTable) spanColumns(column_n int) {
 func TableUpdateLayout(table *ImGuiTable) {
 	IM_ASSERT(!table.IsLayoutLocked)
 
-	var table_sizing_policy = (table.Flags & ImGuiTableFlags_SizingMask_)
+	var table_sizing_policy = table.Flags & ImGuiTableFlags_SizingMask_
 	table.IsDefaultDisplayOrder = true
 	table.ColumnsEnabledCount = 0
 	table.EnabledMaskByIndex = 0x00
@@ -946,9 +946,9 @@ func TableUpdateLayout(table *ImGuiTable) {
 		}
 
 		// Auto-fit unsized columns
-		var start_auto_fit = (column.StretchWeight < 0.0)
+		var start_auto_fit = column.StretchWeight < 0.0
 		if column.Flags&ImGuiTableColumnFlags_WidthFixed != 0 {
-			start_auto_fit = (column.WidthRequest < 0.0)
+			start_auto_fit = column.WidthRequest < 0.0
 		}
 		if start_auto_fit {
 			column.AutoFitQueue = (1 << 3) - 1
@@ -1156,7 +1156,7 @@ func TableUpdateLayout(table *ImGuiTable) {
 	// [Part 6] Setup final position, offset, skip/clip states and clipping rectangles, detect hovered column
 	// Process columns in their visible orders as we are comparing the visible order and adjusting host_clip_rect while looping.
 	var visible_n int = 0
-	var offset_x_frozen = (table.FreezeColumnsCount > 0)
+	var offset_x_frozen = table.FreezeColumnsCount > 0
 
 	var x = work_rect.Min.x
 	if table.FreezeColumnsCount > 0 {
@@ -1243,17 +1243,17 @@ func TableUpdateLayout(table *ImGuiTable) {
 		// FIXME-TABLE: Y clipping is disabled because it effectively means not submitting will reduce contents width which is fed to outer_window.DC.CursorMaxPos.x,
 		// and this may be used (e.guiContext. typically by outer_window using AlwaysAutoResize or outer_window's horizontal scrollbar, but could be something else).
 		// Possible solution to preserve last known content width for clipped column. Test 'table_reported_size' fails when enabling Y clipping and window is resized small.
-		column.IsVisibleX = (column.ClipRect.Max.x > column.ClipRect.Min.x)
+		column.IsVisibleX = column.ClipRect.Max.x > column.ClipRect.Min.x
 		column.IsVisibleY = true           // (column.ClipRect.Max.y > column.ClipRect.Min.y);
 		var is_visible = column.IsVisibleX //&& column.IsVisibleY;
 		if is_visible {
-			table.VisibleMaskByIndex |= ((ImU64)(1 << column_n))
+			table.VisibleMaskByIndex |= (ImU64)(1 << column_n)
 		}
 
 		// Mark column as requesting output from user. Note that fixed + non-resizable sets are auto-fitting at all times and therefore always request output.
 		column.IsRequestOutput = is_visible || column.AutoFitQueue != 0 || column.CannotSkipItemsQueue != 0
 		if column.IsRequestOutput {
-			table.RequestOutputMaskByIndex |= ((ImU64)(1 << column_n))
+			table.RequestOutputMaskByIndex |= (ImU64)(1 << column_n)
 		}
 
 		// Mark column as SkipItems (ignoring all items/layout)
@@ -1504,10 +1504,10 @@ func TableDrawBorders(table *ImGuiTable) {
 			var column_n = table.DisplayOrderToIndex[order_n]
 			table.spanColumns(int(order_n))
 			var column = &table.Columns[column_n]
-			var is_hovered = (table.HoveredColumnBorder == column_n)
+			var is_hovered = table.HoveredColumnBorder == column_n
 			var is_resized = (table.ResizedColumn == column_n) && (table.InstanceInteracted == table.InstanceCurrent)
 			var is_resizable = (column.Flags & (ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoDirectResize_)) == 0
-			var is_frozen_separator = (int(table.FreezeColumnsCount) == order_n+1)
+			var is_frozen_separator = int(table.FreezeColumnsCount) == order_n+1
 			if column.MaxX > table.InnerClipRect.Max.x && !is_resized {
 				continue
 			}
@@ -1703,8 +1703,8 @@ func TableDrawContextMenu(table *ImGuiTable) {
 // This function is particularly tricky to understand.. take a breath.
 func TableMergeDrawChannels(table *ImGuiTable) {
 	var splitter = table.DrawSplitter
-	var has_freeze_v = (table.FreezeRowsCount > 0)
-	var has_freeze_h = (table.FreezeColumnsCount > 0)
+	var has_freeze_v = table.FreezeRowsCount > 0
+	var has_freeze_h = table.FreezeColumnsCount > 0
 	IM_ASSERT(splitter._Current == 0)
 
 	// Track which groups we are going to attempt to merge, and which channels goes into each group.
@@ -1779,7 +1779,7 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 			merge_group.ChannelsMask.SetBit(int(channel_no))
 			merge_group.ChannelsCount++
 			merge_group.ClipRect.AddRect(ImRectFromVec4(&src_channel._CmdBuffer[0].ClipRect))
-			merge_group_mask |= (1 << merge_group_n)
+			merge_group_mask |= 1 << merge_group_n
 		}
 
 		// Invalidate current draw channel
@@ -1906,7 +1906,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 			continue
 		}
 		sort_order_count++
-		sort_order_mask |= ((ImU64)(1 << column.SortOrder))
+		sort_order_mask |= (ImU64)(1 << column.SortOrder)
 		IM_ASSERT(sort_order_count < (int)(unsafe.Sizeof(sort_order_mask))*8)
 	}
 
@@ -1927,7 +1927,7 @@ func TableSortSpecsSanitize(table *ImGuiTable) {
 				}
 			}
 			IM_ASSERT(column_with_smallest_sort_order != -1)
-			fixed_mask |= ((ImU64)(1 << column_with_smallest_sort_order))
+			fixed_mask |= (ImU64)(1 << column_with_smallest_sort_order)
 			table.spanColumns(column_with_smallest_sort_order)
 			table.Columns[column_with_smallest_sort_order].SortOrder = (ImGuiTableColumnIdx)(sort_n)
 
@@ -2111,13 +2111,13 @@ func TableEndRow(table *ImGuiTable) {
 	// Row background fill
 	var bg_y1 = table.RowPosY1
 	var bg_y2 = table.RowPosY2
-	var unfreeze_rows_actual = (table.CurrentRow+1 == int(table.FreezeRowsCount))
-	var unfreeze_rows_request = (table.CurrentRow+1 == int(table.FreezeRowsRequest))
+	var unfreeze_rows_actual = table.CurrentRow+1 == int(table.FreezeRowsCount)
+	var unfreeze_rows_request = table.CurrentRow+1 == int(table.FreezeRowsRequest)
 	if table.CurrentRow == 0 {
 		table.LastFirstRowHeight = bg_y2 - bg_y1
 	}
 
-	var is_visible = (bg_y2 >= table.InnerClipRect.Min.y && bg_y1 <= table.InnerClipRect.Max.y)
+	var is_visible = bg_y2 >= table.InnerClipRect.Min.y && bg_y1 <= table.InnerClipRect.Max.y
 	if is_visible {
 		// Decide of background color for the row
 		var bg_col0 ImU32 = 0
@@ -2397,7 +2397,7 @@ func TableSetColumnWidthAutoSingle(table *ImGuiTable, column_n int) {
 	if !column.IsEnabled {
 		return
 	}
-	column.CannotSkipItemsQueue = (1 << 0)
+	column.CannotSkipItemsQueue = 1 << 0
 	table.AutoFitSingleColumn = (ImGuiTableColumnIdx)(column_n)
 }
 
@@ -2407,8 +2407,8 @@ func TableSetColumnWidthAutoAll(table *ImGuiTable) {
 		if !column.IsEnabled && (column.Flags&ImGuiTableColumnFlags_WidthStretch) == 0 { // Cannot reset weight of hidden stretch column
 			continue
 		}
-		column.CannotSkipItemsQueue = (1 << 0)
-		column.AutoFitQueue = (1 << 1)
+		column.CannotSkipItemsQueue = 1 << 0
+		column.AutoFitQueue = 1 << 1
 	}
 }
 
@@ -2539,7 +2539,7 @@ func TableLoadSettings(table *ImGuiTable) {
 	if settings.ColumnsCount == 64 {
 		expected_display_order_mask = INT_MAX
 	} else {
-		expected_display_order_mask = ((ImU64)(1<<settings.ColumnsCount) - 1)
+		expected_display_order_mask = (ImU64)(1<<settings.ColumnsCount) - 1
 	}
 	if display_order_mask != expected_display_order_mask {
 		for column_n := int(0); column_n < table.ColumnsCount; column_n++ {
