@@ -428,6 +428,19 @@ var widgetsState struct {
 	selectable_columns   [10]bool
 	selectable_grid      [4][4]bool
 
+	// Tabs
+	tab_bar_flags    ImGuiTabBarFlags
+	tabs_opened      [4]bool
+
+	// Plots
+	plots_animate     bool
+	plots_values      [90]float
+	plots_offset      int
+	plots_refresh     float64
+	plots_phase       float
+	plots_progress    float
+	plots_progress_dir float
+
 	// Disable all
 	disable_all bool
 }
@@ -457,6 +470,14 @@ func init() {
 	// Selectables
 	widgetsState.selectable_basic[1] = true
 	widgetsState.selectable_single = -1
+
+	// Tabs
+	widgetsState.tab_bar_flags = ImGuiTabBarFlags_Reorderable
+	widgetsState.tabs_opened = [4]bool{true, true, true, true}
+
+	// Plots
+	widgetsState.plots_animate = true
+	widgetsState.plots_progress_dir = 1.0
 }
 
 func ShowDemoWindowWidgets() {
@@ -1069,6 +1090,129 @@ func ShowDemoWindowWidgets() {
 			}
 			TreePop()
 		}
+		TreePop()
+	}
+
+	// Tabs
+	if TreeNode("Tabs") {
+		if TreeNode("Basic") {
+			tab_bar_flags := ImGuiTabBarFlags_None
+			if BeginTabBar("MyTabBar", tab_bar_flags) {
+				if BeginTabItem("Avocado", nil, 0) {
+					Text("This is the Avocado tab!\nblah blah blah blah blah")
+					EndTabItem()
+				}
+				if BeginTabItem("Broccoli", nil, 0) {
+					Text("This is the Broccoli tab!\nblah blah blah blah blah")
+					EndTabItem()
+				}
+				if BeginTabItem("Cucumber", nil, 0) {
+					Text("This is the Cucumber tab!\nblah blah blah blah blah")
+					EndTabItem()
+				}
+				EndTabBar()
+			}
+			Separator()
+			TreePop()
+		}
+
+		if TreeNode("Advanced & Close Button") {
+			// Expose a couple of the available flags
+			tab_bar_flags_int := int(widgetsState.tab_bar_flags)
+			CheckboxFlagsInt("ImGuiTabBarFlags_Reorderable", &tab_bar_flags_int, int(ImGuiTabBarFlags_Reorderable))
+			CheckboxFlagsInt("ImGuiTabBarFlags_AutoSelectNewTabs", &tab_bar_flags_int, int(ImGuiTabBarFlags_AutoSelectNewTabs))
+			CheckboxFlagsInt("ImGuiTabBarFlags_TabListPopupButton", &tab_bar_flags_int, int(ImGuiTabBarFlags_TabListPopupButton))
+			CheckboxFlagsInt("ImGuiTabBarFlags_NoCloseWithMiddleMouseButton", &tab_bar_flags_int, int(ImGuiTabBarFlags_NoCloseWithMiddleMouseButton))
+			widgetsState.tab_bar_flags = ImGuiTabBarFlags(tab_bar_flags_int)
+
+			// Tab Bar
+			names := []string{"Artichoke", "Beetroot", "Celery", "Daikon"}
+			for n := int(0); n < int(len(names)); n++ {
+				if n > 0 {
+					SameLine(0, 0)
+				}
+				Checkbox(names[n], &widgetsState.tabs_opened[n])
+			}
+
+			// Passing a bool* to BeginTabItem() is similar to passing one to Begin()
+			if BeginTabBar("MyTabBar2", widgetsState.tab_bar_flags) {
+				for n := int(0); n < int(len(names)); n++ {
+					if widgetsState.tabs_opened[n] && BeginTabItem(names[n], &widgetsState.tabs_opened[n], ImGuiTabItemFlags_None) {
+						Text("This is the %s tab!", names[n])
+						if n&1 != 0 {
+							Text("I am an odd tab.")
+						}
+						EndTabItem()
+					}
+				}
+				EndTabBar()
+			}
+			Separator()
+			TreePop()
+		}
+		TreePop()
+	}
+
+	// Plots Widgets
+	if TreeNode("Plots Widgets") {
+		Checkbox("Animate", &widgetsState.plots_animate)
+
+		// Plot as lines and plot as histogram
+		arr := []float{0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2}
+		PlotLines("Frame Times", arr, int(len(arr)), 0, "", FLT_MAX, FLT_MAX, ImVec2{}, 4)
+		PlotHistogram("Histogram", arr, int(len(arr)), 0, "", 0.0, 1.0, ImVec2{0, 80.0}, 4)
+
+		// Fill an array of contiguous float values to plot
+		if !widgetsState.plots_animate || widgetsState.plots_refresh == 0.0 {
+			widgetsState.plots_refresh = GetTime()
+		}
+		for widgetsState.plots_refresh < GetTime() {
+			widgetsState.plots_values[widgetsState.plots_offset] = ImCos(widgetsState.plots_phase)
+			widgetsState.plots_offset = (widgetsState.plots_offset + 1) % int(len(widgetsState.plots_values))
+			widgetsState.plots_phase += 0.10 * float(widgetsState.plots_offset)
+			widgetsState.plots_refresh += 1.0 / 60.0
+		}
+
+		// Plots can display overlay texts
+		{
+			average := float(0.0)
+			for n := int(0); n < int(len(widgetsState.plots_values)); n++ {
+				average += widgetsState.plots_values[n]
+			}
+			average /= float(len(widgetsState.plots_values))
+			overlay := fmt.Sprintf("avg %f", average)
+			PlotLines("Lines", widgetsState.plots_values[:], int(len(widgetsState.plots_values)), widgetsState.plots_offset, overlay, -1.0, 1.0, ImVec2{0, 80.0}, 4)
+		}
+
+		Separator()
+
+		// Animate a simple progress bar
+		if widgetsState.plots_animate {
+			widgetsState.plots_progress += widgetsState.plots_progress_dir * 0.4 * GetIO().DeltaTime
+			if widgetsState.plots_progress >= 1.1 {
+				widgetsState.plots_progress = 1.1
+				widgetsState.plots_progress_dir *= -1.0
+			}
+			if widgetsState.plots_progress <= -0.1 {
+				widgetsState.plots_progress = -0.1
+				widgetsState.plots_progress_dir *= -1.0
+			}
+		}
+
+		// Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width
+		ProgressBar(widgetsState.plots_progress, ImVec2{0.0, 0.0}, "")
+		SameLine(0, GetStyle().ItemInnerSpacing.x)
+		Text("Progress Bar")
+
+		progress_saturated := widgetsState.plots_progress
+		if progress_saturated < 0.0 {
+			progress_saturated = 0.0
+		}
+		if progress_saturated > 1.0 {
+			progress_saturated = 1.0
+		}
+		buf := fmt.Sprintf("%d/%d", int(progress_saturated*1753), 1753)
+		ProgressBar(widgetsState.plots_progress, ImVec2{0.0, 0.0}, buf)
 		TreePop()
 	}
 
