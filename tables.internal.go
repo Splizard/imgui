@@ -273,7 +273,10 @@ func TablePopBackgroundChannel() {
 
 	// Optimization: avoid PopClipRect() + SetCurrentChannel()
 	SetWindowClipRectBeforeSetChannel(window, &table.HostBackupInnerClipRect)
-	table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+	// Skip if draw channel is dummy channel (255 represents -1 when cast to uint8)
+	if column.DrawChannelCurrent != ImGuiTableDrawChannelIdx(255) {
+		table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+	}
 }
 
 // Tables: Internals
@@ -1749,6 +1752,11 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 				channel_no = column.DrawChannelFrozen
 			}
 
+			// Skip dummy channel (255 represents -1 when cast to uint8)
+			if channel_no == ImGuiTableDrawChannelIdx(255) {
+				continue
+			}
+
 			// Don't attempt to merge if there are multiple draw calls within the column
 			var src_channel = &splitter._Channels[channel_no]
 			if len(src_channel._CmdBuffer) > 0 && src_channel._CmdBuffer[len(src_channel._CmdBuffer)-1].ElemCount == 0 {
@@ -2249,7 +2257,10 @@ func TableEndRow(table *ImGuiTable) {
 
 		// Update cliprect ahead of TableBeginCell() so clipper can access to new ClipRect.Min.y
 		SetWindowClipRectBeforeSetChannel(window, &table.Columns[0].ClipRect)
-		table.DrawSplitter.SetCurrentChannel(window.DrawList, int(table.Columns[0].DrawChannelCurrent))
+		// Skip if draw channel is dummy channel (255 represents -1 when cast to uint8)
+		if table.Columns[0].DrawChannelCurrent != ImGuiTableDrawChannelIdx(255) {
+			table.DrawSplitter.SetCurrentChannel(window.DrawList, int(table.Columns[0].DrawChannelCurrent))
+		}
 	}
 
 	if table.RowFlags&ImGuiTableRowFlags_Headers == 0 {
