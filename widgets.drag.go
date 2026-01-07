@@ -541,9 +541,31 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 	return result
 }
 
+// ImParseFormatFindStart finds the start of the format specifier in a format string.
+// For example, "ratio = %.3f" returns "%.3f"
+func ImParseFormatFindStart(format string) string {
+	for i := 0; i < len(format); i++ {
+		if format[i] == '%' {
+			if i+1 < len(format) && format[i+1] != '%' {
+				return format[i:]
+			}
+			// Skip %% (escaped percent)
+			i++
+		}
+	}
+	return format[len(format):] // Return empty string if no format specifier found
+}
+
 func RoundScalarWithFormatT(format string, v float) float {
+	// Find the actual format specifier (e.g., "%.3f" in "ratio = %.3f")
+	fmt_start := ImParseFormatFindStart(format)
+	if len(fmt_start) == 0 || fmt_start[0] != '%' || (len(fmt_start) > 1 && fmt_start[1] == '%') {
+		// Don't apply if the value is not visible in the format string
+		return v
+	}
+
 	// Format value with our rounding, and read back
-	var v_str = fmt.Sprintf(format, v)
+	var v_str = fmt.Sprintf(fmt_start, v)
 	f, _ := strconv.ParseFloat(v_str, 32)
 	return float(f)
 }
@@ -563,13 +585,13 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		v_speed = (float)((*v_max - *v_min) * g.DragSpeedDefaultRatio)
 	}
 	// Inputs accumulates into g.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
-	var adjust_delta float
+	var adjust_delta float = 0.0
 	if g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid(nil) && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold*DRAG_MOUSE_THRESHOLD_FACTOR) {
 		switch axis {
 		case ImGuiAxis_X:
-			adjust_delta *= g.IO.MouseDelta.x
+			adjust_delta = g.IO.MouseDelta.x
 		case ImGuiAxis_Y:
-			adjust_delta *= g.IO.MouseDelta.y
+			adjust_delta = g.IO.MouseDelta.y
 		}
 		if g.IO.KeyAlt {
 			adjust_delta *= 1.0 / 100.0
@@ -582,9 +604,9 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		amount := GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 1.0/10.0, 10.0)
 		switch axis {
 		case ImGuiAxis_X:
-			adjust_delta *= amount.x
+			adjust_delta = amount.x
 		case ImGuiAxis_Y:
-			adjust_delta *= amount.y
+			adjust_delta = amount.y
 		}
 		v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision))
 	}
