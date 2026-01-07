@@ -351,19 +351,18 @@ func InputTextFilterCharacter(p_char *rune, flags ImGuiInputTextFlags, callback 
 }
 
 func ImStrbolW(buf_mid_line []ImWchar, buf_begin []ImWchar) []ImWchar { // find beginning-of-line
-	// FIXME: this is probably wrong
-	/*
-		while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
-		    buf_mid_line--;
-		return buf_mid_line;
-	*/
+	// Find the offset of buf_mid_line within buf_begin
+	// In Go, we use slice lengths to determine position since buf_mid_line is a suffix of buf_begin
+	offset := len(buf_begin) - len(buf_mid_line)
 
-	var i int
-	for i = int(len(buf_mid_line) - 1); i > 0 && buf_mid_line[i] != '\n'; i-- {
-		// noop
+	// Walk backwards from offset to find the beginning of the line (after a newline or at buffer start)
+	lineStart := offset
+	for lineStart > 0 && buf_begin[lineStart-1] != '\n' {
+		lineStart--
 	}
 
-	return []ImWchar{ImWchar(i)}
+	// Return a slice from the beginning of the line to the end of the buffer
+	return buf_begin[lineStart:]
 }
 
 /*
@@ -391,9 +390,8 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 	}
 
 	IM_ASSERT(buf != nil && int(len(*buf)) >= 0)
-	// TODO: check these asserts
-	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) == 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
-	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) == 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
+	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackHistory) != 0 && (flags&ImGuiInputTextFlags_Multiline != 0)))        // Can't use both together (they both use up/down keys)
+	IM_ASSERT(!((flags&ImGuiInputTextFlags_CallbackCompletion) != 0 && (flags&ImGuiInputTextFlags_AllowTabInput != 0))) // Can't use both together (they both use tab key)
 
 	var g = GImGui
 	var io = g.IO
