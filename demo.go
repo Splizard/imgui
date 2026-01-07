@@ -1,6 +1,7 @@
 package imgui
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -409,6 +410,24 @@ var widgetsState struct {
 	// Text
 	wrap_width float
 
+	// Images
+	pressed_count int
+
+	// Combo (advanced)
+	combo_flags          ImGuiComboFlags
+	combo_item_current_idx int
+
+	// List boxes
+	listbox_item_current_idx int
+
+	// Selectables
+	selectable_basic     [5]bool
+	selectable_single    int
+	selectable_multiple  [5]bool
+	selectable_render    [3]bool
+	selectable_columns   [10]bool
+	selectable_grid      [4][4]bool
+
 	// Disable all
 	disable_all bool
 }
@@ -434,6 +453,10 @@ func init() {
 	widgetsState.selection_mask = 1 << 2
 	widgetsState.closable_group = true
 	widgetsState.wrap_width = 200.0
+
+	// Selectables
+	widgetsState.selectable_basic[1] = true
+	widgetsState.selectable_single = -1
 }
 
 func ShowDemoWindowWidgets() {
@@ -789,6 +812,261 @@ func ShowDemoWindowWidgets() {
 					"Read docs/FONTS.md for details.")
 			Text("Hiragana: かきくけこ (kakikukeko)")
 			Text("Kanjis: 日本語 (nihongo)")
+			TreePop()
+		}
+		TreePop()
+	}
+
+	if TreeNode("Images") {
+		io := GetIO()
+		TextWrapped(
+			"Below we are displaying the font texture (which is the only texture we have access to in this demo). " +
+				"Use the 'ImTextureID' type as storage to pass pointers or identifier to your own texture data. " +
+				"Hover the texture for a zoomed view!")
+
+		// Display the font texture
+		my_tex_id := io.Fonts.TexID
+		my_tex_w := float(io.Fonts.TexWidth)
+		my_tex_h := float(io.Fonts.TexHeight)
+		{
+			Text("%.0fx%.0f", my_tex_w, my_tex_h)
+			pos := GetCursorScreenPos()
+			uv_min := ImVec2{0.0, 0.0}
+			uv_max := ImVec2{1.0, 1.0}
+			tint_col := ImVec4{1.0, 1.0, 1.0, 1.0}
+			border_col := ImVec4{1.0, 1.0, 1.0, 0.5}
+			Image(my_tex_id, ImVec2{my_tex_w, my_tex_h}, uv_min, uv_max, tint_col, border_col)
+			if IsItemHovered(0) {
+				BeginTooltip()
+				region_sz := float(32.0)
+				region_x := io.MousePos.x - pos.x - region_sz*0.5
+				region_y := io.MousePos.y - pos.y - region_sz*0.5
+				zoom := float(4.0)
+				if region_x < 0.0 {
+					region_x = 0.0
+				} else if region_x > my_tex_w-region_sz {
+					region_x = my_tex_w - region_sz
+				}
+				if region_y < 0.0 {
+					region_y = 0.0
+				} else if region_y > my_tex_h-region_sz {
+					region_y = my_tex_h - region_sz
+				}
+				Text("Min: (%.2f, %.2f)", region_x, region_y)
+				Text("Max: (%.2f, %.2f)", region_x+region_sz, region_y+region_sz)
+				uv0 := ImVec2{region_x / my_tex_w, region_y / my_tex_h}
+				uv1 := ImVec2{(region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h}
+				Image(my_tex_id, ImVec2{region_sz * zoom, region_sz * zoom}, uv0, uv1, tint_col, border_col)
+				EndTooltip()
+			}
+		}
+		TextWrapped("And now some textured buttons..")
+		for i := int(0); i < 8; i++ {
+			PushID(i)
+			frame_padding := int(-1 + i)
+			size := ImVec2{32.0, 32.0}
+			uv0 := ImVec2{0.0, 0.0}
+			uv1 := ImVec2{32.0 / my_tex_w, 32.0 / my_tex_h}
+			bg_col := ImVec4{0.0, 0.0, 0.0, 1.0}
+			tint_col := ImVec4{1.0, 1.0, 1.0, 1.0}
+			if ImageButton(my_tex_id, size, uv0, uv1, frame_padding, bg_col, tint_col) {
+				widgetsState.pressed_count++
+			}
+			PopID()
+			SameLine(0, 0)
+		}
+		NewLine()
+		Text("Pressed %d times.", widgetsState.pressed_count)
+		TreePop()
+	}
+
+	if TreeNode("Combo") {
+		// Expose flags as checkbox for the demo
+		combo_flags_int := int(widgetsState.combo_flags)
+		CheckboxFlagsInt("ImGuiComboFlags_PopupAlignLeft", &combo_flags_int, int(ImGuiComboFlags_PopupAlignLeft))
+		widgetsState.combo_flags = ImGuiComboFlags(combo_flags_int)
+		SameLine(0, 0)
+		HelpMarker("Only makes a difference if the popup is larger than the combo")
+		combo_flags_int = int(widgetsState.combo_flags)
+		if CheckboxFlagsInt("ImGuiComboFlags_NoArrowButton", &combo_flags_int, int(ImGuiComboFlags_NoArrowButton)) {
+			combo_flags_int &= ^int(ImGuiComboFlags_NoPreview)
+		}
+		widgetsState.combo_flags = ImGuiComboFlags(combo_flags_int)
+		combo_flags_int = int(widgetsState.combo_flags)
+		if CheckboxFlagsInt("ImGuiComboFlags_NoPreview", &combo_flags_int, int(ImGuiComboFlags_NoPreview)) {
+			combo_flags_int &= ^int(ImGuiComboFlags_NoArrowButton)
+		}
+		widgetsState.combo_flags = ImGuiComboFlags(combo_flags_int)
+
+		// Using the generic BeginCombo() API
+		items := []string{"AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO"}
+		combo_preview_value := items[widgetsState.combo_item_current_idx]
+		if BeginCombo("combo 1", combo_preview_value, widgetsState.combo_flags) {
+			for n := int(0); n < int(len(items)); n++ {
+				is_selected := widgetsState.combo_item_current_idx == n
+				if Selectable(items[n], is_selected, 0, ImVec2{}) {
+					widgetsState.combo_item_current_idx = n
+				}
+				if is_selected {
+					SetItemDefaultFocus()
+				}
+			}
+			EndCombo()
+		}
+		TreePop()
+	}
+
+	if TreeNode("List boxes") {
+		items := []string{"AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO"}
+		if BeginListBox("listbox 1", ImVec2{}) {
+			for n := int(0); n < int(len(items)); n++ {
+				is_selected := widgetsState.listbox_item_current_idx == n
+				if Selectable(items[n], is_selected, 0, ImVec2{}) {
+					widgetsState.listbox_item_current_idx = n
+				}
+				if is_selected {
+					SetItemDefaultFocus()
+				}
+			}
+			EndListBox()
+		}
+
+		// Custom size: use all width, 5 items tall
+		Text("Full-width:")
+		if BeginListBox("##listbox 2", ImVec2{-FLT_MIN, 5 * GetTextLineHeightWithSpacing()}) {
+			for n := int(0); n < int(len(items)); n++ {
+				is_selected := widgetsState.listbox_item_current_idx == n
+				if Selectable(items[n], is_selected, 0, ImVec2{}) {
+					widgetsState.listbox_item_current_idx = n
+				}
+				if is_selected {
+					SetItemDefaultFocus()
+				}
+			}
+			EndListBox()
+		}
+		TreePop()
+	}
+
+	if TreeNode("Selectables") {
+		if TreeNode("Basic") {
+			SelectablePointer("1. I am selectable", &widgetsState.selectable_basic[0], 0, ImVec2{})
+			SelectablePointer("2. I am selectable", &widgetsState.selectable_basic[1], 0, ImVec2{})
+			Text("(I am not selectable)")
+			SelectablePointer("4. I am selectable", &widgetsState.selectable_basic[3], 0, ImVec2{})
+			if Selectable("5. I am double clickable", widgetsState.selectable_basic[4], ImGuiSelectableFlags_AllowDoubleClick, ImVec2{}) {
+				if IsMouseDoubleClicked(0) {
+					widgetsState.selectable_basic[4] = !widgetsState.selectable_basic[4]
+				}
+			}
+			TreePop()
+		}
+		if TreeNode("Selection State: Single Selection") {
+			for n := int(0); n < 5; n++ {
+				label := fmt.Sprintf("Object %d", n)
+				if Selectable(label, widgetsState.selectable_single == n, 0, ImVec2{}) {
+					widgetsState.selectable_single = n
+				}
+			}
+			TreePop()
+		}
+		if TreeNode("Selection State: Multiple Selection") {
+			HelpMarker("Hold CTRL and click to select multiple items.")
+			for n := int(0); n < 5; n++ {
+				label := fmt.Sprintf("Object %d", n)
+				if Selectable(label, widgetsState.selectable_multiple[n], 0, ImVec2{}) {
+					if !GetIO().KeyCtrl {
+						// Clear selection when CTRL is not held
+						for i := range widgetsState.selectable_multiple {
+							widgetsState.selectable_multiple[i] = false
+						}
+					}
+					widgetsState.selectable_multiple[n] = !widgetsState.selectable_multiple[n]
+				}
+			}
+			TreePop()
+		}
+		if TreeNode("Rendering more text into the same line") {
+			SelectablePointer("main.c", &widgetsState.selectable_render[0], 0, ImVec2{})
+			SameLine(300, 0)
+			Text(" 2,345 bytes")
+			SelectablePointer("Hello.cpp", &widgetsState.selectable_render[1], 0, ImVec2{})
+			SameLine(300, 0)
+			Text("12,345 bytes")
+			SelectablePointer("Hello.h", &widgetsState.selectable_render[2], 0, ImVec2{})
+			SameLine(300, 0)
+			Text(" 2,345 bytes")
+			TreePop()
+		}
+		if TreeNode("In columns") {
+			if BeginTable("split1", 3, ImGuiTableFlags_Resizable|ImGuiTableFlags_NoSavedSettings|ImGuiTableFlags_Borders, ImVec2{}, 0) {
+				for i := int(0); i < 10; i++ {
+					label := fmt.Sprintf("Item %d", i)
+					TableNextColumn()
+					SelectablePointer(label, &widgetsState.selectable_columns[i], 0, ImVec2{})
+				}
+				EndTable()
+			}
+			Separator()
+			if BeginTable("split2", 3, ImGuiTableFlags_Resizable|ImGuiTableFlags_NoSavedSettings|ImGuiTableFlags_Borders, ImVec2{}, 0) {
+				for i := int(0); i < 10; i++ {
+					label := fmt.Sprintf("Item %d", i)
+					TableNextRow(0, 0)
+					TableNextColumn()
+					SelectablePointer(label, &widgetsState.selectable_columns[i], ImGuiSelectableFlags_SpanAllColumns, ImVec2{})
+					TableNextColumn()
+					Text("Some other contents")
+					TableNextColumn()
+					Text("123456")
+				}
+				EndTable()
+			}
+			TreePop()
+		}
+		if TreeNode("Grid") {
+			// Add in a bit of silly fun...
+			time := float(GetTime())
+			winning_state := true
+			for ri := 0; ri < 4; ri++ {
+				for ci := 0; ci < 4; ci++ {
+					if widgetsState.selectable_grid[ri][ci] {
+						winning_state = false
+					}
+				}
+			}
+			if winning_state {
+				PushStyleVec(ImGuiStyleVar_SelectableTextAlign, ImVec2{0.5 + 0.5*ImCos(time*2.0), 0.5 + 0.5*ImSin(time*3.0)})
+			}
+
+			for ri := 0; ri < 4; ri++ {
+				for ci := 0; ci < 4; ci++ {
+					if ci > 0 {
+						SameLine(0, 0)
+					}
+					PushID(int(ri*4 + ci))
+					if Selectable("Sailor", widgetsState.selectable_grid[ri][ci], 0, ImVec2{50, 50}) {
+						// Toggle clicked cell + toggle neighbors
+						widgetsState.selectable_grid[ri][ci] = !widgetsState.selectable_grid[ri][ci]
+						if ci > 0 {
+							widgetsState.selectable_grid[ri][ci-1] = !widgetsState.selectable_grid[ri][ci-1]
+						}
+						if ci < 3 {
+							widgetsState.selectable_grid[ri][ci+1] = !widgetsState.selectable_grid[ri][ci+1]
+						}
+						if ri > 0 {
+							widgetsState.selectable_grid[ri-1][ci] = !widgetsState.selectable_grid[ri-1][ci]
+						}
+						if ri < 3 {
+							widgetsState.selectable_grid[ri+1][ci] = !widgetsState.selectable_grid[ri+1][ci]
+						}
+					}
+					PopID()
+				}
+			}
+
+			if winning_state {
+				PopStyleVar(1)
+			}
 			TreePop()
 		}
 		TreePop()
