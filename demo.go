@@ -354,7 +354,7 @@ func ShowDemoWindow(p_open *bool) {
 	}
 
 	// All demo contents
-	//ShowDemoWindowWidgets()
+	ShowDemoWindowWidgets()
 	//ShowDemoWindowLayout()
 	//ShowDemoWindowPopups()
 	//ShowDemoWindowTables()
@@ -363,4 +363,438 @@ func ShowDemoWindow(p_open *bool) {
 	// End of ShowDemoWindow()
 	PopItemWidth()
 	End()
+}
+
+// ImVec4FromHSV converts HSV values to an ImVec4 color
+func ImVec4FromHSV(h, s, v float) ImVec4 {
+	var r, g, b float
+	ColorConvertHSVtoRGB(h, s, v, &r, &g, &b)
+	return ImVec4{r, g, b, 1.0}
+}
+
+// State for ShowDemoWindowWidgets
+var widgetsState struct {
+	// Basic
+	clicked       int
+	check         bool
+	e             int
+	counter       int
+	str0          []byte
+	str1          []byte
+	i0            int
+	f0            float
+	f1            float
+	vec4a         [4]float
+	i1, i2        int
+	f1drag, f2drag float
+	i1slider      int
+	f1slider      float
+	f2slider      float
+	angle         float
+	elem          int
+	col1          [3]float
+	col2          [4]float
+	item_current_combo int
+	item_current_list  int
+
+	// Trees
+	base_flags                        ImGuiTreeNodeFlags
+	align_label_with_current_x_position bool
+	test_drag_and_drop                bool
+	selection_mask                    int
+
+	// Collapsing Headers
+	closable_group bool
+
+	// Text
+	wrap_width float
+
+	// Disable all
+	disable_all bool
+}
+
+func init() {
+	// Initialize default values
+	widgetsState.check = true
+	widgetsState.str0 = []byte("Hello, world!")
+	widgetsState.str1 = []byte{}
+	widgetsState.i0 = 123
+	widgetsState.f0 = 0.001
+	widgetsState.f1 = 1.0e10
+	widgetsState.vec4a = [4]float{0.10, 0.20, 0.30, 0.44}
+	widgetsState.i1 = 50
+	widgetsState.i2 = 42
+	widgetsState.f1drag = 1.00
+	widgetsState.f2drag = 0.0067
+	widgetsState.f1slider = 0.123
+	widgetsState.col1 = [3]float{1.0, 0.0, 0.2}
+	widgetsState.col2 = [4]float{0.4, 0.7, 0.0, 0.5}
+	widgetsState.item_current_list = 1
+	widgetsState.base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth
+	widgetsState.selection_mask = 1 << 2
+	widgetsState.closable_group = true
+	widgetsState.wrap_width = 200.0
+}
+
+func ShowDemoWindowWidgets() {
+	if !CollapsingHeader("Widgets", 0) {
+		return
+	}
+
+	if widgetsState.disable_all {
+		BeginDisabled(true)
+	}
+
+	if TreeNode("Basic") {
+		if Button("Button") {
+			widgetsState.clicked++
+		}
+		if widgetsState.clicked&1 != 0 {
+			SameLine(0, 0)
+			Text("Thanks for clicking me!")
+		}
+
+		Checkbox("checkbox", &widgetsState.check)
+
+		RadioButtonInt("radio a", &widgetsState.e, 0)
+		SameLine(0, 0)
+		RadioButtonInt("radio b", &widgetsState.e, 1)
+		SameLine(0, 0)
+		RadioButtonInt("radio c", &widgetsState.e, 2)
+
+		// Color buttons, demonstrate using PushID() to add unique identifier in the ID stack, and changing style.
+		for i := int(0); i < 7; i++ {
+			if i > 0 {
+				SameLine(0, 0)
+			}
+			PushID(i)
+			col := ImVec4FromHSV(float(i)/7.0, 0.6, 0.6)
+			PushStyleColorVec(ImGuiCol_Button, &col)
+			col2 := ImVec4FromHSV(float(i)/7.0, 0.7, 0.7)
+			PushStyleColorVec(ImGuiCol_ButtonHovered, &col2)
+			col3 := ImVec4FromHSV(float(i)/7.0, 0.8, 0.8)
+			PushStyleColorVec(ImGuiCol_ButtonActive, &col3)
+			Button("Click")
+			PopStyleColor(3)
+			PopID()
+		}
+
+		// Use AlignTextToFramePadding() to align text baseline to the baseline of framed widgets elements
+		AlignTextToFramePadding()
+		Text("Hold to repeat:")
+		SameLine(0, 0)
+
+		// Arrow buttons with Repeater
+		spacing := GetStyle().ItemInnerSpacing.x
+		PushButtonRepeat(true)
+		if ArrowButton("##left", ImGuiDir_Left) {
+			widgetsState.counter--
+		}
+		SameLine(0.0, spacing)
+		if ArrowButton("##right", ImGuiDir_Right) {
+			widgetsState.counter++
+		}
+		PopButtonRepeat()
+		SameLine(0, 0)
+		Text("%d", widgetsState.counter)
+
+		Text("Hover over me")
+		if IsItemHovered(0) {
+			SetTooltip("I am a tooltip")
+		}
+
+		SameLine(0, 0)
+		Text("- or me")
+		if IsItemHovered(0) {
+			BeginTooltip()
+			Text("I am a fancy tooltip")
+			arr := []float{0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2}
+			PlotLines("Curve", arr, int(len(arr)), 0, "", FLT_MAX, FLT_MAX, ImVec2{}, 4)
+			EndTooltip()
+		}
+
+		Separator()
+
+		LabelText("label", "Value")
+
+		{
+			// Using the _simplified_ one-liner Combo() api here
+			items := []string{"AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK"}
+			Combo("combo", &widgetsState.item_current_combo, items, int(len(items)), -1)
+			SameLine(0, 0)
+			HelpMarker("Using the simplified one-liner Combo API here.\nRefer to the \"Combo\" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.")
+		}
+
+		{
+			InputText("input text", &widgetsState.str0, 0, nil, nil)
+			SameLine(0, 0)
+			HelpMarker(
+				"USER:\n" +
+					"Hold SHIFT or use mouse to select text.\n" +
+					"CTRL+Left/Right to word jump.\n" +
+					"CTRL+A or double-click to select all.\n" +
+					"CTRL+X,CTRL+C,CTRL+V clipboard.\n" +
+					"CTRL+Z,CTRL+Y undo/redo.\n" +
+					"ESCAPE to revert.\n\n" +
+					"PROGRAMMER:\n" +
+					"You can use the ImGuiInputTextFlags_CallbackResize facility if you need to wire InputText() " +
+					"to a dynamic string type. See misc/cpp/imgui_stdlib.h for an example (this is not demonstrated " +
+					"in imgui_demo.cpp).")
+
+			InputTextWithHint("input text (w/ hint)", "enter text here", &widgetsState.str1, 0, nil, nil)
+
+			InputInt("input int", &widgetsState.i0, 1, 100, 0)
+			SameLine(0, 0)
+			HelpMarker(
+				"You can apply arithmetic operators +,*,/ on numerical values.\n" +
+					"  e.g. [ 100 ], input '*2', result becomes [ 200 ]\n" +
+					"Use +- to subtract.")
+
+			InputFloat("input float", &widgetsState.f0, 0.01, 1.0, "%.3f", 0)
+
+			InputFloat("input scientific", &widgetsState.f1, 0.0, 0.0, "%e", 0)
+			SameLine(0, 0)
+			HelpMarker("You can input value using the scientific notation,\n  e.g. \"1e+8\" becomes \"100000000\".")
+
+			var vec3 = [3]float{widgetsState.vec4a[0], widgetsState.vec4a[1], widgetsState.vec4a[2]}
+			InputFloat3("input float3", &vec3, "%.3f", 0)
+			widgetsState.vec4a[0], widgetsState.vec4a[1], widgetsState.vec4a[2] = vec3[0], vec3[1], vec3[2]
+		}
+
+		{
+			DragInt("drag int", &widgetsState.i1, 1, 0, 0, "%d", 0)
+			SameLine(0, 0)
+			HelpMarker(
+				"Click and drag to edit value.\n" +
+					"Hold SHIFT/ALT for faster/slower edit.\n" +
+					"Double-click or CTRL+click to input value.")
+
+			DragInt("drag int 0..100", &widgetsState.i2, 1, 0, 100, "%d%%", ImGuiSliderFlags_AlwaysClamp)
+
+			DragFloat("drag float", &widgetsState.f1drag, 0.005, 0.0, 0.0, "%.3f", 0)
+			DragFloat("drag small float", &widgetsState.f2drag, 0.0001, 0.0, 0.0, "%.06f ns", 0)
+		}
+
+		{
+			SliderInt("slider int", &widgetsState.i1slider, -1, 3, "%d", 0)
+			SameLine(0, 0)
+			HelpMarker("CTRL+click to input value.")
+
+			SliderFloat("slider float", &widgetsState.f1slider, 0.0, 1.0, "ratio = %.3f", 0)
+			SliderFloat("slider float (log)", &widgetsState.f2slider, -10.0, 10.0, "%.4f", ImGuiSliderFlags_Logarithmic)
+
+			SliderAngle("slider angle", &widgetsState.angle, -360.0, 360.0, "%.0f deg", 0)
+
+			// Using the format string to display a name instead of an integer.
+			elems_names := []string{"Fire", "Earth", "Air", "Water"}
+			elem_name := "Unknown"
+			if widgetsState.elem >= 0 && widgetsState.elem < int(len(elems_names)) {
+				elem_name = elems_names[widgetsState.elem]
+			}
+			SliderInt("slider enum", &widgetsState.elem, 0, int(len(elems_names)-1), elem_name, 0)
+			SameLine(0, 0)
+			HelpMarker("Using the format string parameter to display a name instead of the underlying integer.")
+		}
+
+		{
+			ColorEdit3("color 1", &widgetsState.col1, 0)
+			SameLine(0, 0)
+			HelpMarker(
+				"Click on the color square to open a color picker.\n" +
+					"Click and hold to use drag and drop.\n" +
+					"Right-click on the color square to show options.\n" +
+					"CTRL+click on individual component to input value.\n")
+
+			ColorEdit4("color 2", &widgetsState.col2, 0)
+		}
+
+		{
+			// Using the _simplified_ one-liner ListBox() api here
+			items := []string{"Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon"}
+			ListBox("listbox", &widgetsState.item_current_list, items, int(len(items)), 4)
+			SameLine(0, 0)
+			HelpMarker("Using the simplified one-liner ListBox API here.\nRefer to the \"List boxes\" section below for an explanation of how to use the more flexible and general BeginListBox/EndListBox API.")
+		}
+
+		TreePop()
+	}
+
+	if TreeNode("Trees") {
+		if TreeNode("Basic trees") {
+			for i := int(0); i < 5; i++ {
+				// Use SetNextItemOpen() so set the default state of a node to be open.
+				if i == 0 {
+					SetNextItemOpen(true, ImGuiCond_Once)
+				}
+
+				if TreeNodeInterface(i, "Child %d", i) {
+					Text("blah blah")
+					SameLine(0, 0)
+					if SmallButton("button") {
+					}
+					TreePop()
+				}
+			}
+			TreePop()
+		}
+
+		if TreeNode("Advanced, with Selectable nodes") {
+			HelpMarker(
+				"This is a more typical looking tree with selectable nodes.\n" +
+					"Click to select, CTRL+Click to toggle, click on arrows or double-click to open.")
+			CheckboxFlagsInt("ImGuiTreeNodeFlags_OpenOnArrow", (*int32)(&widgetsState.base_flags), int32(ImGuiTreeNodeFlags_OpenOnArrow))
+			CheckboxFlagsInt("ImGuiTreeNodeFlags_OpenOnDoubleClick", (*int32)(&widgetsState.base_flags), int32(ImGuiTreeNodeFlags_OpenOnDoubleClick))
+			CheckboxFlagsInt("ImGuiTreeNodeFlags_SpanAvailWidth", (*int32)(&widgetsState.base_flags), int32(ImGuiTreeNodeFlags_SpanAvailWidth))
+			SameLine(0, 0)
+			HelpMarker("Extend hit area to all available width instead of allowing more items to be laid out after the node.")
+			CheckboxFlagsInt("ImGuiTreeNodeFlags_SpanFullWidth", (*int32)(&widgetsState.base_flags), int32(ImGuiTreeNodeFlags_SpanFullWidth))
+			Checkbox("Align label with current X position", &widgetsState.align_label_with_current_x_position)
+			Checkbox("Test tree node as drag source", &widgetsState.test_drag_and_drop)
+			Text("Hello!")
+			if widgetsState.align_label_with_current_x_position {
+				Unindent(GetTreeNodeToLabelSpacing())
+			}
+
+			node_clicked := int(-1)
+			for i := int(0); i < 6; i++ {
+				node_flags := widgetsState.base_flags
+				is_selected := (widgetsState.selection_mask & (1 << i)) != 0
+				if is_selected {
+					node_flags |= ImGuiTreeNodeFlags_Selected
+				}
+				if i < 3 {
+					// Items 0..2 are Tree Node
+					node_open := TreeNodeInterfaceEx(i, node_flags, "Selectable Node %d", i)
+					if IsItemClicked(0) {
+						node_clicked = int(i)
+					}
+					if widgetsState.test_drag_and_drop && BeginDragDropSource(0) {
+						SetDragDropPayload("_TREENODE", nil, 0, 0)
+						Text("This is a drag and drop source")
+						EndDragDropSource()
+					}
+					if node_open {
+						BulletText("Blah blah\nBlah Blah")
+						TreePop()
+					}
+				} else {
+					// Items 3..5 are Tree Leaves
+					node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen
+					TreeNodeInterfaceEx(i, node_flags, "Selectable Leaf %d", i)
+					if IsItemClicked(0) {
+						node_clicked = int(i)
+					}
+					if widgetsState.test_drag_and_drop && BeginDragDropSource(0) {
+						SetDragDropPayload("_TREENODE", nil, 0, 0)
+						Text("This is a drag and drop source")
+						EndDragDropSource()
+					}
+				}
+			}
+			if node_clicked != -1 {
+				// Update selection state
+				if GetIO().KeyCtrl {
+					widgetsState.selection_mask ^= 1 << node_clicked // CTRL+click to toggle
+				} else {
+					widgetsState.selection_mask = 1 << node_clicked // Click to single-select
+				}
+			}
+			if widgetsState.align_label_with_current_x_position {
+				Indent(GetTreeNodeToLabelSpacing())
+			}
+			TreePop()
+		}
+		TreePop()
+	}
+
+	if TreeNode("Collapsing Headers") {
+		Checkbox("Show 2nd header", &widgetsState.closable_group)
+		if CollapsingHeader("Header", 0) {
+			Text("IsItemHovered: %d", bool2int(IsItemHovered(0)))
+			for i := int(0); i < 5; i++ {
+				Text("Some content %d", i)
+			}
+		}
+		if CollapsingHeaderVisible("Header with a close button", &widgetsState.closable_group, 0) {
+			Text("IsItemHovered: %d", bool2int(IsItemHovered(0)))
+			for i := int(0); i < 5; i++ {
+				Text("More content %d", i)
+			}
+		}
+		TreePop()
+	}
+
+	if TreeNode("Bullets") {
+		BulletText("Bullet point 1")
+		BulletText("Bullet point 2\nOn multiple lines")
+		if TreeNode("Tree node") {
+			BulletText("Another bullet point")
+			TreePop()
+		}
+		Bullet()
+		Text("Bullet point 3 (two calls)")
+		Bullet()
+		SmallButton("Button")
+		TreePop()
+	}
+
+	if TreeNode("Text") {
+		if TreeNode("Colorful Text") {
+			// Using shortcut. You can use PushStyleColor()/PopStyleColor() for more flexibility.
+			pink := ImVec4{1.0, 0.0, 1.0, 1.0}
+			TextColored(&pink, "Pink")
+			yellow := ImVec4{1.0, 1.0, 0.0, 1.0}
+			TextColored(&yellow, "Yellow")
+			TextDisabled("Disabled")
+			SameLine(0, 0)
+			HelpMarker("The TextDisabled color is stored in ImGuiStyle.")
+			TreePop()
+		}
+
+		if TreeNode("Word Wrapping") {
+			// Using shortcut. You can use PushTextWrapPos()/PopTextWrapPos() for more flexibility.
+			TextWrapped(
+				"This text should automatically wrap on the edge of the window. The current implementation " +
+					"for text wrapping follows simple rules suitable for English and possibly other languages.")
+			Spacing()
+
+			SliderFloat("Wrap width", &widgetsState.wrap_width, -20, 600, "%.0f", 0)
+
+			draw_list := GetWindowDrawList()
+			for n := int(0); n < 2; n++ {
+				Text("Test paragraph %d:", n)
+				pos := GetCursorScreenPos()
+				marker_min := ImVec2{pos.x + widgetsState.wrap_width, pos.y}
+				marker_max := ImVec2{pos.x + widgetsState.wrap_width + 10, pos.y + GetTextLineHeight()}
+				PushTextWrapPos(GetCursorPos().x + widgetsState.wrap_width)
+				if n == 0 {
+					Text("The lazy dog is a good dog. This paragraph should fit within %.0f pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", widgetsState.wrap_width)
+				} else {
+					Text("aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh")
+				}
+
+				// Draw actual text bounding box, following by marker of our expected limit
+				draw_list.AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255), 0, 0, 1.0)
+				draw_list.AddRectFilled(marker_min, marker_max, IM_COL32(255, 0, 255, 255), 0, 0)
+				PopTextWrapPos()
+			}
+
+			TreePop()
+		}
+
+		if TreeNode("UTF-8 Text") {
+			TextWrapped(
+				"CJK text will only appears if the font was loaded with the appropriate CJK character ranges. " +
+					"Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. " +
+					"Read docs/FONTS.md for details.")
+			Text("Hiragana: かきくけこ (kakikukeko)")
+			Text("Kanjis: 日本語 (nihongo)")
+			TreePop()
+		}
+		TreePop()
+	}
+
+	if widgetsState.disable_all {
+		EndDisabled()
+	}
 }
