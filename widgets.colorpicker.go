@@ -560,16 +560,17 @@ func ColorPicker4(label string, col *[4]float, flags ImGuiColorEditFlags, ref_co
 	// Convert back color to RGB
 	if value_changed_h || value_changed_sv {
 		if (flags & ImGuiColorEditFlags_InputRGB) != 0 {
+			// C++: ColorConvertHSVtoRGB(H >= 1.0f ? H - 10 * 1e-6f : H, S > 0.0f ? S : 10 * 1e-6f, V > 0.0f ? V : 1e-6f, ...)
 			h := H
 			if H >= 1.0 {
 				h = H - 10*1e-6
 			}
 			s := S
-			if S > 0.0 {
-				s = S - 10*1e-6
+			if S <= 0.0 {
+				s = 10 * 1e-6
 			}
 			v := V
-			if V > 0.0 {
+			if V <= 0.0 {
 				v = 1e-6
 			}
 
