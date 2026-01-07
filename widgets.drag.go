@@ -556,12 +556,39 @@ func ImParseFormatFindStart(format string) string {
 	return format[len(format):] // Return empty string if no format specifier found
 }
 
+// isIntegerFormatSpecifier checks if the format specifier is for an integer type
+// (d, i, u, o, x, X)
+func isIntegerFormatSpecifier(format string) bool {
+	if len(format) == 0 {
+		return false
+	}
+	// Find the type character at the end of the format specifier
+	for i := len(format) - 1; i >= 0; i-- {
+		c := format[i]
+		switch c {
+		case 'd', 'i', 'u', 'o', 'x', 'X':
+			return true
+		case 'f', 'F', 'e', 'E', 'g', 'G', 'a', 'A':
+			return false
+		}
+	}
+	return false
+}
+
 func RoundScalarWithFormatT(format string, v float) float {
 	// Find the actual format specifier (e.g., "%.3f" in "ratio = %.3f")
 	fmt_start := ImParseFormatFindStart(format)
 	if len(fmt_start) == 0 || fmt_start[0] != '%' || (len(fmt_start) > 1 && fmt_start[1] == '%') {
 		// Don't apply if the value is not visible in the format string
 		return v
+	}
+
+	// Check if this is an integer format specifier
+	if isIntegerFormatSpecifier(fmt_start) {
+		// For integer formats, convert to int first, format, then parse back
+		var v_str = fmt.Sprintf(fmt_start, int(v))
+		i, _ := strconv.ParseInt(v_str, 0, 32)
+		return float(i)
 	}
 
 	// Format value with our rounding, and read back
