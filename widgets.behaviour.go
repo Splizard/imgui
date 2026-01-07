@@ -266,6 +266,17 @@ func SliderBehavior(bb *ImRect, id ImGuiID, data_type ImGuiDataType, p_v any, p_
 	}
 
 	switch data_type {
+	case ImGuiDataType_S32:
+		IM_ASSERT(*p_min.(*int) >= IM_S32_MIN/2 && *p_max.(*int) <= IM_S32_MAX/2)
+		// Convert int32 to float for slider calculations, then convert back
+		v_float := float(*p_v.(*int))
+		v_min_float := float(*p_min.(*int))
+		v_max_float := float(*p_max.(*int))
+		result := sliderBehaviour(bb, id, &v_float, v_min_float, v_max_float, format, flags, out_grab_bb)
+		if result {
+			*p_v.(*int) = int(v_float)
+		}
+		return result
 	case ImGuiDataType_Float:
 		IM_ASSERT(*p_min.(*float) >= -FLT_MAX/2.0 && *p_max.(*float) <= FLT_MAX/2.0)
 		return sliderBehaviour(bb, id, p_v.(*float), *p_min.(*float), *p_max.(*float), format, flags, out_grab_bb)
