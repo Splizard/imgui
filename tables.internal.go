@@ -2302,9 +2302,11 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 		table.DrawSplitter.SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_NOCLIP)
 		//IM_ASSERT(table.DrawSplitter._Current == TABLE_DRAW_CHANNEL_NOCLIP);
 	} else {
-		// FIXME-TABLE: Could avoid this if draw channel is dummy channel?
-		SetWindowClipRectBeforeSetChannel(window, &column.ClipRect)
-		table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+		// Skip if draw channel is dummy channel (255 represents -1 when cast to uint8)
+		if column.DrawChannelCurrent != ImGuiTableDrawChannelIdx(255) {
+			SetWindowClipRectBeforeSetChannel(window, &column.ClipRect)
+			table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+		}
 	}
 
 	// Logging
