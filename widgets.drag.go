@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // Widgets: Drag Sliders
@@ -610,13 +611,16 @@ func RoundScalarWithFormatT(format string, v float) float {
 	// Check if this is an integer format specifier
 	if isIntegerFormatSpecifier(fmt_spec) {
 		// For integer formats, convert to int first, format, then parse back
-		var v_str = fmt.Sprintf(fmt_spec, int(v))
+		// Use TrimSpace because format specifiers like "%3d" produce leading spaces
+		// which strconv.ParseInt cannot handle
+		var v_str = strings.TrimSpace(fmt.Sprintf(fmt_spec, int(v)))
 		i, _ := strconv.ParseInt(v_str, 0, 32)
 		return float(i)
 	}
 
 	// Format value with our rounding, and read back
-	var v_str = fmt.Sprintf(fmt_spec, v)
+	// Use TrimSpace for consistency with integer handling
+	var v_str = strings.TrimSpace(fmt.Sprintf(fmt_spec, v))
 	f, _ := strconv.ParseFloat(v_str, 32)
 	return float(f)
 }
