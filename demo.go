@@ -441,6 +441,36 @@ var widgetsState struct {
 	plots_progress    float
 	plots_progress_dir float
 
+	// Color/Picker Widgets
+	color_picker_color ImVec4
+	color_alpha_preview bool
+	color_alpha_half_preview bool
+	color_drag_and_drop bool
+	color_options_menu bool
+	color_hdr bool
+	color_no_border bool
+	color_alpha bool
+	color_alpha_bar bool
+	color_side_preview bool
+	color_ref_color bool
+	color_ref_color_v ImVec4
+	color_display_mode int
+	color_picker_mode int
+	color_hsv ImVec4
+
+	// Drag/Slider Flags
+	slider_flags ImGuiSliderFlags
+	drag_f float
+	drag_i int
+	slider_f float
+	slider_i int
+
+	// Range Widgets
+	range_begin float
+	range_end float
+	range_begin_i int
+	range_end_i int
+
 	// Disable all
 	disable_all bool
 }
@@ -478,6 +508,29 @@ func init() {
 	// Plots
 	widgetsState.plots_animate = true
 	widgetsState.plots_progress_dir = 1.0
+
+	// Color/Picker Widgets
+	widgetsState.color_picker_color = ImVec4{114.0 / 255.0, 144.0 / 255.0, 154.0 / 255.0, 200.0 / 255.0}
+	widgetsState.color_alpha_preview = true
+	widgetsState.color_drag_and_drop = true
+	widgetsState.color_options_menu = true
+	widgetsState.color_alpha = true
+	widgetsState.color_alpha_bar = true
+	widgetsState.color_side_preview = true
+	widgetsState.color_ref_color_v = ImVec4{1.0, 0.0, 1.0, 0.5}
+	widgetsState.color_hsv = ImVec4{0.23, 1.0, 1.0, 1.0}
+
+	// Drag/Slider Flags
+	widgetsState.drag_f = 0.5
+	widgetsState.drag_i = 50
+	widgetsState.slider_f = 0.5
+	widgetsState.slider_i = 50
+
+	// Range Widgets
+	widgetsState.range_begin = 10
+	widgetsState.range_end = 90
+	widgetsState.range_begin_i = 100
+	widgetsState.range_end_i = 1000
 }
 
 func ShowDemoWindowWidgets() {
@@ -1213,6 +1266,190 @@ func ShowDemoWindowWidgets() {
 		}
 		buf := fmt.Sprintf("%d/%d", int(progress_saturated*1753), 1753)
 		ProgressBar(widgetsState.plots_progress, ImVec2{0.0, 0.0}, buf)
+		TreePop()
+	}
+
+	// Color/Picker Widgets
+	if TreeNode("Color/Picker Widgets") {
+		Checkbox("With Alpha Preview", &widgetsState.color_alpha_preview)
+		Checkbox("With Half Alpha Preview", &widgetsState.color_alpha_half_preview)
+		Checkbox("With Drag and Drop", &widgetsState.color_drag_and_drop)
+		Checkbox("With Options Menu", &widgetsState.color_options_menu)
+		SameLine(0, 0)
+		HelpMarker("Right-click on the individual color widget to show options.")
+		Checkbox("With HDR", &widgetsState.color_hdr)
+		SameLine(0, 0)
+		HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.")
+
+		misc_flags := ImGuiColorEditFlags(0)
+		if widgetsState.color_hdr {
+			misc_flags |= ImGuiColorEditFlags_HDR
+		}
+		if !widgetsState.color_drag_and_drop {
+			misc_flags |= ImGuiColorEditFlags_NoDragDrop
+		}
+		if widgetsState.color_alpha_half_preview {
+			misc_flags |= ImGuiColorEditFlags_AlphaPreviewHalf
+		} else if widgetsState.color_alpha_preview {
+			misc_flags |= ImGuiColorEditFlags_AlphaPreview
+		}
+		if !widgetsState.color_options_menu {
+			misc_flags |= ImGuiColorEditFlags_NoOptions
+		}
+
+		Text("Color widget:")
+		SameLine(0, 0)
+		HelpMarker("Click on the color square to open a color picker.\nCTRL+click on individual component to input value.")
+		col3 := [3]float{widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z}
+		ColorEdit3("MyColor##1", &col3, misc_flags)
+		widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z = col3[0], col3[1], col3[2]
+
+		Text("Color widget HSV with Alpha:")
+		col4 := [4]float{widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w}
+		ColorEdit4("MyColor##2", &col4, ImGuiColorEditFlags_DisplayHSV|misc_flags)
+		widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w = col4[0], col4[1], col4[2], col4[3]
+
+		Text("Color widget with Float Display:")
+		col4 = [4]float{widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w}
+		ColorEdit4("MyColor##2f", &col4, ImGuiColorEditFlags_Float|misc_flags)
+		widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w = col4[0], col4[1], col4[2], col4[3]
+
+		Text("Color button with Picker:")
+		SameLine(0, 0)
+		HelpMarker("With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\nWith the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only be used for the tooltip and picker popup.")
+		col4 = [4]float{widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w}
+		ColorEdit4("MyColor##3", &col4, ImGuiColorEditFlags_NoInputs|ImGuiColorEditFlags_NoLabel|misc_flags)
+		widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w = col4[0], col4[1], col4[2], col4[3]
+
+		Text("Color button only:")
+		Checkbox("ImGuiColorEditFlags_NoBorder", &widgetsState.color_no_border)
+		no_border_flag := ImGuiColorEditFlags(0)
+		if widgetsState.color_no_border {
+			no_border_flag = ImGuiColorEditFlags_NoBorder
+		}
+		ColorButton("MyColor##3c", widgetsState.color_picker_color, misc_flags|no_border_flag, ImVec2{80, 80})
+
+		Text("Color picker:")
+		Checkbox("With Alpha", &widgetsState.color_alpha)
+		Checkbox("With Alpha Bar", &widgetsState.color_alpha_bar)
+		Checkbox("With Side Preview", &widgetsState.color_side_preview)
+		if widgetsState.color_side_preview {
+			SameLine(0, 0)
+			Checkbox("With Ref Color", &widgetsState.color_ref_color)
+			if widgetsState.color_ref_color {
+				SameLine(0, 0)
+				ref_col := [4]float{widgetsState.color_ref_color_v.x, widgetsState.color_ref_color_v.y, widgetsState.color_ref_color_v.z, widgetsState.color_ref_color_v.w}
+				ColorEdit4("##RefColor", &ref_col, ImGuiColorEditFlags_NoInputs|misc_flags)
+				widgetsState.color_ref_color_v.x, widgetsState.color_ref_color_v.y, widgetsState.color_ref_color_v.z, widgetsState.color_ref_color_v.w = ref_col[0], ref_col[1], ref_col[2], ref_col[3]
+			}
+		}
+		Combo("Display Mode", &widgetsState.color_display_mode, []string{"Auto/Current", "None", "RGB Only", "HSV Only", "Hex Only"}, 5, -1)
+		SameLine(0, 0)
+		HelpMarker("ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().")
+		Combo("Picker Mode", &widgetsState.color_picker_mode, []string{"Auto/Current", "Hue bar + SV rect", "Hue wheel + SV triangle"}, 3, -1)
+		SameLine(0, 0)
+		HelpMarker("User can right-click the picker to change mode.")
+
+		picker_flags := misc_flags
+		if !widgetsState.color_alpha {
+			picker_flags |= ImGuiColorEditFlags_NoAlpha
+		}
+		if widgetsState.color_alpha_bar {
+			picker_flags |= ImGuiColorEditFlags_AlphaBar
+		}
+		if !widgetsState.color_side_preview {
+			picker_flags |= ImGuiColorEditFlags_NoSidePreview
+		}
+		if widgetsState.color_picker_mode == 1 {
+			picker_flags |= ImGuiColorEditFlags_PickerHueBar
+		}
+		if widgetsState.color_picker_mode == 2 {
+			picker_flags |= ImGuiColorEditFlags_PickerHueWheel
+		}
+		if widgetsState.color_display_mode == 1 {
+			picker_flags |= ImGuiColorEditFlags_NoInputs
+		}
+		if widgetsState.color_display_mode == 2 {
+			picker_flags |= ImGuiColorEditFlags_DisplayRGB
+		}
+		if widgetsState.color_display_mode == 3 {
+			picker_flags |= ImGuiColorEditFlags_DisplayHSV
+		}
+		if widgetsState.color_display_mode == 4 {
+			picker_flags |= ImGuiColorEditFlags_DisplayHex
+		}
+
+		col4 = [4]float{widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w}
+		var ref_col *float
+		if widgetsState.color_ref_color {
+			ref_col = &widgetsState.color_ref_color_v.x
+		}
+		ColorPicker4("MyColor##4", &col4, picker_flags, ref_col)
+		widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w = col4[0], col4[1], col4[2], col4[3]
+
+		Text("Set defaults in code:")
+		SameLine(0, 0)
+		HelpMarker("SetColorEditOptions() is designed to allow you to set boot-time default.\nWe don't have Push/Pop functions because you can force options on a per-widget basis if needed, and the user can change non-forced ones with the options menu.\nWe don't have a getter to avoid encouraging you to persistently save values that aren't forward-compatible.")
+		if Button("Default: Uint8 + HSV + Hue Bar") {
+			SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_PickerHueBar)
+		}
+		if Button("Default: Float + HDR + Hue Wheel") {
+			SetColorEditOptions(ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_PickerHueWheel)
+		}
+
+		// HSV encoded support
+		Spacing()
+		Text("HSV encoded colors")
+		SameLine(0, 0)
+		HelpMarker("By default, colors are given to ColorEdit and ColorPicker in RGB, but ImGuiColorEditFlags_InputHSV allows you to store colors as HSV and pass them to ColorEdit and ColorPicker as HSV. This comes with the added benefit that you can manipulate hue values with the picker even when saturation or value are zero.")
+		Text("Color widget with InputHSV:")
+		hsv_col := [4]float{widgetsState.color_hsv.x, widgetsState.color_hsv.y, widgetsState.color_hsv.z, widgetsState.color_hsv.w}
+		ColorEdit4("HSV shown as RGB##1", &hsv_col, ImGuiColorEditFlags_DisplayRGB|ImGuiColorEditFlags_InputHSV|ImGuiColorEditFlags_Float)
+		ColorEdit4("HSV shown as HSV##1", &hsv_col, ImGuiColorEditFlags_DisplayHSV|ImGuiColorEditFlags_InputHSV|ImGuiColorEditFlags_Float)
+		widgetsState.color_hsv.x, widgetsState.color_hsv.y, widgetsState.color_hsv.z, widgetsState.color_hsv.w = hsv_col[0], hsv_col[1], hsv_col[2], hsv_col[3]
+
+		TreePop()
+	}
+
+	// Drag/Slider Flags
+	if TreeNode("Drag/Slider Flags") {
+		// Demonstrate using advanced flags for DragXXX and SliderXXX functions
+		slider_flags_int := int(widgetsState.slider_flags)
+		CheckboxFlagsInt("ImGuiSliderFlags_AlwaysClamp", &slider_flags_int, int(ImGuiSliderFlags_AlwaysClamp))
+		SameLine(0, 0)
+		HelpMarker("Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.")
+		CheckboxFlagsInt("ImGuiSliderFlags_Logarithmic", &slider_flags_int, int(ImGuiSliderFlags_Logarithmic))
+		SameLine(0, 0)
+		HelpMarker("Enable logarithmic editing (more precision for small values).")
+		CheckboxFlagsInt("ImGuiSliderFlags_NoRoundToFormat", &slider_flags_int, int(ImGuiSliderFlags_NoRoundToFormat))
+		SameLine(0, 0)
+		HelpMarker("Disable rounding underlying value to match precision of the format string (e.g. %.3f values are rounded to those 3 digits).")
+		CheckboxFlagsInt("ImGuiSliderFlags_NoInput", &slider_flags_int, int(ImGuiSliderFlags_NoInput))
+		SameLine(0, 0)
+		HelpMarker("Disable CTRL+Click or Enter key allowing to input text directly into the widget.")
+		widgetsState.slider_flags = ImGuiSliderFlags(slider_flags_int)
+
+		// Drags
+		Text("Underlying float value: %f", widgetsState.drag_f)
+		DragFloat("DragFloat (0 -> 1)", &widgetsState.drag_f, 0.005, 0.0, 1.0, "%.3f", widgetsState.slider_flags)
+		DragFloat("DragFloat (0 -> +inf)", &widgetsState.drag_f, 0.005, 0.0, FLT_MAX, "%.3f", widgetsState.slider_flags)
+		DragFloat("DragFloat (-inf -> 1)", &widgetsState.drag_f, 0.005, -FLT_MAX, 1.0, "%.3f", widgetsState.slider_flags)
+		DragFloat("DragFloat (-inf -> +inf)", &widgetsState.drag_f, 0.005, -FLT_MAX, FLT_MAX, "%.3f", widgetsState.slider_flags)
+		DragInt("DragInt (0 -> 100)", &widgetsState.drag_i, 0.5, 0, 100, "%d", widgetsState.slider_flags)
+
+		// Sliders
+		Text("Underlying float value: %f", widgetsState.slider_f)
+		SliderFloat("SliderFloat (0 -> 1)", &widgetsState.slider_f, 0.0, 1.0, "%.3f", widgetsState.slider_flags)
+		SliderInt("SliderInt (0 -> 100)", &widgetsState.slider_i, 0, 100, "%d", widgetsState.slider_flags)
+
+		TreePop()
+	}
+
+	// Range Widgets
+	if TreeNode("Range Widgets") {
+		DragFloatRange2("range float", &widgetsState.range_begin, &widgetsState.range_end, 0.25, 0.0, 100.0, "Min: %.1f %%", "Max: %.1f %%", ImGuiSliderFlags_AlwaysClamp)
+		DragIntRange2("range int", &widgetsState.range_begin_i, &widgetsState.range_end_i, 5, 0, 1000, "Min: %d units", "Max: %d units", 0)
+		DragIntRange2("range int (no bounds)", &widgetsState.range_begin_i, &widgetsState.range_end_i, 5, 0, 0, "Min: %d units", "Max: %d units", 0)
 		TreePop()
 	}
 
