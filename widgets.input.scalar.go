@@ -74,6 +74,8 @@ func InputScalarInt64(label string, p_data, p_step, p_step_fast *int64, format s
 		SameLine(0, style.ItemInnerSpacing.x)
 		TextEx(label, 0)
 		style.FramePadding = backup_frame_padding
+
+		PopID()
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
@@ -191,6 +193,8 @@ func InputScalarInt32(label string, p_data, p_step, p_step_fast *int32, format s
 		SameLine(0, style.ItemInnerSpacing.x)
 		TextEx(label, 0)
 		style.FramePadding = backup_frame_padding
+
+		PopID()
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
@@ -308,6 +312,8 @@ func InputScalarFloat64(label string, p_data, p_step, p_step_fast *float64, form
 		SameLine(0, style.ItemInnerSpacing.x)
 		TextEx(label, 0)
 		style.FramePadding = backup_frame_padding
+
+		PopID()
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
@@ -425,6 +431,8 @@ func InputScalarFloat32(label string, p_data, p_step, p_step_fast *float32, form
 		SameLine(0, style.ItemInnerSpacing.x)
 		TextEx(label, 0)
 		style.FramePadding = backup_frame_padding
+
+		PopID()
 		EndGroup()
 	} else {
 		if InputText(label, &buf, flags, nil, nil) {
