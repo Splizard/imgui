@@ -611,7 +611,7 @@ func ShowDemoWindowWidgets() {
 			BeginTooltip()
 			Text("I am a fancy tooltip")
 			arr := []float{0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2}
-			PlotLines("Curve", arr, int(len(arr)), 0, "", FLT_MAX, FLT_MAX, ImVec2{}, 4)
+			PlotLines("Curve", arr, int(len(arr)), 0, "", FLT_MAX, FLT_MAX, ImVec2{}, 1)
 			EndTooltip()
 		}
 
