@@ -825,6 +825,10 @@ func (s *ImGuiStackSizes) CompareWithCurrentState() {
 
 	// Window stacks
 	// NOT checking: DC.ItemWidth, DC.TextWrapPos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
+	if s.SizeOfIDStack != short(len(window.IDStack)) {
+		fmt.Printf("DEBUG: ID Stack mismatch in window '%s': expected %d, got %d (diff: %d)\n",
+			window.Name, s.SizeOfIDStack, len(window.IDStack), int(len(window.IDStack))-int(s.SizeOfIDStack))
+	}
 	IM_ASSERT_USER_ERROR(s.SizeOfIDStack == short(len(window.IDStack)), "PushID/PopID or TreeNode/TreePop Mismatch!")
 
 	// Global stacks

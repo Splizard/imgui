@@ -7,6 +7,13 @@ import (
 
 // HelpMarker Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+// DebugIDStack prints the current ID stack size for debugging
+func DebugIDStack(label string) {
+	g := GImGui
+	window := g.CurrentWindow
+	fmt.Printf("DEBUG ID Stack [%s]: window='%s' size=%d\n", label, window.Name, len(window.IDStack))
+}
+
 func HelpMarker(desc string) {
 	TextDisabled(" (?)")
 
@@ -543,11 +550,15 @@ func ShowDemoWindowWidgets() {
 		return
 	}
 
+	DebugIDStack("ShowDemoWindowWidgets start")
+
 	if widgetsState.disable_all {
 		BeginDisabled(true)
 	}
 
+	DebugIDStack("Before Basic TreeNode")
 	if TreeNode("Basic") {
+		DebugIDStack("Inside Basic TreeNode")
 		if Button("Button") {
 			widgetsState.clicked++
 		}
@@ -718,9 +729,12 @@ func ShowDemoWindowWidgets() {
 			HelpMarker("Using the simplified one-liner ListBox API here.\nRefer to the \"List boxes\" section below for an explanation of how to use the more flexible and general BeginListBox/EndListBox API.")
 		}
 
+		DebugIDStack("Before Basic TreePop")
 		TreePop()
+		DebugIDStack("After Basic TreePop")
 	}
 
+	DebugIDStack("After Basic section")
 	if TreeNode("Trees") {
 		if TreeNode("Basic trees") {
 			for i := int(0); i < 5; i++ {
@@ -1462,6 +1476,8 @@ func ShowDemoWindowWidgets() {
 	if widgetsState.disable_all {
 		EndDisabled()
 	}
+
+	DebugIDStack("ShowDemoWindowWidgets end")
 }
 
 // State for ShowDemoWindowLayout
