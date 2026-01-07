@@ -318,8 +318,8 @@ func FocusWindow(window *ImGuiWindow) {
 	var focus_front_window *ImGuiWindow
 	var display_front_window *ImGuiWindow
 	if window != nil {
-		focus_front_window = window
-		display_front_window = window
+		focus_front_window = window.RootWindow
+		display_front_window = window.RootWindow
 	}
 
 	// Steal active widgets. Some of the cases it triggers includes:

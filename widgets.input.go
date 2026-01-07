@@ -601,7 +601,7 @@ func InputTextEx(label string, hint string, buf *[]byte, size_arg *ImVec2, flags
 		b = state.TextA
 	}
 
-	var is_displaying_hint = (hint != "" && b[0] == 0)
+	var is_displaying_hint = (hint != "" && (len(b) == 0 || b[0] == 0))
 
 	// Password pushes a temporary font with only a fallback glyph
 	if is_password && !is_displaying_hint {

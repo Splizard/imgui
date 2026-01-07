@@ -1216,9 +1216,10 @@ func ShowDemoWindowWidgets() {
 		Checkbox("Animate", &widgetsState.plots_animate)
 
 		// Plot as lines and plot as histogram
+		// Note: stride is 1 in Go (element count), not sizeof(float) like in C++
 		arr := []float{0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2}
-		PlotLines("Frame Times", arr, int(len(arr)), 0, "", FLT_MAX, FLT_MAX, ImVec2{}, 4)
-		PlotHistogram("Histogram", arr, int(len(arr)), 0, "", 0.0, 1.0, ImVec2{0, 80.0}, 4)
+		PlotLines("Frame Times", arr, int(len(arr)), 0, "", FLT_MAX, FLT_MAX, ImVec2{}, 1)
+		PlotHistogram("Histogram", arr, int(len(arr)), 0, "", 0.0, 1.0, ImVec2{0, 80.0}, 1)
 
 		// Fill an array of contiguous float values to plot
 		if !widgetsState.plots_animate || widgetsState.plots_refresh == 0.0 {
@@ -1239,7 +1240,7 @@ func ShowDemoWindowWidgets() {
 			}
 			average /= float(len(widgetsState.plots_values))
 			overlay := fmt.Sprintf("avg %f", average)
-			PlotLines("Lines", widgetsState.plots_values[:], int(len(widgetsState.plots_values)), widgetsState.plots_offset, overlay, -1.0, 1.0, ImVec2{0, 80.0}, 4)
+			PlotLines("Lines", widgetsState.plots_values[:], int(len(widgetsState.plots_values)), widgetsState.plots_offset, overlay, -1.0, 1.0, ImVec2{0, 80.0}, 1)
 		}
 
 		Separator()

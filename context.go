@@ -289,6 +289,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 		WantCaptureMouseNextFrame:         -1,
 		WantCaptureKeyboardNextFrame:      -1,
 		WantTextInputNextFrame:            -1,
+		TabBars:                           make(map[ImGuiID]*ImGuiTabBar),
 	}
 }
 
