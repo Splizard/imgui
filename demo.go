@@ -68,6 +68,11 @@ var demoState struct {
 	no_titlebar, no_scrollbar, no_menu, no_move, no_resize,
 	no_collapse, no_close, no_nav, no_background,
 	no_bring_to_front, unsaved_document bool
+
+	// Layout & Scrolling
+	show_scrolling_decoration bool
+	show_scrolling_track      bool
+	scrolling_track_item      int
 }
 
 // ShowDemoWindow Demonstrate most Dear ImGui features (this is big function!)
@@ -356,10 +361,10 @@ func ShowDemoWindow(p_open *bool) {
 
 	// All demo contents
 	ShowDemoWindowWidgets()
-	//ShowDemoWindowLayout()
-	//ShowDemoWindowPopups()
+	ShowDemoWindowLayout()
+	ShowDemoWindowPopups()
 	//ShowDemoWindowTables()
-	//ShowDemoWindowMisc()
+	ShowDemoWindowMisc()
 
 	// End of ShowDemoWindow()
 	PopItemWidth()
@@ -1380,9 +1385,9 @@ func ShowDemoWindowWidgets() {
 		}
 
 		col4 = [4]float{widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w}
-		var ref_col *float
+		var ref_col []float
 		if widgetsState.color_ref_color {
-			ref_col = &widgetsState.color_ref_color_v.x
+			ref_col = []float{widgetsState.color_ref_color_v.x, widgetsState.color_ref_color_v.y, widgetsState.color_ref_color_v.z, widgetsState.color_ref_color_v.w}
 		}
 		ColorPicker4("MyColor##4", &col4, picker_flags, ref_col)
 		widgetsState.color_picker_color.x, widgetsState.color_picker_color.y, widgetsState.color_picker_color.z, widgetsState.color_picker_color.w = col4[0], col4[1], col4[2], col4[3]
@@ -1455,5 +1460,641 @@ func ShowDemoWindowWidgets() {
 
 	if widgetsState.disable_all {
 		EndDisabled()
+	}
+}
+
+// State for ShowDemoWindowLayout
+var layoutState struct {
+	// Child windows
+	disable_mouse_wheel bool
+	disable_menu        bool
+	offset_x            int
+
+	// Widgets Width
+	width_f              float
+	show_indented_items  bool
+
+	// Basic Horizontal Layout
+	c1, c2, c3, c4 bool
+	f0, f1, f2     float
+	item           int
+
+	// Groups
+	group_values [4]float
+}
+
+func init() {
+	// Initialize layout state
+	layoutState.show_indented_items = true
+	layoutState.f0 = 1.0
+	layoutState.f1 = 2.0
+	layoutState.f2 = 3.0
+	layoutState.item = -1
+}
+
+func ShowDemoWindowLayout() {
+	if !CollapsingHeader("Layout & Scrolling", 0) {
+		return
+	}
+
+	if TreeNode("Child windows") {
+		HelpMarker("Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window.")
+		Checkbox("Disable Mouse Wheel", &layoutState.disable_mouse_wheel)
+		Checkbox("Disable Menu", &layoutState.disable_menu)
+
+		// Child 1: no border, enable horizontal scrollbar
+		{
+			window_flags := ImGuiWindowFlags_HorizontalScrollbar
+			if layoutState.disable_mouse_wheel {
+				window_flags |= ImGuiWindowFlags_NoScrollWithMouse
+			}
+			BeginChild("ChildL", ImVec2{GetContentRegionAvail().x * 0.5, 260}, false, window_flags)
+			for i := int(0); i < 100; i++ {
+				Text("%04d: scrollable region", i)
+			}
+			EndChild()
+		}
+
+		SameLine(0, 0)
+
+		// Child 2: rounded border
+		{
+			window_flags := ImGuiWindowFlags_None
+			if layoutState.disable_mouse_wheel {
+				window_flags |= ImGuiWindowFlags_NoScrollWithMouse
+			}
+			if !layoutState.disable_menu {
+				window_flags |= ImGuiWindowFlags_MenuBar
+			}
+			PushStyleFloat(ImGuiStyleVar_ChildRounding, 5.0)
+			BeginChild("ChildR", ImVec2{0, 260}, true, window_flags)
+			if !layoutState.disable_menu && BeginMenuBar() {
+				if BeginMenu("Menu", true) {
+					// Simplified menu
+					MenuItem("New", "", nil, true)
+					MenuItem("Open", "Ctrl+O", nil, true)
+					EndMenu()
+				}
+				EndMenuBar()
+			}
+			if BeginTable("split", 2, ImGuiTableFlags_Resizable|ImGuiTableFlags_NoSavedSettings, ImVec2{}, 0) {
+				for i := int(0); i < 100; i++ {
+					buf := fmt.Sprintf("%03d", i)
+					TableNextColumn()
+					Button(buf)
+				}
+				EndTable()
+			}
+			EndChild()
+			PopStyleVar(1)
+		}
+
+		Separator()
+
+		// Demonstrate a few extra things
+		{
+			SetNextItemWidth(GetFontSize() * 8)
+			DragInt("Offset X", &layoutState.offset_x, 1.0, -1000, 1000, "%d", 0)
+
+			SetCursorPosX(GetCursorPosX() + float(layoutState.offset_x))
+			PushStyleColorInt(ImGuiCol_ChildBg, IM_COL32(255, 0, 0, 100))
+			BeginChild("Red", ImVec2{200, 100}, true, ImGuiWindowFlags_None)
+			for n := int(0); n < 50; n++ {
+				Text("Some test %d", n)
+			}
+			EndChild()
+			child_is_hovered := IsItemHovered(0)
+			child_rect_min := GetItemRectMin()
+			child_rect_max := GetItemRectMax()
+			PopStyleColor(1)
+			Text("Hovered: %d", bool2int(child_is_hovered))
+			Text("Rect of child window is: (%.0f,%.0f) (%.0f,%.0f)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y)
+		}
+
+		TreePop()
+	}
+
+	if TreeNode("Widgets Width") {
+		Checkbox("Show indented items", &layoutState.show_indented_items)
+
+		// Use SetNextItemWidth() to set the width of a single upcoming item.
+		Text("SetNextItemWidth/PushItemWidth(100)")
+		SameLine(0, 0)
+		HelpMarker("Fixed width.")
+		PushItemWidth(100)
+		DragFloat("float##1b", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+		if layoutState.show_indented_items {
+			Indent(0)
+			DragFloat("float (indented)##1b", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+			Unindent(0)
+		}
+		PopItemWidth()
+
+		Text("SetNextItemWidth/PushItemWidth(-100)")
+		SameLine(0, 0)
+		HelpMarker("Align to right edge minus 100")
+		PushItemWidth(-100)
+		DragFloat("float##2a", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+		if layoutState.show_indented_items {
+			Indent(0)
+			DragFloat("float (indented)##2b", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+			Unindent(0)
+		}
+		PopItemWidth()
+
+		Text("SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5f)")
+		SameLine(0, 0)
+		HelpMarker("Half of available width.\n(~ right-cursor_pos)\n(works within a column set)")
+		PushItemWidth(GetContentRegionAvail().x * 0.5)
+		DragFloat("float##3a", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+		if layoutState.show_indented_items {
+			Indent(0)
+			DragFloat("float (indented)##3b", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+			Unindent(0)
+		}
+		PopItemWidth()
+
+		Text("SetNextItemWidth/PushItemWidth(-FLT_MIN)")
+		SameLine(0, 0)
+		HelpMarker("Align to right edge")
+		PushItemWidth(-FLT_MIN)
+		DragFloat("##float5a", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+		if layoutState.show_indented_items {
+			Indent(0)
+			DragFloat("float (indented)##5b", &layoutState.width_f, 1, 0, 0, "%.3f", 0)
+			Unindent(0)
+		}
+		PopItemWidth()
+
+		TreePop()
+	}
+
+	if TreeNode("Basic Horizontal Layout") {
+		TextWrapped("(Use ImGui::SameLine() to keep adding items to the right of the preceding item)")
+
+		// Text
+		Text("Two items: Hello")
+		SameLine(0, 0)
+		yellow := ImVec4{1, 1, 0, 1}
+		TextColored(&yellow, "Sailor")
+
+		// Adjust spacing
+		Text("More spacing: Hello")
+		SameLine(0, 20)
+		TextColored(&yellow, "Sailor")
+
+		// Button
+		AlignTextToFramePadding()
+		Text("Normal buttons")
+		SameLine(0, 0)
+		Button("Banana")
+		SameLine(0, 0)
+		Button("Apple")
+		SameLine(0, 0)
+		Button("Corniflower")
+
+		// Button
+		Text("Small buttons")
+		SameLine(0, 0)
+		SmallButton("Like this one")
+		SameLine(0, 0)
+		Text("can fit within a text block.")
+
+		// Aligned to arbitrary position
+		Text("Aligned")
+		SameLine(150, 0)
+		Text("x=150")
+		SameLine(300, 0)
+		Text("x=300")
+		Text("Aligned")
+		SameLine(150, 0)
+		SmallButton("x=150")
+		SameLine(300, 0)
+		SmallButton("x=300")
+
+		// Checkbox
+		Checkbox("My", &layoutState.c1)
+		SameLine(0, 0)
+		Checkbox("Tailor", &layoutState.c2)
+		SameLine(0, 0)
+		Checkbox("Is", &layoutState.c3)
+		SameLine(0, 0)
+		Checkbox("Rich", &layoutState.c4)
+
+		// Various
+		PushItemWidth(80)
+		items := []string{"AAAA", "BBBB", "CCCC", "DDDD"}
+		Combo("Combo", &layoutState.item, items, int(len(items)), -1)
+		SameLine(0, 0)
+		SliderFloat("X", &layoutState.f0, 0.0, 5.0, "%.3f", 0)
+		SameLine(0, 0)
+		SliderFloat("Y", &layoutState.f1, 0.0, 5.0, "%.3f", 0)
+		SameLine(0, 0)
+		SliderFloat("Z", &layoutState.f2, 0.0, 5.0, "%.3f", 0)
+		PopItemWidth()
+
+		TreePop()
+	}
+
+	if TreeNode("Groups") {
+		HelpMarker("BeginGroup() basically locks the horizontal position for new line. EndGroup() bundles the whole group so that you can use \"item\" functions such as IsItemHovered()/IsItemActive() or SameLine() etc. on the whole group.")
+		BeginGroup()
+		{
+			BeginGroup()
+			Button("AAA")
+			SameLine(0, 0)
+			Button("BBB")
+			SameLine(0, 0)
+			BeginGroup()
+			Button("CCC")
+			Button("DDD")
+			EndGroup()
+			SameLine(0, 0)
+			Button("EEE")
+			EndGroup()
+			if IsItemHovered(0) {
+				SetTooltip("First group hovered")
+			}
+		}
+		// Capture the group size and create widgets based on that size
+		size := GetItemRectSize()
+		values := layoutState.group_values[:]
+
+		PlotHistogram("##values", values, int(len(values)), 0, "", 0.0, 1.0, size, 4)
+
+		Button("ACTION")
+		SameLine(0, 0)
+		Button("REACTION")
+		SameLine(0, 0)
+		Button("DEMO")
+		SameLine(0, 0)
+		Button("DEMO")
+		SameLine(0, 0)
+		Button("DEMO")
+		EndGroup()
+		SameLine(0, 0)
+
+		Button("HIERARCHYHHH")
+		SameLine(0, 0)
+		BeginGroup()
+		Button("Track")
+		SameLine(0, 0)
+		Button("Move")
+		SameLine(0, 0)
+		Button("Rotate")
+		EndGroup()
+
+		TreePop()
+	}
+
+	if TreeNode("Text Baseline Alignment") {
+		{
+			BulletText("Text baseline:")
+			SameLine(0, 0)
+			HelpMarker("This is testing the vertical alignment that gets applied on text to keep it aligned with widgets. Lines only composed of text or \"small\" widgets use less vertical space than lines with framed widgets.")
+			Indent(0)
+
+			Text("KO Alarm")
+				SameLine(0, 0)
+				Button("Some framed item")
+				SameLine(0, 0)
+				Text("Some text")
+
+				// If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
+				AlignTextToFramePadding()
+				Text("OK Alarm")
+				SameLine(0, 0)
+				Button("Some framed item")
+				SameLine(0, 0)
+				Text("Some text")
+
+			Unindent(0)
+		}
+
+		{
+			BulletText("Multi-line text:")
+			Indent(0)
+			Text("One\nTwo\nThree")
+			SameLine(0, 0)
+			Text("Hello\nWorld")
+			SameLine(0, 0)
+			Text("Banana")
+
+			Text("Banana")
+			SameLine(0, 0)
+			Text("Hello\nWorld")
+			SameLine(0, 0)
+			Text("One\nTwo\nThree")
+
+			Button("HOP##1")
+			SameLine(0, 0)
+			Text("Banana")
+			SameLine(0, 0)
+			Text("Hello\nWorld")
+			SameLine(0, 0)
+			Text("Banana")
+
+			Button("HOP##2")
+			SameLine(0, 0)
+			Text("Hello\nWorld")
+			SameLine(0, 0)
+			Text("Banana")
+			Unindent(0)
+		}
+
+		TreePop()
+	}
+
+	if TreeNode("Scrolling") {
+		// Vertical scroll functions
+		HelpMarker("Use SetScrollHereY() or SetScrollFromPosY() to scroll to a given vertical position.")
+
+		Checkbox("Decoration", &demoState.show_scrolling_decoration)
+
+		if demoState.show_scrolling_decoration {
+			SameLine(0, 0)
+			Checkbox("Track", &demoState.show_scrolling_track)
+			SameLine(0, 0)
+			PushItemWidth(100)
+			Combo("##combo", &demoState.scrolling_track_item, []string{"track", "track centered"}, 2, -1)
+			PopItemWidth()
+		}
+
+		if demoState.show_scrolling_track && demoState.show_scrolling_decoration {
+			for i := int(0); i < 5; i++ {
+				if i > 0 {
+					SameLine(0, 0)
+				}
+				BeginGroup()
+				scroll_to_off := Button(fmt.Sprintf("Scroll Offset##%d", i))
+				scroll_to_pos := Button(fmt.Sprintf("Scroll Pos##%d", i))
+				if scroll_to_off || scroll_to_pos {
+					demoState.scrolling_track_item = i
+				}
+				EndGroup()
+			}
+		}
+
+		TreePop()
+	}
+}
+
+// State for ShowDemoWindowPopups
+var popupsState struct {
+	selected_fish int
+	toggles       [5]bool
+	context_value float
+	name          [32]byte
+}
+
+func init() {
+	popupsState.selected_fish = -1
+	popupsState.toggles[0] = true
+	copy(popupsState.name[:], "Label1")
+}
+
+func ShowDemoWindowPopups() {
+	if !CollapsingHeader("Popups & Modal windows", 0) {
+		return
+	}
+
+	if TreeNode("Popups") {
+		TextWrapped("When a popup is active, it inhibits interacting with windows that are behind the popup. Clicking outside the popup closes it.")
+
+		names := []string{"Bream", "Haddock", "Mackerel", "Pollock", "Tilefish"}
+
+		// Simple selection popup
+		if Button("Select..") {
+			OpenPopup("my_select_popup", 0)
+		}
+		SameLine(0, 0)
+		if popupsState.selected_fish == -1 {
+			TextUnformatted("<None>")
+		} else {
+			TextUnformatted(names[popupsState.selected_fish])
+		}
+		if BeginPopup("my_select_popup", 0) {
+			Text("Aquarium")
+			Separator()
+			for i := 0; i < len(names); i++ {
+				if Selectable(names[i], false, 0, ImVec2{}) {
+					popupsState.selected_fish = int(i)
+				}
+			}
+			EndPopup()
+		}
+
+		// Showing a menu with toggles
+		if Button("Toggle..") {
+			OpenPopup("my_toggle_popup", 0)
+		}
+		if BeginPopup("my_toggle_popup", 0) {
+			for i := 0; i < len(names); i++ {
+				MenuItemSelected(names[i], "", &popupsState.toggles[i], true)
+			}
+			if BeginMenu("Sub-menu", true) {
+				MenuItem("Click me", "", nil, true)
+				EndMenu()
+			}
+
+			Separator()
+			Text("Tooltip here")
+			if IsItemHovered(0) {
+				SetTooltip("I am a tooltip over a popup")
+			}
+
+			if Button("Stacked Popup") {
+				OpenPopup("another popup", 0)
+			}
+			if BeginPopup("another popup", 0) {
+				for i := 0; i < len(names); i++ {
+					MenuItemSelected(names[i], "", &popupsState.toggles[i], true)
+				}
+				if BeginMenu("Sub-menu", true) {
+					MenuItem("Click me", "", nil, true)
+					if Button("Stacked Popup") {
+						OpenPopup("another popup", 0)
+					}
+					if BeginPopup("another popup", 0) {
+						Text("I am the last one here.")
+						EndPopup()
+					}
+					EndMenu()
+				}
+				EndPopup()
+			}
+			EndPopup()
+		}
+
+		TreePop()
+	}
+
+	if TreeNode("Context menus") {
+		HelpMarker("\"Context\" functions are simple helpers to associate a Popup to a given Item or Window identifier.")
+
+		// Example 1
+			{
+				context_names := []string{"Label1", "Label2", "Label3", "Label4", "Label5"}
+				for n := 0; n < 5; n++ {
+					Selectable(context_names[n], false, 0, ImVec2{})
+					if BeginPopupContextItem("", ImGuiPopupFlags_MouseButtonRight) {
+						Text("This a popup for \"%s\"!", context_names[n])
+						if Button("Close") {
+							CloseCurrentPopup()
+						}
+						EndPopup()
+					}
+					if IsItemHovered(0) {
+						SetTooltip("Right-click to open popup")
+					}
+				}
+			}
+
+		// Example 2
+		{
+			HelpMarker("Text() elements don't have stable identifiers so we need to provide one.")
+			Text("Value = %.3f <-- (1) right-click this value", popupsState.context_value)
+			if BeginPopupContextItem("my popup", ImGuiPopupFlags_MouseButtonRight) {
+				if Selectable("Set to zero", false, 0, ImVec2{}) {
+					popupsState.context_value = 0.0
+				}
+				if Selectable("Set to PI", false, 0, ImVec2{}) {
+					popupsState.context_value = 3.1415
+				}
+				SetNextItemWidth(-FLT_MIN)
+				DragFloat("##Value", &popupsState.context_value, 0.1, 0.0, 0.0, "%.3f", 0)
+				EndPopup()
+			}
+
+			Text("(2) Or right-click this text")
+			OpenPopupOnItemClick("my popup", ImGuiPopupFlags_MouseButtonRight)
+
+			if Button("(3) Or click this button") {
+				OpenPopup("my popup", 0)
+			}
+		}
+
+		// Example 3
+		{
+			HelpMarker("Showcase using a popup ID linked to item ID, with the item having a changing label + stable ID using the ### operator.")
+			name := string(popupsState.name[:])
+			for i, c := range popupsState.name {
+				if c == 0 {
+					name = string(popupsState.name[:i])
+					break
+				}
+			}
+			buf := fmt.Sprintf("Button: %s###Button", name)
+			Button(buf)
+			if BeginPopupContextItem("", ImGuiPopupFlags_MouseButtonRight) {
+				Text("Edit name:")
+				nameSlice := popupsState.name[:]
+				InputText("##edit", &nameSlice, 0, nil, nil)
+				if Button("Close") {
+					CloseCurrentPopup()
+				}
+				EndPopup()
+			}
+			SameLine(0, 0)
+			Text("(<-- right-click here)")
+		}
+
+		TreePop()
+	}
+
+	if TreeNode("Modals") {
+		TextWrapped("Modal windows are like popups but the user cannot close them by clicking outside.")
+
+		if Button("Delete..") {
+			OpenPopup("Delete?", 0)
+		}
+
+		// Always center this window when appearing
+		center := GetMainViewport().GetCenter()
+		SetNextWindowPos(&center, ImGuiCond_Appearing, ImVec2{0.5, 0.5})
+
+		if BeginPopupModal("Delete?", nil, ImGuiWindowFlags_AlwaysAutoResize) {
+			Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n")
+			Separator()
+
+			PushStyleVec(ImGuiStyleVar_FramePadding, ImVec2{0, 0})
+			Checkbox("Don't ask me next time", &demoState.no_close)
+			PopStyleVar(1)
+
+			if Button("OK") {
+				CloseCurrentPopup()
+			}
+			SetItemDefaultFocus()
+			SameLine(0, 0)
+			if Button("Cancel") {
+				CloseCurrentPopup()
+			}
+			EndPopup()
+		}
+
+		if Button("Stacked modals..") {
+			OpenPopup("Stacked 1", 0)
+		}
+		if BeginPopupModal("Stacked 1", nil, 0) {
+			Text("Hello from Stacked The First\nUsing style.Colors[ImGuiCol_ModalWindowDimBg] behind it.")
+
+			if Button("Another modal..") {
+				OpenPopup("Stacked 2", 0)
+			}
+			SetItemDefaultFocus()
+			if BeginPopupModal("Stacked 2", nil, 0) {
+				Text("Hello from Stacked The Second!")
+				if Button("Close") {
+					CloseCurrentPopup()
+				}
+				EndPopup()
+			}
+
+			if Button("Close") {
+				CloseCurrentPopup()
+			}
+			EndPopup()
+		}
+
+		TreePop()
+	}
+
+	if TreeNode("Menus inside a regular window") {
+		TextWrapped("Below we are testing adding menu items to a regular window. It's rather unusual but should work!")
+		Separator()
+
+		MenuItem("Menu item", "CTRL+M", nil, true)
+		if BeginMenu("Menu inside a regular window", true) {
+			MenuItem("Submenu item", "", nil, true)
+			EndMenu()
+		}
+		Separator()
+		TreePop()
+	}
+}
+
+// State for ShowDemoWindowMisc
+var miscState struct {
+	filter ImGuiTextFilter
+}
+
+func ShowDemoWindowMisc() {
+	if !CollapsingHeader("Filtering", 0) {
+		return
+	}
+
+	// Helper to display a little (?) mark which shows a tooltip when hovered.
+	HelpMarker("Filter usage:\n" +
+		"  \"\"         display all lines\n" +
+		"  \"xxx\"      display lines containing \"xxx\"\n" +
+		"  \"xxx,yyy\"  display lines containing \"xxx\" or \"yyy\"\n" +
+		"  \"-xxx\"     hide lines containing \"xxx\"")
+
+	miscState.filter.Draw("Filter (inc,-exc)", 0)
+	lines := []string{"aaa1.c", "bbb1.c", "ccc1.c", "aaa2.cpp", "bbb2.cpp", "ccc2.cpp", "abc.h", "hello, world"}
+	for i := 0; i < len(lines); i++ {
+		if miscState.filter.PassFilter(lines[i]) {
+			BulletText("%s", lines[i])
+		}
 	}
 }
