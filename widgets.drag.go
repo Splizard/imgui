@@ -556,6 +556,26 @@ func ImParseFormatFindStart(format string) string {
 	return format[len(format):] // Return empty string if no format specifier found
 }
 
+// ImParseFormatFindEnd finds the end of the format specifier.
+// Printf/scanf types modifiers: I/L/h/j/l/t/w/z. Other uppercase letters qualify as types aka end of the format.
+func ImParseFormatFindEnd(format string) int32 {
+	if len(format) == 0 || format[0] != '%' {
+		return 0
+	}
+	// Ignored uppercase: I, L
+	// Ignored lowercase: h, j, l, t, w, z
+	for i := 0; i < len(format); i++ {
+		c := format[i]
+		if c >= 'A' && c <= 'Z' && c != 'I' && c != 'L' {
+			return int32(i + 1)
+		}
+		if c >= 'a' && c <= 'z' && c != 'h' && c != 'j' && c != 'l' && c != 't' && c != 'w' && c != 'z' {
+			return int32(i + 1)
+		}
+	}
+	return int32(len(format))
+}
+
 // isIntegerFormatSpecifier checks if the format specifier is for an integer type
 // (d, i, u, o, x, X)
 func isIntegerFormatSpecifier(format string) bool {
@@ -583,16 +603,20 @@ func RoundScalarWithFormatT(format string, v float) float {
 		return v
 	}
 
+	// Find the end of the format specifier to extract just the format (e.g., "%.3f" from "%.3f ns")
+	fmt_end := ImParseFormatFindEnd(fmt_start)
+	fmt_spec := fmt_start[:fmt_end]
+
 	// Check if this is an integer format specifier
-	if isIntegerFormatSpecifier(fmt_start) {
+	if isIntegerFormatSpecifier(fmt_spec) {
 		// For integer formats, convert to int first, format, then parse back
-		var v_str = fmt.Sprintf(fmt_start, int(v))
+		var v_str = fmt.Sprintf(fmt_spec, int(v))
 		i, _ := strconv.ParseInt(v_str, 0, 32)
 		return float(i)
 	}
 
 	// Format value with our rounding, and read back
-	var v_str = fmt.Sprintf(fmt_start, v)
+	var v_str = fmt.Sprintf(fmt_spec, v)
 	f, _ := strconv.ParseFloat(v_str, 32)
 	return float(f)
 }
