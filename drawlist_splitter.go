@@ -113,11 +113,11 @@ func (this *ImDrawListSplitter) Merge(draw_list *ImDrawList) {
 	for i := int(1); i < this._Count; i++ {
 		var ch = this._Channels[i]
 		if sz := len(ch._CmdBuffer); sz != 0 {
-			copy(cmd_write, ch._CmdBuffer[sz:])
+			copy(cmd_write, ch._CmdBuffer[:sz])
 			cmd_write = cmd_write[sz:]
 		}
 		if sz := len(ch._IdxBuffer); sz != 0 {
-			copy(idx_write, ch._IdxBuffer[sz:])
+			copy(idx_write, ch._IdxBuffer[:sz])
 			idx_write = idx_write[sz:]
 		}
 	}
@@ -145,12 +145,11 @@ func (this *ImDrawListSplitter) SetCurrentChannel(draw_list *ImDrawList, idx int
 		return
 	}
 
-	// Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
-	copy(this._Channels[this._Current]._CmdBuffer, draw_list.CmdBuffer)
-	copy(this._Channels[this._Current]._IdxBuffer, draw_list.IdxBuffer)
+	// Swap the slice headers (pointer, length, capacity) between draw_list and the channel
+	// This is equivalent to the C++ memcpy of the ImVector structure
+	this._Channels[this._Current]._CmdBuffer, draw_list.CmdBuffer = draw_list.CmdBuffer, this._Channels[idx]._CmdBuffer
+	this._Channels[this._Current]._IdxBuffer, draw_list.IdxBuffer = draw_list.IdxBuffer, this._Channels[idx]._IdxBuffer
 	this._Current = idx
-	copy(draw_list.CmdBuffer, this._Channels[idx]._CmdBuffer)
-	copy(draw_list.IdxBuffer, this._Channels[idx]._IdxBuffer)
 	draw_list._IdxWritePtr = int(len(draw_list.IdxBuffer))
 
 	// If current command is used with different settings we need to add a new command

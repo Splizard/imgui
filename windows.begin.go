@@ -404,6 +404,14 @@ func Begin(name string, p_open *bool, flags ImGuiWindowFlags) bool {
 		}
 		window.ResizeBorderHeld = int8((byte)(border_held))
 
+		// Set window.Size based on collapsed state
+		if window.Collapsed && flags&ImGuiWindowFlags_ChildWindow == 0 {
+			titlebar := window.TitleBarRect()
+			window.Size = titlebar.GetSize()
+		} else {
+			window.Size = window.SizeFull
+		}
+
 		// SCROLLBAR VISIBILITY
 
 		// Update scrollbar visibility (based on the Size that was effective during last frame or the auto-resized Size).
