@@ -2195,7 +2195,9 @@ func TableEndRow(table *ImGuiTable) {
 
 		// Draw cell background color
 		if draw_cell_bg_color {
-			for _, cell_data := range table.RowCellData {
+			// Only iterate up to RowCellDataCurrent (inclusive), not the entire slice
+			for i := int(0); i <= int(table.RowCellDataCurrent); i++ {
+				cell_data := &table.RowCellData[i]
 				table.spanColumns(int(cell_data.Column))
 				var column = &table.Columns[cell_data.Column]
 				var cell_bg_rect = TableGetCellBgRect(table, int(cell_data.Column))
