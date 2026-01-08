@@ -276,6 +276,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 		DragDropMouseButton:               -1,
 		DragDropAcceptFrameCount:          -1,
 		CurrentTableStackIdx:              -1,
+		ColorEditOptions:                  ImGuiColorEditFlags_DefaultOptions_,
 		ColorEditLastColor:                [3]float{FLT_MAX, FLT_MAX, FLT_MAX},
 		DragSpeedDefaultRatio:             1 / 100.0,
 		TooltipSlowDelay:                  0.5,
@@ -288,6 +289,7 @@ func NewImGuiContext(atlas *ImFontAtlas) ImGuiContext {
 		WantCaptureMouseNextFrame:         -1,
 		WantCaptureKeyboardNextFrame:      -1,
 		WantTextInputNextFrame:            -1,
+		TabBars:                           make(map[ImGuiID]*ImGuiTabBar),
 	}
 }
 

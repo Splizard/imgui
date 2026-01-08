@@ -176,7 +176,7 @@ func SliderScalarN(label string, data_type ImGuiDataType, p_data []float, p_min 
 	var value_changed = false
 	BeginGroup()
 	PushString(label)
-	PushMultiItemsWidths(1, CalcItemWidth())
+	PushMultiItemsWidths(int(len(p_data)), CalcItemWidth())
 	for i := 0; i < len(p_data); i++ {
 		PushID(int(i))
 		if i > 0 {

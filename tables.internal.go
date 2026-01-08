@@ -273,7 +273,10 @@ func TablePopBackgroundChannel() {
 
 	// Optimization: avoid PopClipRect() + SetCurrentChannel()
 	SetWindowClipRectBeforeSetChannel(window, &table.HostBackupInnerClipRect)
-	table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+	// Skip if draw channel is dummy channel (255 represents -1 when cast to uint8)
+	if column.DrawChannelCurrent != ImGuiTableDrawChannelIdx(255) {
+		table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+	}
 }
 
 // Tables: Internals
@@ -890,6 +893,22 @@ func (table *ImGuiTable) spanColumns(column_n int) {
 	// add missing items
 	for i := int(0); i < (int(column_n)+1)-columnsLen; i++ {
 		table.Columns = append(table.Columns, NewImGuiTableColumn())
+	}
+}
+
+// helper for the span allocator. called when setting an index
+// of table.RowCellData
+func (table *ImGuiTable) spanRowCellData(idx int) {
+	rowCellDataLen := int(len(table.RowCellData))
+
+	// check if that index already exists
+	if idx <= rowCellDataLen-1 {
+		return
+	}
+
+	// add missing items
+	for i := int(0); i < (idx+1)-rowCellDataLen; i++ {
+		table.RowCellData = append(table.RowCellData, ImGuiTableCellData{})
 	}
 }
 
@@ -1749,6 +1768,11 @@ func TableMergeDrawChannels(table *ImGuiTable) {
 				channel_no = column.DrawChannelFrozen
 			}
 
+			// Skip dummy channel (255 represents -1 when cast to uint8)
+			if channel_no == ImGuiTableDrawChannelIdx(255) {
+				continue
+			}
+
 			// Don't attempt to merge if there are multiple draw calls within the column
 			var src_channel = &splitter._Channels[channel_no]
 			if len(src_channel._CmdBuffer) > 0 && src_channel._CmdBuffer[len(src_channel._CmdBuffer)-1].ElemCount == 0 {
@@ -2187,7 +2211,9 @@ func TableEndRow(table *ImGuiTable) {
 
 		// Draw cell background color
 		if draw_cell_bg_color {
-			for _, cell_data := range table.RowCellData {
+			// Only iterate up to RowCellDataCurrent (inclusive), not the entire slice
+			for i := int(0); i <= int(table.RowCellDataCurrent); i++ {
+				cell_data := &table.RowCellData[i]
 				table.spanColumns(int(cell_data.Column))
 				var column = &table.Columns[cell_data.Column]
 				var cell_bg_rect = TableGetCellBgRect(table, int(cell_data.Column))
@@ -2249,7 +2275,10 @@ func TableEndRow(table *ImGuiTable) {
 
 		// Update cliprect ahead of TableBeginCell() so clipper can access to new ClipRect.Min.y
 		SetWindowClipRectBeforeSetChannel(window, &table.Columns[0].ClipRect)
-		table.DrawSplitter.SetCurrentChannel(window.DrawList, int(table.Columns[0].DrawChannelCurrent))
+		// Skip if draw channel is dummy channel (255 represents -1 when cast to uint8)
+		if table.Columns[0].DrawChannelCurrent != ImGuiTableDrawChannelIdx(255) {
+			table.DrawSplitter.SetCurrentChannel(window.DrawList, int(table.Columns[0].DrawChannelCurrent))
+		}
 	}
 
 	if table.RowFlags&ImGuiTableRowFlags_Headers == 0 {
@@ -2302,9 +2331,11 @@ func TableBeginCell(table *ImGuiTable, column_n int) {
 		table.DrawSplitter.SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_NOCLIP)
 		//IM_ASSERT(table.DrawSplitter._Current == TABLE_DRAW_CHANNEL_NOCLIP);
 	} else {
-		// FIXME-TABLE: Could avoid this if draw channel is dummy channel?
-		SetWindowClipRectBeforeSetChannel(window, &column.ClipRect)
-		table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+		// Skip if draw channel is dummy channel (255 represents -1 when cast to uint8)
+		if column.DrawChannelCurrent != ImGuiTableDrawChannelIdx(255) {
+			SetWindowClipRectBeforeSetChannel(window, &column.ClipRect)
+			table.DrawSplitter.SetCurrentChannel(window.DrawList, int(column.DrawChannelCurrent))
+		}
 	}
 
 	// Logging

@@ -1199,10 +1199,16 @@ func ShowMetricsWindow(p_open *bool) {
 		Indent(0)
 
 		var name, rootName, underName, movingName = "nil", "nil", "nil", "nil"
-		if g.HoveredWindow != nil {
-			name, rootName, underName, movingName = g.HoveredWindow.Name, g.HoveredWindow.RootWindow.Name,
-				g.HoveredWindow.RootWindow.Name, g.MovingWindow.Name
-		}
+			if g.HoveredWindow != nil {
+				name = g.HoveredWindow.Name
+				rootName = g.HoveredWindow.RootWindow.Name
+				if g.HoveredWindowUnderMovingWindow != nil {
+					underName = g.HoveredWindowUnderMovingWindow.Name
+				}
+			}
+			if g.MovingWindow != nil {
+				movingName = g.MovingWindow.Name
+			}
 
 		Text("HoveredWindow: '%s'", name)
 		Text("HoveredWindow.Root: '%s'", rootName)
@@ -1226,7 +1232,10 @@ func ShowMetricsWindow(p_open *bool) {
 
 		var navWindowName, navTargetName = "nil", "nil"
 		if g.NavWindow != nil {
-			navWindowName, navTargetName = g.NavWindow.Name, g.NavWindowingTarget.Name
+			navWindowName = g.NavWindow.Name
+		}
+		if g.NavWindowingTarget != nil {
+			navTargetName = g.NavWindowingTarget.Name
 		}
 
 		Text("NAV,FOCUS")

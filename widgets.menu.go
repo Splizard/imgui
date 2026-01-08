@@ -485,7 +485,7 @@ func MenuItemEx(label string, icon string, shortcut string, selected *bool, enab
 			RenderText(pos.Add(ImVec2{float(offsets.OffsetShortcut) + stretch_w, 0.0}), shortcut, false)
 			PopStyleColor(1)
 		}
-		if *selected {
+		if selected != nil && *selected {
 			RenderCheckMark(window.DrawList, pos.Add(ImVec2{float(offsets.OffsetMark) + stretch_w + g.FontSize*0.40, g.FontSize * 0.134 * 0.5}), GetColorU32FromID(ImGuiCol_Text, 1), g.FontSize*0.866)
 		}
 	}

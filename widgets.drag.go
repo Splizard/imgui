@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // Widgets: Drag Sliders
@@ -541,9 +542,85 @@ func ScaleValueFromRatioT(t, v_min, v_max float, is_logarithmic bool, logarithmi
 	return result
 }
 
+// ImParseFormatFindStart finds the start of the format specifier in a format string.
+// For example, "ratio = %.3f" returns "%.3f"
+func ImParseFormatFindStart(format string) string {
+	for i := 0; i < len(format); i++ {
+		if format[i] == '%' {
+			if i+1 < len(format) && format[i+1] != '%' {
+				return format[i:]
+			}
+			// Skip %% (escaped percent)
+			i++
+		}
+	}
+	return format[len(format):] // Return empty string if no format specifier found
+}
+
+// ImParseFormatFindEnd finds the end of the format specifier.
+// Printf/scanf types modifiers: I/L/h/j/l/t/w/z. Other uppercase letters qualify as types aka end of the format.
+func ImParseFormatFindEnd(format string) int32 {
+	if len(format) == 0 || format[0] != '%' {
+		return 0
+	}
+	// Ignored uppercase: I, L
+	// Ignored lowercase: h, j, l, t, w, z
+	for i := 0; i < len(format); i++ {
+		c := format[i]
+		if c >= 'A' && c <= 'Z' && c != 'I' && c != 'L' {
+			return int32(i + 1)
+		}
+		if c >= 'a' && c <= 'z' && c != 'h' && c != 'j' && c != 'l' && c != 't' && c != 'w' && c != 'z' {
+			return int32(i + 1)
+		}
+	}
+	return int32(len(format))
+}
+
+// isIntegerFormatSpecifier checks if the format specifier is for an integer type
+// (d, i, u, o, x, X)
+func isIntegerFormatSpecifier(format string) bool {
+	if len(format) == 0 {
+		return false
+	}
+	// Find the type character at the end of the format specifier
+	for i := len(format) - 1; i >= 0; i-- {
+		c := format[i]
+		switch c {
+		case 'd', 'i', 'u', 'o', 'x', 'X':
+			return true
+		case 'f', 'F', 'e', 'E', 'g', 'G', 'a', 'A':
+			return false
+		}
+	}
+	return false
+}
+
 func RoundScalarWithFormatT(format string, v float) float {
+	// Find the actual format specifier (e.g., "%.3f" in "ratio = %.3f")
+	fmt_start := ImParseFormatFindStart(format)
+	if len(fmt_start) == 0 || fmt_start[0] != '%' || (len(fmt_start) > 1 && fmt_start[1] == '%') {
+		// Don't apply if the value is not visible in the format string
+		return v
+	}
+
+	// Find the end of the format specifier to extract just the format (e.g., "%.3f" from "%.3f ns")
+	fmt_end := ImParseFormatFindEnd(fmt_start)
+	fmt_spec := fmt_start[:fmt_end]
+
+	// Check if this is an integer format specifier
+	if isIntegerFormatSpecifier(fmt_spec) {
+		// For integer formats, convert to int first, format, then parse back
+		// Use TrimSpace because format specifiers like "%3d" produce leading spaces
+		// which strconv.ParseInt cannot handle
+		var v_str = strings.TrimSpace(fmt.Sprintf(fmt_spec, int(v)))
+		i, _ := strconv.ParseInt(v_str, 0, 32)
+		return float(i)
+	}
+
 	// Format value with our rounding, and read back
-	var v_str = fmt.Sprintf(format, v)
+	// Use TrimSpace for consistency with integer handling
+	var v_str = strings.TrimSpace(fmt.Sprintf(fmt_spec, v))
 	f, _ := strconv.ParseFloat(v_str, 32)
 	return float(f)
 }
@@ -563,13 +640,13 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		v_speed = (float)((*v_max - *v_min) * g.DragSpeedDefaultRatio)
 	}
 	// Inputs accumulates into g.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
-	var adjust_delta float
+	var adjust_delta float = 0.0
 	if g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid(nil) && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold*DRAG_MOUSE_THRESHOLD_FACTOR) {
 		switch axis {
 		case ImGuiAxis_X:
-			adjust_delta *= g.IO.MouseDelta.x
+			adjust_delta = g.IO.MouseDelta.x
 		case ImGuiAxis_Y:
-			adjust_delta *= g.IO.MouseDelta.y
+			adjust_delta = g.IO.MouseDelta.y
 		}
 		if g.IO.KeyAlt {
 			adjust_delta *= 1.0 / 100.0
@@ -582,9 +659,9 @@ func DragBehaviorT(v *float, v_speed float, v_min, v_max *float, format string, 
 		amount := GetNavInputAmount2d(ImGuiNavDirSourceFlags_Keyboard|ImGuiNavDirSourceFlags_PadDPad, ImGuiInputReadMode_RepeatFast, 1.0/10.0, 10.0)
 		switch axis {
 		case ImGuiAxis_X:
-			adjust_delta *= amount.x
+			adjust_delta = amount.x
 		case ImGuiAxis_Y:
-			adjust_delta *= amount.y
+			adjust_delta = amount.y
 		}
 		v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision))
 	}
