@@ -828,9 +828,15 @@ func TableSetBgColor(target ImGuiTableBgTarget, color ImU32, column_n int /*= -1
 		if (table.VisibleMaskByIndex & ((ImU64)(1 << column_n))) == 0 {
 			return
 		}
+		// Ensure RowCellData slice is large enough before checking current entry
+		if table.RowCellDataCurrent >= 0 {
+			table.spanRowCellData(int(table.RowCellDataCurrent))
+		}
 		if table.RowCellDataCurrent < 0 || int(table.RowCellData[table.RowCellDataCurrent].Column) != column_n {
 			table.RowCellDataCurrent++
 		}
+		// Ensure RowCellData slice is large enough for the new entry
+		table.spanRowCellData(int(table.RowCellDataCurrent))
 		var cell_data = &table.RowCellData[table.RowCellDataCurrent]
 		cell_data.BgColor = color
 		cell_data.Column = (ImGuiTableColumnIdx)(column_n)

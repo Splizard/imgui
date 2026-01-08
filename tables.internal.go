@@ -896,6 +896,22 @@ func (table *ImGuiTable) spanColumns(column_n int) {
 	}
 }
 
+// helper for the span allocator. called when setting an index
+// of table.RowCellData
+func (table *ImGuiTable) spanRowCellData(idx int) {
+	rowCellDataLen := int(len(table.RowCellData))
+
+	// check if that index already exists
+	if idx <= rowCellDataLen-1 {
+		return
+	}
+
+	// add missing items
+	for i := int(0); i < (idx+1)-rowCellDataLen; i++ {
+		table.RowCellData = append(table.RowCellData, ImGuiTableCellData{})
+	}
+}
+
 // Layout columns for the frame. This is in essence the followup to BeginTable().
 // Runs on the first call to TableNextRow(), to give a chance for TableSetupColumn() to be called first.
 // FIXME-TABLE: Our width (and therefore our WorkRect) will be minimal in the first frame for _WidthAuto columns.
